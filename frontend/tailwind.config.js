@@ -8,12 +8,12 @@ export default {
       m: "12px",
     },
 
-    fontSize: {
-      l: "32px",
-      m: "24px",
-      s: "16px",
-      xs: "14px",
-    },
+    // fontSize: {
+    //   l: "32px",
+    //   m: "24px",
+    //   s: "16px",
+    //   xs: "14px",
+    // },
 
     extend: {
       colors: {

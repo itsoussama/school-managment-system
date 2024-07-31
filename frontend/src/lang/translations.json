@@ -1,0 +1,22 @@
+{
+    "en": {
+        "translation": {
+        "overview": "Overview",
+        "teachers": "Teachers",
+        "students": "Students",
+        "parents": "Parents",
+        "finance": "Finance",
+        "resources": "Resources"
+        }
+    },
+    "fr": {
+    "translation": {
+        "overview": "Tableau de bord",
+        "teachers": "Enseignants",
+        "students": "Étudiants",
+        "parents": "Parents",
+        "finance": "Finance",
+        "resources": "Ressources"
+    }
+    }
+}

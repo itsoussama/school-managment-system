@@ -28,6 +28,7 @@
       "@src/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
       "@hooks/*": ["src/hooks/*"],
+      "@lang/*": ["src/lang/*"],
     }
 
   },
