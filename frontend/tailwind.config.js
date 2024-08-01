@@ -1,11 +1,13 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: "selector",
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     borderRadius: {
       xs: "4px",
       s: "8px",
       m: "12px",
+      full: "100%",
     },
 
     // fontSize: {
@@ -24,9 +26,9 @@ export default {
       },
       boxShadow: {
         "sharp-dark":
-          "inset 0 1px 0 0 rgba(0, 0, 0, .06), 0 1px 3px 0 rgba(0, 0, 0, .13), 0 1px 2px -1px rgba(0, 0, 0, .1)",
+          "inset 0 1px 0 0 rgba(0, 0, 0, .06), 0 1px 2px -1px rgba(0, 0, 0, .1)",
         "sharp-light":
-          "inset 0 1px 0 0 rgba(0, 0, 0, .06), 0 1px 0 -4px rgba(0, 0, 0, .09)",
+          "inset 0 1px 0 0 rgba(255, 255, 255, .06), 0 2px 3px -4px rgba(255, 255, 255, .1)",
       },
     },
   },

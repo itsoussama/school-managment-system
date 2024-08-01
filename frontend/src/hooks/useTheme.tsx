@@ -1,30 +1,57 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Theme = "dark" | "light";
 
 export function UseTheme() {
+  //  todo: use localstorage to initiate mode
+  const localstorage = window.localStorage;
   const [state, setState] = useState<Theme>(
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light",
+    (localstorage.getItem("color-preferd") as Theme) ?? "dark",
   );
 
-  const themeChange = (ev: MediaQueryListEvent) => {
-    // console.log(ev);
-    if (ev.matches) {
-      setState("dark");
-    } else {
-      setState("light");
-    }
-  };
+  // todo: check if there is no initial value in the localstorage then add the default mode based on the device mode
+  // todo: when changing mode we want to change also the value in the local storage
+  // todo: add a state changer in the output to dynamicly update the state in other components
+  const themeChange = useCallback(
+    (ev: MediaQueryListEvent) => {
+      // console.log(ev);
+      if (ev.matches) {
+        setState("dark");
+        localstorage.setItem("color-preferd", "dark");
+      } else {
+        setState("light");
+        localstorage.setItem("color-preferd", "light");
+      }
+    },
+    [localstorage],
+  );
+
+  const updateTheme = (value: Theme) => setState(value);
 
   useEffect(() => {
     const mediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
 
+    if (!localstorage.getItem("color-preferd")) {
+      localstorage.setItem(
+        "color-preferd",
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light",
+      );
+
+      return;
+    }
+
     mediaQueryList.addEventListener("change", themeChange);
 
     return () => mediaQueryList.removeEventListener("change", themeChange);
-  }, []);
+  }, [localstorage, themeChange]);
 
-  return state;
+  useEffect(() => {
+    if (state) {
+      localstorage.setItem("color-preferd", state);
+    }
+  }, [state, localstorage]);
+
+  return [state, updateTheme] as const;
 }
