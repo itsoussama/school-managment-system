@@ -6,7 +6,8 @@
         "students": "Students",
         "parents": "Parents",
         "finance": "Finance",
-        "resources": "Resources"
+        "resources": "Resources",
+        "settings": "Settings"
         }
     },
     "fr": {
@@ -16,7 +17,8 @@
         "students": "Étudiants",
         "parents": "Parents",
         "finance": "Finance",
-        "resources": "Ressources"
+        "resources": "Ressources",
+        "settings": "Configurations"
     }
     }
 }

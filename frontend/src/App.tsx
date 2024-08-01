@@ -1,12 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
-import { Layout } from "@src/layout/layout";
-import '@src/App.css'
+import "@src/App.css";
+import Admin from "./admin";
 
-export const routes = createBrowserRouter(
-    [
-        {
-            path: '/',
-            element: <Layout />
-        }
-    ]
-) 
+export const routes = createBrowserRouter([
+  {
+    path: "/",
+    element: <Admin />,
+  },
+]);

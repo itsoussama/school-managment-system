@@ -5,8 +5,7 @@ import {
   FaBell,
   FaCalendar,
   FaChartPie,
-  FaChevronDown,
-  FaChevronUp,
+  FaCog,
   FaCompress,
   FaExpand,
   FaLayerGroup,
@@ -14,24 +13,31 @@ import {
   FaUserGraduate,
   FaUserTie,
 } from "react-icons/fa";
-import { Link, Outlet } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { FaMessage, FaScaleBalanced } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
+import Items from "@src/components/item";
+
+interface Layout {
+  children: React.ReactNode;
+  role?: string;
+}
 
 interface SubMenuVisible {
   ref: string;
   state: boolean;
 }
 
-export function Layout() {
+export function Layout({ children, role = "admin" }: Layout) {
   const [theme, setTheme] = UseTheme();
-  const { t } = useTranslation();
   const [subMenuVisible, toggleSubMenuVisible] = useState<SubMenuVisible>({
     ref: "",
     state: false,
   });
+  const { t } = useTranslation();
+
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
 
   const onToggleSubMenu = (item: string) => {
@@ -74,251 +80,97 @@ export function Layout() {
         />
         <div className="menu">
           <div className="main-menu flex flex-col gap-y-2">
-            <div
-              className="rounded-s bg-blue-600"
-              onClick={() => toggleSubMenuVisible({ ref: "", state: false })}
-            >
+            <div className="rounded-s bg-blue-600">
               <Link to={"/"} className="flex w-full items-center px-2 py-3">
                 <FaChartPie className="mr-3 text-lg text-white" />
                 <span className="text-s text-white">{t("overview")}</span>
               </Link>
             </div>
 
-            <div className="w-full">
-              <div
-                id="item-1"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-1" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-1")}
-              >
+            <Items
+              itemId="item-0"
+              itemName="teachers"
+              icon={
                 <FaUserTie className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("teachers")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-1" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-1" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("parents")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
+              }
+              subMenuVisible={subMenuVisible}
+              onToggleSubMenu={onToggleSubMenu}
+            >
+              <Items itemId="subitem-1" itemName="sub item" />
+              <Items itemId="subitem-2" itemName="sub item" />
+              <Items itemId="subitem-3" itemName="sub item" />
+            </Items>
 
-            <div className="w-full">
-              <div
-                id="item-2"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-2" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-2")}
-              >
+            <Items
+              itemId="item-1"
+              itemName="students"
+              icon={
                 <FaUserGraduate className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("students")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-2" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-2" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("teachers")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
+              }
+              subMenuVisible={subMenuVisible}
+              onToggleSubMenu={onToggleSubMenu}
+            >
+              <Items itemId="subitem-1" itemName="sub item" />
+              <Items itemId="subitem-2" itemName="sub item" />
+              <Items itemId="subitem-3" itemName="sub item" />
+            </Items>
 
-            <div className="w-full">
-              <div
-                id="item-3"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-3" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-3")}
-              >
+            <Items
+              itemId="item-2"
+              itemName="parents"
+              icon={
                 <FaUserFriends className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("parents")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-3" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-3" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("teachers")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
+              }
+              subMenuVisible={subMenuVisible}
+              onToggleSubMenu={onToggleSubMenu}
+            >
+              <Items itemId="subitem-1" itemName="sub item" />
+              <Items itemId="subitem-2" itemName="sub item" />
+              <Items itemId="subitem-3" itemName="sub item" />
+            </Items>
 
-            <div className="w-full">
-              <div
-                id="item-4"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-4" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-4")}
-              >
+            <Items
+              itemId="item-3"
+              itemName="finance"
+              icon={
                 <FaScaleBalanced className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("finance")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-4" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-4" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("teachers")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
+              }
+              subMenuVisible={subMenuVisible}
+              onToggleSubMenu={onToggleSubMenu}
+            >
+              <Items itemId="subitem-1" itemName="sub item" />
+              <Items itemId="subitem-2" itemName="sub item" />
+              <Items itemId="subitem-3" itemName="sub item" />
+            </Items>
 
-            <div className="w-full">
-              <div
-                id="item-5"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-5" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-5")}
-              >
+            <Items
+              itemId="item-4"
+              itemName="resources"
+              icon={
                 <FaLayerGroup className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("resources")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-5" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-5" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("teachers")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
+              }
+              subMenuVisible={subMenuVisible}
+              onToggleSubMenu={onToggleSubMenu}
+            >
+              <Items itemId="subitem-1" itemName="sub item" />
+              <Items itemId="subitem-2" itemName="sub item" />
+              <Items itemId="subitem-3" itemName="sub item" />
+            </Items>
           </div>
+          <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>
+          <Items
+            itemId="item-5"
+            itemName="settings"
+            icon={
+              <FaCog className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
+            }
+            subMenuVisible={subMenuVisible}
+            onToggleSubMenu={onToggleSubMenu}
+          >
+            <Items itemId="subitem-1" itemName="sub item" />
+            <Items itemId="subitem-2" itemName="sub item" />
+            <Items itemId="subitem-3" itemName="sub item" />
+          </Items>
         </div>
       </div>
       <div className="flex-1">
@@ -394,7 +246,7 @@ export function Layout() {
             </div>
           </div>
         </div>
-        <Outlet />
+        {children}
       </div>
     </div>
   );
