@@ -1,7 +1,5 @@
-import { Children, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
-import { Link } from "react-router-dom";
 
 interface SubMenuVisible {
   ref: string;
@@ -51,16 +49,7 @@ export default function Items({
         className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === itemId ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
       >
         <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-        <div className="flex w-full flex-col">
-          {Children.toArray(children).map((child) => (
-            <Link
-              to={"/"}
-              className="flex w-full items-center justify-start rounded-s"
-            >
-              {child}
-            </Link>
-          ))}
-        </div>
+        <div className="flex w-full flex-col">{children}</div>
       </div>
     </div>
   );

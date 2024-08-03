@@ -1,8 +1,10 @@
 {
     "en": {
         "translation": {
+        "home": "Home",
         "overview": "Overview",
         "teachers": "Teachers",
+        "new-teacher": "New Teacher",
         "students": "Students",
         "parents": "Parents",
         "finance": "Finance",
@@ -12,8 +14,10 @@
     },
     "fr": {
     "translation": {
+        "home": "Accueil",
         "overview": "Tableau de bord",
         "teachers": "Enseignants",
+        "new-teacher": "Nouveau professeur",
         "students": "Étudiants",
         "parents": "Parents",
         "finance": "Finance",

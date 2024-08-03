@@ -1,51 +1,20 @@
 import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
 import { UseTheme } from "@hooks/useTheme";
-import {
-  FaBell,
-  FaCalendar,
-  FaChartPie,
-  FaCog,
-  FaCompress,
-  FaExpand,
-  FaLayerGroup,
-  FaUserFriends,
-  FaUserGraduate,
-  FaUserTie,
-} from "react-icons/fa";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { FaBell, FaCalendar, FaCompress, FaExpand } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { FaMessage, FaScaleBalanced } from "react-icons/fa6";
+import { FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
-import Items from "@src/components/item";
 
 interface Layout {
   children: React.ReactNode;
+  menu: React.ReactElement;
   role?: string;
 }
 
-interface SubMenuVisible {
-  ref: string;
-  state: boolean;
-}
-
-export function Layout({ children, role = "admin" }: Layout) {
+export function Layout({ children, menu }: Layout) {
   const [theme, setTheme] = UseTheme();
-  const [subMenuVisible, toggleSubMenuVisible] = useState<SubMenuVisible>({
-    ref: "",
-    state: false,
-  });
-  const { t } = useTranslation();
-
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
-
-  const onToggleSubMenu = (item: string) => {
-    toggleSubMenuVisible((prev) => ({
-      ref: item,
-      state: prev.ref !== item ? true : !prev.state,
-    }));
-  };
 
   const onToggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -78,103 +47,10 @@ export function Layout({ children, role = "admin" }: Layout) {
           width={"150px"}
           alt="logo"
         />
-        <div className="menu">
-          <div className="main-menu flex flex-col gap-y-2">
-            <div className="rounded-s bg-blue-600">
-              <Link to={"/"} className="flex w-full items-center px-2 py-3">
-                <FaChartPie className="mr-3 text-lg text-white" />
-                <span className="text-s text-white">{t("overview")}</span>
-              </Link>
-            </div>
-
-            <Items
-              itemId="item-0"
-              itemName="teachers"
-              icon={
-                <FaUserTie className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-              }
-              subMenuVisible={subMenuVisible}
-              onToggleSubMenu={onToggleSubMenu}
-            >
-              <Items itemId="subitem-1" itemName="sub item" />
-              <Items itemId="subitem-2" itemName="sub item" />
-              <Items itemId="subitem-3" itemName="sub item" />
-            </Items>
-
-            <Items
-              itemId="item-1"
-              itemName="students"
-              icon={
-                <FaUserGraduate className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-              }
-              subMenuVisible={subMenuVisible}
-              onToggleSubMenu={onToggleSubMenu}
-            >
-              <Items itemId="subitem-1" itemName="sub item" />
-              <Items itemId="subitem-2" itemName="sub item" />
-              <Items itemId="subitem-3" itemName="sub item" />
-            </Items>
-
-            <Items
-              itemId="item-2"
-              itemName="parents"
-              icon={
-                <FaUserFriends className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-              }
-              subMenuVisible={subMenuVisible}
-              onToggleSubMenu={onToggleSubMenu}
-            >
-              <Items itemId="subitem-1" itemName="sub item" />
-              <Items itemId="subitem-2" itemName="sub item" />
-              <Items itemId="subitem-3" itemName="sub item" />
-            </Items>
-
-            <Items
-              itemId="item-3"
-              itemName="finance"
-              icon={
-                <FaScaleBalanced className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-              }
-              subMenuVisible={subMenuVisible}
-              onToggleSubMenu={onToggleSubMenu}
-            >
-              <Items itemId="subitem-1" itemName="sub item" />
-              <Items itemId="subitem-2" itemName="sub item" />
-              <Items itemId="subitem-3" itemName="sub item" />
-            </Items>
-
-            <Items
-              itemId="item-4"
-              itemName="resources"
-              icon={
-                <FaLayerGroup className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-              }
-              subMenuVisible={subMenuVisible}
-              onToggleSubMenu={onToggleSubMenu}
-            >
-              <Items itemId="subitem-1" itemName="sub item" />
-              <Items itemId="subitem-2" itemName="sub item" />
-              <Items itemId="subitem-3" itemName="sub item" />
-            </Items>
-          </div>
-          <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>
-          <Items
-            itemId="item-5"
-            itemName="settings"
-            icon={
-              <FaCog className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-            }
-            subMenuVisible={subMenuVisible}
-            onToggleSubMenu={onToggleSubMenu}
-          >
-            <Items itemId="subitem-1" itemName="sub item" />
-            <Items itemId="subitem-2" itemName="sub item" />
-            <Items itemId="subitem-3" itemName="sub item" />
-          </Items>
-        </div>
+        {menu}
       </div>
-      <div className="flex-1">
-        <div className="mx-6 my-6 flex h-12 justify-between border-white">
+      <div className="mx-6 my-6 flex-1">
+        <div className="flex h-12 justify-between border-white">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">
               Mardi 12 juillet 2024
