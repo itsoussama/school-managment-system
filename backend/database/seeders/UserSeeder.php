@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -25,9 +26,14 @@ class UserSeeder extends Seeder
         User::factory()->count(10)->create()->each(function (User $User) {
 
             $User->role()->save(Role::factory()->make());
+
             $roles = Role::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
+            $schools = School::inRandomOrder()->limit(rand(1,2))->pluck('id')->toArray()[0];
+            $User->school()->associate($schools); // Associate School with User
+            $User->save();
 
             $User->role()->sync($roles);
+            // $User->school()->sync($schools);
         });
     }
 }
