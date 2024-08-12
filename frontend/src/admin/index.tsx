@@ -11,23 +11,12 @@ import {
   FaUserTie,
 } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useMatch } from "react-router-dom";
 
 interface SubMenuVisible {
   ref: string;
   state: boolean;
 }
-
-// const pathName = {
-//   teachers: {
-//     new: "new-teacher",
-//   },
-//   students: [],
-//   parents: [],
-//   finance: [],
-//   resources: [],
-//   settings: [],
-// };
 
 export default function Admin() {
   return (
@@ -48,14 +37,26 @@ function Menu() {
       state: prev.ref !== item ? true : !prev.state,
     }));
   };
+
+  // const isUriMatch = (uri: string) => {
+  //   const match = useMatch('');
+  //   return match;
+  // };
+
   const { t } = useTranslation();
   return (
     <div className="menu">
       <div className="main-menu flex flex-col gap-y-2">
-        <div className="rounded-s bg-blue-600">
+        <div className={`rounded-s ${useMatch("/") ? "bg-blue-600" : ""}`}>
           <Link to={"/"} className="flex w-full items-center px-2 py-3">
-            <FaChartPie className="mr-3 text-lg text-white" />
-            <span className="text-s text-white">{t("overview")}</span>
+            <FaChartPie
+              className={`mr-3 text-lg ${useMatch("/") ? "text-white" : "text-gray-500 dark:text-gray-100"}`}
+            />
+            <span
+              className={`text-s ${useMatch("/") ? "text-white" : "text-gray-900 dark:text-gray-100"}`}
+            >
+              {t("overview")}
+            </span>
           </Link>
         </div>
 
@@ -68,11 +69,20 @@ function Menu() {
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Link to="/teacher/new">
-            <Items itemId="subitem-1" itemName="new-teacher" />
+          <Link to="teachers/new">
+            <Items
+              isActive={useMatch("/teachers/new") ? true : false}
+              itemId="subitem-1"
+              itemName="new-teacher"
+            />
           </Link>
-          <Items itemId="subitem-2" itemName="sub item" />
-          <Items itemId="subitem-3" itemName="sub item" />
+          <Link to="teachers/manage">
+            <Items
+              isActive={useMatch("/teachers/manage") ? true : false}
+              itemId="subitem-1"
+              itemName="view-teacher"
+            />
+          </Link>
         </Items>
 
         <Items

@@ -1,7 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
 import "@src/App.css";
 import Admin from "@admin/index";
-import AddTeacher from "@admin/pages/teacher/addTeacher";
+import AddTeacher from "@src/admin/pages/teachers/addTeacher";
+import { ViewTeachers } from "./admin/pages/teachers/viewTeachers";
 
 export const routes = createBrowserRouter([
   {
@@ -9,14 +10,20 @@ export const routes = createBrowserRouter([
     element: <Admin />,
     children: [
       {
-        path: "teacher",
+        path: "teachers",
         children: [
           {
             path: "new",
             element: <AddTeacher />,
+          },
+          {
+            path: "manage",
+            element: <ViewTeachers />,
           },
         ],
       },
     ],
   },
 ]);
+
+// path: i18n.t("teachers", { ns: "path" }), :=> this snipet will translate the path namespace

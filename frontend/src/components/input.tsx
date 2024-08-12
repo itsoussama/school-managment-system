@@ -5,13 +5,14 @@ import { ChangeEvent, Children, InputHTMLAttributes } from "react";
 import { FaCheck, FaExclamationCircle } from "react-icons/fa";
 
 interface Input {
-  type: string;
+  type?: string;
   id: string;
   name: string;
-  label: string;
+  label?: string;
   required?: boolean | undefined;
+  icon?: React.ReactNode;
   placeholder?: string;
-  style?: {
+  "custom-style"?: {
     inputStyle?: string;
     labelStyle?: string;
     wrapperInputStyle?: string;
@@ -30,8 +31,13 @@ function Input({
   name,
   label = "",
   required = undefined,
+  icon,
   placeholder,
-  style: { inputStyle = "", labelStyle = "", containerStyle = "" } = {},
+  "custom-style": {
+    inputStyle = "",
+    labelStyle = "",
+    containerStyle = "",
+  } = {},
   error = null,
   handleChange,
   ...attribute
@@ -44,16 +50,19 @@ function Input({
       >
         {label}
       </label>
-      <input
-        type={type}
-        name={name}
-        id={id}
-        className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
-        placeholder={placeholder}
-        required={required}
-        onChange={(event) => handleChange(event)}
-        {...attribute}
-      />
+      <div className="relative">
+        {icon}
+        <input
+          type={type}
+          name={name}
+          id={id}
+          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          placeholder={placeholder}
+          required={required}
+          onChange={(event) => handleChange(event)}
+          {...attribute}
+        />
+      </div>
       {error && (
         <div className="mt-1.5">
           <FaExclamationCircle className="mr-2 text-red-500" />
@@ -70,7 +79,7 @@ function Checkbox({
   name,
   label = "",
   required = undefined,
-  style: {
+  "custom-style": {
     inputStyle = "",
     labelStyle = "",
     containerStyle = "",
@@ -119,4 +128,50 @@ function Checkbox({
   );
 }
 
-export { Input, Checkbox };
+function Select({
+  id,
+  name,
+  label = "",
+  required = undefined,
+  icon,
+  "custom-style": {
+    inputStyle = "",
+    labelStyle = "",
+    containerStyle = "",
+  } = {},
+  error = null,
+  handleChange,
+  children,
+  ...attribute
+}: Input) {
+  return (
+    <div className={containerStyle}>
+      <label
+        htmlFor={name}
+        className={`mb-2 block text-sm font-medium text-gray-900 dark:text-white ${labelStyle}`}
+      >
+        {label}
+      </label>
+      <div className="relative">
+        {icon}
+        <select
+          id={id}
+          className={`block w-full rounded-s border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-700 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          required={required}
+          onChange={(event) => handleChange(event)}
+          {...attribute}
+        >
+          {children}
+        </select>
+      </div>
+      {error && (
+        <div className="mt-1.5">
+          <FaExclamationCircle className="mr-2 text-red-500" />
+          <span className="error text-red-500">{error}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export { Input, Checkbox, Select };

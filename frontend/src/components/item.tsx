@@ -10,6 +10,7 @@ interface Item {
   itemId: string;
   itemName: string;
   icon?: React.ReactElement;
+  isActive?: boolean;
   children?: React.ReactNode;
   subMenuVisible?: SubMenuVisible;
   onToggleSubMenu?: (param: string) => void;
@@ -21,6 +22,7 @@ export default function Items({
   itemId,
   itemName,
   icon,
+  isActive = false,
   children,
   subMenuVisible = { ref: "", state: false },
   onToggleSubMenu = (param) => param,
@@ -31,18 +33,20 @@ export default function Items({
     <div className="w-full">
       <div
         id={itemId}
-        className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === itemId && "bg-gray-100 dark:bg-gray-700"}`}
+        className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === itemId && "bg-gray-100 dark:bg-gray-700"} ${isActive ? "bg-blue-600" : ""}`}
         onClick={() => onToggleSubMenu(itemId)}
       >
         {icon}
-        <span className="text-s text-gray-900 dark:text-white">
+        <span
+          className={`text-s ${isActive ? "text-white" : "text-gray-900 dark:text-gray-100"}`}
+        >
           {t(itemName)}
         </span>
         {children &&
           (subMenuVisible.state && subMenuVisible.ref === itemId ? (
-            <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
+            <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-gray-100" />
           ) : (
-            <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
+            <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-gray-100" />
           ))}
       </div>
       <div

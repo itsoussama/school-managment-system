@@ -2,7 +2,7 @@ import { Input } from "@src/components/input";
 import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaHome } from "react-icons/fa";
+import { FaHome, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 export default function AddTeacher() {
@@ -103,7 +103,7 @@ export default function AddTeacher() {
               label="Address"
               placeholder="123 Rue Principale"
               handleChange={handleChange}
-              style={{ containerStyle: "col-span-full" }}
+              custom-style={{ containerStyle: "col-span-full" }}
             />
 
             <Input
@@ -111,7 +111,7 @@ export default function AddTeacher() {
               id="tel"
               name="tel"
               label="Phone number"
-              placeholder="06000000"
+              placeholder="06 00 00 00"
               handleChange={handleChange}
               attribute={{ pattern: "(06 | 05)[0-9]{2}[0-9]{4}" }}
             />
@@ -131,6 +131,12 @@ export default function AddTeacher() {
               name="password"
               label="Password"
               placeholder="●●●●●●●"
+              custom-style={{
+                inputStyle: "px-10",
+              }}
+              icon={
+                <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+              }
               handleChange={handleChange}
             />
 
@@ -140,6 +146,12 @@ export default function AddTeacher() {
               name="password_confirmation"
               label="Confirm password"
               placeholder="●●●●●●●"
+              custom-style={{
+                inputStyle: "px-10",
+              }}
+              icon={
+                <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+              }
               handleChange={handleChange}
             />
 
