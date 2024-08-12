@@ -1,22 +1,40 @@
 {
     "en": {
         "translation": {
+        "home": "Home",
         "overview": "Overview",
         "teachers": "Teachers",
+        "new-teacher": "New Teacher",
+        "view-teacher": "Manage Teachers",
         "students": "Students",
         "parents": "Parents",
         "finance": "Finance",
-        "resources": "Resources"
+        "resources": "Resources",
+        "settings": "Settings"
+        },
+        "path":{
+            "teachers": "teachers",
+            "new": "new",
+            "manage": "manage"
         }
     },
     "fr": {
     "translation": {
+        "home": "Accueil",
         "overview": "Tableau de bord",
         "teachers": "Enseignants",
+        "new-teacher": "Nouveau professeur",
+        "view-teacher": "Gérer les enseignants",
         "students": "Étudiants",
         "parents": "Parents",
         "finance": "Finance",
-        "resources": "Ressources"
+        "resources": "Ressources",
+        "settings": "Configurations"
+    },
+    "path":{
+        "teachers": "enseignants",
+        "new": "nouveau",
+        "manage": "gerer"  
     }
-    }
+}
 }
