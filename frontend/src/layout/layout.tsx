@@ -27,20 +27,21 @@ export function Layout({ children, menu }: Layout) {
   };
 
   useEffect(() => {
-    const style = getComputedStyle(document.body);
-    document
-      .getElementById("root")
-      ?.style.setProperty(
-        "background-color",
-        style.getPropertyValue(
-          theme === "dark" ? "--dark-secondary" : "--light-secondary",
-        ),
-      );
+    // const style = getComputedStyle(document.body);
+    // document
+    //   .getElementById("root")
+    //   ?.style.setProperty(
+    //     "background-color",
+    //     style.getPropertyValue(
+    //       theme === "dark" ? "--dark-secondary" : "--light-secondary",
+    //     ),
+    //   );
+    document.body.className = theme === "dark" ? "dark" : "";
   }, [theme]);
 
   return (
-    <div className={`flex flex-1 ${theme === "dark" ? "dark" : ""}`}>
-      <div className="flex-[0_0_15%] bg-light-primary p-3 dark:bg-dark-primary">
+    <div className={`flex w-full flex-1 ${theme === "dark" ? "dark" : ""}`}>
+      <div className="w-[18%] max-w-max bg-light-primary p-3 dark:bg-dark-primary">
         <img
           className="mx-auto mb-7 mt-3"
           src={theme === "dark" ? logo_dark : logo_light}
@@ -49,7 +50,7 @@ export function Layout({ children, menu }: Layout) {
         />
         {menu}
       </div>
-      <div className="mx-6 my-6 flex-1">
+      <div className="mx-6 my-6 w-[82%]">
         <div className="flex h-12 justify-between border-white">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">

@@ -14,7 +14,6 @@ export function UseTheme() {
   // todo: add a state changer in the output to dynamicly update the state in other components
   const themeChange = useCallback(
     (ev: MediaQueryListEvent) => {
-      // console.log(ev);
       if (ev.matches) {
         setState("dark");
         localstorage.setItem("color-preferd", "dark");
