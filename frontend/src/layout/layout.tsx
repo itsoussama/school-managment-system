@@ -86,7 +86,7 @@ export function Layout({ children, menu }: Layout) {
               <div className="flex items-center gap-4">
                 <img
                   className="h-8 w-8 rounded-full"
-                  src="https://i.pravatar.cc/300"
+                  src="https://i.pravatar.cc/300?img=12"
                   alt=""
                 />
                 <div className="text-sm font-medium dark:text-white">

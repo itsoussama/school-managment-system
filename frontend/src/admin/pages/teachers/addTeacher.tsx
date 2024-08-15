@@ -46,7 +46,7 @@ export default function AddTeacher() {
           <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
             <img
               className="rounded-full"
-              src="https://i.pravatar.cc/300"
+              src="https://i.pravatar.cc/300?img=12"
               alt=""
             />
             <button className="btn-gray">Upload photo</button>

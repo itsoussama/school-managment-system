@@ -1,6 +1,6 @@
 // import PropTypes from 'prop-types'
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-// import { faCheck, faCircleExclamation } from '@fortawesome/free-solid-svg-icons'
+// import { FontAwesomeIcon } from '@htmlFortawesome/react-fontawesome'
+// import { faCheck, faCircleExclamation } from '@htmlFortawesome/free-solid-svg-icons'
 import { ChangeEvent, Children, InputHTMLAttributes } from "react";
 import { FaCheck, FaExclamationCircle } from "react-icons/fa";
 
@@ -128,7 +128,7 @@ function Checkbox({
   );
 }
 
-function Select({
+function RSelect({
   id,
   name,
   label = "",
@@ -174,4 +174,12 @@ function Select({
   );
 }
 
-export { Input, Checkbox, Select };
+function MultiSelect() {
+  return (
+    <>
+      <div className="h-3 w-5 bg-red-500"></div>
+    </>
+  );
+}
+
+export { Input, Checkbox, RSelect, MultiSelect };

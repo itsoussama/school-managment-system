@@ -1,10 +1,9 @@
-import { Input, Select } from "@src/components/input";
+import { Input, RSelect } from "@src/components/input";
 
 import { Breadcrumb, Checkbox, Modal, Pagination, Table } from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  FaClock,
   FaExclamationTriangle,
   FaEye,
   FaHome,
@@ -13,6 +12,7 @@ import {
   FaSearch,
   FaTrash,
 } from "react-icons/fa";
+import { IoFilter } from "react-icons/io5";
 import { Link } from "react-router-dom";
 
 interface Check {
@@ -33,6 +33,7 @@ const teachers = [
     gradeLevel: "9th, 10th",
     email: "test@example.com",
     phone: "+212 600 0000",
+    time_spent: 360000000,
   },
   {
     uid: "T002",
@@ -41,6 +42,7 @@ const teachers = [
     gradeLevel: "9th, 10th",
     email: "test@example.com",
     phone: "+212 600 0000",
+    time_spent: 560000000,
   },
   {
     uid: "T003",
@@ -49,6 +51,7 @@ const teachers = [
     gradeLevel: "9th, 10th",
     email: "test@example.com",
     phone: "+212 600 0000",
+    time_spent: 760000000,
   },
 ];
 
@@ -96,6 +99,14 @@ export function ViewTeachers() {
     }
   };
 
+  const formatDuration = (duration: number) => {
+    const convertToHour = Math.floor(duration / (1000 * 60 * 60));
+    const remainingMilliseconds = duration % (1000 * 60 * 60);
+    const convertToMinute = Math.floor(remainingMilliseconds / (1000 * 60));
+
+    return { hour: convertToHour, minute: convertToMinute };
+  };
+
   useEffect(() => {
     const checkedVal = checkAll.filter((val) => val.status === true)
       .length as number;
@@ -121,7 +132,7 @@ export function ViewTeachers() {
             {t("teachers")}
           </span>
         </Breadcrumb.Item>
-        <Breadcrumb.Item>{t("view-teacher")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("view-teachers")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
@@ -145,11 +156,10 @@ export function ViewTeachers() {
           }))
         }
       >
-        {/* {`${console.log(theme)}`} */}
         <Modal.Header>{openViewModal?.id}</Modal.Header>
         <Modal.Body>
           <div className="flex gap-x-8">
-            <div className="flex flex-col items-start rounded-s bg-gray-800 p-4">
+            <div className="flex flex-col items-start rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <img
                 className="max-w-40 rounded-full"
                 src="https://i.pravatar.cc/300"
@@ -158,7 +168,7 @@ export function ViewTeachers() {
             </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-800 px-4 py-2 text-xl font-semibold text-gray-900 dark:text-white">
+                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   Personal Information
                 </h1>
                 <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
@@ -206,7 +216,7 @@ export function ViewTeachers() {
               </div>
 
               <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-800 px-4 py-2 text-xl font-semibold text-gray-900 dark:text-white">
+                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   Academic Information
                 </h1>
                 <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
@@ -255,30 +265,6 @@ export function ViewTeachers() {
             </div>
           </div>
         </Modal.Body>
-        {/* <Modal.Footer>
-          <button
-            className="btn-default !w-auto"
-            onClick={() =>
-              setViewOpenModal((prev) => ({
-                id: prev?.id as string,
-                open: false,
-              }))
-            }
-          >
-            I accept
-          </button>
-          <button
-            className="btn-danger !w-auto"
-            onClick={() =>
-              setViewOpenModal((prev) => ({
-                id: prev?.id as string,
-                open: false,
-              }))
-            }
-          >
-            Decline
-          </button>
-        </Modal.Footer> */}
       </Modal>
 
       <Modal
@@ -302,20 +288,34 @@ export function ViewTeachers() {
           }))
         }
       >
-        {/* {`${console.log(theme)}`} */}
         <Modal.Header>{openEditModal?.id}</Modal.Header>
         <Modal.Body>
           <div className="flex gap-x-8">
-            <div className="flex flex-col items-start rounded-s bg-gray-800 p-4">
+            <div className="flex flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <img
                 className="max-w-40 rounded-full"
                 src="https://i.pravatar.cc/300"
                 alt=""
               />
+              <button className="btn-dark dark:btn-gray">Upload photo</button>
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-700 dark:text-gray-500">
+                  Accepted format:{" "}
+                  <span className="text-gray-500 dark:text-gray-400">
+                    jpg, jpeg, png
+                  </span>
+                </span>
+                <span className="text-xs text-gray-700 dark:text-gray-500">
+                  Maximum size:{" "}
+                  <span className="text-gray-500 dark:text-gray-400">
+                    1024 mb
+                  </span>
+                </span>
+              </div>
             </div>
             <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-800 px-4 py-2 text-xl font-semibold text-gray-900 dark:text-white">
+                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   Personal Information
                 </h1>
                 <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
@@ -447,7 +447,6 @@ export function ViewTeachers() {
           }))
         }
       >
-        {/* {`${console.log(theme)}`} */}
         <Modal.Header>Delete User</Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-x-8">
@@ -500,30 +499,19 @@ export function ViewTeachers() {
       </Modal>
 
       <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
-        <div className="flex w-full justify-between px-5 py-4">
-          <div className="flex items-center gap-x-4">
-            <Select
-              id="period"
-              name="period"
-              icon={
-                <FaClock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-              }
-              handleChange={(ev) => console.log(ev)}
-              custom-style={{ inputStyle: "px-10", labelStyle: "!m-0" }}
-              attribute={{ defaultValue: 0 }}
-            >
-              <option>Last 30 days</option>
-            </Select>
-            {checkAll.find((val) => val.status === true) && (
+        {checkAll.find((val) => val.status === true) ? (
+          <div className="flex w-full justify-between px-5 py-4">
+            <div className="flex items-center gap-x-4">
+              {/* <CheckboxDropdown /> */}
+
               <button className="btn-danger !m-0 flex w-max items-center">
                 <FaTrash className="mr-2 text-white" />
                 Delete
                 <span className="ml-2 rounded-full bg-red-800 px-2 py-0.5">{`${numChecked}`}</span>
               </button>
-            )}
-          </div>
+            </div>
 
-          <Input
+            {/* <Input
             id="search"
             type="text"
             icon={
@@ -537,8 +525,11 @@ export function ViewTeachers() {
               labelStyle: "mb-0",
             }}
             handleChange={(ev) => console.log(ev)}
-          />
-        </div>
+          /> */}
+          </div>
+        ) : (
+          ""
+        )}
 
         <div className="w-full overflow-x-auto">
           <Table
@@ -552,21 +543,93 @@ export function ViewTeachers() {
             }}
             striped
           >
-            <Table.Head>
+            <Table.Head className="uppercase">
               <Table.HeadCell className="w-0 p-4">
                 <Checkbox id="0" onChange={() => handleCheck()} />
               </Table.HeadCell>
               <Table.HeadCell>UID</Table.HeadCell>
-              <Table.HeadCell>FULLNAME</Table.HeadCell>
-              <Table.HeadCell>SUBJECT</Table.HeadCell>
-              <Table.HeadCell>GRADE LEVEL</Table.HeadCell>
-              <Table.HeadCell>EMAIL</Table.HeadCell>
-              <Table.HeadCell>PHONE</Table.HeadCell>
+              <Table.HeadCell>Fullname</Table.HeadCell>
+              <Table.HeadCell>Subject</Table.HeadCell>
+              <Table.HeadCell>Grade level</Table.HeadCell>
+              <Table.HeadCell>Email</Table.HeadCell>
+              <Table.HeadCell>Phone</Table.HeadCell>
+              <Table.HeadCell>Active time</Table.HeadCell>
               <Table.HeadCell className="w-0">
                 <span className="sr-only w-full">Actions</span>
               </Table.HeadCell>
             </Table.Head>
             <Table.Body ref={tableRef} className="divide-y">
+              <Table.Row>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2">
+                  {/* <div className="h-2 w-12 bg-red-600"></div> */}
+                  <Input
+                    id="search"
+                    type="text"
+                    icon={
+                      <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                    }
+                    label=""
+                    placeholder="All"
+                    name="search"
+                    custom-style={{
+                      inputStyle: "px-8 !py-1",
+                      labelStyle: "mb-0 !inline",
+                    }}
+                    handleChange={(ev) => console.log(ev)}
+                  />
+                </Table.Cell>
+                <Table.Cell className="p-2">
+                  <RSelect
+                    id="subject"
+                    name="subject"
+                    icon={
+                      <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                    }
+                    custom-style={{
+                      inputStyle: "px-9 !py-1",
+                      labelStyle: "mb-0 !inline",
+                    }}
+                    handleChange={() => null}
+                    attribute={{ defaultValue: "" }}
+                  >
+                    <option value="" selected disabled>
+                      All
+                    </option>
+                    <option value="math">Math</option>
+                    <option value="lecture">Lecture</option>
+                    <option value="science">Science</option>
+                  </RSelect>
+                </Table.Cell>
+                <Table.Cell className="p-2">
+                  <RSelect
+                    id="gradelevel"
+                    name="gradelevel"
+                    icon={
+                      <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                    }
+                    custom-style={{
+                      inputStyle: "px-9 !py-1",
+                      labelStyle: "mb-0 !inline",
+                    }}
+                    handleChange={() => null}
+                    attribute={{ defaultValue: "", multiple: true }}
+                  >
+                    <option value="" selected disabled>
+                      All
+                    </option>
+                    <option value="grade_1">Grade 1</option>
+                    <option value="grade_2">Grade 2</option>
+                    <option value="grade_3">Grade 3</option>
+                  </RSelect>
+                </Table.Cell>
+
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+              </Table.Row>
               {teachers.map((teacher, key) => (
                 <Table.Row
                   key={key}
@@ -591,6 +654,22 @@ export function ViewTeachers() {
                     {teacher.email}
                   </Table.Cell>
                   <Table.Cell>{teacher.phone}</Table.Cell>
+                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                    <span>
+                      {formatDuration(teacher.time_spent).hour}
+                      <span className="text-gray-400"> h </span>
+                      {formatDuration(teacher.time_spent).minute > 0
+                        ? formatDuration(teacher.time_spent).minute
+                        : ""}
+                      <span
+                        className="text-gray-400"
+                        hidden={formatDuration(teacher.time_spent).minute <= 0}
+                      >
+                        {" "}
+                        min
+                      </span>
+                    </span>
+                  </Table.Cell>
                   <Table.Cell className="flex w-fit gap-x-2">
                     <div
                       onClick={() =>
@@ -635,7 +714,7 @@ export function ViewTeachers() {
             </span>
           </span>
           <div className="flex items-center gap-x-4">
-            <Select
+            <RSelect
               id="row-num"
               name="row-num"
               handleChange={(ev) => console.log(ev)}
@@ -645,7 +724,7 @@ export function ViewTeachers() {
               <option value={10}>10</option>
               <option value={15}>15</option>
               <option value={20}>20</option>
-            </Select>
+            </RSelect>
             <Pagination
               currentPage={10}
               onPageChange={() => 1}

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { FaHome, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-export default function AddTeacher() {
+export default function AddStudent() {
   const { t } = useTranslation();
   const [data, setData] = useState<object>({});
 
@@ -33,7 +33,7 @@ export default function AddTeacher() {
             {t("students")}
           </span>
         </Breadcrumb.Item>
-        <Breadcrumb.Item>{t("new-students")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("new-student")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <div className="flex flex-wrap gap-5">
@@ -46,7 +46,7 @@ export default function AddTeacher() {
           <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
             <img
               className="rounded-full"
-              src="https://i.pravatar.cc/300"
+              src="https://i.pravatar.cc/300?img=12"
               alt=""
             />
             <button className="btn-gray">Upload photo</button>
@@ -70,7 +70,7 @@ export default function AddTeacher() {
         <div className="flex flex-[3] flex-col gap-4">
           <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Teacher information
+              Student information
             </h1>
           </div>
           <form
