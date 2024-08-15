@@ -12,9 +12,15 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('school', 'role')->get();
+        $perPage = $request->input('per_page', 5);
+        info($request);
+        // Get sort parameters from request
+        $sortColumn = $request->input('sort_column', 'id');
+        $sortDirection = $request->input('sort_direction', 'asc');
+
+        $users = User::with('school', 'role')->orderBy($sortColumn, $sortDirection)->paginate($perPage);
         return response()->json($users, Response::HTTP_OK);
     }
 
