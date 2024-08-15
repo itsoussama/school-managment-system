@@ -80,7 +80,7 @@ function Menu() {
             <Items
               isActive={useMatch("/teachers/manage") ? true : false}
               itemId="subitem-1"
-              itemName="view-teacher"
+              itemName="view-teachers"
             />
           </Link>
         </Items>
@@ -94,9 +94,20 @@ function Menu() {
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Items itemId="subitem-1" itemName="sub item" />
-          <Items itemId="subitem-2" itemName="sub item" />
-          <Items itemId="subitem-3" itemName="sub item" />
+          <Link to="students/new">
+            <Items
+              isActive={useMatch("/students/new") ? true : false}
+              itemId="subitem-1"
+              itemName="new-student"
+            />
+          </Link>
+          <Link to="students/manage">
+            <Items
+              isActive={useMatch("/students/manage") ? true : false}
+              itemId="subitem-1"
+              itemName="view-students"
+            />
+          </Link>
         </Items>
 
         <Items

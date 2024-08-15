@@ -1,5 +1,4 @@
 import { Input, RSelect } from "@src/components/input";
-
 import { Breadcrumb, Checkbox, Modal, Pagination, Table } from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,37 +24,24 @@ interface ViewModal {
   open: boolean;
 }
 
-const teachers = [
+const students = [
   {
-    uid: "T001",
+    uid: "S001",
     fullName: "Leanne Graham",
-    subject: "Math",
-    gradeLevel: "9th, 10th",
+    grade_level: "10th",
+    date_birth: "2018-09-01",
+    guardian: {
+      img: "https://i.pravatar.cc/300?img=12",
+      fullName: "John Graham",
+    },
+    enrollment_date: "2024-09-01",
     email: "test@example.com",
     phone: "+212 600 0000",
     time_spent: 360000000,
   },
-  {
-    uid: "T002",
-    fullName: "Leanne Graham",
-    subject: "Math",
-    gradeLevel: "9th, 10th",
-    email: "test@example.com",
-    phone: "+212 600 0000",
-    time_spent: 560000000,
-  },
-  {
-    uid: "T003",
-    fullName: "Leanne Graham",
-    subject: "Math",
-    gradeLevel: "9th, 10th",
-    email: "test@example.com",
-    phone: "+212 600 0000",
-    time_spent: 760000000,
-  },
 ];
 
-export function ViewTeachers() {
+export function ViewStudents() {
   const { t } = useTranslation();
   // const [selectedItem, setSelectedItem] = useState()
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
@@ -129,10 +115,10 @@ export function ViewTeachers() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>
           <span className="text-gray-600 dark:text-gray-300">
-            {t("teachers")}
+            {t("students")}
           </span>
         </Breadcrumb.Item>
-        <Breadcrumb.Item>{t("view-teachers")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("view-students")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
@@ -159,7 +145,7 @@ export function ViewTeachers() {
         <Modal.Header>{openViewModal?.id}</Modal.Header>
         <Modal.Body>
           <div className="flex gap-x-8">
-            <div className="flex flex-col items-start rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+            <div className="flex flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <img
                 className="max-w-40 rounded-full"
                 src="https://i.pravatar.cc/300"
@@ -549,8 +535,10 @@ export function ViewTeachers() {
               </Table.HeadCell>
               <Table.HeadCell>UID</Table.HeadCell>
               <Table.HeadCell>Fullname</Table.HeadCell>
-              <Table.HeadCell>Subject</Table.HeadCell>
               <Table.HeadCell>Grade level</Table.HeadCell>
+              <Table.HeadCell>Date of birth</Table.HeadCell>
+              <Table.HeadCell>Parents / Guardian</Table.HeadCell>
+              <Table.HeadCell>Enrollment Date</Table.HeadCell>
               <Table.HeadCell>Email</Table.HeadCell>
               <Table.HeadCell>Phone</Table.HeadCell>
               <Table.HeadCell>Active time</Table.HeadCell>
@@ -581,6 +569,7 @@ export function ViewTeachers() {
                   />
                 </Table.Cell>
                 <Table.Cell className="p-2">
+                  {" "}
                   <RSelect
                     id="subject"
                     name="subject"
@@ -602,35 +591,29 @@ export function ViewTeachers() {
                     <option value="science">Science</option>
                   </RSelect>
                 </Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2">
-                  <RSelect
-                    id="gradelevel"
-                    name="gradelevel"
+                  {/* <div className="h-2 w-12 bg-red-600"></div> */}
+                  <Input
+                    id="search"
+                    type="text"
                     icon={
-                      <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                     }
+                    label=""
+                    placeholder="All"
+                    name="search"
                     custom-style={{
-                      inputStyle: "px-9 !py-1",
+                      inputStyle: "px-8 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
-                    handleChange={() => null}
-                    attribute={{ defaultValue: "", multiple: true }}
-                  >
-                    <option value="" selected disabled>
-                      All
-                    </option>
-                    <option value="grade_1">Grade 1</option>
-                    <option value="grade_2">Grade 2</option>
-                    <option value="grade_3">Grade 3</option>
-                  </RSelect>
+                    handleChange={(ev) => console.log(ev)}
+                  />
                 </Table.Cell>
-
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
               </Table.Row>
-              {teachers.map((teacher, key) => (
+              {students.map((student, key) => (
                 <Table.Row
                   key={key}
                   className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
@@ -643,27 +626,38 @@ export function ViewTeachers() {
                     />
                   </Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {teacher.uid}
+                    {student.uid}
                   </Table.Cell>
-                  <Table.Cell>{teacher.fullName}</Table.Cell>
+                  <Table.Cell>{student.fullName}</Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {teacher.subject}
+                    {student.grade_level}
                   </Table.Cell>
-                  <Table.Cell>{teacher.gradeLevel}</Table.Cell>
+                  <Table.Cell>{student.date_birth}</Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {teacher.email}
+                    <div className="flex items-center gap-x-3">
+                      <img
+                        className="w-8 rounded-full"
+                        src="https://i.pravatar.cc/300?img=12"
+                        alt="profile"
+                      />
+                      <span>{student.guardian.fullName}</span>
+                    </div>
                   </Table.Cell>
-                  <Table.Cell>{teacher.phone}</Table.Cell>
+                  <Table.Cell>{student.enrollment_date}</Table.Cell>
+                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                    {student.email}
+                  </Table.Cell>
+                  <Table.Cell>{student.phone}</Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                     <span>
-                      {formatDuration(teacher.time_spent).hour}
+                      {formatDuration(student.time_spent).hour}
                       <span className="text-gray-400"> h </span>
-                      {formatDuration(teacher.time_spent).minute > 0
-                        ? formatDuration(teacher.time_spent).minute
+                      {formatDuration(student.time_spent).minute > 0
+                        ? formatDuration(student.time_spent).minute
                         : ""}
                       <span
                         className="text-gray-400"
-                        hidden={formatDuration(teacher.time_spent).minute <= 0}
+                        hidden={formatDuration(student.time_spent).minute <= 0}
                       >
                         {" "}
                         min
@@ -673,7 +667,7 @@ export function ViewTeachers() {
                   <Table.Cell className="flex w-fit gap-x-2">
                     <div
                       onClick={() =>
-                        setViewOpenModal({ id: teacher.uid, open: true })
+                        setViewOpenModal({ id: student.uid, open: true })
                       }
                       className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
                     >
@@ -682,7 +676,7 @@ export function ViewTeachers() {
                     <div
                       className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                       onClick={() =>
-                        setEditOpenModal({ id: teacher.uid, open: true })
+                        setEditOpenModal({ id: student.uid, open: true })
                       }
                     >
                       <FaPen className="text-green-600 dark:text-green-500" />
@@ -690,7 +684,7 @@ export function ViewTeachers() {
                     <div
                       className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                       onClick={() =>
-                        setDeleteOpenModal({ id: teacher.uid, open: true })
+                        setDeleteOpenModal({ id: student.uid, open: true })
                       }
                     >
                       <FaTrash className="text-red-600 dark:text-red-500" />
