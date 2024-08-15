@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\UsersExport;
+use App\Imports\UsersImport;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -65,15 +69,13 @@ class UserController extends Controller
                     'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
                     'password' => 'nullable|string|min:8|confirmed',
                     'school_id' => 'nullable|exists:schools,id',
-                    'roles' => 'nullable|array',  // Array of role IDs
-                    'roles.*' => 'exists:roles,id', // Each role ID should exist
+                    'roles' => 'nullable|array',
+                    'roles.*' => 'exists:roles,id',
                 ]);
 
-                // Update user attributes
                 $user->name = $request->input('name', $user->name);
                 $user->email = $request->input('email', $user->email);
 
-                // If password is provided, hash and update it
                 if ($request->filled('password')) {
                     $user->password = bcrypt($request->input('password'));
                 }
@@ -83,7 +85,6 @@ class UserController extends Controller
                     $user->school_id = $request->input('school_id');
                 }
 
-                // Save the user with updated attributes
                 $user->save();
 
                 // Sync roles if provided
@@ -101,16 +102,35 @@ class UserController extends Controller
         }
     }
 
-    // Remove the specified resource from storage
     public function destroy(User $user)
     {
-        // Detach roles if necessary
         $user->role()->detach();
 
-        // Delete the user
         $user->delete();
 
-    // Return a response indicating success
-    return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
+
+        return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
+    }
+    public function export()
+    {
+        return Excel::download(new UsersExport, 'users.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        try {
+        $request->validate([
+            'file' => 'required|mimes:xlsx',
+        ]);
+
+        Excel::import(new UsersImport, $request->file('file'));
+
+        return response()->json(['success' => 'Users Imported Successfully']);
+        }catch(ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed for some rows.',
+                'error' => $e->errors()
+            ], 422);
+        }
     }
 }
