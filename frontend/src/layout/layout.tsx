@@ -1,45 +1,25 @@
 import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
+import logo_minimize from "@assets/icon.png";
 import { UseTheme } from "@hooks/useTheme";
-import {
-  FaBell,
-  FaCalendar,
-  FaChartPie,
-  FaChevronDown,
-  FaChevronUp,
-  FaCompress,
-  FaExpand,
-  FaLayerGroup,
-  FaUserFriends,
-  FaUserGraduate,
-  FaUserTie,
-} from "react-icons/fa";
-import { Link, Outlet } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
-import { FaMessage, FaScaleBalanced } from "react-icons/fa6";
+import { FaBell, FaCalendar, FaCompress, FaExpand } from "react-icons/fa";
+import { useContext, useEffect, useState } from "react";
+import { FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
+import useBreakpoint from "@src/hooks/useBreakpoint";
+import { hoverContext } from "@context/hoverContext";
 
-interface SubMenuVisible {
-  ref: string;
-  state: boolean;
+interface Layout {
+  children: React.ReactNode;
+  menu: React.ReactElement;
+  role?: string;
 }
 
-export function Layout() {
+export function Layout({ children, menu }: Layout) {
   const [theme, setTheme] = UseTheme();
-  const { t } = useTranslation();
-  const [subMenuVisible, toggleSubMenuVisible] = useState<SubMenuVisible>({
-    ref: "",
-    state: false,
-  });
+  const { isOnHover, setIsOnHover } = useContext(hoverContext);
+  const minXxl = useBreakpoint("min", "2xl");
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
-
-  const onToggleSubMenu = (item: string) => {
-    toggleSubMenuVisible((prev) => ({
-      ref: item,
-      state: prev.ref !== item ? true : !prev.state,
-    }));
-  };
 
   const onToggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -51,278 +31,54 @@ export function Layout() {
     }
   };
 
+  const onMouseEnter = () => {
+    setIsOnHover(true);
+  };
+  const onMouseLeave = () => {
+    setIsOnHover(false);
+  };
+
   useEffect(() => {
-    const style = getComputedStyle(document.body);
-    document
-      .getElementById("root")
-      ?.style.setProperty(
-        "background-color",
-        style.getPropertyValue(
-          theme === "dark" ? "--dark-secondary" : "--light-secondary",
-        ),
-      );
+    // const style = getComputedStyle(document.body);
+    // document
+    //   .getElementById("root")
+    //   ?.style.setProperty(
+    //     "background-color",
+    //     style.getPropertyValue(
+    //       theme === "dark" ? "--dark-secondary" : "--light-secondary",
+    //     ),
+    //   );
+    document.body.className = theme === "dark" ? "dark" : "";
   }, [theme]);
 
   return (
-    <div className={`flex flex-1 ${theme === "dark" ? "dark" : ""}`}>
-      <div className="flex-[0_0_15%] bg-light-primary p-3 dark:bg-dark-primary">
-        <img
-          className="mx-auto mb-7 mt-3"
-          src={theme === "dark" ? logo_dark : logo_light}
-          width={"150px"}
-          alt="logo"
-        />
-        <div className="menu">
-          <div className="main-menu flex flex-col gap-y-2">
-            <div
-              className="rounded-s bg-blue-600"
-              onClick={() => toggleSubMenuVisible({ ref: "", state: false })}
-            >
-              <Link to={"/"} className="flex w-full items-center px-2 py-3">
-                <FaChartPie className="mr-3 text-lg text-white" />
-                <span className="text-s text-white">{t("overview")}</span>
-              </Link>
-            </div>
-
-            <div className="w-full">
-              <div
-                id="item-1"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-1" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-1")}
-              >
-                <FaUserTie className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("teachers")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-1" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-1" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("parents")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full">
-              <div
-                id="item-2"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-2" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-2")}
-              >
-                <FaUserGraduate className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("students")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-2" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-2" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("teachers")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full">
-              <div
-                id="item-3"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-3" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-3")}
-              >
-                <FaUserFriends className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("parents")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-3" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-3" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("teachers")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full">
-              <div
-                id="item-4"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-4" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-4")}
-              >
-                <FaScaleBalanced className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("finance")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-4" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-4" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("teachers")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full">
-              <div
-                id="item-5"
-                className={`flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === "item-5" && "bg-gray-100 dark:bg-gray-700"}`}
-                onClick={() => onToggleSubMenu("item-5")}
-              >
-                <FaLayerGroup className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-                <span className="text-s text-gray-900 dark:text-white">
-                  {t("resources")}
-                </span>
-                {subMenuVisible.state && subMenuVisible.ref === "item-5" ? (
-                  <FaChevronUp className="ml-auto text-xs text-gray-900 dark:text-white" />
-                ) : (
-                  <FaChevronDown className="ml-auto text-xs text-gray-900 dark:text-white" />
-                )}
-              </div>
-              <div
-                className={`flex overflow-hidden transition-all duration-200 ${subMenuVisible.state && subMenuVisible.ref === "item-5" ? "my-3 max-h-96 delay-150" : "my-0 max-h-0"}`}
-              >
-                <div className="mx-4 border-r border-gray-300 dark:border-gray-700"></div>
-                <div className="flex w-full flex-col">
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s bg-blue-600 px-2 py-3"
-                  >
-                    <span className="text-s text-white">{t("teachers")}</span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                  <Link
-                    to={"/"}
-                    className="flex w-full items-center justify-start rounded-s px-2 py-3"
-                  >
-                    <span className="text-s text-gray-900 dark:text-white">
-                      {t("teachers")}
-                    </span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div className={`flex w-full flex-1 ${theme === "dark" ? "dark" : ""}`}>
+      <div
+        className={`z-[10] w-[18%] bg-light-primary p-3 max-2xl:absolute max-2xl:h-full ${isOnHover ? "max-2xl:w-[18%]" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        <div className={`flex items-start justify-start transition-all`}>
+          <img
+            className={`mx-auto mb-7 mt-3 transition-all ${!minXxl && !isOnHover ? "w-7" : ""}`}
+            src={
+              minXxl || isOnHover
+                ? theme === "dark"
+                  ? logo_dark
+                  : logo_light
+                : logo_minimize
+            }
+            // width={"150px"}
+            alt="logo"
+          />
         </div>
+
+        {menu}
       </div>
-      <div className="flex-1">
-        <div className="mx-6 my-6 flex h-12 justify-between border-white">
+      <div
+        className={`mx-8 my-6 w-[82%] flex-1 transition-all ${isOnHover ? "max-2xl:ms-0" : "max-2xl:ms-24"}`}
+      >
+        <div className="flex h-12 w-full justify-between border-white">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">
               Mardi 12 juillet 2024
@@ -357,7 +113,7 @@ export function Layout() {
               <div className="flex items-center gap-4">
                 <img
                   className="h-8 w-8 rounded-full"
-                  src="https://i.pravatar.cc/300"
+                  src="https://i.pravatar.cc/300?img=12"
                   alt=""
                 />
                 <div className="text-sm font-medium dark:text-white">
@@ -394,7 +150,7 @@ export function Layout() {
             </div>
           </div>
         </div>
-        <Outlet />
+        {children}
       </div>
     </div>
   );
