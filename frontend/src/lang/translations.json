@@ -10,6 +10,8 @@
         "new-student": "New Student",
         "view-students": "Manage Students",
         "parents": "Parents",
+        "new-parent": "New Parent",
+        "view-parents": "Manage Parents",
         "finance": "Finance",
         "resources": "Resources",
         "settings": "Settings"
@@ -31,6 +33,8 @@
         "new-student": "Nouveau étudiant",
         "view-students": "Gestion d'étudiants",
         "parents": "Parents",
+        "new-parent": "Nouveau Parent",
+        "view-parents": "Gestion des Parents",
         "finance": "Finance",
         "resources": "Ressources",
         "settings": "Configurations"

@@ -657,12 +657,15 @@ export function ViewTeachers() {
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                     <span>
                       {formatDuration(teacher.time_spent).hour}
-                      <span className="text-gray-400"> h </span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        {" "}
+                        h{" "}
+                      </span>
                       {formatDuration(teacher.time_spent).minute > 0
                         ? formatDuration(teacher.time_spent).minute
                         : ""}
                       <span
-                        className="text-gray-400"
+                        className="text-gray-500 dark:text-gray-400"
                         hidden={formatDuration(teacher.time_spent).minute <= 0}
                       >
                         {" "}

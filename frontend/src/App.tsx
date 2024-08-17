@@ -5,6 +5,8 @@ import AddTeacher from "@src/admin/pages/teachers/addTeacher";
 import { ViewTeachers } from "./admin/pages/teachers/viewTeachers";
 import AddStudent from "./admin/pages/students/addStudent";
 import { ViewStudents } from "./admin/pages/students/viewStudents";
+import AddParent from "./admin/pages/parents/addParent";
+import { ViewParents } from "./admin/pages/parents/viewParents";
 
 export const routes = createBrowserRouter([
   {
@@ -34,6 +36,19 @@ export const routes = createBrowserRouter([
           {
             path: "manage",
             element: <ViewStudents />,
+          },
+        ],
+      },
+      {
+        path: "parents",
+        children: [
+          {
+            path: "new",
+            element: <AddParent />,
+          },
+          {
+            path: "manage",
+            element: <ViewParents />,
           },
         ],
       },
