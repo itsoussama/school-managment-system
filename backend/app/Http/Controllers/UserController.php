@@ -7,6 +7,7 @@ use App\Imports\UsersImport;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -64,9 +65,12 @@ class UserController extends Controller
     // Display the specified resource
     public function show(User $user)
     {
-        if ($user->hasRole('Teacher')) {
+        if (auth()->user()->hasRole(config('roles.student'))) {
             $user->load('school', 'role');
             return response()->json($user, Response::HTTP_OK);
+
+        }else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
 
         }
     }

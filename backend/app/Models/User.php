@@ -59,8 +59,8 @@ class User extends Authenticatable
     }
     public function hasRole($role)
     {
-        // Assuming roles are stored in a 'roles' attribute or related model
-        return in_array($role, $this->role);
+        $roles = $this->role->pluck('name')->toArray();
+        return in_array($role, $roles);
     }
 
     // public function createToken(Request $request)
