@@ -28,10 +28,12 @@ class UserController extends Controller
     public function store(Request $request)
     {
 
+        // print_r($request);die;
         try{
             $validation = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
+                'phone' => 'required|string|max:255',
                 'password' => 'required|string|min:8|confirmed',
                 'school_id' => 'required|exists:schools,id',
                 'roles' => 'required|array',
@@ -41,6 +43,7 @@ class UserController extends Controller
                 $user = User::create([
                     'name' => $request->name,
                     'email' => $request->email,
+                    'phone' => $request->phone,
                     'password' => bcrypt($request->password),
                 ]);
                 $user->school()->associate($request->school_id);
@@ -73,6 +76,7 @@ class UserController extends Controller
                 $request->validate([
                     'name' => 'nullable|string|max:255',
                     'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
+                    'phone' => 'required|string|max:255',
                     'password' => 'nullable|string|min:8|confirmed',
                     'school_id' => 'nullable|exists:schools,id',
                     'roles' => 'nullable|array',
@@ -81,6 +85,7 @@ class UserController extends Controller
 
                 $user->name = $request->input('name', $user->name);
                 $user->email = $request->input('email', $user->email);
+                $user->phone = $request->input('phone', $user->phone);
 
                 if ($request->filled('password')) {
                     $user->password = bcrypt($request->input('password'));

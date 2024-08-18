@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\Client\Request;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable , HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +23,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
     ];
 
@@ -59,4 +62,12 @@ class User extends Authenticatable
         // Assuming roles are stored in a 'roles' attribute or related model
         return in_array($role, $this->role);
     }
+
+    // public function createToken(Request $request)
+    // {
+    //     $user = User::find(1); // Replace with the appropriate user lookup
+    //     $token = $user->createToken('MyApp')->plainTextToken;
+
+    //     return response()->json(['token' => $token]);
+    // }
 }

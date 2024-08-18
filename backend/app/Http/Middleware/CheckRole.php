@@ -36,8 +36,8 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !Auth::user()?->hasRole($this->role)) {
-            return redirect('/');
+        if (!Auth::check() || !Auth::hasRole($this->role)) {
+            return response()->json(['error' => 'Role does not exist']);
         }
         return $next($request);
     }
