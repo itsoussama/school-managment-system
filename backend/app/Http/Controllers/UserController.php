@@ -64,8 +64,11 @@ class UserController extends Controller
     // Display the specified resource
     public function show(User $user)
     {
-        $user->load('school', 'role');
-        return response()->json($user, Response::HTTP_OK);
+        if ($user->hasRole('Teacher')) {
+            $user->load('school', 'role');
+            return response()->json($user, Response::HTTP_OK);
+
+        }
     }
 
     // Update the specified resource in storage
