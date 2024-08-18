@@ -28,6 +28,7 @@
       "@src/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
       "@admin/*": ["src/admin/*"],
+      "@context/*": ["src/features/context/*"],
       "@components/*": ["src/components/*"],
       "@hooks/*": ["src/hooks/*"],
       "@lang/*": ["src/lang/*"],

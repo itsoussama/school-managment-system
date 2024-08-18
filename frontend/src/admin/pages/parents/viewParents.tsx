@@ -24,25 +24,69 @@ interface ViewModal {
   open: boolean;
 }
 
-const students = [
+const parents = [
   {
-    uid: "S001",
+    uid: "P001",
     fullName: "Leanne Graham",
-    grade_level: "10th",
-    date_birth: "2018-09-01",
-    guardian: {
-      img: "https://i.pravatar.cc/300?img=12",
-      fullName: "John Graham",
-    },
-    relationship: "Father",
-    enrollment_date: "2024-09-01",
+    Childs: [
+      {
+        img: "https://i.pravatar.cc/300?img=12",
+        fullName: "John Graham",
+      },
+      {
+        img: "https://i.pravatar.cc/300?img=12",
+        fullName: "John Graham",
+      },
+    ],
+    email: "test@example.com",
+    phone: "+212 600 0000",
+    time_spent: 360000000,
+  },
+  {
+    uid: "P002",
+    fullName: "Leanne Graham",
+    Childs: [
+      {
+        img: "https://i.pravatar.cc/300?img=12",
+        fullName: "John Graham",
+      },
+      {
+        img: "https://i.pravatar.cc/300?img=12",
+        fullName: "John Graham",
+      },
+      {
+        img: "https://i.pravatar.cc/300?img=12",
+        fullName: "John Graham",
+      },
+      {
+        img: "https://i.pravatar.cc/300?img=12",
+        fullName: "John Graham",
+      },
+      {
+        img: "https://i.pravatar.cc/300?img=12",
+        fullName: "John Graham",
+      },
+    ],
+    email: "test@example.com",
+    phone: "+212 600 0000",
+    time_spent: 360000000,
+  },
+  {
+    uid: "P003",
+    fullName: "Leanne Graham",
+    Childs: [
+      {
+        img: "https://i.pravatar.cc/300?img=12",
+        fullName: "John Graham",
+      },
+    ],
     email: "test@example.com",
     phone: "+212 600 0000",
     time_spent: 360000000,
   },
 ];
 
-export function ViewStudents() {
+export function ViewParents() {
   const { t } = useTranslation();
   // const [selectedItem, setSelectedItem] = useState()
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
@@ -116,10 +160,10 @@ export function ViewStudents() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>
           <span className="text-gray-600 dark:text-gray-300">
-            {t("students")}
+            {t("parents")}
           </span>
         </Breadcrumb.Item>
-        <Breadcrumb.Item>{t("view-students")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("view-parents")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
@@ -525,7 +569,13 @@ export function ViewStudents() {
                 base: "w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
                 shadow:
                   "absolute left-0 top-0 -z-10 h-full w-full rounded-s bg-white drop-shadow-md dark:bg-black",
-                wrapper: "relative",
+                wrapper: "relative z-auto",
+              },
+              row: {
+                base: "group/row group",
+                hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
+                striped:
+                  "odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700",
               },
             }}
             striped
@@ -536,11 +586,7 @@ export function ViewStudents() {
               </Table.HeadCell>
               <Table.HeadCell>UID</Table.HeadCell>
               <Table.HeadCell>Fullname</Table.HeadCell>
-              <Table.HeadCell>Grade level</Table.HeadCell>
-              <Table.HeadCell>Date of birth</Table.HeadCell>
-              <Table.HeadCell>Parent / Guardian</Table.HeadCell>
-              <Table.HeadCell>Relationship</Table.HeadCell>
-              <Table.HeadCell>Enrollment Date</Table.HeadCell>
+              <Table.HeadCell>Child(s)</Table.HeadCell>
               <Table.HeadCell>Email</Table.HeadCell>
               <Table.HeadCell>Phone</Table.HeadCell>
               <Table.HeadCell>Active time</Table.HeadCell>
@@ -571,33 +617,6 @@ export function ViewStudents() {
                   />
                 </Table.Cell>
                 <Table.Cell className="p-2">
-                  {" "}
-                  <RSelect
-                    id="subject"
-                    name="subject"
-                    icon={
-                      <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                    }
-                    custom-style={{
-                      inputStyle: "px-9 !py-1",
-                      labelStyle: "mb-0 !inline",
-                    }}
-                    handleChange={() => null}
-                    attribute={{ defaultValue: "" }}
-                  >
-                    <option value="" selected disabled>
-                      All
-                    </option>
-                    <option value="math">Math</option>
-                    <option value="lecture">Lecture</option>
-                    <option value="science">Science</option>
-                  </RSelect>
-                </Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2">
-                  {/* <div className="h-2 w-12 bg-red-600"></div> */}
                   <Input
                     id="search"
                     type="text"
@@ -614,8 +633,12 @@ export function ViewStudents() {
                     handleChange={(ev) => console.log(ev)}
                   />
                 </Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
               </Table.Row>
-              {students.map((student, key) => (
+              {parents.map((parent, key) => (
                 <Table.Row
                   key={key}
                   className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
@@ -628,44 +651,67 @@ export function ViewStudents() {
                     />
                   </Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {student.uid}
+                    {parent.uid}
                   </Table.Cell>
-                  <Table.Cell>{student.fullName}</Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {student.grade_level}
-                  </Table.Cell>
-                  <Table.Cell>{student.date_birth}</Table.Cell>
+                  <Table.Cell>{parent.fullName}</Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                     <div className="flex items-center gap-x-2">
-                      <img
-                        className="w-10 rounded-full"
-                        src="https://i.pravatar.cc/300?img=12"
-                        alt="profile"
-                      />
-                      <span>{student.guardian.fullName}</span>
+                      {parent.Childs.length > 2 ? (
+                        <div className="flex -space-x-4 rtl:space-x-reverse">
+                          {parent.Childs.map(
+                            (child, key) =>
+                              key < 3 && (
+                                <img
+                                  className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                  src={child.img}
+                                  alt="profile"
+                                />
+                              ),
+                          )}
+                          <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500">
+                            {`+${parent.Childs.length - 3}`}
+                          </div>
+                        </div>
+                      ) : // <span>{parent.Childs[0].fullName}</span>
+                      parent.Childs.length > 1 ? (
+                        <div className="flex -space-x-4 rtl:space-x-reverse">
+                          {parent.Childs.map((child) => (
+                            <img
+                              className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                              src={child.img}
+                              alt="profile"
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <>
+                          <img
+                            className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                            src={parent.Childs[0].img}
+                            alt="profile"
+                          />
+                          <span>{parent.Childs[0].fullName}</span>
+                        </>
+                      )}
                     </div>
                   </Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {student.relationship}
+                    {parent.email}
                   </Table.Cell>
-                  <Table.Cell>{student.enrollment_date}</Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {student.email}
-                  </Table.Cell>
-                  <Table.Cell>{student.phone}</Table.Cell>
+                  <Table.Cell>{parent.phone}</Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                     <span>
-                      {formatDuration(student.time_spent).hour}
+                      {formatDuration(parent.time_spent).hour}
                       <span className="text-gray-500 dark:text-gray-400">
                         {" "}
                         h{" "}
                       </span>
-                      {formatDuration(student.time_spent).minute > 0
-                        ? formatDuration(student.time_spent).minute
+                      {formatDuration(parent.time_spent).minute > 0
+                        ? formatDuration(parent.time_spent).minute
                         : ""}
                       <span
                         className="text-gray-500 dark:text-gray-400"
-                        hidden={formatDuration(student.time_spent).minute <= 0}
+                        hidden={formatDuration(parent.time_spent).minute <= 0}
                       >
                         {" "}
                         min
@@ -675,7 +721,7 @@ export function ViewStudents() {
                   <Table.Cell className="flex w-fit gap-x-2">
                     <div
                       onClick={() =>
-                        setViewOpenModal({ id: student.uid, open: true })
+                        setViewOpenModal({ id: parent.uid, open: true })
                       }
                       className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
                     >
@@ -684,7 +730,7 @@ export function ViewStudents() {
                     <div
                       className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                       onClick={() =>
-                        setEditOpenModal({ id: student.uid, open: true })
+                        setEditOpenModal({ id: parent.uid, open: true })
                       }
                     >
                       <FaPen className="text-green-600 dark:text-green-500" />
@@ -692,7 +738,7 @@ export function ViewStudents() {
                     <div
                       className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                       onClick={() =>
-                        setDeleteOpenModal({ id: student.uid, open: true })
+                        setDeleteOpenModal({ id: parent.uid, open: true })
                       }
                     >
                       <FaTrash className="text-red-600 dark:text-red-500" />
