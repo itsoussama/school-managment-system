@@ -15,6 +15,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        if (auth()->user()->hasRole(config('roles.admin')) || auth()->user()->hasRole(config('roles.teacher'))) {
         $perPage = $request->input('per_page', 5);
         info($request);
         // Get sort parameters from request
@@ -23,61 +24,65 @@ class UserController extends Controller
 
         $users = User::with('school', 'role')->orderBy($sortColumn, $sortDirection)->paginate($perPage);
         return response()->json($users, Response::HTTP_OK);
+    }else {
+        return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+
+    }
     }
 
     // Show the form for creating a new resource (not typically used in APIs)
     public function store(Request $request)
     {
 
-        // print_r($request);die;
-        try{
-            $validation = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'phone' => 'required|string|max:255',
-                'password' => 'required|string|min:8|confirmed',
-                'school_id' => 'required|exists:schools,id',
-                'roles' => 'required|array',
-                'roles.*' => 'exists:roles,id',
-            ]);
-            if ($validation) {
-                $user = User::create([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'phone' => $request->phone,
-                    'password' => bcrypt($request->password),
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+            try{
+                $validation = $request->validate([
+                    'name' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255|unique:users',
+                    'phone' => 'required|string|max:255',
+                    'password' => 'required|string|min:8|confirmed',
+                    'school_id' => 'required|exists:schools,id',
+                    'roles' => 'required|array',
+                    'roles.*' => 'exists:roles,id',
                 ]);
-                $user->school()->associate($request->school_id);
-                $user->role()->sync($request->roles);
-                $user->save();
-            }else {
-                return $request;
+                if ($validation) {
+                    $user = User::create([
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'phone' => $request->phone,
+                        'password' => bcrypt($request->password),
+                    ]);
+                    $user->school()->associate($request->school_id);
+                    $user->role()->sync($request->roles);
+                    $user->save();
+                }else {
+                    return $request;
+                }
+
+
+                return response()->json($user, Response::HTTP_CREATED);
             }
+            catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json($e->errors(), 422);
+            }
+    }else {
+        return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
 
-
-            return response()->json($user, Response::HTTP_CREATED);
-        }
-        catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json($e->errors(), 422);
-        }
+    }
     }
 
     // Display the specified resource
     public function show(User $user)
     {
-        if (auth()->user()->hasRole(config('roles.student'))) {
-            $user->load('school', 'role');
-            return response()->json($user, Response::HTTP_OK);
+        $user->load('school', 'role');
+        return response()->json($user, Response::HTTP_OK);
 
-        }else {
-            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
-
-        }
     }
 
     // Update the specified resource in storage
     public function update(Request $request, User $user)
     {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
         try {
                 // Validate incoming request
                 $request->validate([
@@ -118,16 +123,25 @@ class UserController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json($e->errors(), 422);
         }
+    }else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+
+        }
     }
 
     public function destroy(User $user)
     {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
         $user->role()->detach();
 
         $user->delete();
 
 
         return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
+    }else {
+        return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+
+    }
     }
     public function export()
     {
