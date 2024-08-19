@@ -1,7 +1,6 @@
 import Items from "@src/components/item";
 import { Layout } from "@src/layout/layout";
 import { useContext, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { hoverContext } from "@context/hoverContext";
 import {
   FaChartPie,
@@ -178,6 +177,7 @@ function Menu() {
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
             />
           }
+          containerClass="locked"
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
@@ -194,6 +194,7 @@ function Menu() {
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
             />
           }
+          containerClass="locked"
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
@@ -213,6 +214,7 @@ function Menu() {
         }
         subMenuVisible={subMenuVisible}
         onToggleSubMenu={onToggleSubMenu}
+        containerClass="locked"
       >
         <Items itemId="subitem-1" itemName="sub item" />
         <Items itemId="subitem-2" itemName="sub item" />

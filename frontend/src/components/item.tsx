@@ -1,6 +1,6 @@
 import { hoverContext } from "@src/features/context/hoverContext";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import React, { useContext, useEffect } from "react";
+import React, { HTMLAttributes, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
@@ -19,6 +19,7 @@ interface Item {
   children?: React.ReactNode;
   subMenuVisible?: SubMenuVisible;
   onToggleSubMenu?: (param: string) => void;
+  containerClass?: string;
 }
 
 //   <FaUserTie className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
@@ -31,12 +32,14 @@ export default function Items({
   children,
   subMenuVisible = { ref: "", state: false },
   onToggleSubMenu = (param) => param,
+  containerClass,
 }: Item) {
   const { t } = useTranslation();
   const maxXxl = useBreakpoint("min", "2xl");
 
   const { isOnHover } = useContext(hoverContext);
   const location = useLocation();
+  // const className = customStyle?.className;
 
   useEffect(() => {
     console.log(location);
@@ -47,7 +50,7 @@ export default function Items({
       {/* {location.state} */}
       <div
         id={itemId}
-        className={`relative flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === itemId && `${maxXxl || isOnHover ? "bg-gray-100 dark:bg-gray-700" : location.state?.active && "after:max-2xl:absolute after:max-2xl:right-0 after:max-2xl:top-0 after:max-2xl:h-full after:max-2xl:w-1 after:max-2xl:translate-x-3 after:max-2xl:rounded-xs after:max-2xl:bg-blue-600"}`} ${isActive ? (isOnHover || maxXxl ? "bg-blue-600" : "after:max-2xl:absolute after:max-2xl:right-0 after:max-2xl:top-0 after:max-2xl:h-full after:max-2xl:w-1 after:max-2xl:translate-x-3 after:max-2xl:rounded-xs after:max-2xl:bg-blue-600") : ""}`}
+        className={`relative flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === itemId && `${maxXxl || isOnHover ? "bg-gray-100 dark:bg-gray-700" : location.state?.active && "after:max-2xl:absolute after:max-2xl:right-0 after:max-2xl:top-0 after:max-2xl:h-full after:max-2xl:w-1 after:max-2xl:translate-x-3 after:max-2xl:rounded-xs after:max-2xl:bg-blue-600"}`} ${isActive ? (isOnHover || maxXxl ? "bg-blue-600" : "after:max-2xl:absolute after:max-2xl:right-0 after:max-2xl:top-0 after:max-2xl:h-full after:max-2xl:w-1 after:max-2xl:translate-x-3 after:max-2xl:rounded-xs after:max-2xl:bg-blue-600") : ""} ${containerClass}`}
         onClick={() => onToggleSubMenu(itemId)}
       >
         {icon}
