@@ -74,9 +74,13 @@ class UserController extends Controller
     // Display the specified resource
     public function show(User $user)
     {
-        $user->load('school', 'role');
-        return response()->json($user, Response::HTTP_OK);
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+            $user->load('school', 'role');
+            return response()->json($user, Response::HTTP_OK);
+        }else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
 
+        }
     }
 
     // Update the specified resource in storage

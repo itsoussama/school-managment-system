@@ -13,6 +13,7 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
+        $expiryMinutes = (int)config('token.time_expired');
         $credentials = $request->only('email', 'password');
         $user = User::where('email', $credentials['email'])->first();
 
@@ -20,8 +21,8 @@ class AuthController extends Controller
         return response()->json(['error' => 'Unauthorized'], 401);
 
     }
-        $token = $user->createToken('private_school')->plainTextToken;
-
+        // $token = $user->createToken('private_school')->plainTextToken;
+        $token = $user->createToken('token-name', ['*'], now()->addMinutes($expiryMinutes))->plainTextToken;
         return response()->json(['user' => $user,'token' => $token]);
 
     }

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::get('/export-users', [UserController::class, 'export']);
     Route::post('/import-users', [UserController::class, 'import']);
