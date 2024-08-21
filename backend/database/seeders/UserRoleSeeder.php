@@ -5,6 +5,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\School;
+use App\Models\Subject;
 
 class UserRoleSeeder extends Seeder
 {
@@ -31,7 +32,8 @@ class UserRoleSeeder extends Seeder
                     'school_id' => $school->id
                 ])->each(function ($user) use ($role) {
                     $user->role()->attach($role);
-
+                    $subjects = Subject::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
+                    $user->subjects()->sync($subjects);
                 });
             }
         }
