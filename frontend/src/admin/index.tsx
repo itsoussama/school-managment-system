@@ -14,7 +14,6 @@ import { FaScaleBalanced } from "react-icons/fa6";
 import { Link, Outlet, useMatch } from "react-router-dom";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { axiosInstance } from "@services/axiosConfig";
-import AxiosProvider from "@src/features/services/axiosProvider";
 
 interface SubMenuVisible {
   ref: string;
@@ -25,7 +24,6 @@ interface SubMenuVisible {
 
 export default function Admin() {
   const [isOnHover, setIsOnHover] = useState<boolean>(false);
-  const axiosApi = AxiosProvider();
 
   useEffect(() => {
     // axiosInstance
@@ -54,19 +52,15 @@ export default function Admin() {
     if (!localStorage.getItem("accessToken")) {
       axiosInstance
         .post("/api/login", {
-          email: "admin@example.com",
+          email: "clare52@example.net",
           password: "password",
         })
         .then((res) => {
-          localStorage.setItem("accessToken", res.data.token.plainTextToken);
-          localStorage.setItem(
-            "refreshToken",
-            res.data.refresh_token.plainTextToken,
-          );
+          localStorage.setItem("accessToken", res.data.token);
+          localStorage.setItem("refreshToken", res.data.refresh_token);
         });
     }
-    axiosApi.get("/api/users").then((res) => console.log(res));
-  }, [axiosApi]);
+  }, []);
 
   return (
     <hoverContext.Provider

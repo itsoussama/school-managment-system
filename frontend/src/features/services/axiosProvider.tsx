@@ -1,8 +1,8 @@
 import axios from "axios";
-import { axiosInstance } from "./axiosConfig";
+import { axiosAuthInstance } from "./axiosConfig";
 
 export default function AxiosProvider() {
-  axiosInstance.interceptors.request.use(
+  axiosAuthInstance.interceptors.request.use(
     (request) => {
       const accessToken = localStorage.getItem("accessToken");
       if (accessToken) {
@@ -15,17 +15,18 @@ export default function AxiosProvider() {
     },
   );
 
-  axiosInstance.interceptors.response.use(
+  axiosAuthInstance.interceptors.response.use(
     (response) => response, // Directly return successful responses.
     async (error) => {
       const originalRequest = error.config;
+
       if (error.response.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true; // Mark the request as retried to avoid infinite loops.
         try {
           const refreshToken = localStorage.getItem("refreshToken"); // Retrieve the stored refresh token.
           // Make a request to your auth server to refresh the token.
           const response = await axios.post(
-            import.meta.env.VITE_SERVER_URL + "/auth/refresh-token",
+            import.meta.env.VITE_SERVER_URL + "auth/refresh-token",
             {
               refreshToken,
             },
@@ -35,15 +36,15 @@ export default function AxiosProvider() {
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("refreshToken", newRefreshToken);
           // Update the authorization header with the new access token.
-          axiosInstance.defaults.headers.common["Authorization"] =
+          axiosAuthInstance.defaults.headers.common["Authorization"] =
             `Bearer ${accessToken}`;
-          return axiosInstance(originalRequest); // Retry the original request with the new access token.
+          return axiosAuthInstance(originalRequest); // Retry the original request with the new access token.
         } catch (refreshError) {
           // Handle refresh token errors by clearing stored tokens and redirecting to the login page.
           console.error("Token refresh failed:", refreshError);
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
-          // window.location.href = '/login';
+          window.location.href = "/";
           return Promise.reject(refreshError);
         }
       }
@@ -51,6 +52,5 @@ export default function AxiosProvider() {
     },
   );
 
-  const axiosApi = axiosInstance;
-  return axiosApi;
+  return axiosAuthInstance;
 }

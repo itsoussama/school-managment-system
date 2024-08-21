@@ -1,6 +1,13 @@
 import { Input, RSelect } from "@src/components/input";
 
-import { Breadcrumb, Checkbox, Modal, Pagination, Table } from "flowbite-react";
+import {
+  Breadcrumb,
+  Checkbox,
+  Modal,
+  Pagination,
+  Spinner,
+  Table,
+} from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,6 +22,10 @@ import {
 import { IoFilter } from "react-icons/io5";
 import { Link } from "react-router-dom";
 
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { getTeachers } from "@api";
+import { SkeletonProfile } from "@src/components/skeleton";
+
 interface Check {
   id?: string;
   status?: boolean;
@@ -25,37 +36,58 @@ interface ViewModal {
   open: boolean;
 }
 
-const teachers = [
-  {
-    uid: "T001",
-    fullName: "Leanne Graham",
-    subject: "Math",
-    gradeLevel: "9th, 10th",
-    email: "test@example.com",
-    phone: "+212 600 0000",
-    time_spent: 360000000,
-  },
-  {
-    uid: "T002",
-    fullName: "Leanne Graham",
-    subject: "Math",
-    gradeLevel: "9th, 10th",
-    email: "test@example.com",
-    phone: "+212 600 0000",
-    time_spent: 560000000,
-  },
-  {
-    uid: "T003",
-    fullName: "Leanne Graham",
-    subject: "Math",
-    gradeLevel: "9th, 10th",
-    email: "test@example.com",
-    phone: "+212 600 0000",
-    time_spent: 760000000,
-  },
-];
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: [
+    {
+      id: string;
+      name: string;
+    },
+  ];
+}
+
+// const teachers = [
+//   {
+//     uid: "T001",
+//     fullName: "Leanne Graham",
+//     subject: "Math",
+//     gradeLevel: "9th, 10th",
+//     email: "test@example.com",
+//     phone: "+212 600 0000",
+//     time_spent: 360000000,
+//   },
+//   {
+//     uid: "T002",
+//     fullName: "Leanne Graham",
+//     subject: "Math",
+//     gradeLevel: "9th, 10th",
+//     email: "test@example.com",
+//     phone: "+212 600 0000",
+//     time_spent: 560000000,
+//   },
+//   {
+//     uid: "T003",
+//     fullName: "Leanne Graham",
+//     subject: "Math",
+//     gradeLevel: "9th, 10th",
+//     email: "test@example.com",
+//     phone: "+212 600 0000",
+//     time_spent: 760000000,
+//   },
+// ];
 
 export function ViewTeachers() {
+  // const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState<number>();
+  const getTeachersQuery = useQuery({
+    queryKey: ["getTeachers", page, perPage],
+    queryFn: () => getTeachers(page, perPage),
+    placeholderData: keepPreviousData,
+  });
   const { t } = useTranslation();
   // const [selectedItem, setSelectedItem] = useState()
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
@@ -99,13 +131,13 @@ export function ViewTeachers() {
     }
   };
 
-  const formatDuration = (duration: number) => {
-    const convertToHour = Math.floor(duration / (1000 * 60 * 60));
-    const remainingMilliseconds = duration % (1000 * 60 * 60);
-    const convertToMinute = Math.floor(remainingMilliseconds / (1000 * 60));
+  // const formatDuration = (duration: number) => {
+  //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
+  //   const remainingMilliseconds = duration % (1000 * 60 * 60);
+  //   const convertToMinute = Math.floor(remainingMilliseconds / (1000 * 60));
 
-    return { hour: convertToHour, minute: convertToMinute };
-  };
+  //   return { hour: convertToHour, minute: convertToMinute };
+  // };
 
   useEffect(() => {
     const checkedVal = checkAll.filter((val) => val.status === true)
@@ -160,10 +192,9 @@ export function ViewTeachers() {
         <Modal.Body>
           <div className="flex gap-x-8">
             <div className="flex flex-col items-start rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-              <img
-                className="max-w-40 rounded-full"
-                src="https://i.pravatar.cc/300"
-                alt=""
+              <SkeletonProfile
+                imgSource="https://i.pravatar.cc/300"
+                imgSize={40}
               />
             </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
@@ -293,6 +324,7 @@ export function ViewTeachers() {
           <div className="flex gap-x-8">
             <div className="flex flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <img
+                id="profile"
                 className="max-w-40 rounded-full"
                 src="https://i.pravatar.cc/300"
                 alt=""
@@ -531,7 +563,7 @@ export function ViewTeachers() {
           ""
         )}
 
-        <div className="w-full overflow-x-auto">
+        <div className="w-full overflow-x-auto rounded-lg">
           <Table
             theme={{
               root: {
@@ -539,6 +571,16 @@ export function ViewTeachers() {
                 shadow:
                   "absolute left-0 top-0 -z-10 h-full w-full rounded-s bg-white drop-shadow-md dark:bg-black",
                 wrapper: "relative",
+              },
+              body: {
+                cell: {
+                  base: "px-6 py-4",
+                },
+              },
+              head: {
+                cell: {
+                  base: "bg-gray-50 px-6 py-3 dark:bg-gray-700",
+                },
               },
             }}
             striped
@@ -558,7 +600,15 @@ export function ViewTeachers() {
                 <span className="sr-only w-full">Actions</span>
               </Table.HeadCell>
             </Table.Head>
-            <Table.Body ref={tableRef} className="divide-y">
+            <Table.Body ref={tableRef} className="relative divide-y">
+              {getTeachersQuery.isLoading ||
+                (getTeachersQuery.isFetching && (
+                  <div
+                    className={`table-loader absolute z-50 grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                  >
+                    <Spinner />
+                  </div>
+                ))}
               <Table.Row>
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
@@ -630,32 +680,33 @@ export function ViewTeachers() {
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
               </Table.Row>
-              {teachers.map((teacher, key) => (
-                <Table.Row
-                  key={key}
-                  className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
-                >
-                  <Table.Cell className="p-4">
-                    <Checkbox
-                      id={(key + 1).toString()}
-                      name="checkbox"
-                      onChange={(ev) => handleCheck(ev.currentTarget.id)}
-                    />
-                  </Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {teacher.uid}
-                  </Table.Cell>
-                  <Table.Cell>{teacher.fullName}</Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {teacher.subject}
-                  </Table.Cell>
-                  <Table.Cell>{teacher.gradeLevel}</Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {teacher.email}
-                  </Table.Cell>
-                  <Table.Cell>{teacher.phone}</Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    <span>
+              {getTeachersQuery.data?.data.data.map(
+                (data: Teacher, key: number) => (
+                  <Table.Row
+                    key={key}
+                    className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
+                  >
+                    <Table.Cell className="p-4">
+                      <Checkbox
+                        id={(key + 1).toString()}
+                        name="checkbox"
+                        onChange={(ev) => handleCheck(ev.currentTarget.id)}
+                      />
+                    </Table.Cell>
+                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                      T00{data.id}
+                    </Table.Cell>
+                    <Table.Cell>{data.name}</Table.Cell>
+                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                      -
+                    </Table.Cell>
+                    <Table.Cell>-</Table.Cell>
+                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                      {data.email}
+                    </Table.Cell>
+                    <Table.Cell>{data.phone}</Table.Cell>
+                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                      {/* <span>
                       {formatDuration(teacher.time_spent).hour}
                       <span className="text-gray-500 dark:text-gray-400">
                         {" "}
@@ -671,67 +722,76 @@ export function ViewTeachers() {
                         {" "}
                         min
                       </span>
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell className="flex w-fit gap-x-2">
-                    <div
-                      onClick={() =>
-                        setViewOpenModal({ id: teacher.uid, open: true })
-                      }
-                      className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                    >
-                      <FaEye className="text-blue-600 dark:text-blue-500" />
-                    </div>
-                    <div
-                      className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                      onClick={() =>
-                        setEditOpenModal({ id: teacher.uid, open: true })
-                      }
-                    >
-                      <FaPen className="text-green-600 dark:text-green-500" />
-                    </div>
-                    <div
-                      className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                      onClick={() =>
-                        setDeleteOpenModal({ id: teacher.uid, open: true })
-                      }
-                    >
-                      <FaTrash className="text-red-600 dark:text-red-500" />
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
+                    </span> */}
+                      -
+                    </Table.Cell>
+                    <Table.Cell className="flex w-fit gap-x-2">
+                      <div
+                        onClick={() =>
+                          setViewOpenModal({ id: data.id, open: true })
+                        }
+                        className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                      >
+                        <FaEye className="text-blue-600 dark:text-blue-500" />
+                      </div>
+                      <div
+                        className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                        onClick={() =>
+                          setEditOpenModal({ id: data.id, open: true })
+                        }
+                      >
+                        <FaPen className="text-green-600 dark:text-green-500" />
+                      </div>
+                      <div
+                        className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                        onClick={() =>
+                          setDeleteOpenModal({ id: data.id, open: true })
+                        }
+                      >
+                        <FaTrash className="text-red-600 dark:text-red-500" />
+                      </div>
+                    </Table.Cell>
+                  </Table.Row>
+                ),
+              )}
             </Table.Body>
           </Table>
         </div>
+        {/* <p>`${getTeachers}`</p> */}
 
         <div className="flex w-full items-center justify-between px-5 py-4">
           <span className="text-gray-500 dark:text-gray-400">
             Showing{" "}
             <span className="font-semibold text-gray-900 dark:text-white">
-              1-10
+              {getTeachersQuery.data?.data.from}-
+              {getTeachersQuery.data?.data.to}
             </span>{" "}
             of{" "}
             <span className="font-semibold text-gray-900 dark:text-white">
-              100
+              {getTeachersQuery.data?.data.total}
             </span>
           </span>
           <div className="flex items-center gap-x-4">
             <RSelect
               id="row-num"
               name="row-num"
-              handleChange={(ev) => console.log(ev)}
+              handleChange={(ev) =>
+                setPerPage(parseInt((ev.target as HTMLTextAreaElement).value))
+              }
               custom-style={{ inputStyle: "!py-2" }}
-              attribute={{ defaultValue: 10 }}
+              attribute={{ defaultValue: getTeachersQuery.data?.data.per_page }}
             >
+              <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={15}>15</option>
               <option value={20}>20</option>
             </RSelect>
             <Pagination
-              currentPage={10}
-              onPageChange={() => 1}
-              totalPages={20}
+              currentPage={getTeachersQuery.data?.data.current_page ?? 1}
+              onPageChange={(page) =>
+                !getTeachersQuery.isPlaceholderData && setPage(page)
+              }
+              totalPages={getTeachersQuery.data?.data.last_page ?? 1}
               theme={{
                 pages: {
                   next: {

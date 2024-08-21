@@ -9,6 +9,7 @@ export default defineConfig({
       "@src": path.resolve(__dirname, "src"),
       "@axios": path.resolve(__dirname, "src/main"),
       "@services": path.resolve(__dirname, "src/features/services"),
+      "@api": path.resolve(__dirname, "src/features/api"),
       "@assets": path.resolve(__dirname, "src/assets"),
       "@admin": path.resolve(__dirname, "src/admin"),
       "@context": path.resolve(__dirname, "src/features/context"),
