@@ -8,6 +8,7 @@ import { ViewStudents } from "./admin/pages/students/viewStudents";
 import AddParent from "./admin/pages/parents/addParent";
 import { ViewParents } from "./admin/pages/parents/viewParents";
 
+
 export const routes = createBrowserRouter([
   {
     path: "/",

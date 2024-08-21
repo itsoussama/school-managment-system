@@ -1,6 +1,6 @@
 import Items from "@src/components/item";
 import { Layout } from "@src/layout/layout";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { hoverContext } from "@context/hoverContext";
 import {
   FaChartPie,
@@ -13,6 +13,8 @@ import {
 import { FaScaleBalanced } from "react-icons/fa6";
 import { Link, Outlet, useMatch } from "react-router-dom";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import { axiosInstance } from "@services/axiosConfig";
+import AxiosProvider from "@src/features/services/axiosProvider";
 
 interface SubMenuVisible {
   ref: string;
@@ -23,6 +25,49 @@ interface SubMenuVisible {
 
 export default function Admin() {
   const [isOnHover, setIsOnHover] = useState<boolean>(false);
+  const axiosApi = AxiosProvider();
+
+  useEffect(() => {
+    // axiosInstance
+    //   .get("/sanctum/csrf-cookie")
+    //   .then((res) => {
+    //     res.status == 204
+    //       ? axiosInstance
+    //           .post("/api/login", {
+    //             email: "tspinka@example.org",
+    //             password: "password",
+    //           })
+    //           .then((res) =>
+    //             axiosInstance
+    //               .get("/api/users", {
+    //                 headers: {
+    //                   "Content-Type": "application/json",
+    //                   Authorization: `Bearer ${res.data?.token}`,
+    //                 },
+    //               })
+    //               .then((user) => console.log(user.status)),
+    //           )
+    //       : console.log("unable to connect");
+    //   })
+    //   .catch((error) => console.log(error));
+
+    if (!localStorage.getItem("accessToken")) {
+      axiosInstance
+        .post("/api/login", {
+          email: "admin@example.com",
+          password: "password",
+        })
+        .then((res) => {
+          localStorage.setItem("accessToken", res.data.token.plainTextToken);
+          localStorage.setItem(
+            "refreshToken",
+            res.data.refresh_token.plainTextToken,
+          );
+        });
+    }
+    axiosApi.get("/api/users").then((res) => console.log(res));
+  }, [axiosApi]);
+
   return (
     <hoverContext.Provider
       value={{ isOnHover: isOnHover, setIsOnHover: setIsOnHover }}

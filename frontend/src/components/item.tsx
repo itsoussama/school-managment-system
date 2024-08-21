@@ -1,6 +1,6 @@
 import { hoverContext } from "@src/features/context/hoverContext";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import React, { HTMLAttributes, useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
@@ -40,10 +40,6 @@ export default function Items({
   const { isOnHover } = useContext(hoverContext);
   const location = useLocation();
   // const className = customStyle?.className;
-
-  useEffect(() => {
-    console.log(location);
-  }, [location]);
 
   return (
     <div className="w-full">
