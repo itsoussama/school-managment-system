@@ -17,6 +17,8 @@ import {
   FaLock,
   FaPen,
   FaSearch,
+  FaSortDown,
+  FaSortUp,
   FaTrash,
 } from "react-icons/fa";
 import { IoFilter } from "react-icons/io5";
@@ -96,6 +98,7 @@ export function ViewTeachers() {
   const queryClient = useQueryClient();
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
 
+  const [sortPosition, setSortPosition] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
@@ -242,6 +245,22 @@ export function ViewTeachers() {
       id: prev?.id as string,
       open: false,
     }));
+  };
+
+  const handleSort = () => {
+    setSortPosition((prev) => prev + 1);
+    switch (sortPosition) {
+      case 0:
+        console.log("ascending");
+        return;
+      case 1:
+        console.log("descending");
+        return;
+      default:
+        console.log("normal");
+        setSortPosition(0);
+        return;
+    }
   };
 
   // const formatDuration = (duration: number) => {
@@ -692,7 +711,23 @@ export function ViewTeachers() {
                 <Checkbox id="0" onChange={() => handleCheck()} />
               </Table.HeadCell>
               <Table.HeadCell>UID</Table.HeadCell>
-              <Table.HeadCell>Fullname</Table.HeadCell>
+              <Table.HeadCell>
+                <div className="flex items-center justify-center gap-x-3">
+                  <span className="inline-block">Fullname</span>
+                  <div className="flex flex-col" onClick={() => handleSort()}>
+                    <FaSortUp
+                      className={`h-2.5 ${sortPosition === 2 ? "text-gray-600" : "text-gray-400"}`}
+                      viewBox="0 -140 320 412"
+                    />
+                    <FaSortDown
+                      className={`h-2.5 ${sortPosition === 1 ? "text-gray-600" : "text-gray-400"}`}
+                      viewBox="0 240 320 412"
+                    />
+                    {/* viewBox="0 -90 330 330"
+viewBox="0 230 330 330" */}
+                  </div>
+                </div>
+              </Table.HeadCell>
               <Table.HeadCell>Subject</Table.HeadCell>
               <Table.HeadCell>Grade level</Table.HeadCell>
               <Table.HeadCell>Email</Table.HeadCell>
