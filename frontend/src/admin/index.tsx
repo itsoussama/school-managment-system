@@ -1,7 +1,7 @@
 import Items from "@src/components/item";
 import { Layout } from "@src/layout/layout";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useContext, useEffect, useState } from "react";
+import { hoverContext } from "@context/hoverContext";
 import {
   FaChartPie,
   FaCog,
@@ -12,17 +12,64 @@ import {
 } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 import { Link, Outlet, useMatch } from "react-router-dom";
+import useBreakpoint from "@src/hooks/useBreakpoint";
+import { axiosInstance } from "@services/axiosConfig";
 
 interface SubMenuVisible {
   ref: string;
   state: boolean;
 }
 
+// todo: use this context component to get hover value to use in childs
+
 export default function Admin() {
+  const [isOnHover, setIsOnHover] = useState<boolean>(false);
+
+  useEffect(() => {
+    // axiosInstance
+    //   .get("/sanctum/csrf-cookie")
+    //   .then((res) => {
+    //     res.status == 204
+    //       ? axiosInstance
+    //           .post("/api/login", {
+    //             email: "tspinka@example.org",
+    //             password: "password",
+    //           })
+    //           .then((res) =>
+    //             axiosInstance
+    //               .get("/api/users", {
+    //                 headers: {
+    //                   "Content-Type": "application/json",
+    //                   Authorization: `Bearer ${res.data?.token}`,
+    //                 },
+    //               })
+    //               .then((user) => console.log(user.status)),
+    //           )
+    //       : console.log("unable to connect");
+    //   })
+    //   .catch((error) => console.log(error));
+
+    if (!localStorage.getItem("accessToken")) {
+      axiosInstance
+        .post("/api/login", {
+          email: "liliana69@example.org",
+          password: "password",
+        })
+        .then((res) => {
+          localStorage.setItem("accessToken", res.data.token);
+          localStorage.setItem("refreshToken", res.data.refresh_token);
+        });
+    }
+  }, []);
+
   return (
-    <Layout menu={<Menu />}>
-      <Outlet />
-    </Layout>
+    <hoverContext.Provider
+      value={{ isOnHover: isOnHover, setIsOnHover: setIsOnHover }}
+    >
+      <Layout menu={<Menu />}>
+        <Outlet />
+      </Layout>
+    </hoverContext.Provider>
   );
 }
 
@@ -31,6 +78,9 @@ function Menu() {
     ref: "",
     state: false,
   });
+
+  const { isOnHover } = useContext(hoverContext);
+
   const onToggleSubMenu = (item: string) => {
     toggleSubMenuVisible((prev) => ({
       ref: item,
@@ -43,40 +93,59 @@ function Menu() {
   //   return match;
   // };
 
-  const { t } = useTranslation();
+  const maxXxl = useBreakpoint("min", "2xl");
+
   return (
-    <div className="menu">
-      <div className="main-menu flex flex-col gap-y-2">
-        <div className={`rounded-s ${useMatch("/") ? "bg-blue-600" : ""}`}>
+    <div className="menu z-50 w-full">
+      <div className="main-menu flex w-full flex-col gap-y-2">
+        {/* <div
+          className={`rounded-s ${useMatch("/") ? `relative bg-blue-600 ${!isOnHover ? "max-2xl:bg-transparent after:max-2xl:absolute after:max-2xl:right-0 after:max-2xl:top-0 after:max-2xl:h-full after:max-2xl:w-1 after:max-2xl:translate-x-3 after:max-2xl:rounded-xs after:max-2xl:bg-blue-600" : ""}` : ""}`}
+        >
           <Link to={"/"} className="flex w-full items-center px-2 py-3">
             <FaChartPie
-              className={`mr-3 text-lg ${useMatch("/") ? "text-white" : "text-gray-500 dark:text-gray-100"}`}
+              className={`mr-3 flex-shrink-0 text-lg ${!isOnHover ? "max-2xl:mx-auto" : ""} ${useMatch("/") ? "text-white" : "text-gray-500 dark:text-gray-100"}`}
             />
             <span
-              className={`text-s ${useMatch("/") ? "text-white" : "text-gray-900 dark:text-gray-100"}`}
+              className={`text-s text-nowrap ${!isOnHover ? "max-2xl:hidden" : ""} ${useMatch("/") ? "text-white" : "text-gray-900 dark:text-gray-100"}`}
             >
               {t("overview")}
             </span>
           </Link>
-        </div>
+        </div> */}
+
+        <Link to="/">
+          <Items
+            itemId="item-0"
+            itemName="overview"
+            isActive={useMatch("/") ? true : false}
+            icon={
+              <FaChartPie
+                className={`mr-3 flex-shrink-0 text-lg ${!isOnHover ? "max-2xl:mx-auto" : ""} ${useMatch("/") && (maxXxl || isOnHover) ? "text-white" : "text-gray-500 dark:text-gray-100"}`}
+              />
+            }
+            onToggleSubMenu={onToggleSubMenu}
+          />
+        </Link>
 
         <Items
-          itemId="item-0"
+          itemId="item-1"
           itemName="teachers"
           icon={
-            <FaUserTie className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
+            <FaUserTie
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+            />
           }
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Link to="teachers/new">
+          <Link to="teachers/new" state={{ active: true }}>
             <Items
               isActive={useMatch("/teachers/new") ? true : false}
               itemId="subitem-1"
               itemName="new-teacher"
             />
           </Link>
-          <Link to="teachers/manage">
+          <Link to="teachers/manage" state={{ active: true }}>
             <Items
               isActive={useMatch("/teachers/manage") ? true : false}
               itemId="subitem-1"
@@ -86,22 +155,24 @@ function Menu() {
         </Items>
 
         <Items
-          itemId="item-1"
+          itemId="item-2"
           itemName="students"
           icon={
-            <FaUserGraduate className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
+            <FaUserGraduate
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+            />
           }
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Link to="students/new">
+          <Link to="students/new" state={{ active: true }}>
             <Items
               isActive={useMatch("/students/new") ? true : false}
               itemId="subitem-1"
               itemName="new-student"
             />
           </Link>
-          <Link to="students/manage">
+          <Link to="students/manage" state={{ active: true }}>
             <Items
               isActive={useMatch("/students/manage") ? true : false}
               itemId="subitem-1"
@@ -111,39 +182,58 @@ function Menu() {
         </Items>
 
         <Items
-          itemId="item-2"
+          itemId="item-3"
           itemName="parents"
           icon={
-            <FaUserFriends className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
+            <FaUserFriends
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+            />
           }
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Items itemId="subitem-1" itemName="sub item" />
-          <Items itemId="subitem-2" itemName="sub item" />
-          <Items itemId="subitem-3" itemName="sub item" />
-        </Items>
-
-        <Items
-          itemId="item-3"
-          itemName="finance"
-          icon={
-            <FaScaleBalanced className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
-          }
-          subMenuVisible={subMenuVisible}
-          onToggleSubMenu={onToggleSubMenu}
-        >
-          <Items itemId="subitem-1" itemName="sub item" />
-          <Items itemId="subitem-2" itemName="sub item" />
-          <Items itemId="subitem-3" itemName="sub item" />
+          <Link to="Parents/new" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/Parents/new") ? true : false}
+              itemId="subitem-1"
+              itemName="new-parent"
+            />
+          </Link>
+          <Link to="Parents/manage" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/Parents/manage") ? true : false}
+              itemId="subitem-1"
+              itemName="view-parents"
+            />
+          </Link>
         </Items>
 
         <Items
           itemId="item-4"
+          itemName="finance"
+          icon={
+            <FaScaleBalanced
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+            />
+          }
+          containerClass="locked"
+          subMenuVisible={subMenuVisible}
+          onToggleSubMenu={onToggleSubMenu}
+        >
+          <Items itemId="subitem-1" itemName="sub item" />
+          <Items itemId="subitem-2" itemName="sub item" />
+          <Items itemId="subitem-3" itemName="sub item" />
+        </Items>
+
+        <Items
+          itemId="item-5"
           itemName="resources"
           icon={
-            <FaLayerGroup className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
+            <FaLayerGroup
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+            />
           }
+          containerClass="locked"
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
@@ -154,13 +244,16 @@ function Menu() {
       </div>
       <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>
       <Items
-        itemId="item-5"
+        itemId="item-6"
         itemName="settings"
         icon={
-          <FaCog className="mr-3 text-lg text-gray-500 dark:text-gray-100" />
+          <FaCog
+            className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+          />
         }
         subMenuVisible={subMenuVisible}
         onToggleSubMenu={onToggleSubMenu}
+        containerClass="locked"
       >
         <Items itemId="subitem-1" itemName="sub item" />
         <Items itemId="subitem-2" itemName="sub item" />

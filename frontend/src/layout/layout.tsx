@@ -1,10 +1,13 @@
 import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
+import logo_minimize from "@assets/icon.png";
 import { UseTheme } from "@hooks/useTheme";
 import { FaBell, FaCalendar, FaCompress, FaExpand } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
+import useBreakpoint from "@src/hooks/useBreakpoint";
+import { hoverContext } from "@context/hoverContext";
 
 interface Layout {
   children: React.ReactNode;
@@ -14,6 +17,8 @@ interface Layout {
 
 export function Layout({ children, menu }: Layout) {
   const [theme, setTheme] = UseTheme();
+  const { isOnHover, setIsOnHover } = useContext(hoverContext);
+  const minXxl = useBreakpoint("min", "2xl");
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
 
   const onToggleFullScreen = () => {
@@ -24,6 +29,13 @@ export function Layout({ children, menu }: Layout) {
       document.exitFullscreen();
       toggleFullScreen(false);
     }
+  };
+
+  const onMouseEnter = () => {
+    setIsOnHover(true);
+  };
+  const onMouseLeave = () => {
+    setIsOnHover(false);
   };
 
   useEffect(() => {
@@ -41,17 +53,35 @@ export function Layout({ children, menu }: Layout) {
 
   return (
     <div className={`flex w-full flex-1 ${theme === "dark" ? "dark" : ""}`}>
-      <div className="w-[18%] max-w-max bg-light-primary p-3 dark:bg-dark-primary">
-        <img
-          className="mx-auto mb-7 mt-3"
-          src={theme === "dark" ? logo_dark : logo_light}
-          width={"150px"}
-          alt="logo"
-        />
+      <div
+        className={`z-[10] w-[18%] bg-light-primary p-3 max-2xl:absolute max-2xl:h-full ${isOnHover ? "max-2xl:w-[18%]" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        <div
+          className={`flex ${!minXxl && !isOnHover ? "min-h-16" : "min-h-20"} items-start justify-start transition-all`}
+        >
+          <img
+            className={`mx-auto mt-3 transition-all ${!minXxl && !isOnHover ? "w-7" : ""}`}
+            src={
+              minXxl || isOnHover
+                ? theme === "dark"
+                  ? logo_dark
+                  : logo_light
+                : logo_minimize
+            }
+            // width={"150px"}
+            alt="logo"
+          />
+        </div>
+        {/* <div className="my-4 w-full border-t border-gray-300 dark:border-gray-700"></div> */}
+
         {menu}
       </div>
-      <div className="mx-6 my-6 w-[82%]">
-        <div className="flex h-12 justify-between border-white">
+      <div
+        className={`mx-8 my-6 w-[82%] flex-1 transition-all ${isOnHover ? "max-2xl:ms-0" : "max-2xl:ms-24"}`}
+      >
+        <div className="flex h-12 w-full justify-between border-white">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">
               Mardi 12 juillet 2024

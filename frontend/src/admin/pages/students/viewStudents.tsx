@@ -34,6 +34,7 @@ const students = [
       img: "https://i.pravatar.cc/300?img=12",
       fullName: "John Graham",
     },
+    relationship: "Father",
     enrollment_date: "2024-09-01",
     email: "test@example.com",
     phone: "+212 600 0000",
@@ -537,7 +538,8 @@ export function ViewStudents() {
               <Table.HeadCell>Fullname</Table.HeadCell>
               <Table.HeadCell>Grade level</Table.HeadCell>
               <Table.HeadCell>Date of birth</Table.HeadCell>
-              <Table.HeadCell>Parents / Guardian</Table.HeadCell>
+              <Table.HeadCell>Parent / Guardian</Table.HeadCell>
+              <Table.HeadCell>Relationship</Table.HeadCell>
               <Table.HeadCell>Enrollment Date</Table.HeadCell>
               <Table.HeadCell>Email</Table.HeadCell>
               <Table.HeadCell>Phone</Table.HeadCell>
@@ -634,14 +636,17 @@ export function ViewStudents() {
                   </Table.Cell>
                   <Table.Cell>{student.date_birth}</Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    <div className="flex items-center gap-x-3">
+                    <div className="flex items-center gap-x-2">
                       <img
-                        className="w-8 rounded-full"
+                        className="w-10 rounded-full"
                         src="https://i.pravatar.cc/300?img=12"
                         alt="profile"
                       />
                       <span>{student.guardian.fullName}</span>
                     </div>
+                  </Table.Cell>
+                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                    {student.relationship}
                   </Table.Cell>
                   <Table.Cell>{student.enrollment_date}</Table.Cell>
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
@@ -651,12 +656,15 @@ export function ViewStudents() {
                   <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                     <span>
                       {formatDuration(student.time_spent).hour}
-                      <span className="text-gray-400"> h </span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        {" "}
+                        h{" "}
+                      </span>
                       {formatDuration(student.time_spent).minute > 0
                         ? formatDuration(student.time_spent).minute
                         : ""}
                       <span
-                        className="text-gray-400"
+                        className="text-gray-500 dark:text-gray-400"
                         hidden={formatDuration(student.time_spent).minute <= 0}
                       >
                         {" "}
