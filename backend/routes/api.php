@@ -7,9 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
+// Route::get('/auth/refresh-token', [AuthController::class, 'refreshToken'])->middleware('auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value);
 
 Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value])->group(function () {
-    Route::get('/auth/refresh-token', [AuthController::class, 'refreshToken']);;
+    Route::post('/auth/refresh-token', [AuthController::class, 'refreshToken']);;
 });
 
 Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value])->group(function () {

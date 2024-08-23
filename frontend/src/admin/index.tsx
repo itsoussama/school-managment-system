@@ -1,7 +1,6 @@
 import Items from "@src/components/item";
 import { Layout } from "@src/layout/layout";
-import { useContext, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useContext, useEffect, useState } from "react";
 import { hoverContext } from "@context/hoverContext";
 import {
   FaChartPie,
@@ -14,6 +13,7 @@ import {
 import { FaScaleBalanced } from "react-icons/fa6";
 import { Link, Outlet, useMatch } from "react-router-dom";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import { axiosInstance } from "@services/axiosConfig";
 
 interface SubMenuVisible {
   ref: string;
@@ -24,6 +24,44 @@ interface SubMenuVisible {
 
 export default function Admin() {
   const [isOnHover, setIsOnHover] = useState<boolean>(false);
+
+  useEffect(() => {
+    // axiosInstance
+    //   .get("/sanctum/csrf-cookie")
+    //   .then((res) => {
+    //     res.status == 204
+    //       ? axiosInstance
+    //           .post("/api/login", {
+    //             email: "tspinka@example.org",
+    //             password: "password",
+    //           })
+    //           .then((res) =>
+    //             axiosInstance
+    //               .get("/api/users", {
+    //                 headers: {
+    //                   "Content-Type": "application/json",
+    //                   Authorization: `Bearer ${res.data?.token}`,
+    //                 },
+    //               })
+    //               .then((user) => console.log(user.status)),
+    //           )
+    //       : console.log("unable to connect");
+    //   })
+    //   .catch((error) => console.log(error));
+
+    if (!localStorage.getItem("accessToken")) {
+      axiosInstance
+        .post("/api/login", {
+          email: "liliana69@example.org",
+          password: "password",
+        })
+        .then((res) => {
+          localStorage.setItem("accessToken", res.data.token);
+          localStorage.setItem("refreshToken", res.data.refresh_token);
+        });
+    }
+  }, []);
+
   return (
     <hoverContext.Provider
       value={{ isOnHover: isOnHover, setIsOnHover: setIsOnHover }}
@@ -178,6 +216,7 @@ function Menu() {
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
             />
           }
+          containerClass="locked"
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
@@ -194,6 +233,7 @@ function Menu() {
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
             />
           }
+          containerClass="locked"
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
@@ -213,6 +253,7 @@ function Menu() {
         }
         subMenuVisible={subMenuVisible}
         onToggleSubMenu={onToggleSubMenu}
+        containerClass="locked"
       >
         <Items itemId="subitem-1" itemName="sub item" />
         <Items itemId="subitem-2" itemName="sub item" />

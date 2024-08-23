@@ -58,9 +58,11 @@ export function Layout({ children, menu }: Layout) {
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        <div className={`flex items-start justify-start transition-all`}>
+        <div
+          className={`flex ${!minXxl && !isOnHover ? "min-h-16" : "min-h-20"} items-start justify-start transition-all`}
+        >
           <img
-            className={`mx-auto mb-7 mt-3 transition-all ${!minXxl && !isOnHover ? "w-7" : ""}`}
+            className={`mx-auto mt-3 transition-all ${!minXxl && !isOnHover ? "w-7" : ""}`}
             src={
               minXxl || isOnHover
                 ? theme === "dark"
@@ -72,6 +74,7 @@ export function Layout({ children, menu }: Layout) {
             alt="logo"
           />
         </div>
+        {/* <div className="my-4 w-full border-t border-gray-300 dark:border-gray-700"></div> */}
 
         {menu}
       </div>

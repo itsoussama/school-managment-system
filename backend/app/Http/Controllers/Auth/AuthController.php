@@ -19,19 +19,18 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $user = User::where('email', $credentials['email'])->first();
 
-    if (!$user || !Hash::check($credentials['password'], $user->password)) {
-        return response()->json(['error' => 'Unauthorized'], 401);
-
-    }
-    $accessToken = $user->createToken('access_token', [TokenAbility::ACCESS_API->value], Carbon::now()->addMinutes(config('sanctum.ac_expiration')));
-    $refreshToken = $user->createToken('refresh_token', [TokenAbility::ISSUE_ACCESS_TOKEN->value], Carbon::now()->addMinutes(config('sanctum.rt_expiration')));
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        $accessToken = $user->createToken('access_token', [TokenAbility::ACCESS_API->value], Carbon::now()->addMinutes(config('sanctum.ac_expiration')));
+        $refreshToken = $user->createToken('refresh_token', [TokenAbility::ISSUE_ACCESS_TOKEN->value], Carbon::now()->addMinutes(config('sanctum.rt_expiration')));
         return response()->json([
             'user' => $user,
             'token' => $accessToken->plainTextToken,
             'refresh_token' => $refreshToken->plainTextToken
         ]);
-
     }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

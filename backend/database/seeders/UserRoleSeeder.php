@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -12,7 +13,7 @@ class UserRoleSeeder extends Seeder
     public function run()
     {
         // Create roles
-        $roles = ['Admin', 'Teacher', 'Student'];
+        $roles = ['Administrator', 'Teacher', 'Student'];
         $schools = [];
 
         // Create schools
@@ -32,8 +33,10 @@ class UserRoleSeeder extends Seeder
                     'school_id' => $school->id
                 ])->each(function ($user) use ($role) {
                     $user->role()->attach($role);
+
                     $subjects = Subject::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
                     $user->subjects()->sync($subjects);
+
                 });
             }
         }

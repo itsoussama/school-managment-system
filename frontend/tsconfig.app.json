@@ -26,6 +26,9 @@
     "baseUrl": ".",
     "paths": {
       "@src/*": ["src/*"],
+      "@axios": ["src/main"],
+      "@services/*": ["src/features/services/*"],
+      "@api": ["src/features/api"],
       "@assets/*": ["src/assets/*"],
       "@admin/*": ["src/admin/*"],
       "@context/*": ["src/features/context/*"],
