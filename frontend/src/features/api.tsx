@@ -8,4 +8,9 @@ const getTeachers = async (page = 1, perPage = 5) => {
   return response;
 };
 
-export { getTeachers };
+const getTeacher = async (id: string) => {
+  const response = await axiosApi.get("/api/users/" + id);
+  return response;
+};
+
+export { getTeachers, getTeacher };

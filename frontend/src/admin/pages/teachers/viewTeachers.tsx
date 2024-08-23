@@ -8,7 +8,7 @@ import {
   Spinner,
   Table,
 } from "flowbite-react";
-import React, { useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
@@ -22,9 +22,13 @@ import {
 import { IoFilter } from "react-icons/io5";
 import { Link } from "react-router-dom";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { getTeachers } from "@api";
-import { SkeletonProfile } from "@src/components/skeleton";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { getTeacher, getTeachers } from "@api";
+import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 
 interface Check {
   id?: string;
@@ -47,6 +51,14 @@ interface Teacher {
       name: string;
     },
   ];
+}
+
+interface FormData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
 }
 
 // const teachers = [
@@ -80,22 +92,32 @@ interface Teacher {
 // ];
 
 export function ViewTeachers() {
-  // const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
+
+  const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
-  const getTeachersQuery = useQuery({
-    queryKey: ["getTeachers", page, perPage],
-    queryFn: () => getTeachers(page, perPage),
-    placeholderData: keepPreviousData,
-  });
-  const { t } = useTranslation();
-  // const [selectedItem, setSelectedItem] = useState()
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openViewModal, setViewOpenModal] = useState<ViewModal>();
   const [openEditModal, setEditOpenModal] = useState<ViewModal>();
   const [openDeleteModal, setDeleteOpenModal] = useState<ViewModal>();
+  const [formData, setFormData] = useState<FormData>();
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
+  const { t } = useTranslation();
+  // const userId = useRef<string>(null)
+  const getTeachersQuery = useQuery({
+    queryKey: ["getTeachers", page, perPage],
+    queryFn: () => getTeachers(page, perPage),
+    placeholderData: keepPreviousData,
+  });
+
+  const getTeacherQuery = useQuery({
+    queryKey: ["getTeacher", openViewModal?.id || openEditModal?.id],
+    queryFn: () =>
+      getTeacher((openViewModal?.id || openEditModal?.id) as string),
+    enabled: !!(openViewModal?.id || openEditModal?.id),
+  });
+  // const [selectedItem, setSelectedItem] = useState()
 
   const handleCheck = (id = "") => {
     const firstCheckbox = document.getElementById("0") as HTMLInputElement;
@@ -131,6 +153,23 @@ export function ViewTeachers() {
     }
   };
 
+  const editModal = async (id: string, isOpen: boolean) => {
+    setEditOpenModal({ id: id, open: isOpen });
+    const { data: teacherData } = await queryClient.ensureQueryData({
+      queryKey: ["getTeacher"],
+      queryFn: () => getTeacher(id),
+    });
+    console.log(teacherData);
+
+    setFormData({
+      id: teacherData?.id,
+      firstName: teacherData?.name,
+      lastName: teacherData?.name,
+      email: teacherData?.email,
+      phone: teacherData?.phone,
+    });
+  };
+
   // const formatDuration = (duration: number) => {
   //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
   //   const remainingMilliseconds = duration % (1000 * 60 * 60);
@@ -144,6 +183,24 @@ export function ViewTeachers() {
       .length as number;
     setNumChecked(checkedVal);
   }, [checkAll]);
+
+  // useEffect(() => {
+  //   setFormData({
+  //     id: getTeacherQuery.data?.data.id,
+  //     firstName: getTeacherQuery.data?.data.name,
+  //     lastName: getTeacherQuery.data?.data.name,
+  //     email: getTeacherQuery.data?.data.email,
+  //     phone: getTeacherQuery.data?.data.phone,
+  //   });
+  // }, [getTeacherQuery]);
+
+  const onChange = (event: ChangeEvent) => {
+    setFormData((prev) => ({
+      ...(prev as FormData),
+      [event.target.id]: (event.target as HTMLInputElement).value,
+    }));
+    // console.log((event.target as HTMLInputElement).value);
+  };
 
   return (
     <div className="flex w-full flex-col">
@@ -194,7 +251,7 @@ export function ViewTeachers() {
             <div className="flex flex-col items-start rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource="https://i.pravatar.cc/300"
-                imgSize={40}
+                imgSize="40"
               />
             </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
@@ -202,48 +259,60 @@ export function ViewTeachers() {
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   Personal Information
                 </h1>
-                <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      First name:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      Leanne
-                    </span>
+                <SkeletonContent isLoaded={getTeacherQuery.isFetched}>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        First name:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        {
+                          getTeacherQuery.data?.data.name.split(" ")[
+                            getTeacherQuery.data?.data.name.split(" ").length -
+                              2
+                          ]
+                        }
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        Last name:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        {
+                          getTeacherQuery.data?.data.name.split(" ")[
+                            getTeacherQuery.data?.data.name.split(" ").length -
+                              1
+                          ]
+                        }
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        Email:
+                      </span>
+                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                        {getTeacherQuery.data?.data.email}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        Phone:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        {getTeacherQuery.data?.data.phone}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        Address:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        123 Rue Principale
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Last name:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      Graham
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Email:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      test@example.com
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Phone:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      +212 600 0000
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Address:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      123 Rue Principale
-                    </span>
-                  </div>
-                </div>
+                </SkeletonContent>
               </div>
 
               <div className="w-full space-y-3">
@@ -253,42 +322,26 @@ export function ViewTeachers() {
                 <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      First name:
+                      Subject:
                     </span>
                     <span className="text-base text-gray-900 dark:text-white">
-                      Leanne
+                      Maths
                     </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Last name:
+                      Grade Levels:
                     </span>
                     <span className="text-base text-gray-900 dark:text-white">
-                      Graham
+                      9th, 10th
                     </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Email:
+                      Start date:
                     </span>
                     <span className="text-base text-gray-900 dark:text-white">
-                      test@example.com
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Phone:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      +212 600 0000
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Address:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      123 Rue Principale
+                      2024/01/01
                     </span>
                   </div>
                 </div>
@@ -322,12 +375,10 @@ export function ViewTeachers() {
         <Modal.Header>{openEditModal?.id}</Modal.Header>
         <Modal.Body>
           <div className="flex gap-x-8">
-            <div className="flex flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-              <img
-                id="profile"
-                className="max-w-40 rounded-full"
-                src="https://i.pravatar.cc/300"
-                alt=""
+            <div className="flex min-w-fit flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+              <SkeletonProfile
+                imgSource="https://i.pravatar.cc/300"
+                imgSize="40"
               />
               <button className="btn-dark dark:btn-gray">Upload photo</button>
               <div className="flex flex-col">
@@ -353,20 +404,22 @@ export function ViewTeachers() {
                 <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                   <Input
                     type="text"
-                    id="firstname"
-                    name="firstname"
+                    id="firstName"
+                    name="firstName"
                     label="First name"
                     placeholder="First name"
-                    handleChange={() => null}
+                    value={formData?.firstName}
+                    onChange={onChange}
                   />
 
                   <Input
                     type="text"
-                    id="lastname"
-                    name="lastname"
+                    id="lastName"
+                    name="lastName"
                     label="Last name"
                     placeholder="Last name"
-                    handleChange={() => null}
+                    value={formData?.lastName}
+                    onChange={onChange}
                   />
 
                   <Input
@@ -375,18 +428,20 @@ export function ViewTeachers() {
                     name="address"
                     label="Address"
                     placeholder="123 Rue Principale"
-                    handleChange={() => null}
+                    value="123 Rue Principale"
+                    onChange={(e) => console.log(e.target.value)}
                     custom-style={{ containerStyle: "col-span-full" }}
                   />
 
                   <Input
                     type="tel"
-                    id="tel"
-                    name="tel"
+                    id="phone"
+                    name="phone"
                     label="Phone number"
                     placeholder="06 00 00 00"
-                    handleChange={() => null}
-                    attribute={{ pattern: "(06 | 05)[0-9]{2}[0-9]{4}" }}
+                    pattern="(06 | 05)[0-9]{2}[0-9]{4}"
+                    value={formData?.phone}
+                    onChange={onChange}
                   />
 
                   <Input
@@ -395,7 +450,8 @@ export function ViewTeachers() {
                     name="email"
                     label="Email"
                     placeholder="Johndoe@example.com"
-                    handleChange={() => null}
+                    value={formData?.email}
+                    onChange={onChange}
                   />
 
                   <Input
@@ -410,7 +466,7 @@ export function ViewTeachers() {
                     icon={
                       <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                     }
-                    handleChange={() => null}
+                    onChange={(e) => console.log(e.target.value)}
                   />
 
                   <Input
@@ -425,7 +481,7 @@ export function ViewTeachers() {
                     icon={
                       <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                     }
-                    handleChange={() => null}
+                    onChange={(e) => console.log(e.target.value)}
                   />
                 </div>
               </div>
@@ -500,7 +556,6 @@ export function ViewTeachers() {
               id="verfication"
               name="verfication"
               placeholder="XXXXXX"
-              handleChange={() => null}
             />
           </div>
         </Modal.Body>
@@ -600,10 +655,13 @@ export function ViewTeachers() {
                 <span className="sr-only w-full">Actions</span>
               </Table.HeadCell>
             </Table.Head>
+
             <Table.Body ref={tableRef} className="relative divide-y">
               {getTeachersQuery.isLoading ||
                 (getTeachersQuery.isFetching && (
                   <div
+                    slot="row"
+                    role="row"
                     className={`table-loader absolute z-50 grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
                   >
                     <Spinner />
@@ -627,7 +685,6 @@ export function ViewTeachers() {
                       inputStyle: "px-8 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
-                    handleChange={(ev) => console.log(ev)}
                   />
                 </Table.Cell>
                 <Table.Cell className="p-2">
@@ -641,10 +698,9 @@ export function ViewTeachers() {
                       inputStyle: "px-9 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
-                    handleChange={() => null}
-                    attribute={{ defaultValue: "" }}
+                    defaultValue={""}
                   >
-                    <option value="" selected disabled>
+                    <option value="" disabled>
                       All
                     </option>
                     <option value="math">Math</option>
@@ -663,10 +719,9 @@ export function ViewTeachers() {
                       inputStyle: "px-9 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
-                    handleChange={() => null}
-                    attribute={{ defaultValue: "", multiple: true }}
+                    defaultValue=""
                   >
-                    <option value="" selected disabled>
+                    <option value="" disabled>
                       All
                     </option>
                     <option value="grade_1">Grade 1</option>
@@ -736,9 +791,7 @@ export function ViewTeachers() {
                       </div>
                       <div
                         className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                        onClick={() =>
-                          setEditOpenModal({ id: data.id, open: true })
-                        }
+                        onClick={() => editModal(data.id, true)}
                       >
                         <FaPen className="text-green-600 dark:text-green-500" />
                       </div>
@@ -775,11 +828,9 @@ export function ViewTeachers() {
             <RSelect
               id="row-num"
               name="row-num"
-              handleChange={(ev) =>
-                setPerPage(parseInt((ev.target as HTMLTextAreaElement).value))
-              }
+              onChange={(ev) => setPerPage(parseInt(ev.target.value))}
               custom-style={{ inputStyle: "!py-2" }}
-              attribute={{ defaultValue: getTeachersQuery.data?.data.per_page }}
+              defaultValue={getTeachersQuery.data?.data.per_page}
             >
               <option value={5}>5</option>
               <option value={10}>10</option>

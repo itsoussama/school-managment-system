@@ -1,31 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { FaImage } from "react-icons/fa6";
 
 interface Image {
   imgSource: string;
-  imgSize: number;
+  imgSize: string;
 }
 
-function SkeletonProfile({ imgSource, imgSize }: Image) {
+function SkeletonProfile({ imgSource, imgSize = "40" }: Image) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
-
-  //   const handleImageLoad = () => {
-  //     // console.log(imgRef.current);
-  //   };
 
   useEffect(() => {
     imgRef.current?.addEventListener("load", () => {
       setLoaded(true);
     });
-    // console.log(imgRef.current instanceof Element);
   }, [imgRef]);
 
   return (
     <>
       <img
         id="profile"
-        className={`max-w-${imgSize.toString()} ${!loaded ? "hidden" : ""} rounded-full`}
+        className={`max-w-${imgSize} ${!loaded ? "hidden" : ""} rounded-full`}
         src={imgSource}
         alt="profile"
         ref={imgRef}
@@ -34,7 +29,7 @@ function SkeletonProfile({ imgSource, imgSize }: Image) {
       {!loaded && (
         <div
           role="status"
-          className={`animate-pulse h-${imgSize.toString()} w-${imgSize.toString()} space-y-8 overflow-hidden rounded-full md:flex md:items-center md:space-x-8 md:space-y-0 rtl:space-x-reverse`}
+          className={`h-${imgSize} w-${imgSize} animate-pulse space-y-8 overflow-hidden rounded-full md:flex md:items-center md:space-x-8 md:space-y-0 rtl:space-x-reverse`}
         >
           <div
             className={`flex h-full w-full items-center justify-center bg-gray-300 dark:bg-gray-700`}
@@ -49,4 +44,26 @@ function SkeletonProfile({ imgSource, imgSize }: Image) {
   );
 }
 
-export { SkeletonProfile };
+// type Status = "idle" | "fetching" | "loading" | "refetching";
+interface FCSkeletonContent {
+  isLoaded: boolean;
+  children: ReactNode;
+}
+
+function SkeletonContent({ isLoaded = false, children }: FCSkeletonContent) {
+  return !isLoaded ? (
+    <div role="status" className="max-w-sm animate-pulse">
+      <div className="mb-4 h-2.5 w-48 rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="mb-2.5 h-2 max-w-[360px] rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="mb-2.5 h-2 rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="mb-2.5 h-2 max-w-[330px] rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="mb-2.5 h-2 max-w-[300px] rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="h-2 max-w-[360px] rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <span className="sr-only">Loading...</span>
+    </div>
+  ) : (
+    children
+  );
+}
+
+export { SkeletonProfile, SkeletonContent };
