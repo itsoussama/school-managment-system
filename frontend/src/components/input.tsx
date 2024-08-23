@@ -52,7 +52,7 @@ function Input({
         />
       </div>
       {error && (
-        <div className="mt-1.5">
+        <div className="mt-1.5 flex items-center">
           <FaExclamationCircle className="mr-2 text-red-500" />
           <span className="error text-red-500">{error}</span>
         </div>
@@ -89,7 +89,7 @@ function Checkbox({
           className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 peer-checked:block"
         />
         {error && (
-          <div className="mt-1.5">
+          <div className="mt-1.5 flex items-center">
             <FaExclamationCircle className="mr-2 text-red-500" />
             <span className="error text-red-500">{error}</span>
           </div>
@@ -139,7 +139,7 @@ function RSelect({
         </select>
       </div>
       {error && (
-        <div className="mt-1.5">
+        <div className="mt-1.5 flex items-center">
           <FaExclamationCircle className="mr-2 text-red-500" />
           <span className="error text-red-500">{error}</span>
         </div>

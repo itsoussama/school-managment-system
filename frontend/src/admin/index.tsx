@@ -52,7 +52,7 @@ export default function Admin() {
     if (!localStorage.getItem("accessToken")) {
       axiosInstance
         .post("/api/login", {
-          email: "clare52@example.net",
+          email: "liliana69@example.org",
           password: "password",
         })
         .then((res) => {

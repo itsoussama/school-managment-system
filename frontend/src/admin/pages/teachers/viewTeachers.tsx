@@ -24,10 +24,11 @@ import { Link } from "react-router-dom";
 
 import {
   keepPreviousData,
+  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { getTeacher, getTeachers } from "@api";
+import { deleteTeacher, getTeacher, getTeachers, setTeacher } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 
 interface Check {
@@ -53,7 +54,7 @@ interface Teacher {
   ];
 }
 
-interface FormData {
+export interface FormData {
   id: string;
   firstName: string;
   lastName: string;
@@ -93,18 +94,27 @@ interface FormData {
 
 export function ViewTeachers() {
   const queryClient = useQueryClient();
+  // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
 
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
-  const [openViewModal, setViewOpenModal] = useState<ViewModal>();
-  const [openEditModal, setEditOpenModal] = useState<ViewModal>();
-  const [openDeleteModal, setDeleteOpenModal] = useState<ViewModal>();
-  const [formData, setFormData] = useState<FormData>();
+  const [openViewModal, setOpenViewModal] = useState<ViewModal>();
+  const [openEditModal, setOpenEditModal] = useState<ViewModal>();
+  const [openDeleteModal, setOpenDeleteModal] = useState<ViewModal>();
+  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
+  const [formData, setFormData] = useState<FormData>({
+    id: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const { t } = useTranslation();
   // const userId = useRef<string>(null)
+
   const getTeachersQuery = useQuery({
     queryKey: ["getTeachers", page, perPage],
     queryFn: () => getTeachers(page, perPage),
@@ -112,10 +122,33 @@ export function ViewTeachers() {
   });
 
   const getTeacherQuery = useQuery({
-    queryKey: ["getTeacher", openViewModal?.id || openEditModal?.id],
+    queryKey: [
+      "getTeacher",
+      openViewModal?.id || openEditModal?.id || openDeleteModal?.id,
+    ],
     queryFn: () =>
-      getTeacher((openViewModal?.id || openEditModal?.id) as string),
-    enabled: !!(openViewModal?.id || openEditModal?.id),
+      getTeacher(
+        (openViewModal?.id ||
+          openEditModal?.id ||
+          openDeleteModal?.id) as string,
+      ),
+    enabled: !!(openViewModal?.id || openEditModal?.id || openDeleteModal?.id),
+  });
+
+  const setTeacherQuery = useMutation({ mutationFn: setTeacher });
+  const deleteTeacherQuery = useMutation({
+    mutationFn: deleteTeacher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getTeachers"] });
+      setOpenDeleteModal(undefined);
+      setFormData({
+        id: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+      });
+    },
   });
   // const [selectedItem, setSelectedItem] = useState()
 
@@ -153,14 +186,20 @@ export function ViewTeachers() {
     }
   };
 
+  const onChange = (event: ChangeEvent) => {
+    setFormData((prev) => ({
+      ...(prev as FormData),
+      [event.target.id]: (event.target as HTMLInputElement).value,
+    }));
+    // console.log((event.target as HTMLInputElement).value);
+  };
+
   const editModal = async (id: string, isOpen: boolean) => {
-    setEditOpenModal({ id: id, open: isOpen });
+    setOpenEditModal({ id: id, open: isOpen });
     const { data: teacherData } = await queryClient.ensureQueryData({
-      queryKey: ["getTeacher"],
+      queryKey: ["getTeacher", id],
       queryFn: () => getTeacher(id),
     });
-    console.log(teacherData);
-
     setFormData({
       id: teacherData?.id,
       firstName: teacherData?.name,
@@ -168,6 +207,41 @@ export function ViewTeachers() {
       email: teacherData?.email,
       phone: teacherData?.phone,
     });
+  };
+
+  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // console.log(formData);
+    setTeacherQuery.mutate(formData as FormData);
+    setOpenEditModal((prev) => ({
+      id: prev?.id as string,
+      open: false,
+    }));
+  };
+
+  const onResetUpdate = () => {
+    setTeacherQuery.reset();
+    setOpenEditModal((prev) => ({
+      id: prev?.id as string,
+      open: false,
+    }));
+  };
+
+  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsVerficationMatch(true);
+    const input = event.target as HTMLFormElement;
+
+    if (input.verfication.value !== getTeacherQuery.data?.data.name) {
+      setIsVerficationMatch(false);
+      return;
+    }
+
+    deleteTeacherQuery.mutate(openDeleteModal?.id as string);
+    setOpenDeleteModal((prev) => ({
+      id: prev?.id as string,
+      open: false,
+    }));
   };
 
   // const formatDuration = (duration: number) => {
@@ -183,24 +257,6 @@ export function ViewTeachers() {
       .length as number;
     setNumChecked(checkedVal);
   }, [checkAll]);
-
-  // useEffect(() => {
-  //   setFormData({
-  //     id: getTeacherQuery.data?.data.id,
-  //     firstName: getTeacherQuery.data?.data.name,
-  //     lastName: getTeacherQuery.data?.data.name,
-  //     email: getTeacherQuery.data?.data.email,
-  //     phone: getTeacherQuery.data?.data.phone,
-  //   });
-  // }, [getTeacherQuery]);
-
-  const onChange = (event: ChangeEvent) => {
-    setFormData((prev) => ({
-      ...(prev as FormData),
-      [event.target.id]: (event.target as HTMLInputElement).value,
-    }));
-    // console.log((event.target as HTMLInputElement).value);
-  };
 
   return (
     <div className="flex w-full flex-col">
@@ -239,7 +295,7 @@ export function ViewTeachers() {
           },
         }}
         onClose={() =>
-          setViewOpenModal((prev) => ({
+          setOpenViewModal((prev) => ({
             id: prev?.id as string,
             open: false,
           }))
@@ -251,7 +307,7 @@ export function ViewTeachers() {
             <div className="flex flex-col items-start rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource="https://i.pravatar.cc/300"
-                imgSize="40"
+                imgSize={{ width: "w-40", height: "h-40" }}
               />
             </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
@@ -366,152 +422,146 @@ export function ViewTeachers() {
           },
         }}
         onClose={() =>
-          setEditOpenModal((prev) => ({
+          setOpenEditModal((prev) => ({
             id: prev?.id as string,
             open: false,
           }))
         }
       >
-        <Modal.Header>{openEditModal?.id}</Modal.Header>
-        <Modal.Body>
-          <div className="flex gap-x-8">
-            <div className="flex min-w-fit flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-              <SkeletonProfile
-                imgSource="https://i.pravatar.cc/300"
-                imgSize="40"
-              />
-              <button className="btn-dark dark:btn-gray">Upload photo</button>
-              <div className="flex flex-col">
-                <span className="text-xs text-gray-700 dark:text-gray-500">
-                  Accepted format:{" "}
-                  <span className="text-gray-500 dark:text-gray-400">
-                    jpg, jpeg, png
+        <form onSubmit={onSubmitUpdate}>
+          <Modal.Header>{openEditModal?.id}</Modal.Header>
+          <Modal.Body>
+            <div className="flex gap-x-8">
+              <div className="flex min-w-fit flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+                <SkeletonProfile
+                  imgSource="https://i.pravatar.cc/300"
+                  imgSize={{ width: "w-40", height: "h-40" }}
+                />
+                <button className="btn-dark dark:btn-gray">Upload photo</button>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-700 dark:text-gray-500">
+                    Accepted format:{" "}
+                    <span className="text-gray-500 dark:text-gray-400">
+                      jpg, jpeg, png
+                    </span>
                   </span>
-                </span>
-                <span className="text-xs text-gray-700 dark:text-gray-500">
-                  Maximum size:{" "}
-                  <span className="text-gray-500 dark:text-gray-400">
-                    1024 mb
+                  <span className="text-xs text-gray-700 dark:text-gray-500">
+                    Maximum size:{" "}
+                    <span className="text-gray-500 dark:text-gray-400">
+                      1024 mb
+                    </span>
                   </span>
-                </span>
+                </div>
               </div>
-            </div>
-            <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  Personal Information
-                </h1>
-                <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                  <Input
-                    type="text"
-                    id="firstName"
-                    name="firstName"
-                    label="First name"
-                    placeholder="First name"
-                    value={formData?.firstName}
-                    onChange={onChange}
-                  />
+              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
+                <div className="w-full space-y-3">
+                  <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
+                    Personal Information
+                  </h1>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                    <Input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      label="First name"
+                      placeholder="First name"
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getTeacherQuery.isFetching && true}
+                      value={formData?.firstName}
+                      onChange={onChange}
+                    />
 
-                  <Input
-                    type="text"
-                    id="lastName"
-                    name="lastName"
-                    label="Last name"
-                    placeholder="Last name"
-                    value={formData?.lastName}
-                    onChange={onChange}
-                  />
+                    <Input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      label="Last name"
+                      placeholder="Last name"
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getTeacherQuery.isFetching && true}
+                      value={formData?.lastName}
+                      onChange={onChange}
+                    />
 
-                  <Input
-                    type="text"
-                    id="address"
-                    name="address"
-                    label="Address"
-                    placeholder="123 Rue Principale"
-                    value="123 Rue Principale"
-                    onChange={(e) => console.log(e.target.value)}
-                    custom-style={{ containerStyle: "col-span-full" }}
-                  />
+                    <Input
+                      type="text"
+                      id="address"
+                      name="address"
+                      label="Address"
+                      placeholder="123 Rue Principale"
+                      value="123 Rue Principale"
+                      onChange={(e) => console.log(e.target.value)}
+                      custom-style={{ containerStyle: "col-span-full" }}
+                    />
 
-                  <Input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    label="Phone number"
-                    placeholder="06 00 00 00"
-                    pattern="(06 | 05)[0-9]{2}[0-9]{4}"
-                    value={formData?.phone}
-                    onChange={onChange}
-                  />
+                    <Input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      label="Phone number"
+                      placeholder="06 00 00 00"
+                      pattern="(06|05)[0-9]{6}"
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getTeacherQuery.isFetching && true}
+                      value={formData?.phone}
+                      onChange={onChange}
+                    />
 
-                  <Input
-                    type="email"
-                    id="email"
-                    name="email"
-                    label="Email"
-                    placeholder="Johndoe@example.com"
-                    value={formData?.email}
-                    onChange={onChange}
-                  />
+                    <Input
+                      type="email"
+                      id="email"
+                      name="email"
+                      label="Email"
+                      placeholder="Johndoe@example.com"
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getTeacherQuery.isFetching && true}
+                      value={formData?.email}
+                      onChange={onChange}
+                    />
 
-                  <Input
-                    type="password"
-                    id="password"
-                    name="password"
-                    label="Password"
-                    placeholder="●●●●●●●"
-                    custom-style={{
-                      inputStyle: "px-10",
-                    }}
-                    icon={
-                      <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                    }
-                    onChange={(e) => console.log(e.target.value)}
-                  />
+                    <Input
+                      type="password"
+                      id="password"
+                      name="password"
+                      label="Password"
+                      placeholder="●●●●●●●"
+                      custom-style={{
+                        inputStyle: "px-10",
+                      }}
+                      icon={
+                        <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      }
+                      onChange={(e) => console.log(e.target.value)}
+                    />
 
-                  <Input
-                    type="password"
-                    id="password_confirmation"
-                    name="password_confirmation"
-                    label="Confirm password"
-                    placeholder="●●●●●●●"
-                    custom-style={{
-                      inputStyle: "px-10",
-                    }}
-                    icon={
-                      <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                    }
-                    onChange={(e) => console.log(e.target.value)}
-                  />
+                    <Input
+                      type="password"
+                      id="password_confirmation"
+                      name="password_confirmation"
+                      label="Confirm password"
+                      placeholder="●●●●●●●"
+                      custom-style={{
+                        inputStyle: "px-10",
+                      }}
+                      icon={
+                        <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      }
+                      onChange={(e) => console.log(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <button
-            className="btn-default !w-auto"
-            onClick={() =>
-              setEditOpenModal((prev) => ({
-                id: prev?.id as string,
-                open: false,
-              }))
-            }
-          >
-            I accept
-          </button>
-          <button
-            className="btn-danger !w-auto"
-            onClick={() =>
-              setEditOpenModal((prev) => ({
-                id: prev?.id as string,
-                open: false,
-              }))
-            }
-          >
-            Decline
-          </button>
-        </Modal.Footer>
+          </Modal.Body>
+          <Modal.Footer>
+            <button type="submit" className="btn-default !w-auto">
+              I accept
+            </button>
+            <button className="btn-danger !w-auto" onClick={onResetUpdate}>
+              Decline
+            </button>
+          </Modal.Footer>
+        </form>
       </Modal>
 
       <Modal
@@ -529,60 +579,57 @@ export function ViewTeachers() {
           },
         }}
         onClose={() =>
-          setDeleteOpenModal((prev) => ({
+          setOpenDeleteModal((prev) => ({
             id: prev?.id as string,
             open: false,
           }))
         }
       >
-        <Modal.Header>Delete User</Modal.Header>
-        <Modal.Body>
-          <div className="flex flex-col gap-x-8">
-            <p className="mb-3 text-gray-600 dark:text-gray-300">
-              Are you sure you want to delete <b>Leanne Graham?</b>
-            </p>
-            <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-              <FaExclamationTriangle className="text-white" size={53} />
-              <p className="text-white">
-                This will delete the user completely, and you can not undo this
-                action
+        <form onSubmit={onSubmitDelete}>
+          <Modal.Header>Delete User</Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-x-8">
+              <p className="mb-3 text-gray-600 dark:text-gray-300">
+                Are you sure you want to delete{" "}
+                <b>{getTeacherQuery.data?.data.name}</b>
               </p>
+              <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
+                <FaExclamationTriangle className="text-white" size={53} />
+                <p className="text-white">
+                  This will delete the user completely, and you can not undo
+                  this action
+                </p>
+              </div>
+              <p className="text-gray-900 dark:text-white">
+                Please retype <b>{getTeacherQuery.data?.data.name}</b>
+              </p>
+              <Input
+                type="text"
+                id="verfication"
+                name="verfication"
+                placeholder="John doe"
+                error={!isVerficationMatch ? "Values doesn't match" : null}
+                required
+              />
             </div>
-            <p className="text-gray-900 dark:text-white">
-              Please retype user id <b>A2400001</b>
-            </p>
-            <Input
-              type="text"
-              id="verfication"
-              name="verfication"
-              placeholder="XXXXXX"
-            />
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <button
-            className="btn-danger !w-auto"
-            onClick={() =>
-              setDeleteOpenModal((prev) => ({
-                id: prev?.id as string,
-                open: false,
-              }))
-            }
-          >
-            Delete
-          </button>
-          <button
-            className="btn-outline !w-auto"
-            onClick={() =>
-              setDeleteOpenModal((prev) => ({
-                id: prev?.id as string,
-                open: false,
-              }))
-            }
-          >
-            No, cancel
-          </button>
-        </Modal.Footer>
+          </Modal.Body>
+          <Modal.Footer>
+            <button type="submit" className="btn-danger !w-auto">
+              Delete
+            </button>
+            <button
+              className="btn-outline !w-auto"
+              onClick={() =>
+                setOpenDeleteModal((prev) => ({
+                  id: prev?.id as string,
+                  open: false,
+                }))
+              }
+            >
+              No, cancel
+            </button>
+          </Modal.Footer>
+        </form>
       </Modal>
 
       <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
@@ -659,19 +706,20 @@ export function ViewTeachers() {
             <Table.Body ref={tableRef} className="relative divide-y">
               {getTeachersQuery.isLoading ||
                 (getTeachersQuery.isFetching && (
-                  <div
-                    slot="row"
-                    role="row"
-                    className={`table-loader absolute z-50 grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
-                  >
-                    <Spinner />
-                  </div>
+                  <Table.Row>
+                    <Table.Cell className="p-0">
+                      <div
+                        className={`table-loader absolute left-0 top-0 z-50 grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                      >
+                        <Spinner />
+                      </div>
+                    </Table.Cell>
+                  </Table.Row>
                 ))}
               <Table.Row>
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2">
-                  {/* <div className="h-2 w-12 bg-red-600"></div> */}
                   <Input
                     id="search"
                     type="text"
@@ -783,7 +831,7 @@ export function ViewTeachers() {
                     <Table.Cell className="flex w-fit gap-x-2">
                       <div
                         onClick={() =>
-                          setViewOpenModal({ id: data.id, open: true })
+                          setOpenViewModal({ id: data.id, open: true })
                         }
                         className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
                       >
@@ -798,7 +846,7 @@ export function ViewTeachers() {
                       <div
                         className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                         onClick={() =>
-                          setDeleteOpenModal({ id: data.id, open: true })
+                          setOpenDeleteModal({ id: data.id, open: true })
                         }
                       >
                         <FaTrash className="text-red-600 dark:text-red-500" />

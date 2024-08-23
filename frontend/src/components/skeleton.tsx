@@ -3,10 +3,13 @@ import { FaImage } from "react-icons/fa6";
 
 interface Image {
   imgSource: string;
-  imgSize: string;
+  imgSize: {
+    width: string;
+    height: string;
+  };
 }
 
-function SkeletonProfile({ imgSource, imgSize = "40" }: Image) {
+function SkeletonProfile({ imgSource, imgSize }: Image) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
 
@@ -20,7 +23,7 @@ function SkeletonProfile({ imgSource, imgSize = "40" }: Image) {
     <>
       <img
         id="profile"
-        className={`max-w-${imgSize} ${!loaded ? "hidden" : ""} rounded-full`}
+        className={`max-${imgSize.width} ${!loaded ? "hidden" : ""} rounded-full`}
         src={imgSource}
         alt="profile"
         ref={imgRef}
@@ -29,7 +32,7 @@ function SkeletonProfile({ imgSource, imgSize = "40" }: Image) {
       {!loaded && (
         <div
           role="status"
-          className={`h-${imgSize} w-${imgSize} animate-pulse space-y-8 overflow-hidden rounded-full md:flex md:items-center md:space-x-8 md:space-y-0 rtl:space-x-reverse`}
+          className={`${imgSize.width} ${imgSize.height} animate-pulse overflow-hidden rounded-full`}
         >
           <div
             className={`flex h-full w-full items-center justify-center bg-gray-300 dark:bg-gray-700`}

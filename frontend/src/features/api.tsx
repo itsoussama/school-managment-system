@@ -1,4 +1,5 @@
 import AxiosProvider from "@services/axiosProvider";
+import { FormData } from "@admin/pages/teachers/viewTeachers";
 const axiosApi = AxiosProvider();
 
 const getTeachers = async (page = 1, perPage = 5) => {
@@ -13,4 +14,14 @@ const getTeacher = async (id: string) => {
   return response;
 };
 
-export { getTeachers, getTeacher };
+const setTeacher = async (formData: FormData) => {
+  const response = await axiosApi.put("/api/users/" + formData?.id, formData);
+  return response;
+};
+
+const deleteTeacher = async (id: string) => {
+  const response = await axiosApi.delete("/api/users/" + id);
+  return response;
+};
+
+export { getTeachers, getTeacher, setTeacher, deleteTeacher };
