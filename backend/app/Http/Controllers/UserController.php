@@ -16,18 +16,38 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if (auth()->user()->hasRole(config('roles.admin')) || auth()->user()->hasRole(config('roles.teacher'))) {
-        $perPage = $request->input('per_page', 5);
-        info($request);
-        // Get sort parameters from request
-        $sortColumn = $request->input('sort_column', 'id');
-        $sortDirection = $request->input('sort_direction', 'asc');
+            $perPage = $request->input('per_page', 5);
+            info($request);
+            // Get sort parameters from request
+            $sortColumn = $request->input('sort_column', 'id');
+            $sortDirection = $request->input('sort_direction', 'asc');
 
-        $users = User::with('school', 'role')->orderBy($sortColumn, $sortDirection)->paginate($perPage);
-        return response()->json($users, Response::HTTP_OK);
-    }else {
-        return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+            $users = User::with('school', 'role', 'subjects')->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+            return response()->json($users, Response::HTTP_OK);
+        }else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
 
+        }
     }
+    public function teachers(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+            $perPage = $request->input('per_page', 5);
+            info($request);
+            // Get sort parameters from request
+            $sortColumn = $request->input('sort_column', 'id');
+            $sortDirection = $request->input('sort_direction', 'asc');
+
+            $users = User::with('school', 'role', 'subjects')->whereHas('role', function ($query) {
+                $query->where('name', 'Teacher');
+            }
+
+            )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+            return response()->json($users, Response::HTTP_OK);
+        }else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+
+        }
     }
 
     // Show the form for creating a new resource (not typically used in APIs)
