@@ -39,7 +39,27 @@ class UserController extends Controller
             $sortDirection = $request->input('sort_direction', 'asc');
 
             $users = User::with('school', 'role', 'subjects')->whereHas('role', function ($query) {
-                $query->where('name', 'Teacher');
+                $query->where('name', config('roles.teacher'));
+            }
+
+            )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+            return response()->json($users, Response::HTTP_OK);
+        }else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+
+        }
+    }
+    public function students(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+            $perPage = $request->input('per_page', 5);
+            info($request);
+            // Get sort parameters from request
+            $sortColumn = $request->input('sort_column', 'id');
+            $sortDirection = $request->input('sort_direction', 'asc');
+
+            $users = User::with('school', 'role', 'subjects')->whereHas('role', function ($query) {
+                $query->where('name', config('roles.student'));
             }
 
             )->orderBy($sortColumn, $sortDirection)->paginate($perPage);

@@ -16,6 +16,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN
 Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::get('/teacher', [UserController::class, 'teachers']);
+    Route::get('/student', [UserController::class, 'students']);
     Route::get('/export-users', [UserController::class, 'export']);
     Route::post('/import-users', [UserController::class, 'import']);
     Route::post('/logout', [AuthController::class, 'logout']);
