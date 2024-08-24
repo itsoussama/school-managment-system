@@ -38,8 +38,9 @@ interface Check {
   status?: boolean;
 }
 
-interface ViewModal {
+interface Modal {
   id: string;
+  type?: "view" | "edit" | "delete";
   open: boolean;
 }
 
@@ -103,9 +104,7 @@ export function ViewTeachers() {
   const [perPage, setPerPage] = useState<number>();
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
-  const [openViewModal, setOpenViewModal] = useState<ViewModal>();
-  const [openEditModal, setOpenEditModal] = useState<ViewModal>();
-  const [openDeleteModal, setOpenDeleteModal] = useState<ViewModal>();
+  const [openModal, setOpenModal] = useState<Modal>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [formData, setFormData] = useState<FormData>({
     id: "",
@@ -125,25 +124,37 @@ export function ViewTeachers() {
   });
 
   const getTeacherQuery = useQuery({
-    queryKey: [
-      "getTeacher",
-      openViewModal?.id || openEditModal?.id || openDeleteModal?.id,
-    ],
-    queryFn: () =>
-      getTeacher(
-        (openViewModal?.id ||
-          openEditModal?.id ||
-          openDeleteModal?.id) as string,
-      ),
-    enabled: !!(openViewModal?.id || openEditModal?.id || openDeleteModal?.id),
+    queryKey: ["getTeacher", openModal?.id],
+    queryFn: () => getTeacher(openModal?.id as string),
+    enabled: !!openModal?.id,
   });
 
-  const setTeacherQuery = useMutation({ mutationFn: setTeacher });
+  const setTeacherQuery = useMutation({
+    mutationFn: setTeacher,
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getTeacher"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getTeachers"],
+      });
+
+      setFormData({
+        id: data?.id,
+        firstName: data?.name,
+        lastName: data?.name,
+        email: data?.email,
+        phone: data?.phone,
+      });
+    },
+  });
+
   const deleteTeacherQuery = useMutation({
     mutationFn: deleteTeacher,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getTeachers"] });
-      setOpenDeleteModal(undefined);
+      // setOpenDeleteModal(undefined);
       setFormData({
         id: "",
         firstName: "",
@@ -197,12 +208,13 @@ export function ViewTeachers() {
     // console.log((event.target as HTMLInputElement).value);
   };
 
-  const editModal = async (id: string, isOpen: boolean) => {
-    setOpenEditModal({ id: id, open: isOpen });
+  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
+    setOpenModal({ id: id, type: type, open: isOpen });
     const { data: teacherData } = await queryClient.ensureQueryData({
       queryKey: ["getTeacher", id],
       queryFn: () => getTeacher(id),
     });
+
     setFormData({
       id: teacherData?.id,
       firstName: teacherData?.name,
@@ -216,18 +228,26 @@ export function ViewTeachers() {
     event.preventDefault();
     // console.log(formData);
     setTeacherQuery.mutate(formData as FormData);
-    setOpenEditModal((prev) => ({
+    setOpenModal((prev) => ({
       id: prev?.id as string,
       open: false,
     }));
   };
 
-  const onResetUpdate = () => {
+  const onCloseModal = () => {
     setTeacherQuery.reset();
-    setOpenEditModal((prev) => ({
+    setOpenModal((prev) => ({
       id: prev?.id as string,
       open: false,
     }));
+
+    setFormData({
+      id: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+    });
   };
 
   const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
@@ -240,8 +260,8 @@ export function ViewTeachers() {
       return;
     }
 
-    deleteTeacherQuery.mutate(openDeleteModal?.id as string);
-    setOpenDeleteModal((prev) => ({
+    deleteTeacherQuery.mutate(openModal?.id as string);
+    setOpenModal((prev) => ({
       id: prev?.id as string,
       open: false,
     }));
@@ -300,7 +320,7 @@ export function ViewTeachers() {
       </Breadcrumb>
 
       <Modal
-        show={openViewModal?.open}
+        show={openModal?.type === "view" ? openModal?.open : false}
         // size={"md"}
         theme={{
           content: {
@@ -313,14 +333,9 @@ export function ViewTeachers() {
             popup: "pt-0",
           },
         }}
-        onClose={() =>
-          setOpenViewModal((prev) => ({
-            id: prev?.id as string,
-            open: false,
-          }))
-        }
+        onClose={onCloseModal}
       >
-        <Modal.Header>{openViewModal?.id}</Modal.Header>
+        <Modal.Header>{openModal?.id}</Modal.Header>
         <Modal.Body>
           <div className="flex gap-x-8">
             <div className="flex flex-col items-start rounded-s bg-gray-200 p-4 dark:bg-gray-800">
@@ -427,7 +442,7 @@ export function ViewTeachers() {
       </Modal>
 
       <Modal
-        show={openEditModal?.open}
+        show={openModal?.type === "edit" ? openModal?.open : false}
         size={"4xl"}
         theme={{
           content: {
@@ -440,15 +455,10 @@ export function ViewTeachers() {
             popup: "pt-0",
           },
         }}
-        onClose={() =>
-          setOpenEditModal((prev) => ({
-            id: prev?.id as string,
-            open: false,
-          }))
-        }
+        onClose={onCloseModal}
       >
         <form onSubmit={onSubmitUpdate}>
-          <Modal.Header>{openEditModal?.id}</Modal.Header>
+          <Modal.Header>{openModal?.id}</Modal.Header>
           <Modal.Body>
             <div className="flex gap-x-8">
               <div className="flex min-w-fit flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
@@ -576,7 +586,7 @@ export function ViewTeachers() {
             <button type="submit" className="btn-default !w-auto">
               I accept
             </button>
-            <button className="btn-danger !w-auto" onClick={onResetUpdate}>
+            <button className="btn-danger !w-auto" onClick={onCloseModal}>
               Decline
             </button>
           </Modal.Footer>
@@ -584,7 +594,8 @@ export function ViewTeachers() {
       </Modal>
 
       <Modal
-        show={openDeleteModal?.open}
+        show={openModal?.type === "delete" ? openModal?.open : false}
+        onClose={onCloseModal}
         size={"md"}
         theme={{
           content: {
@@ -597,12 +608,6 @@ export function ViewTeachers() {
             popup: "pt-0",
           },
         }}
-        onClose={() =>
-          setOpenDeleteModal((prev) => ({
-            id: prev?.id as string,
-            open: false,
-          }))
-        }
       >
         <form onSubmit={onSubmitDelete}>
           <Modal.Header>Delete User</Modal.Header>
@@ -636,15 +641,7 @@ export function ViewTeachers() {
             <button type="submit" className="btn-danger !w-auto">
               Delete
             </button>
-            <button
-              className="btn-outline !w-auto"
-              onClick={() =>
-                setOpenDeleteModal((prev) => ({
-                  id: prev?.id as string,
-                  open: false,
-                }))
-              }
-            >
+            <button className="btn-outline !w-auto" onClick={onCloseModal}>
               No, cancel
             </button>
           </Modal.Footer>
@@ -866,7 +863,11 @@ viewBox="0 230 330 330" */}
                     <Table.Cell className="flex w-fit gap-x-2">
                       <div
                         onClick={() =>
-                          setOpenViewModal({ id: data.id, open: true })
+                          setOpenModal({
+                            id: data.id,
+                            type: "view",
+                            open: true,
+                          })
                         }
                         className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
                       >
@@ -874,14 +875,24 @@ viewBox="0 230 330 330" */}
                       </div>
                       <div
                         className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                        onClick={() => editModal(data.id, true)}
+                        onClick={() =>
+                          onOpenEditModal({
+                            id: data.id,
+                            type: "edit",
+                            open: true,
+                          })
+                        }
                       >
                         <FaPen className="text-green-600 dark:text-green-500" />
                       </div>
                       <div
                         className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                         onClick={() =>
-                          setOpenDeleteModal({ id: data.id, open: true })
+                          setOpenModal({
+                            id: data.id,
+                            type: "delete",
+                            open: true,
+                          })
                         }
                       >
                         <FaTrash className="text-red-600 dark:text-red-500" />
