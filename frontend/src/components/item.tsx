@@ -1,5 +1,5 @@
 import { hoverContext } from "@src/features/context/hoverContext";
-import useBreakpoint from "@src/hooks/useBreakpoint";
+import useBreakpoint from "@hooks/useBreakpoint";
 import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";

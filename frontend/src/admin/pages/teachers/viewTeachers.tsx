@@ -65,6 +65,11 @@ export interface FormData {
   phone: string;
 }
 
+interface Sort {
+  column: string;
+  direction: "asc" | "desc";
+}
+
 // const teachers = [
 //   {
 //     uid: "T001",
@@ -100,6 +105,7 @@ export function ViewTeachers() {
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
 
   const [sortPosition, setSortPosition] = useState<number>(0);
+  const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
@@ -118,8 +124,8 @@ export function ViewTeachers() {
   // const userId = useRef<string>(null)
 
   const getTeachersQuery = useQuery({
-    queryKey: ["getTeachers", page, perPage],
-    queryFn: () => getTeachers(page, perPage),
+    queryKey: ["getTeachers", page, perPage, sort.column, sort.direction],
+    queryFn: () => getTeachers(page, perPage, sort.column, sort.direction),
     placeholderData: keepPreviousData,
   });
 
@@ -267,16 +273,19 @@ export function ViewTeachers() {
     }));
   };
 
-  const handleSort = () => {
+  const handleSort = (column: string) => {
     setSortPosition((prev) => prev + 1);
     switch (sortPosition) {
       case 0:
+        setSort({ column: column, direction: "asc" });
         console.log("ascending");
         return;
       case 1:
+        setSort({ column: column, direction: "desc" });
         console.log("descending");
         return;
       default:
+        setSort({ column: "id", direction: "asc" });
         console.log("normal");
         setSortPosition(0);
         return;
@@ -711,7 +720,10 @@ export function ViewTeachers() {
               <Table.HeadCell>
                 <div className="flex items-center justify-center gap-x-3">
                   <span className="inline-block">Fullname</span>
-                  <div className="flex flex-col" onClick={() => handleSort()}>
+                  <div
+                    className="flex flex-col"
+                    onClick={() => handleSort("name")}
+                  >
                     <FaSortUp
                       className={`h-2.5 ${sortPosition === 2 ? "text-gray-600" : "text-gray-400"}`}
                       viewBox="0 -140 320 412"

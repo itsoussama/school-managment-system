@@ -54,7 +54,7 @@ export function Layout({ children, menu }: Layout) {
   return (
     <div className={`flex w-full flex-1 ${theme === "dark" ? "dark" : ""}`}>
       <div
-        className={`z-[10] w-[18%] bg-light-primary p-3 max-2xl:absolute max-2xl:h-full ${isOnHover ? "max-2xl:min-w-max" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
+        className={`z-[10] w-[18%] overflow-hidden bg-light-primary p-3 max-2xl:absolute max-2xl:h-full ${isOnHover ? "max-2xl:w-60" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
