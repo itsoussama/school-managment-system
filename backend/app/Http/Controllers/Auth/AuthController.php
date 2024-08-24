@@ -39,6 +39,13 @@ class AuthController extends Controller
     }
     public function refreshToken(Request $request)
     {
+        $user = $request->user();
+        $user->tokens()->whereNotIn('id', function ($query) use ($user) {
+            $query->select('id')
+                    ->from('personal_access_tokens')
+                    ->where('abilities', 'like', '%issue-access-token%');
+        })->delete();
+
         $accessToken = $request->user()->createToken('access_token', [TokenAbility::ACCESS_API->value], Carbon::now()->addMinutes(config('sanctum.ac_expiration')));
         return response(['message' => "Token regenerate", 'token' => $accessToken->plainTextToken]);
     }
