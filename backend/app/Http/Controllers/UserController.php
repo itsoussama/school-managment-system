@@ -17,8 +17,6 @@ class UserController extends Controller
     {
         if (auth()->user()->hasRole(config('roles.admin')) || auth()->user()->hasRole(config('roles.teacher'))) {
             $perPage = $request->input('per_page', 5);
-            info($request);
-            // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
 
