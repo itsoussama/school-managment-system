@@ -1,6 +1,7 @@
 {
     "en": {
         "translation": {
+        "locales": "en-US",
         "home": "Home",
         "overview": "Overview",
         "teachers": "Teachers",
@@ -24,6 +25,7 @@
     },
     "fr": {
     "translation": {
+        "locales": "fr-FR",
         "home": "Accueil",
         "overview": "Tableau de bord",
         "teachers": "Enseignants",

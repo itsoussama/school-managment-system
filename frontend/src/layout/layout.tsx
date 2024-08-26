@@ -3,11 +3,12 @@ import logo_light from "@assets/logo_light.png";
 import logo_minimize from "@assets/icon.png";
 import { UseTheme } from "@hooks/useTheme";
 import { FaBell, FaCalendar, FaCompress, FaExpand } from "react-icons/fa";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { hoverContext } from "@context/hoverContext";
+import { useTranslation } from "react-i18next";
 
 interface Layout {
   children: React.ReactNode;
@@ -15,11 +16,18 @@ interface Layout {
   role?: string;
 }
 
+interface DateTime {
+  date: string;
+  time: string;
+}
+
 export function Layout({ children, menu }: Layout) {
+  const { t } = useTranslation();
   const [theme, setTheme] = UseTheme();
   const { isOnHover, setIsOnHover } = useContext(hoverContext);
   const minXxl = useBreakpoint("min", "2xl");
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
+  const [dateTime, setDateTime] = useState<DateTime>({ date: "", time: "" });
 
   const onToggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -38,23 +46,59 @@ export function Layout({ children, menu }: Layout) {
     setIsOnHover(false);
   };
 
+  const getMyIANATZ = () => {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  };
+
+  const handleDateTime = useCallback(
+    (options: Intl.DateTimeFormatOptions, date: number): string => {
+      return new Intl.DateTimeFormat(t("locales"), options).format(date);
+    },
+    [t],
+  );
+
   useEffect(() => {
-    // const style = getComputedStyle(document.body);
-    // document
-    //   .getElementById("root")
-    //   ?.style.setProperty(
-    //     "background-color",
-    //     style.getPropertyValue(
-    //       theme === "dark" ? "--dark-secondary" : "--light-secondary",
-    //     ),
-    //   );
+    console.log(getMyIANATZ());
+
+    setDateTime({
+      time: handleDateTime({ timeStyle: "short" }, Date.now()),
+      date: handleDateTime({ dateStyle: "full" }, Date.now()),
+    });
+  }, [handleDateTime]);
+
+  useEffect(() => {
+    setInterval(() => {
+      setDateTime((prev: DateTime) => ({
+        ...prev,
+        time: handleDateTime({ timeStyle: "short" }, Date.now()),
+      }));
+    }, 60 * 1000);
+
+    return clearInterval(60 * 1000);
+  }, [handleDateTime]);
+
+  useEffect(() => {
+    setInterval(
+      () => {
+        setDateTime((prev: DateTime) => ({
+          ...prev,
+          date: handleDateTime({ dateStyle: "full" }, Date.now()),
+        }));
+      },
+      24 * 60 * 60 * 1000,
+    );
+
+    return clearInterval(24 * 60 * 60 * 1000);
+  }, [handleDateTime]);
+
+  useEffect(() => {
     document.body.className = theme === "dark" ? "dark" : "";
   }, [theme]);
 
   return (
     <div className={`flex w-full flex-1 ${theme === "dark" ? "dark" : ""}`}>
       <div
-        className={`z-[10] w-[18%] overflow-hidden bg-light-primary p-3 max-2xl:absolute max-2xl:h-full ${isOnHover ? "max-2xl:w-60" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
+        className={`z-[10] min-w-[16%] overflow-hidden bg-light-primary p-3 max-2xl:absolute max-2xl:h-full max-2xl:min-w-fit ${isOnHover ? "max-2xl:w-60" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
@@ -84,9 +128,9 @@ export function Layout({ children, menu }: Layout) {
         <div className="flex h-12 w-full justify-between border-white">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">
-              Mardi 12 juillet 2024
+              {dateTime?.date}
             </div>
-            <div className="text-blue-600">20h30</div>
+            <div className="text-lg text-blue-600">{dateTime?.time}</div>
           </div>
           <div className="top-bar flex gap-4">
             <div className="channels flex items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">

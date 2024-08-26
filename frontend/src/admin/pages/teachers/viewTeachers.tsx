@@ -8,7 +8,13 @@ import {
   Spinner,
   Table,
 } from "flowbite-react";
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, {
+  ChangeEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
@@ -30,7 +36,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deleteTeacher, getTeacher, getTeachers, setTeacher } from "@api";
+import { deleteUser, getUser, getTeachers, setUser } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 
 interface Check {
@@ -108,6 +114,8 @@ export function ViewTeachers() {
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
+  const firstCheckboxRef = useRef<HTMLInputElement>(null);
+  const isCheckBoxAll = useRef(false);
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
@@ -131,12 +139,12 @@ export function ViewTeachers() {
 
   const getTeacherQuery = useQuery({
     queryKey: ["getTeacher", openModal?.id],
-    queryFn: () => getTeacher(openModal?.id as string),
+    queryFn: () => getUser(openModal?.id as string),
     enabled: !!openModal?.id,
   });
 
-  const setTeacherQuery = useMutation({
-    mutationFn: setTeacher,
+  const setUserQuery = useMutation({
+    mutationFn: setUser,
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({
         queryKey: ["getTeacher"],
@@ -156,8 +164,8 @@ export function ViewTeachers() {
     },
   });
 
-  const deleteTeacherQuery = useMutation({
-    mutationFn: deleteTeacher,
+  const deleteUserQuery = useMutation({
+    mutationFn: deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getTeachers"] });
       // setOpenDeleteModal(undefined);
@@ -172,32 +180,52 @@ export function ViewTeachers() {
   });
   // const [selectedItem, setSelectedItem] = useState()
 
+  const handleCheckAll = useCallback(
+    (firstCheckbox: HTMLInputElement) => {
+      if (getTeachersQuery.isFetched) {
+        getTeachersQuery.data?.data.data.forEach((teacher: Teacher) => {
+          setCheckAll((prev) => {
+            const alreadyChecked = prev.some((item) => item.id === teacher.id);
+            if (firstCheckbox.checked && !alreadyChecked) {
+              return [...prev, { id: teacher.id as string, status: true }];
+            }
+            return prev;
+          });
+          isCheckBoxAll.current = true;
+        });
+      }
+    },
+    [getTeachersQuery.data?.data, getTeachersQuery.isFetched],
+  );
+
   const handleCheck = (id = "") => {
-    const firstCheckbox = document.getElementById("0") as HTMLInputElement;
+    const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
 
     if (id == "") {
       setCheckAll([]);
-      document.getElementsByName("checkbox").forEach((elem) => {
-        const checkbox = elem as HTMLInputElement;
-        // console.log(firstCheckbox.ariaChecked);
+      handleCheckAll(firstCheckbox);
+      // document.getElementsByName("checkbox").forEach((elem) => {
+      //   const checkbox = elem as HTMLInputElement;
+      //   // console.log(firstCheckbox.ariaChecked);
 
-        if (firstCheckbox.checked) {
-          checkbox.checked = true;
-          setCheckAll((prev) => [
-            ...(prev as []),
-            { id: checkbox.getAttribute("id") as string, status: true },
-          ]);
-        } else {
-          checkbox.checked = false;
-          setCheckAll((prev) => [
-            ...(prev as []),
-            { id: checkbox.getAttribute("id") as string, status: false },
-          ]);
-        }
-      });
+      //   if (firstCheckbox.checked) {
+      //     checkbox.checked = true;
+      //     setCheckAll((prev) => [
+      //       ...(prev as []),
+      //       { id: id as string, status: true },
+      //     ]);
+      //   } else {
+      //     checkbox.checked = false;
+      //     setCheckAll((prev) => [
+      //       ...(prev as []),
+      //       { id: id as string, status: false },
+      //     ]);
+      //   }
+      // });
     } else {
       const getValue = checkAll.find((elem) => elem.id === id);
       const filteredArr = checkAll.filter((elem) => elem.id !== id);
+
       setCheckAll([
         ...(filteredArr as []),
         { id: id, status: !getValue?.status },
@@ -218,7 +246,7 @@ export function ViewTeachers() {
     setOpenModal({ id: id, type: type, open: isOpen });
     const { data: teacherData } = await queryClient.ensureQueryData({
       queryKey: ["getTeacher", id],
-      queryFn: () => getTeacher(id),
+      queryFn: () => getUser(id),
     });
 
     setFormData({
@@ -233,7 +261,7 @@ export function ViewTeachers() {
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     // console.log(formData);
-    setTeacherQuery.mutate(formData as FormData);
+    setUserQuery.mutate(formData as FormData);
     setOpenModal((prev) => ({
       id: prev?.id as string,
       open: false,
@@ -241,7 +269,7 @@ export function ViewTeachers() {
   };
 
   const onCloseModal = () => {
-    setTeacherQuery.reset();
+    setUserQuery.reset();
     setOpenModal((prev) => ({
       id: prev?.id as string,
       open: false,
@@ -266,7 +294,7 @@ export function ViewTeachers() {
       return;
     }
 
-    deleteTeacherQuery.mutate(openModal?.id as string);
+    deleteUserQuery.mutate(openModal?.id as string);
     setOpenModal((prev) => ({
       id: prev?.id as string,
       open: false,
@@ -300,11 +328,23 @@ export function ViewTeachers() {
   //   return { hour: convertToHour, minute: convertToMinute };
   // };
 
+  const handlePerPage = (ev: ChangeEvent) => {
+    const target = ev.target as HTMLSelectElement;
+    setPage(1);
+    setPerPage(parseInt(target.value));
+  };
+
   useEffect(() => {
     const checkedVal = checkAll.filter((val) => val.status === true)
       .length as number;
     setNumChecked(checkedVal);
   }, [checkAll]);
+
+  useEffect(() => {
+    if (isCheckBoxAll) {
+      handleCheckAll(firstCheckboxRef.current as HTMLInputElement);
+    }
+  }, [page, handleCheckAll]);
 
   return (
     <div className="flex w-full flex-col">
@@ -666,25 +706,9 @@ export function ViewTeachers() {
               <button className="btn-danger !m-0 flex w-max items-center">
                 <FaTrash className="mr-2 text-white" />
                 Delete
-                <span className="ml-2 rounded-full bg-red-800 px-2 py-0.5">{`${numChecked}`}</span>
+                <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
               </button>
             </div>
-
-            {/* <Input
-            id="search"
-            type="text"
-            icon={
-              <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-            }
-            label=""
-            placeholder="Search"
-            name="search"
-            custom-style={{
-              inputStyle: "px-10",
-              labelStyle: "mb-0",
-            }}
-            handleChange={(ev) => console.log(ev)}
-          /> */}
           </div>
         ) : (
           ""
@@ -714,7 +738,11 @@ export function ViewTeachers() {
           >
             <Table.Head className="uppercase">
               <Table.HeadCell className="w-0 p-4">
-                <Checkbox id="0" onChange={() => handleCheck()} />
+                <Checkbox
+                  id="0"
+                  ref={firstCheckboxRef}
+                  onChange={() => handleCheck()}
+                />
               </Table.HeadCell>
               <Table.HeadCell>UID</Table.HeadCell>
               <Table.HeadCell>
@@ -732,8 +760,6 @@ export function ViewTeachers() {
                       className={`h-2.5 ${sortPosition === 1 ? "text-gray-600" : "text-gray-400"}`}
                       viewBox="0 240 320 412"
                     />
-                    {/* viewBox="0 -90 330 330"
-viewBox="0 230 330 330" */}
                   </div>
                 </div>
               </Table.HeadCell>
@@ -753,7 +779,7 @@ viewBox="0 230 330 330" */}
                   <Table.Row>
                     <Table.Cell className="p-0">
                       <div
-                        className={`table-loader absolute left-0 top-0 z-50 grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
                       >
                         <Spinner />
                       </div>
@@ -828,30 +854,36 @@ viewBox="0 230 330 330" */}
                 <Table.Cell className="p-2"></Table.Cell>
               </Table.Row>
               {getTeachersQuery.data?.data.data.map(
-                (data: Teacher, key: number) => (
+                (teacher: Teacher, key: number) => (
                   <Table.Row
                     key={key}
                     className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
                   >
                     <Table.Cell className="p-4">
                       <Checkbox
-                        id={(key + 1).toString()}
+                        id={teacher.id}
                         name="checkbox"
-                        onChange={(ev) => handleCheck(ev.currentTarget.id)}
+                        checked={
+                          checkAll.find((check) => check.id == teacher.id)
+                            ?.status == true
+                            ? true
+                            : false
+                        }
+                        onChange={() => handleCheck(teacher.id)}
                       />
                     </Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      T00{data.id}
+                      T00{teacher.id}
                     </Table.Cell>
-                    <Table.Cell>{data.name}</Table.Cell>
+                    <Table.Cell>{teacher.name}</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                       -
                     </Table.Cell>
                     <Table.Cell>-</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {data.email}
+                      {teacher.email}
                     </Table.Cell>
-                    <Table.Cell>{data.phone}</Table.Cell>
+                    <Table.Cell>{teacher.phone}</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                       {/* <span>
                       {formatDuration(teacher.time_spent).hour}
@@ -876,7 +908,7 @@ viewBox="0 230 330 330" */}
                       <div
                         onClick={() =>
                           setOpenModal({
-                            id: data.id,
+                            id: teacher.id,
                             type: "view",
                             open: true,
                           })
@@ -889,7 +921,7 @@ viewBox="0 230 330 330" */}
                         className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                         onClick={() =>
                           onOpenEditModal({
-                            id: data.id,
+                            id: teacher.id,
                             type: "edit",
                             open: true,
                           })
@@ -901,7 +933,7 @@ viewBox="0 230 330 330" */}
                         className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                         onClick={() =>
                           setOpenModal({
-                            id: data.id,
+                            id: teacher.id,
                             type: "delete",
                             open: true,
                           })
@@ -934,7 +966,7 @@ viewBox="0 230 330 330" */}
             <RSelect
               id="row-num"
               name="row-num"
-              onChange={(ev) => setPerPage(parseInt(ev.target.value))}
+              onChange={handlePerPage}
               custom-style={{ inputStyle: "!py-2" }}
               defaultValue={getTeachersQuery.data?.data.per_page}
             >
@@ -944,7 +976,7 @@ viewBox="0 230 330 330" */}
               <option value={20}>20</option>
             </RSelect>
             <Pagination
-              currentPage={getTeachersQuery.data?.data.current_page ?? 1}
+              currentPage={page}
               onPageChange={(page) =>
                 !getTeachersQuery.isPlaceholderData && setPage(page)
               }

@@ -84,7 +84,7 @@ export default function AddStudent() {
               name="firstname"
               label="First name"
               placeholder="First name"
-              handleChange={handleChange}
+              onChange={(e) => console.log(e.target.value)}
             />
 
             <Input
@@ -93,7 +93,7 @@ export default function AddStudent() {
               name="lastname"
               label="Last name"
               placeholder="Last name"
-              handleChange={handleChange}
+              onChange={(e) => console.log(e.target.value)}
             />
 
             <Input
@@ -102,7 +102,7 @@ export default function AddStudent() {
               name="address"
               label="Address"
               placeholder="123 Rue Principale"
-              handleChange={handleChange}
+              onChange={(e) => console.log(e.target.value)}
               custom-style={{ containerStyle: "col-span-full" }}
             />
 
@@ -112,7 +112,7 @@ export default function AddStudent() {
               name="tel"
               label="Phone number"
               placeholder="06 00 00 00"
-              handleChange={handleChange}
+              onChange={(e) => console.log(e.target.value)}
               attribute={{ pattern: "(06 | 05)[0-9]{2}[0-9]{4}" }}
             />
 
@@ -122,7 +122,7 @@ export default function AddStudent() {
               name="email"
               label="Email"
               placeholder="Johndoe@example.com"
-              handleChange={handleChange}
+              onChange={(e) => console.log(e.target.value)}
             />
 
             <Input
@@ -137,7 +137,7 @@ export default function AddStudent() {
               icon={
                 <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               }
-              handleChange={handleChange}
+              onChange={(e) => console.log(e.target.value)}
             />
 
             <Input
@@ -152,7 +152,7 @@ export default function AddStudent() {
               icon={
                 <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               }
-              handleChange={handleChange}
+              onChange={(e) => console.log(e.target.value)}
             />
 
             <button className="btn-default m-0 mt-auto" type="submit">
