@@ -57,17 +57,24 @@ class User extends Authenticatable
     {
         return $this->belongsTo(School::class, 'school_id', 'id');
     }
+    public function subjects() : BelongsToMany
+    {
+        return $this->belongsToMany(Subject::class);
+    }
     public function hasRole($role)
     {
         $roles = $this->role->pluck('name')->toArray();
         return in_array($role, $roles);
     }
 
-    // public function createToken(Request $request)
-    // {
-    //     $user = User::find(1); // Replace with the appropriate user lookup
-    //     $token = $user->createToken('MyApp')->plainTextToken;
+    public function hasAnyRole(array $roles): bool
+    {
+        foreach ($roles as $role) {
+            if ($this->hasRole($role)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-    //     return response()->json(['token' => $token]);
-    // }
 }

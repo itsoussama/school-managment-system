@@ -6,7 +6,9 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\School;
-
+use App\Models\Subject;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 class UserRoleSeeder extends Seeder
 {
     public function run()
@@ -32,8 +34,23 @@ class UserRoleSeeder extends Seeder
                     'school_id' => $school->id
                 ])->each(function ($user) use ($role) {
                     $user->role()->attach($role);
+
+                    $subjects = Subject::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
+                    $user->subjects()->sync($subjects);
+
                 });
             }
         }
+        $admin = User::create([
+            'name' => 'admin',
+            'email' => 'admin@example.com',
+            'phone' => fake()->phoneNumber(),
+            // 'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+            'remember_token' => Str::random(10),
+            'school_id' => 1,
+        ]);
+
+        $admin->role()->attach(Role::where('name', 'Administrator')->first()->id);
     }
 }

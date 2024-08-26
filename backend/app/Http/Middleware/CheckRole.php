@@ -9,23 +9,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    /**
-     * The role to check.
-     *
-     * @var string
-     */
-    protected $role;
-
-    /**
-     * Create a new middleware instance.
-     *
-     * @param  string  $role
-     * @return void
-     */
-    public function __construct(string $role)
-    {
-        $this->role = $role;
-    }
 
     /**
      * Handle an incoming request.
@@ -34,11 +17,12 @@ class CheckRole
      * @param  \Closure  $next
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (!Auth::check() || !Auth::hasRole($this->role)) {
-            return response()->json(['error' => 'Role does not exist']);
+        if (Auth::check() && Auth::user()->hasAnyRole($roles)) {
+            return $next($request);
         }
-        return $next($request);
+
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
 }
