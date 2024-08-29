@@ -13,9 +13,12 @@ class GradeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $grades = Grade::all();
+        $perPage = $request->input('per_page', 5);
+        $sortColumn = $request->input('sort_column', 'id');
+        $sortDirection = $request->input('sort_direction', 'asc');
+        $grades = Grade::orderBy($sortColumn, $sortDirection)->paginate($perPage);
         return response()->json($grades);
     }
 
