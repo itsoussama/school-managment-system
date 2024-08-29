@@ -4,12 +4,16 @@ import logo_minimize from "@assets/icon.png";
 import { UseTheme } from "@hooks/useTheme";
 import { FaBell, FaCalendar, FaCompress, FaExpand } from "react-icons/fa";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { FaMessage } from "react-icons/fa6";
+import { FaArrowRightFromBracket, FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { hoverContext } from "@context/hoverContext";
 import { useTranslation } from "react-i18next";
-import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { useAppDispatch, useAppSelector } from "@src/hooks/useReduxEvent";
+import { Dropdown } from "flowbite-react";
+import { logout } from "@src/features/redux/userAsyncActions";
+import { useNavigate } from "react-router-dom";
+// import { MegaMenu } from "flowbite-react";
 
 interface Layout {
   children: React.ReactNode;
@@ -24,12 +28,14 @@ interface DateTime {
 
 export function Layout({ children, menu }: Layout) {
   const { t } = useTranslation();
-  const [theme, setTheme] = UseTheme();
   const { isOnHover, setIsOnHover } = useContext(hoverContext);
-  const minXxl = useBreakpoint("min", "2xl");
+  const [theme, setTheme] = UseTheme();
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
   const [dateTime, setDateTime] = useState<DateTime>({ date: "", time: "" });
+  const minXxl = useBreakpoint("min", "2xl");
   const authUser = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch();
+  const route = useNavigate();
 
   const onToggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -58,6 +64,12 @@ export function Layout({ children, menu }: Layout) {
     },
     [t],
   );
+
+  const handleLogout = () => {
+    dispatch(logout()).then(
+      (res) => res.meta.requestStatus == "fulfilled" && route("/login"),
+    );
+  };
 
   useEffect(() => {
     console.log(getMyIANATZ());
@@ -158,21 +170,44 @@ export function Layout({ children, menu }: Layout) {
                 <FaCalendar className="mb-0.5 text-lg text-gray-500" />
               </div>
             </div>
-            <div className="profile flex items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
-              <div className="flex items-center gap-4">
-                <img
-                  className="h-8 w-8 rounded-full"
-                  src="https://i.pravatar.cc/300?img=12"
-                  alt=""
-                />
-                <div className="text-sm font-medium dark:text-white">
-                  <div>{authUser.name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Joined in August 2014
+            <Dropdown
+              label
+              theme={{
+                floating: {
+                  base: "z-10 w-fit divide-y divide-gray-100 rounded-xs shadow-sharp-dark dark:shadow-sharp-light focus:outline-none",
+                },
+              }}
+              dismissOnClick={false}
+              renderTrigger={() => (
+                <div className="profile flex cursor-pointer items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
+                  <div className="flex items-center gap-4">
+                    <img
+                      className="h-8 w-8 rounded-full"
+                      src="https://i.pravatar.cc/300?img=12"
+                      alt=""
+                    />
+
+                    <div className="text-sm font-medium dark:text-white">
+                      <div>{authUser.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Joined in August 2014
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              )}
+            >
+              <Dropdown.Item>Profile</Dropdown.Item>
+              <Dropdown.Item>Settings</Dropdown.Item>
+              <Dropdown.Item
+                onClick={handleLogout}
+                className="items-center justify-between font-medium text-red-600 hover:!bg-red-600 hover:text-white"
+              >
+                Sign out
+                <FaArrowRightFromBracket size={12} />
+              </Dropdown.Item>
+            </Dropdown>
+
             <div className="display flex items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               {isFullScreen ? (
                 <FaCompress

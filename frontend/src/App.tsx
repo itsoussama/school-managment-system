@@ -2,12 +2,12 @@ import { createBrowserRouter } from "react-router-dom";
 import "@src/App.css";
 import Admin from "@admin/index";
 import AddTeacher from "@src/admin/pages/teachers/addTeacher";
-import { ViewTeachers } from "./admin/pages/teachers/viewTeachers";
-import AddStudent from "./admin/pages/students/addStudent";
-import { ViewStudents } from "./admin/pages/students/viewStudents";
-import AddParent from "./admin/pages/parents/addParent";
-import { ViewParents } from "./admin/pages/parents/viewParents";
-import Login from "./auth/login";
+import { ViewTeachers } from "@admin/pages/teachers/viewTeachers";
+import AddStudent from "@admin/pages/students/addStudent";
+import { ViewStudents } from "@admin/pages/students/viewStudents";
+import AddParent from "@admin/pages/parents/addParent";
+import { ViewParents } from "@admin/pages/parents/viewParents";
+import Login from "@src/auth/login";
 import { RouteAuthorization } from "@components/routeAuthorization";
 
 export const routes = createBrowserRouter([

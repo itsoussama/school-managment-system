@@ -54,13 +54,21 @@ export default function Login() {
   // }, [auth, route])
 
   // functions
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const target = event.target as HTMLFormElement;
 
     if (formError?.email === "" && formError?.password === "") {
       if (target.email.value !== "" && target.password.value !== "") {
-        dispatch(login(data as Data)).then(() => route("/"));
+        const response = await dispatch(login(data as Data));
+
+        if (response.meta.requestStatus === "fulfilled") {
+          return route("/");
+        }
+
+        setFormError({
+          form: "You have entered an invalid username or password",
+        });
       } else {
         setFormError((prev) => ({ prev, form: "Invalid login credentiales" }));
       }

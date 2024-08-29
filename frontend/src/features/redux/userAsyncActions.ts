@@ -7,45 +7,30 @@ interface Data {
     password: string
 }
 
-interface KnownError {
-    error: string
-}
-
-const login = createAsyncThunk<Data, void, {rejectValue: KnownError}>('user/login', async (data,thunkApi) => {
+const login = createAsyncThunk<void, Data>('user/login', async (data, {rejectWithValue}) => {
     try {
 
         const localStorage = window.localStorage
         let payload = null
 
-      const response = await axiosInstance
-        .post("/api/login", data)
-        
-        
-        if (response.status === 200) {
-            // let cookies = document.cookie.split(';').every(el => el.search('remember_token'));
-            
-            // console.log(cookies);
+        const response = await axiosInstance.post("/api/login", data)
 
-            // if(response.data.remember_token !== null){
-            //     const d = new Date();
-            //     d.setTime(d.getTime() + (10*356*24*60*60*1000));
-            //     let expires = "expires="+ d.toUTCString();
-            //     document.cookie = `remember_token=${response.data.remember_token}; path=/; expires=${expires} httponly=true; secure=true,`
-            // }
+        // jsenger@example.com
+        //  password
+
+        if (response.status === 200) {
             
             localStorage.setItem("accessToken", response.data.token);
             localStorage.setItem("refreshToken", response.data.refresh_token);
             localStorage.setItem('user', JSON.stringify(response.data.user))
 
             payload = response.data
-            // console.log(payload);
-            
 
             return payload
         }
-
     } catch (error) {
-        return thunkApi.rejectWithValue(error.response?.data)
+        
+        return rejectWithValue(error?.response.payload)
     }
 })
 
@@ -59,7 +44,9 @@ const logout = createAsyncThunk( 'user/logout', async (_,{rejectWithValue}) => {
             throw Error("Bad Request")
         }
 
-        localStorage.clear()
+        localStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
 
     } catch (error) {
         return rejectWithValue(error)
