@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Grade;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Role;
@@ -19,7 +20,7 @@ class UserRoleSeeder extends Seeder
 
         // Create schools
         for ($i = 1; $i <= 3; $i++) {
-            $schools = School::factory(2)->create();
+            $schools = School::all();
             // $schools[] = School::create(['name' => 'School ' . $i, 'address' => 'address ' . $i]);
         }
 
@@ -36,7 +37,9 @@ class UserRoleSeeder extends Seeder
                     $user->role()->attach($role);
 
                     $subjects = Subject::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
+                    $grades = Grade::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
                     $user->subjects()->sync($subjects);
+                    $user->grades()->sync($grades);
 
                 });
             }
