@@ -82,6 +82,10 @@ class UserController extends Controller
                     'school_id' => 'required|exists:schools,id',
                     'roles' => 'required|array',
                     'roles.*' => 'exists:roles,id',
+                    'subjects' => 'required|array',
+                    'subjects.*' => 'exists:subjects,id',
+                    'grades' => 'required|array',
+                    'grades.*' => 'exists:grades,id',
                 ]);
                 if ($validation) {
                     $user = User::create([
@@ -92,6 +96,8 @@ class UserController extends Controller
                     ]);
                     $user->school()->associate($request->school_id);
                     $user->role()->sync($request->roles);
+                    $user->subjects()->sync($request->subjects);
+                    $user->grades()->sync($request->grades);
                     $user->save();
                 }else {
                     return $request;
@@ -113,7 +119,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
-            $user->load('school', 'role');
+            $user->load('school', 'role', 'subjects', 'grades');
             return response()->json($user, Response::HTTP_OK);
         }else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
@@ -135,6 +141,10 @@ class UserController extends Controller
                     'school_id' => 'nullable|exists:schools,id',
                     'roles' => 'nullable|array',
                     'roles.*' => 'exists:roles,id',
+                    'subjects' => 'required|array',
+                    'subjects.*' => 'exists:subjects,id',
+                    'grades' => 'required|array',
+                    'grades.*' => 'exists:grades,id',
                 ]);
 
                 $user->name = $request->input('name', $user->name);
@@ -153,12 +163,19 @@ class UserController extends Controller
                 $user->save();
 
                 // Sync roles if provided
-                if ($request->has('role')) {
-                    $user->role()->sync($request->input('role'));
+                if ($request->has('roles')) {
+                    $user->role()->sync($request->input('roles'));
+                }
+                if ($request->has('subjects')) {
+                    $user->subjects()->sync($request->input('subjects'));
+                    $user->grades()->sync($request->grades);
+                }
+                if ($request->has('grades')) {
+                    $user->grades()->sync($request->input('grades'));
                 }
 
                 // Load relationships and return response
-                $user->load('school', 'role');
+                $user->load('school', 'role', 'subjects', 'grades');
 
         return response()->json($user, Response::HTTP_OK);
 
