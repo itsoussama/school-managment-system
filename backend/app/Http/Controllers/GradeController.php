@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Subject;
+use App\Models\Grade;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class SubjectController extends Controller
+class GradeController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,8 +18,8 @@ class SubjectController extends Controller
         $perPage = $request->input('per_page', 5);
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $subjects = Subject::orderBy($sortColumn, $sortDirection)->paginate($perPage);
-        return response()->json($subjects);
+        $grades = Grade::orderBy($sortColumn, $sortDirection)->paginate($perPage);
+        return response()->json($grades);
     }
 
     /**
@@ -31,52 +31,50 @@ class SubjectController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'coef' => 'required|numeric|min:0',
+            'label' => 'required|string|max:255',
         ]);
 
-        $subject = Subject::create($request->all());
-        return response()->json($subject, Response::HTTP_CREATED);
+        $grade = Grade::create($request->all());
+        return response()->json($grade, Response::HTTP_CREATED);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param \App\Models\Subject $subject
+     * @param \App\Models\Grade $grade
      * @return \Illuminate\Http\Response
      */
-    public function show(Subject $subject)
+    public function show(Grade $grade)
     {
-        return response()->json($subject);
+        return response()->json($grade);
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Subject $subject
+     * @param \App\Models\Grade $grade
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Subject $subject)
+    public function update(Request $request, Grade $grade)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'coef' => 'required|numeric|min:0',
+            'label' => 'required|string|max:255',
         ]);
 
-        $subject->update($request->all());
-        return response()->json($subject);
+        $grade->update($request->all());
+        return response()->json($grade);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param \App\Models\Subject $subject
+     * @param \App\Models\Grade $grade
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Subject $subject)
+    public function destroy(Grade $grade)
     {
-        $subject->delete();
+        $grade->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }

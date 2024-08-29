@@ -2,20 +2,24 @@
 
 namespace Database\Seeders;
 
+use App\Models\Grade;
 use App\Models\School;
-use App\Models\User;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class SchoolSeeder extends Seeder
+class GradeSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        // School::factory()->has(User::factory())->create();
-        School::factory(2)->create();
+        $schools = School::all();
+
+        foreach ($schools as $school) {
+            Grade::factory(5)->create([
+                'school_id' => $school->id,
+            ]);
+        }
     }
 }

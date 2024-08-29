@@ -18,4 +18,8 @@ class School extends Model
     {
         return $this->hasMany(resource::class, 'school_id', 'id');
     }
+    public function grades() : HasMany
+    {
+        return $this->hasMany(Grade::class, 'school_id', 'id');
+    }
 }
