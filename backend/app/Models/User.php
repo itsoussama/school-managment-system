@@ -53,6 +53,10 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class);
     }
+    public function grades(): BelongsToMany
+    {
+        return $this->belongsToMany(Grade::class);
+    }
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class, 'school_id', 'id');

@@ -20,7 +20,7 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
 
-            $users = User::with('school', 'role', 'subjects')->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+            $users = User::with('school', 'role', 'subjects', 'grades')->orderBy($sortColumn, $sortDirection)->paginate($perPage);
             return response()->json($users, Response::HTTP_OK);
         }else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
@@ -36,7 +36,7 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
 
-            $users = User::with('school', 'role', 'subjects')->whereHas('role', function ($query) {
+            $users = User::with('school', 'role', 'subjects', 'grades')->whereHas('role', function ($query) {
                 $query->where('name', config('roles.teacher'));
             }
 
@@ -56,7 +56,7 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
 
-            $users = User::with('school', 'role', 'subjects')->whereHas('role', function ($query) {
+            $users = User::with('school', 'role', 'subjects', 'grades')->whereHas('role', function ($query) {
                 $query->where('name', config('roles.student'));
             }
 

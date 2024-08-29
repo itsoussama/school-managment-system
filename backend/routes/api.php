@@ -3,6 +3,7 @@
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\GradeController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::middleware('role:' . config('roles.admin') . ',' . config('roles.teacher'))->group(function () {
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('resources', ResourceController::class);
+        Route::apiResource('grades', GradeController::class);
     });
     Route::get('/teacher', [UserController::class, 'teachers']);
     Route::get('/student', [UserController::class, 'students']);
