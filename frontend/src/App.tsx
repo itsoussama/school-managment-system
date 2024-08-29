@@ -7,12 +7,18 @@ import AddStudent from "./admin/pages/students/addStudent";
 import { ViewStudents } from "./admin/pages/students/viewStudents";
 import AddParent from "./admin/pages/parents/addParent";
 import { ViewParents } from "./admin/pages/parents/viewParents";
-
+import Login from "./auth/login";
+import { RouteAuthorization } from "@components/routeAuthorization";
 
 export const routes = createBrowserRouter([
   {
+    path: "/login",
+    element: <Login />,
+  },
+  {
     path: "/",
     element: <Admin />,
+    loader: RouteAuthorization,
     children: [
       {
         path: "teachers",

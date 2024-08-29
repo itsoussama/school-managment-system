@@ -113,7 +113,7 @@ export default function AddStudent() {
               label="Phone number"
               placeholder="06 00 00 00"
               onChange={(e) => console.log(e.target.value)}
-              attribute={{ pattern: "(06 | 05)[0-9]{2}[0-9]{4}" }}
+              pattern="(06|05)[0-9]{2}[0-9]{4}"
             />
 
             <Input

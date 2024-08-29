@@ -12,8 +12,9 @@ import {
 } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
 import { Link, Outlet, useMatch } from "react-router-dom";
-import useBreakpoint from "@src/hooks/useBreakpoint";
-import { axiosInstance } from "@services/axiosConfig";
+import useBreakpoint from "@hooks/useBreakpoint";
+import { login } from "@redux/userAsyncActions";
+import { useAppDispatch } from "@hooks/useReduxEvent";
 
 interface SubMenuVisible {
   ref: string;
@@ -24,43 +25,13 @@ interface SubMenuVisible {
 
 export default function Admin() {
   const [isOnHover, setIsOnHover] = useState<boolean>(false);
+  // const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    // axiosInstance
-    //   .get("/sanctum/csrf-cookie")
-    //   .then((res) => {
-    //     res.status == 204
-    //       ? axiosInstance
-    //           .post("/api/login", {
-    //             email: "tspinka@example.org",
-    //             password: "password",
-    //           })
-    //           .then((res) =>
-    //             axiosInstance
-    //               .get("/api/users", {
-    //                 headers: {
-    //                   "Content-Type": "application/json",
-    //                   Authorization: `Bearer ${res.data?.token}`,
-    //                 },
-    //               })
-    //               .then((user) => console.log(user.status)),
-    //           )
-    //       : console.log("unable to connect");
-    //   })
-    //   .catch((error) => console.log(error));
-
-    if (!localStorage.getItem("accessToken")) {
-      axiosInstance
-        .post("/api/login", {
-          email: "jsenger@example.com",
-          password: "password",
-        })
-        .then((res) => {
-          localStorage.setItem("accessToken", res.data.token);
-          localStorage.setItem("refreshToken", res.data.refresh_token);
-        });
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!localStorage.getItem("accessToken")) {
+  //     dispatch(login());
+  //   }
+  // }, [dispatch]);
 
   return (
     <hoverContext.Provider

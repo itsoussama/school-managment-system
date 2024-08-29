@@ -9,6 +9,7 @@ import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { hoverContext } from "@context/hoverContext";
 import { useTranslation } from "react-i18next";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
 
 interface Layout {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ export function Layout({ children, menu }: Layout) {
   const minXxl = useBreakpoint("min", "2xl");
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
   const [dateTime, setDateTime] = useState<DateTime>({ date: "", time: "" });
+  const authUser = useAppSelector((state) => state.user);
 
   const onToggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -164,7 +166,7 @@ export function Layout({ children, menu }: Layout) {
                   alt=""
                 />
                 <div className="text-sm font-medium dark:text-white">
-                  <div>Jese Leos</div>
+                  <div>{authUser.name}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
                     Joined in August 2014
                   </div>

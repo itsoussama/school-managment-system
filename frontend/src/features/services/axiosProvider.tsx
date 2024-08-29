@@ -38,13 +38,14 @@ export default function AxiosProvider() {
           // Update the authorization header with the new access token.
           axiosAuthInstance.defaults.headers.common["Authorization"] =
             `Bearer ${accessToken}`;
+
           return axiosAuthInstance(originalRequest); // Retry the original request with the new access token.
         } catch (refreshError) {
           // Handle refresh token errors by clearing stored tokens and redirecting to the login page.
           console.error("Token refresh failed:", refreshError);
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
-          window.location.href = "/";
+          window.location.href = "/login";
           return Promise.reject(refreshError);
         }
       }

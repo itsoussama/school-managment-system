@@ -1,7 +1,7 @@
 // import PropTypes from 'prop-types'
 // import { FontAwesomeIcon } from '@htmlFortawesome/react-fontawesome'
 // import { faCheck, faCircleExclamation } from '@htmlFortawesome/free-solid-svg-icons'
-import { Children, InputHTMLAttributes, SelectHTMLAttributes } from "react";
+import { InputHTMLAttributes, SelectHTMLAttributes } from "react";
 import { FaCheck, FaExclamationCircle } from "react-icons/fa";
 
 interface Field {
@@ -52,9 +52,9 @@ function Input({
         />
       </div>
       {error && (
-        <div className="mt-1.5 flex items-center">
-          <FaExclamationCircle className="mr-2 text-red-500" />
-          <span className="error text-red-500">{error}</span>
+        <div className="mt-1.5 flex items-start">
+          <FaExclamationCircle className="mr-2 mt-0.5 min-w-4 text-red-500" />
+          <span className="error text-sm text-red-500">{error}</span>
         </div>
       )}
     </div>
@@ -80,7 +80,8 @@ function Checkbox({
       <div className={`relative flex items-center ${wrapperInputStyle}`}>
         <input
           aria-describedby={htmlFor}
-          className={`peer box-content h-4 w-4 appearance-none rounded-s border-gray-300 bg-gray-100 text-blue-600 checked:border-0 checked:bg-blue-800 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 ${inputStyle}`}
+          type="checkbox"
+          className={`peer box-content h-4 w-4 appearance-none rounded-xs border-gray-300 bg-gray-100 text-blue-600 checked:border-0 checked:bg-blue-800 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 ${inputStyle}`}
           {...attribute}
         />
         <FaCheck
@@ -101,7 +102,7 @@ function Checkbox({
           className={`text-gray-500 dark:text-gray-300 ${labelStyle}`}
         >
           {label}
-          {Children.only(children)}
+          {children}
         </label>
       </div>
     </div>
