@@ -33,11 +33,11 @@ class UserRoleSeeder extends Seeder
 
                 User::factory($userCount)->create([
                     'school_id' => $school->id
-                ])->each(function ($user) use ($role) {
+                ])->each(function ($user) use ($role, $school) {
                     $user->role()->attach($role);
 
                     $subjects = Subject::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
-                    $grades = Grade::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
+                    $grades = Grade::where('school_id', $school->id)->inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
                     $user->subjects()->sync($subjects);
                     $user->grades()->sync($grades);
 
