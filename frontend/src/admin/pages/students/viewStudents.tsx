@@ -38,6 +38,7 @@ import {
 } from "@tanstack/react-query";
 import { deleteUser, getUser, getStudents, setUser } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
 
 interface Check {
   id?: string;
@@ -116,12 +117,21 @@ export function ViewStudents() {
     phone: "",
   });
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
+  const admin = useAppSelector((state) => state.user);
   const { t } = useTranslation();
   // const userId = useRef<string>(null)
 
   const getStudentsQuery = useQuery({
-    queryKey: ["getStudents", page, perPage, sort.column, sort.direction],
-    queryFn: () => getStudents(page, perPage, sort.column, sort.direction),
+    queryKey: [
+      "getStudents",
+      page,
+      perPage,
+      sort.column,
+      sort.direction,
+      admin.school_id,
+    ],
+    queryFn: () =>
+      getStudents(page, perPage, sort.column, sort.direction, admin.school_id),
     placeholderData: keepPreviousData,
   });
 

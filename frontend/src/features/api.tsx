@@ -1,5 +1,6 @@
 import AxiosProvider from "@services/axiosProvider";
-import { FormData } from "@admin/pages/teachers/viewTeachers";
+import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTeachers";
+import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
 const axiosApi = AxiosProvider();
 
 const getTeachers = async (
@@ -7,6 +8,7 @@ const getTeachers = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
+  schoolId: string,
 ) => {
   const response = await axiosApi.get(
     "/api/teacher?page=" +
@@ -16,7 +18,9 @@ const getTeachers = async (
       "&sort_column=" +
       sortColumn +
       "&sort_direction=" +
-      sortDirection,
+      sortDirection +
+      "&school_id=" +
+      schoolId,
   );
   return response;
 };
@@ -26,6 +30,7 @@ const getStudents = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
+  schoolId: string,
 ) => {
   const response = await axiosApi.get(
     "/api/student?page=" +
@@ -35,7 +40,9 @@ const getStudents = async (
       "&sort_column=" +
       sortColumn +
       "&sort_direction=" +
-      sortDirection,
+      sortDirection +
+      "&school_id=" +
+      schoolId,
   );
   return response;
 };
@@ -45,7 +52,12 @@ const getUser = async (id: string) => {
   return response;
 };
 
-const setUser = async (formData: FormData) => {
+const addUser = async (formData: AddTeacherFromData) => {
+  const response = await axiosApi.post("/api/users/", formData);
+  return response;
+};
+
+const setUser = async (formData: UpdateTeacherFromData) => {
   const response = await axiosApi.put("/api/users/" + formData?.id, formData);
   return response;
 };
@@ -55,4 +67,17 @@ const deleteUser = async (id: string) => {
   return response;
 };
 
-export { getTeachers, getStudents, getUser, setUser, deleteUser };
+const getSubjects = async () => {
+  const response = await axiosApi.get("/api/subjects/");
+  return response;
+};
+
+export {
+  getTeachers,
+  getStudents,
+  getUser,
+  addUser,
+  setUser,
+  deleteUser,
+  getSubjects,
+};

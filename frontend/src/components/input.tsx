@@ -1,8 +1,19 @@
 // import PropTypes from 'prop-types'
 // import { FontAwesomeIcon } from '@htmlFortawesome/react-fontawesome'
 // import { faCheck, faCircleExclamation } from '@htmlFortawesome/free-solid-svg-icons'
-import { InputHTMLAttributes, SelectHTMLAttributes } from "react";
+import React, {
+  ChangeEvent,
+  cloneElement,
+  InputHTMLAttributes,
+  ReactElement,
+  ReactNode,
+  SelectHTMLAttributes,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FaCheck, FaExclamationCircle } from "react-icons/fa";
+import { FaXmark } from "react-icons/fa6";
 
 interface Field {
   htmlFor?: string;
@@ -79,9 +90,9 @@ function Checkbox({
     <div className={`flex items-center ${containerStyle}`}>
       <div className={`relative flex items-center ${wrapperInputStyle}`}>
         <input
-          aria-describedby={htmlFor}
+          id={htmlFor}
           type="checkbox"
-          className={`peer box-content h-4 w-4 appearance-none rounded-xs border-gray-300 bg-gray-100 text-blue-600 checked:border-0 checked:bg-blue-800 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 ${inputStyle}`}
+          className={`peer h-4 w-4 appearance-none rounded-xs border-gray-300 bg-gray-100 text-blue-600 checked:border-0 checked:bg-blue-800 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 ${inputStyle}`}
           {...attribute}
         />
         <FaCheck
@@ -149,11 +160,145 @@ function RSelect({
   );
 }
 
-function MultiSelect() {
+interface MultiSelectProps extends InputHTMLAttributes<HTMLInputElement> {
+  name: string;
+  label: string;
+  onSelectItem: (items: Array<SelectedData>) => void;
+  children: ReactNode;
+}
+
+export interface SelectedData {
+  id: string;
+  label: string;
+}
+
+function MultiSelect({
+  label,
+  name,
+  onSelectItem,
+  children,
+}: MultiSelectProps) {
+  const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownList = useRef<HTMLDivElement>(null);
+
+  const handleItemsChange = (event: ChangeEvent) => {
+    const target = event.target as HTMLInputElement;
+    let itemsCollection: SelectedData[];
+
+    const hasItem = selectedItems.find((item) => item.id == target.id);
+
+    if (hasItem) {
+      const newItemsSet = selectedItems.filter((item) => item.id !== target.id);
+      itemsCollection = newItemsSet;
+      setSelectedItems(newItemsSet);
+    } else {
+      itemsCollection = [
+        ...selectedItems,
+        {
+          id: (event.target as HTMLInputElement).id,
+          label: (event.target as HTMLInputElement).value,
+        },
+      ];
+      setSelectedItems(itemsCollection);
+    }
+
+    onSelectItem(itemsCollection);
+  };
+
+  const deleteItem = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    const target = event.target as HTMLSpanElement;
+
+    document.getElementsByName(name).forEach((item) => {
+      if ((item as HTMLInputElement).id == target.parentElement?.id) {
+        (item as HTMLInputElement).checked = false;
+      }
+    });
+
+    const newItemsSet = selectedItems.filter(
+      (item) => item.id !== target.parentElement?.id,
+    );
+    setSelectedItems(newItemsSet);
+    onSelectItem(newItemsSet);
+  };
+
+  const clonedChildren = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      return cloneElement(child as ReactElement, {
+        onChange: handleItemsChange,
+      });
+    }
+    return child;
+  });
+
+  const handleDropDown = () => {
+    setIsDropdownOpen((prev) => !prev);
+  };
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target as Node)
+    ) {
+      setIsDropdownOpen(false); // Close dropdown if clicked outside
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <>
-      <div className="h-3 w-5 bg-red-500"></div>
-    </>
+    <div className="relative">
+      <label
+        htmlFor="dropdown"
+        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+      >
+        {label}
+      </label>
+      <div ref={dropdownRef}>
+        <div
+          id="dropdown"
+          className="dropdown relative flex h-10 w-full items-center overflow-y-scroll rounded-s border border-gray-300 bg-gray-50 px-2 text-gray-900 focus:border-2 focus:border-blue-600 focus:outline-none focus:ring-blue-600 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+          tabIndex={0}
+          onClick={() => handleDropDown()}
+        >
+          {selectedItems.length < 1 ? (
+            <span className="text-gray-500 dark:text-gray-400">None</span>
+          ) : (
+            selectedItems?.map((item, key) => (
+              <span
+                key={key}
+                id={item.id}
+                className="me-2 inline-flex items-center text-nowrap rounded-xs bg-gray-100 px-2 py-1 text-sm font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+              >
+                {item.label}
+                <button
+                  type="button"
+                  className="rounded-sm ms-2 inline-flex items-center bg-transparent p-1 text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-gray-300"
+                  aria-label="Remove"
+                  onClick={deleteItem}
+                >
+                  <FaXmark className="pointer-events-none h-3 w-3" />
+                  <span className="sr-only">Remove badge</span>
+                </button>
+              </span>
+            ))
+          )}
+        </div>
+        <div
+          ref={dropdownList}
+          className={`dropdown-content ${!isDropdownOpen ? "hidden" : ""} absolute left-0 z-50 mt-1 flex h-max w-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-300 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-700`}
+        >
+          {clonedChildren}
+        </div>
+      </div>
+    </div>
   );
 }
 

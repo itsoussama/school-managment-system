@@ -1,17 +1,65 @@
-import { Input } from "@src/components/input";
+import { Checkbox, Input, MultiSelect } from "@src/components/input";
+import { addUser, getSubjects } from "@api";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
+
+export interface FormData {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  school_id: number;
+  roles: number[];
+  subjects: number[];
+  grades: number[];
+}
+
+interface Subject {
+  id: string;
+  name: string;
+}
 
 export default function AddTeacher() {
-  const { t } = useTranslation();
-  const [data, setData] = useState<object>({});
+  const getSubjectsQuery = useQuery({
+    queryKey: ["getSubjects"],
+    queryFn: getSubjects,
+  });
 
-  const handleChange = (event: ChangeEvent) => {
-    const target = event.target as HTMLTextAreaElement;
-    setData((prev) => ({ ...prev, [target.id]: target.value }));
+  const addUserQuery = useMutation({
+    mutationFn: addUser,
+  });
+
+  const { t } = useTranslation();
+  const [data, setData] = useState<FormData>();
+  const admin = useAppSelector((state) => state.user);
+
+  const handleChange = (property: string, value: string | number[]) => {
+    setData((prev) => ({ ...(prev as FormData), [property]: value }));
+  };
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log(data);
+
+    addUserQuery.mutate({
+      name: data?.firstName + " " + data?.lastName,
+      email: data?.email as string,
+      school_id: admin?.school_id,
+      password: data?.password as string,
+      password_confirmation: data?.password_confirmation as string,
+      phone: data?.phone as string,
+      roles: [2],
+      subjects: data?.subjects as number[],
+      grades: [1],
+    });
   };
 
   return (
@@ -75,25 +123,25 @@ export default function AddTeacher() {
           </div>
           <form
             action=""
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={onSubmit}
             className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light"
           >
             <Input
               type="text"
-              id="firstname"
-              name="firstname"
+              id="firstName"
+              name="firstName"
               label="First name"
               placeholder="First name"
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
               type="text"
-              id="lastname"
-              name="lastname"
+              id="lastName"
+              name="lastName"
               label="Last name"
               placeholder="Last name"
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -102,18 +150,18 @@ export default function AddTeacher() {
               name="address"
               label="Address"
               placeholder="123 Rue Principale"
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
               custom-style={{ containerStyle: "col-span-full" }}
             />
 
             <Input
               type="tel"
-              id="tel"
-              name="tel"
+              id="phone"
+              name="phone"
               label="Phone number"
               placeholder="06 00 00 00"
-              onChange={(e) => console.log(e.target.value)}
-              attribute={{ pattern: "(06 | 05)[0-9]{2}[0-9]{4}" }}
+              pattern="(06|05)[0-9]{2}[0-9]{4}"
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -122,8 +170,31 @@ export default function AddTeacher() {
               name="email"
               label="Email"
               placeholder="Johndoe@example.com"
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
+
+            <MultiSelect
+              label="Select subject"
+              name="subjects"
+              onSelectItem={(items) =>
+                handleChange(
+                  "subjects",
+                  items.map((item) => parseInt(item.id)),
+                )
+              }
+            >
+              {getSubjectsQuery.data?.data.data.map((subject: Subject) => (
+                <Checkbox
+                  htmlFor={subject.name}
+                  label={subject.name}
+                  id={subject.id}
+                  name="subject"
+                  value={subject.name}
+                />
+              ))}
+            </MultiSelect>
+
+            <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 
             <Input
               type="password"
@@ -137,7 +208,7 @@ export default function AddTeacher() {
               icon={
                 <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               }
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -152,7 +223,7 @@ export default function AddTeacher() {
               icon={
                 <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               }
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <button className="btn-default m-0 mt-auto" type="submit">

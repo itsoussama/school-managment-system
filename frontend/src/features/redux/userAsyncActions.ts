@@ -15,7 +15,7 @@ const login = createAsyncThunk<void, Data>('user/login', async (data, {rejectWit
 
         const response = await axiosInstance.post("/api/login", data)
 
-        // jsenger@example.com
+        // hammes.mckenzie@example.net
         //  password
 
         if (response.status === 200) {

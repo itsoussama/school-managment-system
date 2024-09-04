@@ -110,9 +110,11 @@ export function Layout({ children, menu }: Layout) {
   }, [theme]);
 
   return (
-    <div className={`flex w-full flex-1 ${theme === "dark" ? "dark" : ""}`}>
+    <div
+      className={`relative flex h-full w-full flex-1 ${theme === "dark" ? "dark" : ""}`}
+    >
       <div
-        className={`z-[10] min-w-[16%] overflow-hidden bg-light-primary p-3 max-2xl:absolute max-2xl:h-full max-2xl:min-w-fit ${isOnHover ? "max-2xl:w-60" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
+        className={`z-[10] h-full min-w-[16%] overflow-hidden bg-light-primary p-3 max-2xl:absolute max-2xl:min-w-fit ${isOnHover ? "max-2xl:w-60" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
