@@ -72,6 +72,11 @@ const getSubjects = async () => {
   return response;
 };
 
+const getGrades = async () => {
+  const response = await axiosApi.get("/api/grades/");
+  return response;
+};
+
 export {
   getTeachers,
   getStudents,
@@ -80,4 +85,5 @@ export {
   setUser,
   deleteUser,
   getSubjects,
+  getGrades,
 };

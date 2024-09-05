@@ -1,6 +1,7 @@
 import { Input, RSelect } from "@src/components/input";
 
 import {
+  Badge,
   Breadcrumb,
   Checkbox,
   Modal,
@@ -60,6 +61,18 @@ interface Teacher {
     {
       id: string;
       name: string;
+    },
+  ];
+  subjects: [
+    {
+      id: string;
+      name: string;
+    },
+  ];
+  grades: [
+    {
+      id: string;
+      label: string;
     },
   ];
 }
@@ -131,6 +144,7 @@ export function ViewTeachers() {
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.user);
   const { t } = useTranslation();
+  const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   // const userId = useRef<string>(null)
 
   const getTeachersQuery = useQuery({
@@ -887,9 +901,29 @@ export function ViewTeachers() {
                     </Table.Cell>
                     <Table.Cell>{teacher.name}</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      -
+                      <div className="flex w-max max-w-36 flex-wrap">
+                        {teacher.subjects.map((subject, index) => (
+                          <Badge
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {subject.name}
+                          </Badge>
+                        ))}
+                      </div>
                     </Table.Cell>
-                    <Table.Cell>-</Table.Cell>
+                    <Table.Cell>
+                      <div className="flex w-max max-w-36 flex-wrap">
+                        {teacher.grades.map((grade, index) => (
+                          <Badge
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {grade.label}
+                          </Badge>
+                        ))}
+                      </div>
+                    </Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                       {teacher.email}
                     </Table.Cell>

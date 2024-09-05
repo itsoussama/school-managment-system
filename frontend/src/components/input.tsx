@@ -9,11 +9,13 @@ import React, {
   ReactNode,
   SelectHTMLAttributes,
   useEffect,
+  useId,
   useRef,
   useState,
 } from "react";
 import { FaCheck, FaExclamationCircle } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
+import ReactDOM from "react-dom";
 
 interface Field {
   htmlFor?: string;
@@ -180,6 +182,13 @@ function MultiSelect({
 }: MultiSelectProps) {
   const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [dropdownStyles, setDropdownStyles] = useState<{
+    width: number;
+    top: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
+  const dropdownUid = useId();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownList = useRef<HTMLDivElement>(null);
 
@@ -233,16 +242,33 @@ function MultiSelect({
     return child;
   });
 
-  const handleDropDown = () => {
-    setIsDropdownOpen((prev) => !prev);
+  const openDropDown = () => {
+    setIsDropdownOpen(true);
+
+    if (document.getElementById(dropdownUid)?.id == dropdownUid) {
+      selectedItems.forEach((item) => {
+        (document.getElementById(item.id) as HTMLInputElement).checked = true;
+      });
+    }
+
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const availableSpace = window.innerHeight - rect.bottom;
+      setDropdownStyles({
+        width: rect.width,
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        maxHeight: Math.max(availableSpace - 20, 150),
+      });
+    }
   };
 
   const handleClickOutside = (event: MouseEvent) => {
     if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target as Node)
+      !dropdownRef.current?.contains(event.target as Node) &&
+      !(dropdownList.current as HTMLDivElement)?.contains(event.target as Node)
     ) {
-      setIsDropdownOpen(false); // Close dropdown if clicked outside
+      setIsDropdownOpen(false);
     }
   };
 
@@ -261,15 +287,17 @@ function MultiSelect({
       >
         {label}
       </label>
-      <div ref={dropdownRef}>
+      <div className="relative" ref={dropdownRef}>
         <div
           id="dropdown"
           className="dropdown relative flex h-10 w-full items-center overflow-y-scroll rounded-s border border-gray-300 bg-gray-50 px-2 text-gray-900 focus:border-2 focus:border-blue-600 focus:outline-none focus:ring-blue-600 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
           tabIndex={0}
-          onClick={() => handleDropDown()}
+          onClick={() => openDropDown()}
         >
           {selectedItems.length < 1 ? (
-            <span className="text-gray-500 dark:text-gray-400">None</span>
+            <span className="pointer-events-none select-none text-gray-500 dark:text-gray-400">
+              None
+            </span>
           ) : (
             selectedItems?.map((item, key) => (
               <span
@@ -291,12 +319,23 @@ function MultiSelect({
             ))
           )}
         </div>
-        <div
-          ref={dropdownList}
-          className={`dropdown-content ${!isDropdownOpen ? "hidden" : ""} absolute left-0 z-50 mt-1 flex h-max w-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-300 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-700`}
-        >
-          {clonedChildren}
-        </div>
+        {ReactDOM.createPortal(
+          <div
+            ref={dropdownList}
+            id={dropdownUid}
+            className="dropdown-content absolute left-0 z-50 mt-1 flex max-h-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-300 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-700"
+            style={{
+              display: isDropdownOpen && dropdownStyles ? "flex" : "none",
+              width: `${dropdownStyles?.width}px`,
+              top: `${dropdownStyles?.top}px`,
+              left: `${dropdownStyles?.left}px`,
+              maxHeight: `${dropdownStyles?.maxHeight}px`,
+            }}
+          >
+            {clonedChildren}
+          </div>,
+          document.body,
+        )}
       </div>
     </div>
   );

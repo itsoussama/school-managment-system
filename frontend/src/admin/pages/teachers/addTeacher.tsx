@@ -1,5 +1,5 @@
 import { Checkbox, Input, MultiSelect } from "@src/components/input";
-import { addUser, getSubjects } from "@api";
+import { addUser, getGrades, getSubjects } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
 import { FormEvent, useState } from "react";
@@ -26,11 +26,20 @@ interface Subject {
   id: string;
   name: string;
 }
+interface Grades {
+  id: string;
+  label: string;
+}
 
 export default function AddTeacher() {
   const getSubjectsQuery = useQuery({
     queryKey: ["getSubjects"],
     queryFn: getSubjects,
+  });
+
+  const getGradesQuery = useQuery({
+    queryKey: ["getGrades"],
+    queryFn: getGrades,
   });
 
   const addUserQuery = useMutation({
@@ -58,7 +67,7 @@ export default function AddTeacher() {
       phone: data?.phone as string,
       roles: [2],
       subjects: data?.subjects as number[],
-      grades: [1],
+      grades: data?.grades as number[],
     });
   };
 
@@ -124,7 +133,7 @@ export default function AddTeacher() {
           <form
             action=""
             onSubmit={onSubmit}
-            className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light"
+            className="relative grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light"
           >
             <Input
               type="text"
@@ -174,7 +183,7 @@ export default function AddTeacher() {
             />
 
             <MultiSelect
-              label="Select subject"
+              label="Subject"
               name="subjects"
               onSelectItem={(items) =>
                 handleChange(
@@ -188,8 +197,29 @@ export default function AddTeacher() {
                   htmlFor={subject.name}
                   label={subject.name}
                   id={subject.id}
-                  name="subject"
+                  name="subjects"
                   value={subject.name}
+                />
+              ))}
+            </MultiSelect>
+
+            <MultiSelect
+              label="Grade"
+              name="grades"
+              onSelectItem={(items) =>
+                handleChange(
+                  "grades",
+                  items.map((item) => parseInt(item.id)),
+                )
+              }
+            >
+              {getGradesQuery.data?.data.data.map((grade: Grades) => (
+                <Checkbox
+                  htmlFor={grade.label}
+                  label={grade.label}
+                  id={grade.id}
+                  name="grades"
+                  value={grade.label}
                 />
               ))}
             </MultiSelect>
