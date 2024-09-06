@@ -17,7 +17,7 @@ class SubjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'name' => null,
             'coef' => fake()->numberBetween(1, 7),
         ];
     }

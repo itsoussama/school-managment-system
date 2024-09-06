@@ -1,5 +1,5 @@
 import { Checkbox, Input, MultiSelect } from "@src/components/input";
-import { addUser, getGrades, getSubjects } from "@api";
+import { addTeacher, getGrades, getSubjects } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
 import { FormEvent, useState } from "react";
@@ -42,8 +42,8 @@ export default function AddTeacher() {
     queryFn: getGrades,
   });
 
-  const addUserQuery = useMutation({
-    mutationFn: addUser,
+  const addTeacherQuery = useMutation({
+    mutationFn: addTeacher,
   });
 
   const { t } = useTranslation();
@@ -58,7 +58,7 @@ export default function AddTeacher() {
     event.preventDefault();
     console.log(data);
 
-    addUserQuery.mutate({
+    addTeacherQuery.mutate({
       name: data?.firstName + " " + data?.lastName,
       email: data?.email as string,
       school_id: admin?.school_id,

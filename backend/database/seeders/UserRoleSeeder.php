@@ -10,12 +10,13 @@ use App\Models\School;
 use App\Models\Subject;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+
 class UserRoleSeeder extends Seeder
 {
     public function run()
     {
         // Create roles
-        $roles = ['Administrator', 'Teacher', 'Student'];
+        $roles = ['Administrator', 'Teacher', 'Student', 'Parent'];
         $schools = [];
 
         // Create schools
@@ -40,10 +41,10 @@ class UserRoleSeeder extends Seeder
                     $grades = Grade::where('school_id', $school->id)->inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
                     $user->subjects()->sync($subjects);
                     $user->grades()->sync($grades);
-
                 });
             }
         }
+
         $admin = User::create([
             'name' => 'admin',
             'email' => 'admin@example.com',
@@ -55,5 +56,19 @@ class UserRoleSeeder extends Seeder
         ]);
 
         $admin->role()->attach(Role::where('name', 'Administrator')->first()->id);
+
+        User::each(function ($user) {
+
+            if ($user->role()->where('name', 'Student')->exists()) {
+                $parent = User::whereHas('role', function ($query) {
+                    $query->where('name', 'Parent');
+                })->inRandomOrder()->first();
+                // Get a random parent
+
+                // Set guardian_id
+                $user->guardian_id = $parent ? $parent->id : null;
+                $user->save();
+            }
+        });
     }
 }

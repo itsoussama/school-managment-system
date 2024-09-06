@@ -15,9 +15,10 @@ class GradeSeeder extends Seeder
     public function run(): void
     {
         $schools = School::all();
+        $grades = [['label' => 'Grade 1'], ['label' => 'Grade 2'], ['label' => 'Grade 3'], ['label' => 'Grade 4'], ['label' => 'Grade 5']];
 
         foreach ($schools as $school) {
-            Grade::factory(5)->create([
+            Grade::factory(5)->sequence(...$grades)->create([
                 'school_id' => $school->id,
             ]);
         }

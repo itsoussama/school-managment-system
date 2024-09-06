@@ -1,17 +1,65 @@
-import { Input } from "@src/components/input";
+import { Checkbox, Input, MultiSelect } from "@components/input";
+import { addStudent, getGrades } from "@api";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
+
+export interface FormData {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  school_id: number;
+  roles: number[];
+  subjects: number[];
+  grades: number[];
+}
+
+interface Grades {
+  id: string;
+  label: string;
+}
 
 export default function AddStudent() {
-  const { t } = useTranslation();
-  const [data, setData] = useState<object>({});
+  const getGradesQuery = useQuery({
+    queryKey: ["getGrades"],
+    queryFn: getGrades,
+  });
 
-  const handleChange = (event: ChangeEvent) => {
-    const target = event.target as HTMLTextAreaElement;
-    setData((prev) => ({ ...prev, [target.id]: target.value }));
+  const addStudentQuery = useMutation({
+    mutationFn: addStudent,
+  });
+
+  const { t } = useTranslation();
+  const [data, setData] = useState<FormData>();
+  const admin = useAppSelector((state) => state.user);
+
+  const handleChange = (property: string, value: string | number[]) => {
+    setData((prev) => ({ ...(prev as FormData), [property]: value }));
+  };
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log(data);
+
+    addStudentQuery.mutate({
+      name: data?.firstName + " " + data?.lastName,
+      email: data?.email as string,
+      school_id: admin?.school_id,
+      password: data?.password as string,
+      password_confirmation: data?.password_confirmation as string,
+      phone: data?.phone as string,
+      roles: [3],
+      subjects: [1],
+      grades: data?.grades as number[],
+    });
   };
 
   return (
@@ -75,25 +123,25 @@ export default function AddStudent() {
           </div>
           <form
             action=""
-            onSubmit={(e) => e.preventDefault()}
-            className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light"
+            onSubmit={onSubmit}
+            className="relative grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light"
           >
             <Input
               type="text"
-              id="firstname"
-              name="firstname"
+              id="firstName"
+              name="firstName"
               label="First name"
               placeholder="First name"
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
               type="text"
-              id="lastname"
-              name="lastname"
+              id="lastName"
+              name="lastName"
               label="Last name"
               placeholder="Last name"
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -102,18 +150,18 @@ export default function AddStudent() {
               name="address"
               label="Address"
               placeholder="123 Rue Principale"
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
               custom-style={{ containerStyle: "col-span-full" }}
             />
 
             <Input
               type="tel"
-              id="tel"
-              name="tel"
+              id="phone"
+              name="phone"
               label="Phone number"
               placeholder="06 00 00 00"
-              onChange={(e) => console.log(e.target.value)}
               pattern="(06|05)[0-9]{2}[0-9]{4}"
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -122,8 +170,31 @@ export default function AddStudent() {
               name="email"
               label="Email"
               placeholder="Johndoe@example.com"
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
+
+            <MultiSelect
+              label="Grade"
+              name="grades"
+              onSelectItem={(items) =>
+                handleChange(
+                  "grades",
+                  items.map((item) => parseInt(item.id)),
+                )
+              }
+            >
+              {getGradesQuery.data?.data.data.map((grade: Grades) => (
+                <Checkbox
+                  htmlFor={grade.label}
+                  label={grade.label}
+                  id={grade.id}
+                  name="grades"
+                  value={grade.label}
+                />
+              ))}
+            </MultiSelect>
+
+            <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 
             <Input
               type="password"
@@ -137,7 +208,7 @@ export default function AddStudent() {
               icon={
                 <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               }
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -152,7 +223,7 @@ export default function AddStudent() {
               icon={
                 <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               }
-              onChange={(e) => console.log(e.target.value)}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <button className="btn-default m-0 mt-auto" type="submit">

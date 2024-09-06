@@ -1,6 +1,7 @@
 import { Input, RSelect } from "@src/components/input";
 
 import {
+  Badge,
   Breadcrumb,
   Checkbox,
   Modal,
@@ -62,6 +63,18 @@ interface Student {
       name: string;
     },
   ];
+  subjects: [
+    {
+      id: string;
+      name: string;
+    },
+  ];
+  grades: [
+    {
+      id: string;
+      label: string;
+    },
+  ];
 }
 
 export interface FormData {
@@ -119,6 +132,7 @@ export function ViewStudents() {
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.user);
   const { t } = useTranslation();
+  const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   // const userId = useRef<string>(null)
 
   const getStudentsQuery = useQuery({
@@ -873,7 +887,16 @@ export function ViewStudents() {
                     </Table.Cell>
                     <Table.Cell>{student.name}</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {/* {student.grade_level} */}-
+                      <div className="flex w-max max-w-36 flex-wrap">
+                        {student.grades.map((grade, index) => (
+                          <Badge
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {grade.label}
+                          </Badge>
+                        ))}
+                      </div>
                     </Table.Cell>
                     <Table.Cell>{/* {student.date_birth} */}-</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">

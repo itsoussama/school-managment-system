@@ -17,7 +17,7 @@ class GradeFactory extends Factory
     public function definition(): array
     {
         return [
-            'label' => fake()->name(),
+            'label' => null,
         ];
     }
 }

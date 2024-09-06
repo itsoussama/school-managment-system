@@ -61,7 +61,7 @@ class User extends Authenticatable
     {
         return $this->belongsTo(School::class, 'school_id', 'id');
     }
-    public function subjects() : BelongsToMany
+    public function subjects(): BelongsToMany
     {
         return $this->belongsToMany(Subject::class);
     }
@@ -81,4 +81,13 @@ class User extends Authenticatable
         return false;
     }
 
+    public function guardian()
+    {
+        return $this->belongsTo(User::class, 'guardian_id');
+    }
+
+    public function childrens()
+    {
+        return $this->hasMany(User::class, 'guardian_id');
+    }
 }

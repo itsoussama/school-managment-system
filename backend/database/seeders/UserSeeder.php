@@ -36,7 +36,24 @@ class UserSeeder extends Seeder
         //     // $User->school()->sync($schools);
         // });
 
-        User::factory()->has(Role::factory()->sequence(['name' => 'Teacher'], ['name' => 'Student'], ['name' => 'Administrator']))->for(School::factory())->count(2)->create();
+        User::factory()
+            ->has(Role::factory()->sequence(['name' => 'Teacher'], ['name' => 'Student'], ['name' => 'Administrator'], ['name' => 'Parent']))
+            ->for(School::factory())
+            ->count(2)
+            ->create()
+            ->each(function ($user) {
+                // Attach the role 'Student' or 'Parent' after creation
+                if ($user->roles()->where('name', 'Student')->exists()) {
+                    // Assign a random parent as guardian
+                    $parent = User::whereHas('roles', function ($query) {
+                        $query->where('name', 'Parent');
+                    })->inRandomOrder()->first();
+
+                    // Set guardian_id
+                    $user->guardian_id = $parent ? $parent->id : null;
+                    $user->save();
+                }
+            });
         User::factory(['name' => 'admin', 'email' => 'admin@example.com', 'school_id' => 1])->has(Role::factory(['name' => 'Administrator']))->createOne();
     }
 }
