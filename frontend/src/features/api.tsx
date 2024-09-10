@@ -87,7 +87,7 @@ const addStudent = async (formData: AddStudentFromData) => {
 };
 
 const addParent = async (formData: AddParentFromData) => {
-  const response = await axiosApi.post("/api/users/", formData);
+  const response = await axiosApi.post("/api/add-parent/", formData);
   return response;
 };
 

@@ -2,7 +2,7 @@ import { Input, MultiSelect, Checkbox } from "@components/input";
 import { addParent, getStudents } from "@api";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, FormEvent, KeyboardEventHandler, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaLock, FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -17,6 +17,7 @@ export interface FormData {
   password: string;
   password_confirmation: string;
   school_id: number;
+  childrens: number[];
   roles: number[];
 }
 
@@ -27,10 +28,6 @@ interface Childs {
 }
 
 export default function AddParent() {
-  const addStudentQuery = useMutation({
-    mutationFn: addParent,
-  });
-
   const { t } = useTranslation();
   const [data, setData] = useState<FormData>();
   const [searchValue, setSearchValue] = useState<string>("");
@@ -38,8 +35,12 @@ export default function AddParent() {
 
   const getChildrensQuery = useQuery({
     queryKey: ["getChildrens"],
-    queryFn: () => getStudents(),
+    queryFn: () => getStudents(1, -1),
     placeholderData: keepPreviousData,
+  });
+
+  const addParentQuery = useMutation({
+    mutationFn: addParent,
   });
 
   const handleChange = (property: string, value: string | number[]) => {
@@ -55,13 +56,14 @@ export default function AddParent() {
     event.preventDefault();
     console.log(data);
 
-    addStudentQuery.mutate({
+    addParentQuery.mutate({
       name: data?.firstName + " " + data?.lastName,
       email: data?.email as string,
       school_id: admin?.school_id,
       password: data?.password as string,
       password_confirmation: data?.password_confirmation as string,
       phone: data?.phone as string,
+      childrens: data?.childrens as number[],
       roles: [4],
     });
   };
@@ -178,11 +180,11 @@ export default function AddParent() {
             />
 
             <MultiSelect
-              label="Childs"
-              name="childs"
+              label="Childrens"
+              name="childrens"
               onSelectItem={(items) =>
                 handleChange(
-                  "childs",
+                  "childrens",
                   items.map((item) => parseInt(item.id)),
                 )
               }
@@ -202,25 +204,19 @@ export default function AddParent() {
                   labelStyle: "mb-0 !inline",
                 }}
               />
-              {getChildrensQuery.data?.data.data
-                // .filter(
-                //   (child: Childs) =>
-                //     child.guardian_id &&
-                //     child.name.toLowerCase().includes(searchValue), // Case-insensitive search match
-                // )
-                .map(
-                  (child: Childs) =>
-                    child.guardian_id &&
-                    child.name.search(new RegExp(searchValue, "i")) !== -1 && (
-                      <Checkbox
-                        htmlFor={child.name}
-                        label={child.name}
-                        id={child.id}
-                        name="childs"
-                        value={child.name}
-                      />
-                    ),
-                )}
+              {getChildrensQuery.data?.data.map(
+                (child: Childs, key: number) =>
+                  child.name.search(new RegExp(searchValue, "i")) !== -1 && (
+                    <Checkbox
+                      key={key}
+                      htmlFor={child.name}
+                      label={child.name}
+                      id={child.id}
+                      name="childrens"
+                      value={child.name}
+                    />
+                  ),
+              )}
             </MultiSelect>
 
             <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>

@@ -27,6 +27,7 @@ import {
   FaSortDown,
   FaSortUp,
   FaTrash,
+  FaUser,
 } from "react-icons/fa";
 import { IoFilter } from "react-icons/io5";
 import { Link } from "react-router-dom";
@@ -876,9 +877,10 @@ export function ViewStudents() {
                       {student.id}
                     </Table.Cell>
                     <Table.Cell>{student.name}</Table.Cell>
+
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                       <div className="flex w-max max-w-36 flex-wrap">
-                        {student.grades.map((grade, index) => (
+                        {student.grades?.map((grade, index) => (
                           <Badge
                             key={index}
                             color={badgeColor[index % badgeColor.length]}
@@ -891,14 +893,24 @@ export function ViewStudents() {
                     </Table.Cell>
                     <Table.Cell>{/* {student.date_birth} */}-</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      <div className="flex items-center gap-x-2">
-                        <img
-                          className="w-8 rounded-full"
-                          src="https://i.pravatar.cc/300?img=12"
-                          alt="profile"
-                        />
-                        <span>{student.guardian.name}</span>
-                      </div>
+                      {student.guardian ? (
+                        <div className="flex items-center gap-x-2">
+                          <img
+                            className="w-8 rounded-full"
+                            src="https://i.pravatar.cc/300?img=12"
+                            alt="profile"
+                          />
+                          <span>{student.guardian?.name}</span>
+                        </div>
+                      ) : (
+                        <a
+                          href="#"
+                          className="flex items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                        >
+                          <FaUser className="me-2" />
+                          Assign to a parent
+                        </a>
+                      )}
                     </Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                       -

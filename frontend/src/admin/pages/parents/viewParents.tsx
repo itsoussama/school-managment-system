@@ -828,14 +828,14 @@ export function ViewParents() {
                       {parent.id}
                     </Table.Cell>
                     <Table.Cell>{parent.name}</Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      <div
-                        className="flex items-center gap-x-2"
-                        onMouseOver={(e) => setDropDownPos(e.currentTarget)}
-                        data-id={key}
-                      >
+                    <Table.Cell
+                      className="font-medium text-gray-900 dark:text-gray-300"
+                      onMouseOver={(e) => setDropDownPos(e.currentTarget)}
+                      data-id={key}
+                    >
+                      <div className="flex items-center gap-x-2">
                         {parent.childrens.length > 2 ? (
-                          <div className="flex -space-x-4 rtl:space-x-reverse">
+                          <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
                             {parent.childrens.map(
                               (child, key) =>
                                 key < 1 && (
@@ -852,7 +852,7 @@ export function ViewParents() {
                             </div>
                           </div>
                         ) : parent.childrens.length > 1 ? (
-                          <div className="flex -space-x-4 rtl:space-x-reverse">
+                          <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
                             {parent.childrens.map(
                               (child, key) =>
                                 key < 1 && (
@@ -875,7 +875,9 @@ export function ViewParents() {
                               src="https://i.pravatar.cc/300?img=12"
                               alt="profile"
                             />
-                            <span>{parent.childrens[0]?.name}</span>
+                            <span className="pointer-events-none">
+                              {parent.childrens[0]?.name}
+                            </span>
                           </>
                         ) : (
                           <a

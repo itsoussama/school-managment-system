@@ -64,8 +64,12 @@ class UserController extends Controller
                     $query->where('name', config('roles.student'));
                 }
 
-            )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
-            return response()->json($users, Response::HTTP_OK);
+            )->orderBy($sortColumn, $sortDirection);
+
+            if ($perPage == -1) {
+                return response()->json($users->get(), Response::HTTP_OK);
+            }
+            return response()->json($users->paginate($perPage), Response::HTTP_OK);
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
@@ -87,7 +91,51 @@ class UserController extends Controller
                 }
 
             )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+
             return response()->json($users, Response::HTTP_OK);
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
+    public function addParent(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+            try {
+                $validation = $request->validate([
+                    'childrens' => 'required|array|exists:users,id',
+                    'name' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255|unique:users',
+                    'phone' => 'required|string|max:255',
+                    'password' => 'required|string|min:8|confirmed',
+                    'school_id' => 'required|exists:schools,id',
+                    'roles' => 'required|array',
+                    'roles.*' => 'exists:roles,id',
+                ]);
+                if ($validation) {
+                    $user = User::create([
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'phone' => $request->phone,
+                        'password' => bcrypt($request->password),
+                    ]);
+                    $user->school()->associate($request->school_id);
+                    $user->role()->sync($request->roles);
+                    $user->save();
+                    $childrens = User::whereIn('id', $request->childrens)->get();
+                    foreach ($childrens as $child) {
+                        $child->guardian_id = $user->id;
+                        $child->save();
+                    }
+                } else {
+                    return $request;
+                }
+
+
+                // return response()->json($user, Response::HTTP_CREATED);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json($e->errors(), 422);
+            }
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
