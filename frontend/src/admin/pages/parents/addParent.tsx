@@ -29,6 +29,7 @@ interface Childs {
 
 export default function AddParent() {
   const { t } = useTranslation();
+  const { t: fieldsTrans } = useTranslation("form-fields");
   const [data, setData] = useState<FormData>();
   const [searchValue, setSearchValue] = useState<string>("");
   const admin = useAppSelector((state) => state.user);
@@ -94,7 +95,7 @@ export default function AddParent() {
         <div className="item flex min-w-72 flex-1 flex-col gap-4">
           <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Profile
+              {t("profile")}
             </h1>
           </div>
           <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
@@ -103,16 +104,16 @@ export default function AddParent() {
               src="https://i.pravatar.cc/300?img=12"
               alt=""
             />
-            <button className="btn-gray">Upload photo</button>
+            <button className="btn-gray">{fieldsTrans("upload-photo")}</button>
             <div className="flex flex-col">
               <span className="text-sm text-gray-700 dark:text-gray-500">
-                Accepted format:{" "}
+                {t("accepted-format")}:{" "}
                 <span className="text-gray-500 dark:text-gray-400">
                   jpg, jpeg, png
                 </span>
               </span>
               <span className="text-sm text-gray-700 dark:text-gray-500">
-                Maximum size:{" "}
+                {t("maximum-size")}:{" "}
                 <span className="text-gray-500 dark:text-gray-400">
                   1024 mb
                 </span>
@@ -124,7 +125,7 @@ export default function AddParent() {
         <div className="flex flex-[3] flex-col gap-4">
           <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Parent information
+              {t("parent-information")}
             </h1>
           </div>
           <form
@@ -136,8 +137,8 @@ export default function AddParent() {
               type="text"
               id="firstName"
               name="firstName"
-              label="First name"
-              placeholder="First name"
+              label={fieldsTrans("first-name")}
+              placeholder={fieldsTrans("first-name-placeholder")}
               onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
@@ -145,8 +146,8 @@ export default function AddParent() {
               type="text"
               id="lastName"
               name="lastName"
-              label="Last name"
-              placeholder="Last name"
+              label={fieldsTrans("last-name")}
+              placeholder={fieldsTrans("last-name-placeholder")}
               onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
@@ -154,8 +155,8 @@ export default function AddParent() {
               type="text"
               id="address"
               name="address"
-              label="Address"
-              placeholder="123 Rue Principale"
+              label={fieldsTrans("address")}
+              placeholder={fieldsTrans("address-placeholder")}
               onChange={(e) => handleChange(e.target.id, e.target.value)}
               custom-style={{ containerStyle: "col-span-full" }}
             />
@@ -164,7 +165,7 @@ export default function AddParent() {
               type="tel"
               id="phone"
               name="phone"
-              label="Phone number"
+              label={fieldsTrans("phone-number")}
               placeholder="06 00 00 00"
               pattern="(06|05)[0-9]{2}[0-9]{4}"
               onChange={(e) => handleChange(e.target.id, e.target.value)}
@@ -174,13 +175,13 @@ export default function AddParent() {
               type="email"
               id="email"
               name="email"
-              label="Email"
+              label={fieldsTrans("email")}
               placeholder="Johndoe@example.com"
               onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <MultiSelect
-              label="Childrens"
+              label={fieldsTrans("childrens")}
               name="childrens"
               onSelectItem={(items) =>
                 handleChange(
@@ -197,7 +198,7 @@ export default function AddParent() {
                 }
                 label=""
                 onKeyUp={(e) => handleSearch(e.target)}
-                placeholder="All"
+                placeholder={fieldsTrans("filter-all")}
                 name="search"
                 custom-style={{
                   inputStyle: "px-8 !py-1",
@@ -225,7 +226,7 @@ export default function AddParent() {
               type="password"
               id="password"
               name="password"
-              label="Password"
+              label={fieldsTrans("password")}
               placeholder="●●●●●●●"
               custom-style={{
                 inputStyle: "px-10",
@@ -240,7 +241,7 @@ export default function AddParent() {
               type="password"
               id="password_confirmation"
               name="password_confirmation"
-              label="Confirm password"
+              label={fieldsTrans("confirm-password")}
               placeholder="●●●●●●●"
               custom-style={{
                 inputStyle: "px-10",
@@ -252,7 +253,7 @@ export default function AddParent() {
             />
 
             <button className="btn-default m-0 mt-auto" type="submit">
-              Create account
+              {fieldsTrans("create-account-btn")}
             </button>
           </form>
         </div>

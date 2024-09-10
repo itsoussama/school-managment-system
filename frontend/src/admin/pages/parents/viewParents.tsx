@@ -1,7 +1,6 @@
 import { Input, RSelect } from "@src/components/input";
 
 import {
-  Badge,
   Breadcrumb,
   Checkbox,
   Modal,
@@ -110,6 +109,7 @@ export function ViewParents() {
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.user);
   const { t } = useTranslation();
+  const { t: fieldTrans } = useTranslation("form-fields");
   // const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
 
   const getParentsQuery = useQuery({
@@ -385,13 +385,13 @@ export function ViewParents() {
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  Personal Information
+                  {t("personal-information")}
                 </h1>
                 <SkeletonContent isLoaded={getStudentQuery.isFetched}>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        First name:
+                        {fieldTrans("first-name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {
@@ -404,7 +404,7 @@ export function ViewParents() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        Last name:
+                        {fieldTrans("last-name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {
@@ -417,7 +417,7 @@ export function ViewParents() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        Email:
+                        {fieldTrans("email")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
                         {getStudentQuery.data?.data.email}
@@ -425,7 +425,7 @@ export function ViewParents() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        Phone:
+                        {fieldTrans("phone-number")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {getStudentQuery.data?.data.phone}
@@ -433,7 +433,7 @@ export function ViewParents() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        Address:
+                        {fieldTrans("address")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         123 Rue Principale
@@ -445,12 +445,12 @@ export function ViewParents() {
 
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  Academic Information
+                  {t("academic-information")}
                 </h1>
                 <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Subject:
+                      {fieldTrans("subjects")}:
                     </span>
                     <span className="text-base text-gray-900 dark:text-white">
                       Maths
@@ -458,7 +458,7 @@ export function ViewParents() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Grade Levels:
+                      {fieldTrans("grade-levels")}:
                     </span>
                     <span className="text-base text-gray-900 dark:text-white">
                       9th, 10th
@@ -466,7 +466,7 @@ export function ViewParents() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      Start date:
+                      {fieldTrans("start-date")}:
                     </span>
                     <span className="text-base text-gray-900 dark:text-white">
                       2024/01/01
@@ -507,13 +507,13 @@ export function ViewParents() {
                 <button className="btn-dark dark:btn-gray">Upload photo</button>
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-700 dark:text-gray-500">
-                    Accepted format:{" "}
+                    {fieldTrans("accepted-format")}:{" "}
                     <span className="text-gray-500 dark:text-gray-400">
                       jpg, jpeg, png
                     </span>
                   </span>
                   <span className="text-xs text-gray-700 dark:text-gray-500">
-                    Maximum size:{" "}
+                    {fieldTrans("maximum-size")}:{" "}
                     <span className="text-gray-500 dark:text-gray-400">
                       1024 mb
                     </span>
@@ -523,15 +523,15 @@ export function ViewParents() {
               <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    Personal Information
+                    {t("personal-information")}
                   </h1>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
                       id="firstName"
                       name="firstName"
-                      label="First name"
-                      placeholder="First name"
+                      label={fieldTrans("first-name")}
+                      placeholder={fieldTrans("first-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
                       value={formData?.firstName}
@@ -542,8 +542,8 @@ export function ViewParents() {
                       type="text"
                       id="lastName"
                       name="lastName"
-                      label="Last name"
-                      placeholder="Last name"
+                      label={fieldTrans("last-name")}
+                      placeholder={fieldTrans("last-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
                       value={formData?.lastName}
@@ -554,8 +554,8 @@ export function ViewParents() {
                       type="text"
                       id="address"
                       name="address"
-                      label="Address"
-                      placeholder="123 Rue Principale"
+                      label={fieldTrans("address")}
+                      placeholder={fieldTrans("address-placeholder")}
                       value="123 Rue Principale"
                       onChange={(e) => console.log(e.target.value)}
                       custom-style={{ containerStyle: "col-span-full" }}
@@ -565,7 +565,7 @@ export function ViewParents() {
                       type="tel"
                       id="phone"
                       name="phone"
-                      label="Phone number"
+                      label={fieldTrans("phone-number")}
                       placeholder="06 00 00 00"
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
@@ -578,8 +578,8 @@ export function ViewParents() {
                       type="email"
                       id="email"
                       name="email"
-                      label="Email"
-                      placeholder="Johndoe@example.com"
+                      label={fieldTrans("email")}
+                      placeholder={fieldTrans("email-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
                       value={formData?.email}
@@ -590,7 +590,7 @@ export function ViewParents() {
                       type="password"
                       id="password"
                       name="password"
-                      label="Password"
+                      label={fieldTrans("password")}
                       placeholder="●●●●●●●"
                       custom-style={{
                         inputStyle: "px-10",
@@ -605,7 +605,7 @@ export function ViewParents() {
                       type="password"
                       id="password_confirmation"
                       name="password_confirmation"
-                      label="Confirm password"
+                      label={fieldTrans("confirm-password")}
                       placeholder="●●●●●●●"
                       custom-style={{
                         inputStyle: "px-10",
@@ -622,10 +622,10 @@ export function ViewParents() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-default !w-auto">
-              I accept
+              {fieldTrans("accept")}
             </button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              Decline
+              {fieldTrans("decline")}
             </button>
           </Modal.Footer>
         </form>
@@ -648,39 +648,39 @@ export function ViewParents() {
         }}
       >
         <form onSubmit={onSubmitDelete}>
-          <Modal.Header>Delete User</Modal.Header>
+          <Modal.Header>{t("delete-modal")}</Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                Are you sure you want to delete{" "}
+                {t("delete-modal-title")}
                 <b>{getStudentQuery.data?.data.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">
-                  This will delete the user completely, and you can not undo
-                  this action
-                </p>
+                <p className="text-white">{t("delete-modal-message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                Please retype <b>{getStudentQuery.data?.data.name}</b>
+                {t("delete-modal-label")}{" "}
+                <b>{getStudentQuery.data?.data.name}</b>
               </p>
               <Input
                 type="text"
                 id="verfication"
                 name="verfication"
                 placeholder="John doe"
-                error={!isVerficationMatch ? "Values doesn't match" : null}
+                error={
+                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
+                }
                 required
               />
             </div>
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
-              Delete
+              {t("delete-modal-delete-btn")}
             </button>
             <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              No, cancel
+              {t("delete-modal-cancel-btn")}
             </button>
           </Modal.Footer>
         </form>
@@ -694,7 +694,8 @@ export function ViewParents() {
 
               <button className="btn-danger !m-0 flex w-max items-center">
                 <FaTrash className="mr-2 text-white" />
-                Delete
+
+                {t("delete-records")}
                 <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
               </button>
             </div>
@@ -722,17 +723,17 @@ export function ViewParents() {
             striped
           >
             <Table.Head className="uppercase">
-              <Table.HeadCell className="w-0 p-4">
+              <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                 <Checkbox
                   id="0"
                   ref={firstCheckboxRef}
                   onChange={() => handleCheck()}
                 />
               </Table.HeadCell>
-              <Table.HeadCell>UID</Table.HeadCell>
+              <Table.HeadCell>{t("parent-id")}</Table.HeadCell>
               <Table.HeadCell>
                 <div className="flex items-center justify-center gap-x-3">
-                  <span className="inline-block">Fullname</span>
+                  <span className="inline-block">{t("full-name")}</span>
                   <div
                     className="flex flex-col"
                     onClick={() => handleSort("name")}
@@ -748,10 +749,10 @@ export function ViewParents() {
                   </div>
                 </div>
               </Table.HeadCell>
-              <Table.HeadCell>Child(s)</Table.HeadCell>
-              <Table.HeadCell>Email</Table.HeadCell>
-              <Table.HeadCell>Phone</Table.HeadCell>
-              <Table.HeadCell>Active time</Table.HeadCell>
+              <Table.HeadCell>{t("Childs")}</Table.HeadCell>
+              <Table.HeadCell>{fieldTrans("email")}</Table.HeadCell>
+              <Table.HeadCell>{fieldTrans("phone-number")}</Table.HeadCell>
+              <Table.HeadCell>{t("active-time")}</Table.HeadCell>
               <Table.HeadCell className="w-0">
                 <span className="sr-only w-full">Actions</span>
               </Table.HeadCell>
@@ -770,7 +771,7 @@ export function ViewParents() {
                   </Table.Row>
                 ))}
               <Table.Row>
-                <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2">
                   {/* <div className="h-2 w-12 bg-red-600"></div> */}
@@ -781,7 +782,7 @@ export function ViewParents() {
                       <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                     }
                     label=""
-                    placeholder="All"
+                    placeholder={fieldTrans("filter-all")}
                     name="search"
                     custom-style={{
                       inputStyle: "px-8 !py-1",
@@ -797,7 +798,7 @@ export function ViewParents() {
                       <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                     }
                     label=""
-                    placeholder="All"
+                    placeholder={fieldTrans("filter-all")}
                     name="search"
                     custom-style={{
                       inputStyle: "px-8 !py-1",
@@ -816,7 +817,7 @@ export function ViewParents() {
                     key={key}
                     className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
                   >
-                    <Table.Cell className="p-4">
+                    <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                       <Checkbox
                         id={(key + 1).toString()}
                         name="checkbox"
@@ -885,7 +886,7 @@ export function ViewParents() {
                             className="flex items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
                           >
                             <FaUser className="me-2" />
-                            Add new child
+                            {t("add-new-child")}
                           </a>
                         )}
                         {dropDownPos && parent.childrens.length > 0 && (
@@ -903,7 +904,7 @@ export function ViewParents() {
                               ))}
                             </DropdownListButton.List>
                             <DropdownListButton.Button>
-                              Add new child
+                              {t("add-new-child")}
                             </DropdownListButton.Button>
                           </DropdownListButton>
                         )}
@@ -981,11 +982,11 @@ export function ViewParents() {
 
         <div className="flex w-full items-center justify-between px-5 py-4">
           <span className="text-gray-500 dark:text-gray-400">
-            Showing{" "}
+            {t("records-number")}{" "}
             <span className="font-semibold text-gray-900 dark:text-white">
               {getParentsQuery.data?.data.from}-{getParentsQuery.data?.data.to}
             </span>{" "}
-            of{" "}
+            {t("total-records")}{" "}
             <span className="font-semibold text-gray-900 dark:text-white">
               {getParentsQuery.data?.data.total}
             </span>
@@ -1009,6 +1010,8 @@ export function ViewParents() {
                 !getParentsQuery.isPlaceholderData && setPage(page)
               }
               totalPages={getParentsQuery.data?.data.last_page ?? 1}
+              nextLabel={t("next")}
+              previousLabel={t("previous")}
               theme={{
                 pages: {
                   next: {
