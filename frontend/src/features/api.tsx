@@ -2,6 +2,7 @@ import AxiosProvider from "@services/axiosProvider";
 import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTeachers";
 import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
 import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStudent";
+import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
 const axiosApi = AxiosProvider();
 
 const getTeachers = async (
@@ -31,10 +32,32 @@ const getStudents = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: string,
+  schoolId = 1,
 ) => {
   const response = await axiosApi.get(
     "/api/student?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&school_id=" +
+      schoolId,
+  );
+  return response;
+};
+
+const getParents = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  schoolId = 1,
+) => {
+  const response = await axiosApi.get(
+    "/api/parent?page=" +
       page +
       "&per_page=" +
       perPage +
@@ -63,6 +86,11 @@ const addStudent = async (formData: AddStudentFromData) => {
   return response;
 };
 
+const addParent = async (formData: AddParentFromData) => {
+  const response = await axiosApi.post("/api/users/", formData);
+  return response;
+};
+
 const setUser = async (formData: UpdateTeacherFromData) => {
   const response = await axiosApi.put("/api/users/" + formData?.id, formData);
   return response;
@@ -86,9 +114,11 @@ const getGrades = async () => {
 export {
   getTeachers,
   getStudents,
+  getParents,
   getUser,
   addStudent,
   addTeacher,
+  addParent,
   setUser,
   deleteUser,
   getSubjects,

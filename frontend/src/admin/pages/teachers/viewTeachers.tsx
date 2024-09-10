@@ -904,6 +904,7 @@ export function ViewTeachers() {
                       <div className="flex w-max max-w-36 flex-wrap">
                         {teacher.subjects.map((subject, index) => (
                           <Badge
+                            key={index}
                             color={badgeColor[index % badgeColor.length]}
                             className="mb-1 me-1 rounded-xs"
                           >
@@ -916,6 +917,7 @@ export function ViewTeachers() {
                       <div className="flex w-max max-w-36 flex-wrap">
                         {teacher.grades.map((grade, index) => (
                           <Badge
+                            key={index}
                             color={badgeColor[index % badgeColor.length]}
                             className="mb-1 me-1 rounded-xs"
                           >
@@ -948,42 +950,44 @@ export function ViewTeachers() {
                     </span> */}
                       -
                     </Table.Cell>
-                    <Table.Cell className="flex w-fit gap-x-2">
-                      <div
-                        onClick={() =>
-                          setOpenModal({
-                            id: teacher.id,
-                            type: "view",
-                            open: true,
-                          })
-                        }
-                        className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                      >
-                        <FaEye className="text-blue-600 dark:text-blue-500" />
-                      </div>
-                      <div
-                        className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                        onClick={() =>
-                          onOpenEditModal({
-                            id: teacher.id,
-                            type: "edit",
-                            open: true,
-                          })
-                        }
-                      >
-                        <FaPen className="text-green-600 dark:text-green-500" />
-                      </div>
-                      <div
-                        className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                        onClick={() =>
-                          setOpenModal({
-                            id: teacher.id,
-                            type: "delete",
-                            open: true,
-                          })
-                        }
-                      >
-                        <FaTrash className="text-red-600 dark:text-red-500" />
+                    <Table.Cell>
+                      <div className="flex h-full w-fit gap-x-2">
+                        <div
+                          onClick={() =>
+                            setOpenModal({
+                              id: teacher.id,
+                              type: "view",
+                              open: true,
+                            })
+                          }
+                          className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                        >
+                          <FaEye className="text-blue-600 dark:text-blue-500" />
+                        </div>
+                        <div
+                          className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                          onClick={() =>
+                            onOpenEditModal({
+                              id: teacher.id,
+                              type: "edit",
+                              open: true,
+                            })
+                          }
+                        >
+                          <FaPen className="text-green-600 dark:text-green-500" />
+                        </div>
+                        <div
+                          className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                          onClick={() =>
+                            setOpenModal({
+                              id: teacher.id,
+                              type: "delete",
+                              open: true,
+                            })
+                          }
+                        >
+                          <FaTrash className="text-red-600 dark:text-red-500" />
+                        </div>
                       </div>
                     </Table.Cell>
                   </Table.Row>

@@ -23,9 +23,8 @@ class UserController extends Controller
 
             $users = User::with('school', 'role', 'subjects', 'grades')->where('school_id', $school_id)->orderBy($sortColumn, $sortDirection)->paginate($perPage);
             return response()->json($users, Response::HTTP_OK);
-        }else {
+        } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
-
         }
     }
     public function teachers(Request $request)
@@ -38,15 +37,16 @@ class UserController extends Controller
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
 
-            $users = User::with('school', 'role', 'subjects', 'grades')->where('school_id', $school_id)->whereHas('role', function ($query) {
-                $query->where('name', config('roles.teacher'));
-            }
+            $users = User::with('school', 'role', 'subjects', 'grades')->where('school_id', $school_id)->whereHas(
+                'role',
+                function ($query) {
+                    $query->where('name', config('roles.teacher'));
+                }
 
             )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
             return response()->json($users, Response::HTTP_OK);
-        }else {
+        } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
-
         }
     }
     public function students(Request $request)
@@ -58,15 +58,38 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
-            $users = User::with('school', 'role', 'subjects', 'grades')->where('school_id', $school_id)->whereHas('role', function ($query) {
-                $query->where('name', config('roles.student'));
-            }
+            $users = User::with('school', 'role', 'subjects', 'grades', 'guardian')->where('school_id', $school_id)->whereHas(
+                'role',
+                function ($query) {
+                    $query->where('name', config('roles.student'));
+                }
 
             )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
             return response()->json($users, Response::HTTP_OK);
-        }else {
+        } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
 
+    public function parents(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+            $perPage = $request->input('per_page', 5);
+            info($request);
+            // Get sort parameters from request
+            $sortColumn = $request->input('sort_column', 'id');
+            $sortDirection = $request->input('sort_direction', 'asc');
+            $school_id = $request->input('school_id');
+            $users = User::with('school', 'role', 'childrens')->where('school_id', $school_id)->whereHas(
+                'role',
+                function ($query) {
+                    $query->where('name', config('roles.parent'));
+                }
+
+            )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+            return response()->json($users, Response::HTTP_OK);
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
     }
 
@@ -75,7 +98,7 @@ class UserController extends Controller
     {
 
         if (auth()->user()->hasRole(config('roles.admin'))) {
-            try{
+            try {
                 $validation = $request->validate([
                     'name' => 'required|string|max:255',
                     'email' => 'required|string|email|max:255|unique:users',
@@ -101,20 +124,18 @@ class UserController extends Controller
                     $user->subjects()->sync($request->subjects);
                     $user->grades()->sync($request->grades);
                     $user->save();
-                }else {
+                } else {
                     return $request;
                 }
 
 
                 return response()->json($user, Response::HTTP_CREATED);
-            }
-            catch (\Illuminate\Validation\ValidationException $e) {
+            } catch (\Illuminate\Validation\ValidationException $e) {
                 return response()->json($e->errors(), 422);
             }
-    }else {
-        return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
-
-    }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
     }
 
     // Display the specified resource
@@ -123,9 +144,8 @@ class UserController extends Controller
         if (auth()->user()->hasRole(config('roles.admin'))) {
             $user->load('school', 'role', 'subjects', 'grades');
             return response()->json($user, Response::HTTP_OK);
-        }else {
+        } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
-
         }
     }
 
@@ -133,7 +153,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
-        try {
+            try {
                 // Validate incoming request
                 $request->validate([
                     'name' => 'nullable|string|max:255',
@@ -179,30 +199,27 @@ class UserController extends Controller
                 // Load relationships and return response
                 $user->load('school', 'role', 'subjects', 'grades');
 
-        return response()->json($user, Response::HTTP_OK);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json($e->errors(), 422);
-        }
-    }else {
+                return response()->json($user, Response::HTTP_OK);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json($e->errors(), 422);
+            }
+        } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
-
         }
     }
 
     public function destroy(User $user)
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
-        $user->role()->detach();
+            $user->role()->detach();
 
-        $user->delete();
+            $user->delete();
 
 
-        return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
-    }else {
-        return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
-
-    }
+            return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
     }
     public function export()
     {
@@ -212,14 +229,14 @@ class UserController extends Controller
     public function import(Request $request)
     {
         try {
-        $request->validate([
-            'file' => 'required|mimes:xlsx',
-        ]);
+            $request->validate([
+                'file' => 'required|mimes:xlsx',
+            ]);
 
-        Excel::import(new UsersImport, $request->file('file'));
+            Excel::import(new UsersImport, $request->file('file'));
 
-        return response()->json(['success' => 'Users Imported Successfully']);
-        }catch(ValidationException $e) {
+            return response()->json(['success' => 'Users Imported Successfully']);
+        } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Validation failed for some rows.',
                 'error' => $e->errors()

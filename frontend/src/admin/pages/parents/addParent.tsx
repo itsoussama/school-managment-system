@@ -1,17 +1,69 @@
-import { Input } from "@src/components/input";
+import { Input, MultiSelect, Checkbox } from "@components/input";
+import { addParent, getStudents } from "@api";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEventHandler, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaHome, FaLock } from "react-icons/fa";
+import { FaHome, FaLock, FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
+
+export interface FormData {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  school_id: number;
+  roles: number[];
+}
+
+interface Childs {
+  id: string;
+  name: string;
+  guardian_id: string;
+}
 
 export default function AddParent() {
-  const { t } = useTranslation();
-  const [data, setData] = useState<object>({});
+  const addStudentQuery = useMutation({
+    mutationFn: addParent,
+  });
 
-  const handleChange = (event: ChangeEvent) => {
-    const target = event.target as HTMLTextAreaElement;
-    setData((prev) => ({ ...prev, [target.id]: target.value }));
+  const { t } = useTranslation();
+  const [data, setData] = useState<FormData>();
+  const [searchValue, setSearchValue] = useState<string>("");
+  const admin = useAppSelector((state) => state.user);
+
+  const getChildrensQuery = useQuery({
+    queryKey: ["getChildrens"],
+    queryFn: () => getStudents(),
+    placeholderData: keepPreviousData,
+  });
+
+  const handleChange = (property: string, value: string | number[]) => {
+    setData((prev) => ({ ...(prev as FormData), [property]: value }));
+  };
+
+  const handleSearch = (e: EventTarget) => {
+    setSearchValue((e as HTMLInputElement).value);
+    // console.log();
+  };
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log(data);
+
+    addStudentQuery.mutate({
+      name: data?.firstName + " " + data?.lastName,
+      email: data?.email as string,
+      school_id: admin?.school_id,
+      password: data?.password as string,
+      password_confirmation: data?.password_confirmation as string,
+      phone: data?.phone as string,
+      roles: [4],
+    });
   };
 
   return (
@@ -70,30 +122,30 @@ export default function AddParent() {
         <div className="flex flex-[3] flex-col gap-4">
           <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Student information
+              Parent information
             </h1>
           </div>
           <form
             action=""
-            onSubmit={(e) => e.preventDefault()}
-            className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light"
+            onSubmit={onSubmit}
+            className="relative grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light"
           >
             <Input
               type="text"
-              id="firstname"
-              name="firstname"
+              id="firstName"
+              name="firstName"
               label="First name"
               placeholder="First name"
-              handleChange={handleChange}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
               type="text"
-              id="lastname"
-              name="lastname"
+              id="lastName"
+              name="lastName"
               label="Last name"
               placeholder="Last name"
-              handleChange={handleChange}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -102,18 +154,18 @@ export default function AddParent() {
               name="address"
               label="Address"
               placeholder="123 Rue Principale"
-              handleChange={handleChange}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
               custom-style={{ containerStyle: "col-span-full" }}
             />
 
             <Input
               type="tel"
-              id="tel"
-              name="tel"
+              id="phone"
+              name="phone"
               label="Phone number"
               placeholder="06 00 00 00"
-              handleChange={handleChange}
-              attribute={{ pattern: "(06 | 05)[0-9]{2}[0-9]{4}" }}
+              pattern="(06|05)[0-9]{2}[0-9]{4}"
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -122,8 +174,56 @@ export default function AddParent() {
               name="email"
               label="Email"
               placeholder="Johndoe@example.com"
-              handleChange={handleChange}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
+
+            <MultiSelect
+              label="Childs"
+              name="childs"
+              onSelectItem={(items) =>
+                handleChange(
+                  "childs",
+                  items.map((item) => parseInt(item.id)),
+                )
+              }
+            >
+              <Input
+                id="search"
+                type="text"
+                icon={
+                  <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                }
+                label=""
+                onKeyUp={(e) => handleSearch(e.target)}
+                placeholder="All"
+                name="search"
+                custom-style={{
+                  inputStyle: "px-8 !py-1",
+                  labelStyle: "mb-0 !inline",
+                }}
+              />
+              {getChildrensQuery.data?.data.data
+                // .filter(
+                //   (child: Childs) =>
+                //     child.guardian_id &&
+                //     child.name.toLowerCase().includes(searchValue), // Case-insensitive search match
+                // )
+                .map(
+                  (child: Childs) =>
+                    child.guardian_id &&
+                    child.name.search(new RegExp(searchValue, "i")) !== -1 && (
+                      <Checkbox
+                        htmlFor={child.name}
+                        label={child.name}
+                        id={child.id}
+                        name="childs"
+                        value={child.name}
+                      />
+                    ),
+                )}
+            </MultiSelect>
+
+            <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 
             <Input
               type="password"
@@ -137,7 +237,7 @@ export default function AddParent() {
               icon={
                 <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               }
-              handleChange={handleChange}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <Input
@@ -152,7 +252,7 @@ export default function AddParent() {
               icon={
                 <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               }
-              handleChange={handleChange}
+              onChange={(e) => handleChange(e.target.id, e.target.value)}
             />
 
             <button className="btn-default m-0 mt-auto" type="submit">

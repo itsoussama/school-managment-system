@@ -72,8 +72,6 @@ export function Layout({ children, menu }: Layout) {
   };
 
   useEffect(() => {
-    console.log(getMyIANATZ());
-
     setDateTime({
       time: handleDateTime({ timeStyle: "short" }, Date.now()),
       date: handleDateTime({ dateStyle: "full" }, Date.now()),

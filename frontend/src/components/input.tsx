@@ -195,25 +195,29 @@ function MultiSelect({
   const handleItemsChange = (event: ChangeEvent) => {
     const target = event.target as HTMLInputElement;
     let itemsCollection: SelectedData[];
+    if ((event.target as HTMLInputElement).type == "checkbox") {
+      const hasItem = selectedItems.find((item) => item.id == target.id);
+      console.log((event.target as HTMLInputElement).type);
 
-    const hasItem = selectedItems.find((item) => item.id == target.id);
+      if (hasItem) {
+        const newItemsSet = selectedItems.filter(
+          (item) => item.id !== target.id,
+        );
+        itemsCollection = newItemsSet;
+        setSelectedItems(newItemsSet);
+      } else {
+        itemsCollection = [
+          ...selectedItems,
+          {
+            id: (event.target as HTMLInputElement).id,
+            label: (event.target as HTMLInputElement).value,
+          },
+        ];
+        setSelectedItems(itemsCollection);
+      }
 
-    if (hasItem) {
-      const newItemsSet = selectedItems.filter((item) => item.id !== target.id);
-      itemsCollection = newItemsSet;
-      setSelectedItems(newItemsSet);
-    } else {
-      itemsCollection = [
-        ...selectedItems,
-        {
-          id: (event.target as HTMLInputElement).id,
-          label: (event.target as HTMLInputElement).value,
-        },
-      ];
-      setSelectedItems(itemsCollection);
+      onSelectItem(itemsCollection);
     }
-
-    onSelectItem(itemsCollection);
   };
 
   const deleteItem = (event: React.MouseEvent) => {

@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
 
     Route::get('/teacher', [UserController::class, 'teachers']);
     Route::get('/student', [UserController::class, 'students']);
+    Route::get('/parent', [UserController::class, 'parents']);
     Route::get('/export-users', [UserController::class, 'export']);
     Route::post('/import-users', [UserController::class, 'import']);
     Route::post('/logout', [AuthController::class, 'logout']);

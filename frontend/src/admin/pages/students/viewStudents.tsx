@@ -75,6 +75,14 @@ interface Student {
       label: string;
     },
   ];
+  guardian: {
+    id: string;
+    guardian_id: string;
+    name: string;
+    email: string;
+    school_id: string;
+    phone: string;
+  };
 }
 
 export interface FormData {
@@ -89,24 +97,6 @@ interface Sort {
   column: string;
   direction: "asc" | "desc";
 }
-
-// const students = [
-//   {
-//     uid: "S001",
-//     fullName: "Leanne Graham",
-//     grade_level: "10th",
-//     date_birth: "2018-09-01",
-//     guardian: {
-//       img: "https://i.pravatar.cc/300?img=12",
-//       fullName: "John Graham",
-//     },
-//     relationship: "Father",
-//     enrollment_date: "2024-09-01",
-//     email: "test@example.com",
-//     phone: "+212 600 0000",
-//     time_spent: 360000000,
-//   },
-// ];
 
 export function ViewStudents() {
   const queryClient = useQueryClient();
@@ -890,6 +880,7 @@ export function ViewStudents() {
                       <div className="flex w-max max-w-36 flex-wrap">
                         {student.grades.map((grade, index) => (
                           <Badge
+                            key={index}
                             color={badgeColor[index % badgeColor.length]}
                             className="mb-1 me-1 rounded-xs"
                           >
@@ -901,17 +892,16 @@ export function ViewStudents() {
                     <Table.Cell>{/* {student.date_birth} */}-</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                       <div className="flex items-center gap-x-2">
-                        {/* <img
-                        className="w-10 rounded-full"
-                        src="https://i.pravatar.cc/300?img=12"
-                        alt="profile"
-                      />
-                      <span>{student.guardian.fullName}</span> */}
-                        -
+                        <img
+                          className="w-8 rounded-full"
+                          src="https://i.pravatar.cc/300?img=12"
+                          alt="profile"
+                        />
+                        <span>{student.guardian.name}</span>
                       </div>
                     </Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {/* {student.relationship} */}-
+                      -
                     </Table.Cell>
                     <Table.Cell>{/* {student.enrollment_date} */}-</Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
@@ -938,42 +928,44 @@ export function ViewStudents() {
                     </span> */}
                       -
                     </Table.Cell>
-                    <Table.Cell className="flex w-fit gap-x-2">
-                      <div
-                        onClick={() =>
-                          setOpenModal({
-                            id: student.id,
-                            type: "view",
-                            open: true,
-                          })
-                        }
-                        className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                      >
-                        <FaEye className="text-blue-600 dark:text-blue-500" />
-                      </div>
-                      <div
-                        className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                        onClick={() =>
-                          onOpenEditModal({
-                            id: student.id,
-                            type: "edit",
-                            open: true,
-                          })
-                        }
-                      >
-                        <FaPen className="text-green-600 dark:text-green-500" />
-                      </div>
-                      <div
-                        className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                        onClick={() =>
-                          setOpenModal({
-                            id: student.id,
-                            type: "delete",
-                            open: true,
-                          })
-                        }
-                      >
-                        <FaTrash className="text-red-600 dark:text-red-500" />
+                    <Table.Cell>
+                      <div className="flex w-fit gap-x-2">
+                        <div
+                          onClick={() =>
+                            setOpenModal({
+                              id: student.id,
+                              type: "view",
+                              open: true,
+                            })
+                          }
+                          className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                        >
+                          <FaEye className="text-blue-600 dark:text-blue-500" />
+                        </div>
+                        <div
+                          className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                          onClick={() =>
+                            onOpenEditModal({
+                              id: student.id,
+                              type: "edit",
+                              open: true,
+                            })
+                          }
+                        >
+                          <FaPen className="text-green-600 dark:text-green-500" />
+                        </div>
+                        <div
+                          className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                          onClick={() =>
+                            setOpenModal({
+                              id: student.id,
+                              type: "delete",
+                              open: true,
+                            })
+                          }
+                        >
+                          <FaTrash className="text-red-600 dark:text-red-500" />
+                        </div>
                       </div>
                     </Table.Cell>
                   </Table.Row>
