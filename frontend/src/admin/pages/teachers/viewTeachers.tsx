@@ -40,6 +40,7 @@ import {
 import { deleteUser, getUser, getTeachers, setUser } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
+import useBreakpoint from "@src/hooks/useBreakpoint";
 
 interface Check {
   id?: string;
@@ -146,6 +147,7 @@ export function ViewTeachers() {
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
+  const minSm = useBreakpoint("min", "sm");
   // const userId = useRef<string>(null)
 
   const getTeachersQuery = useQuery({
@@ -377,19 +379,23 @@ export function ViewTeachers() {
         className="my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white px-5 py-3 text-gray-700 dark:border-gray-700 dark:bg-gray-800"
         aria-label="Breadcrumb"
       >
-        <Breadcrumb.Item icon={FaHome}>
-          <Link
-            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-            to="/"
-          >
-            {t("home")}
-          </Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <span className="text-gray-600 dark:text-gray-300">
-            {t("teachers")}
-          </span>
-        </Breadcrumb.Item>
+        <Link
+          className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          to="/"
+        >
+          <Breadcrumb.Item icon={FaHome}>
+            {minSm ? t("home") : ""}
+          </Breadcrumb.Item>
+        </Link>
+        {minSm ? (
+          <Breadcrumb.Item>
+            <span className="text-gray-600 dark:text-gray-300">
+              {t("teachers")}
+            </span>
+          </Breadcrumb.Item>
+        ) : (
+          <Breadcrumb.Item>...</Breadcrumb.Item>
+        )}
         <Breadcrumb.Item>{t("view-teachers")}</Breadcrumb.Item>
       </Breadcrumb>
 
@@ -1031,13 +1037,15 @@ export function ViewTeachers() {
               <option value={20}>20</option>
             </RSelect>
             <Pagination
+              layout={minSm ? "pagination" : "navigation"}
+              showIcons
               currentPage={page}
               onPageChange={(page) =>
                 !getTeachersQuery.isPlaceholderData && setPage(page)
               }
               totalPages={getTeachersQuery.data?.data.last_page ?? 1}
-              nextLabel={t("next")}
-              previousLabel={t("previous")}
+              nextLabel={minSm ? t("next") : ""}
+              previousLabel={minSm ? t("previous") : ""}
               theme={{
                 pages: {
                   next: {

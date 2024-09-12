@@ -23,6 +23,18 @@
     @apply mb-2 me-2 h-10 w-full rounded-s border border-gray-300 px-5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700;
   }
 
+  .fade-edge {
+    @apply relative overflow-hidden before:pointer-events-none before:absolute after:pointer-events-none after:absolute;
+  }
+
+  .fade-edge-x {
+    @apply before:bottom-0 before:left-0 before:h-full before:w-6 before:bg-[linear-gradient(to_left,_rgba(255,255,255,0),_rgba(255,255,255,_1)_90%)] after:bottom-0 after:right-0 after:h-full after:w-6 after:bg-[linear-gradient(to_right,_rgba(255,255,255,0),_rgba(255,255,255,_1)_90%)] before:dark:bg-[linear-gradient(to_left,_#1e293b00,_#1e293b_90%)] after:dark:bg-[linear-gradient(to_right,_#1e293b00,_#1e293b_90%)];
+  }
+
+  .fade-edge-y {
+    @apply before:left-0 before:top-0 before:h-6 before:w-full before:bg-[linear-gradient(to_top,_rgba(255,255,255,0),_rgba(255,255,255,_1)_90%)] after:bottom-0 after:left-0 after:h-6 after:w-full after:bg-[linear-gradient(to_buttom,_rgba(255,255,255,0),_rgba(255,255,255,_1)_90%)] before:dark:bg-[linear-gradient(to_top,_#1e293b00,_#1e293b_90%)] after:dark:bg-[linear-gradient(to_bottom,_#1e293b00,_#1e293b_90%)];
+  }
+
   .locked {
     @apply pointer-events-none bg-gray-300 opacity-60 before:absolute before:right-0 before:top-0 before:-translate-y-1/3 before:translate-x-1/3 before:font-['Material_Icons'] before:text-gray-600 before:content-['\e897'] dark:bg-gray-500 dark:opacity-45 before:dark:text-gray-300;
   }

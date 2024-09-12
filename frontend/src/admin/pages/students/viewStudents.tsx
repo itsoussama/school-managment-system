@@ -41,6 +41,7 @@ import {
 import { deleteUser, getUser, getStudents, setUser } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
+import useBreakpoint from "@src/hooks/useBreakpoint";
 
 interface Check {
   id?: string;
@@ -125,6 +126,8 @@ export function ViewStudents() {
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
+  const minSm = useBreakpoint("min", "sm");
+
   // const userId = useRef<string>(null)
 
   const getStudentsQuery = useQuery({
@@ -353,7 +356,8 @@ export function ViewStudents() {
   return (
     <div className="flex w-full flex-col">
       <Breadcrumb
-        className="my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white px-5 py-3 text-gray-700 dark:border-gray-700 dark:bg-gray-800"
+        theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
+        className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
         aria-label="Breadcrumb"
       >
         <Breadcrumb.Item icon={FaHome}>
@@ -361,15 +365,21 @@ export function ViewStudents() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {t("home")}
+            {minSm ? t("home") : ""}
           </Link>
         </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <span className="text-gray-600 dark:text-gray-300">
-            {t("students")}
-          </span>
+        {minSm ? (
+          <Breadcrumb.Item>
+            <span className="text-gray-600 dark:text-gray-300">
+              {t("students")}
+            </span>
+          </Breadcrumb.Item>
+        ) : (
+          <Breadcrumb.Item>...</Breadcrumb.Item>
+        )}
+        <Breadcrumb.Item className="whitespace-nowrap">
+          {t("view-students")}
         </Breadcrumb.Item>
-        <Breadcrumb.Item>{t("view-students")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
@@ -1020,13 +1030,15 @@ export function ViewStudents() {
               <option value={20}>20</option>
             </RSelect>
             <Pagination
+              layout={minSm ? "pagination" : "navigation"}
+              showIcons
               currentPage={page}
               onPageChange={(page) =>
                 !getStudentsQuery.isPlaceholderData && setPage(page)
               }
               totalPages={getStudentsQuery.data?.data.last_page ?? 1}
-              nextLabel={t("next")}
-              previousLabel={t("previous")}
+              nextLabel={minSm ? t("next") : ""}
+              previousLabel={minSm ? t("previous") : ""}
               theme={{
                 pages: {
                   next: {

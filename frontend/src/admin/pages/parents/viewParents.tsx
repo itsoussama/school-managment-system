@@ -40,6 +40,7 @@ import { deleteUser, getUser, getParents, setUser } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { DropdownListButton } from "@src/components/dropdown";
+import useBreakpoint from "@src/hooks/useBreakpoint";
 
 interface Check {
   id?: string;
@@ -110,7 +111,7 @@ export function ViewParents() {
   const admin = useAppSelector((state) => state.user);
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
-  // const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
+  const minSm = useBreakpoint("min", "sm");
 
   const getParentsQuery = useQuery({
     queryKey: [
@@ -346,14 +347,18 @@ export function ViewParents() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {t("home")}
+            {minSm ? t("home") : ""}
           </Link>
         </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <span className="text-gray-600 dark:text-gray-300">
-            {t("parents")}
-          </span>
-        </Breadcrumb.Item>
+        {minSm ? (
+          <Breadcrumb.Item>
+            <span className="text-gray-600 dark:text-gray-300">
+              {t("parents")}
+            </span>
+          </Breadcrumb.Item>
+        ) : (
+          <Breadcrumb.Item>...</Breadcrumb.Item>
+        )}
         <Breadcrumb.Item>{t("view-parents")}</Breadcrumb.Item>
       </Breadcrumb>
 
@@ -1005,13 +1010,15 @@ export function ViewParents() {
               <option value={20}>20</option>
             </RSelect>
             <Pagination
+              layout={minSm ? "pagination" : "navigation"}
+              showIcons
               currentPage={page}
               onPageChange={(page) =>
                 !getParentsQuery.isPlaceholderData && setPage(page)
               }
               totalPages={getParentsQuery.data?.data.last_page ?? 1}
-              nextLabel={t("next")}
-              previousLabel={t("previous")}
+              nextLabel={minSm ? t("next") : ""}
+              previousLabel={minSm ? t("previous") : ""}
               theme={{
                 pages: {
                   next: {
