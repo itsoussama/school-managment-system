@@ -168,7 +168,7 @@ export function Layout({ children, menu }: Layout) {
       <div
         className={`w-[75%] flex-1 transition-all sm:mx-8 sm:my-6 2xl:ms-8 ${isOnHover ? "sm:ms-0" : "sm:ms-24"}`}
       >
-        {/* screen size above 640px*/}
+        {/* //? screen size above 640px*/}
         <div className="hidden h-12 w-full justify-between border-white sm:flex">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">
@@ -264,7 +264,7 @@ export function Layout({ children, menu }: Layout) {
             </div>
           </div>
         </div>
-        {/* top bar screen size below 640px */}
+        {/* //? top bar screen size below 640px */}
         <div className="flex h-16 w-full items-center border-white bg-gray-800 px-6 py-4 sm:hidden">
           <div className="flex gap-x-3">
             <img
@@ -286,7 +286,7 @@ export function Layout({ children, menu }: Layout) {
           {ReactDOM.createPortal(
             <div
               ref={mobileMenuRef}
-              className={`absolute top-0 z-[10] h-full min-w-fit overflow-hidden bg-light-primary p-3 shadow-md transition-all ${openMobileMenu ? "block" : "hidden"} sm:hidden dark:bg-dark-primary`}
+              className={`absolute top-0 z-[10] h-full overflow-hidden bg-light-primary shadow-md outline outline-[rgba(0,0,0,0.5)] transition-all ${openMobileMenu ? "w-1/2 min-w-fit p-3 outline-[9999px]" : "w-0 outline-[0px]"} sm:hidden dark:bg-dark-primary`}
             >
               <div
                 className={`flex min-h-20 items-start justify-start transition-all`}
