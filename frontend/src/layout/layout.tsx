@@ -2,8 +2,14 @@ import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
 import logo_minimize from "@assets/icon.png";
 import { UseTheme } from "@hooks/useTheme";
-import { FaBell, FaCalendar, FaCompress, FaExpand } from "react-icons/fa";
-import { useCallback, useContext, useEffect, useState } from "react";
+import {
+  FaBell,
+  FaCalendar,
+  FaCompress,
+  FaExpand,
+  FaGripLines,
+} from "react-icons/fa";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FaArrowRightFromBracket, FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -13,6 +19,8 @@ import { useAppDispatch, useAppSelector } from "@src/hooks/useReduxEvent";
 import { Dropdown } from "flowbite-react";
 import { logout } from "@src/features/redux/userAsyncActions";
 import { useNavigate } from "react-router-dom";
+import { FiMenu } from "react-icons/fi";
+import ReactDOM from "react-dom";
 // import { MegaMenu } from "flowbite-react";
 
 interface Layout {
@@ -30,12 +38,15 @@ export function Layout({ children, menu }: Layout) {
   const { t } = useTranslation();
   const { isOnHover, setIsOnHover } = useContext(hoverContext);
   const [theme, setTheme] = UseTheme();
+  const [openMobileMenu, toggleOpenMobileMenu] = useState<boolean>(false);
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
   const [dateTime, setDateTime] = useState<DateTime>({ date: "", time: "" });
   const minXxl = useBreakpoint("min", "2xl");
   const authUser = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
   const route = useNavigate();
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   const onToggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -71,6 +82,17 @@ export function Layout({ children, menu }: Layout) {
     );
   };
 
+  const handleToggleMobilMenu = (event: MouseEvent) => {
+    if (
+      mobileMenuRef.current &&
+      !mobileMenuRef.current.contains(event.target as Node) &&
+      mobileMenuButtonRef.current &&
+      !mobileMenuButtonRef.current.contains(event.target as Node)
+    ) {
+      toggleOpenMobileMenu(false);
+    }
+  };
+
   useEffect(() => {
     setDateTime({
       time: handleDateTime({ timeStyle: "short" }, Date.now()),
@@ -104,6 +126,13 @@ export function Layout({ children, menu }: Layout) {
   }, [handleDateTime]);
 
   useEffect(() => {
+    document.addEventListener("click", handleToggleMobilMenu);
+    return () => {
+      document.removeEventListener("click", handleToggleMobilMenu);
+    };
+  }, []);
+
+  useEffect(() => {
     document.body.className = theme === "dark" ? "dark" : "";
   }, [theme]);
 
@@ -112,7 +141,7 @@ export function Layout({ children, menu }: Layout) {
       className={`relative flex h-full w-full flex-1 ${theme === "dark" ? "dark" : ""}`}
     >
       <div
-        className={`z-[10] h-full min-w-[16%] overflow-hidden bg-light-primary p-3 max-2xl:absolute max-2xl:min-w-fit ${isOnHover ? "max-2xl:w-max" : "max-2xl:w-16"} transition-all dark:bg-dark-primary`}
+        className={`z-[10] hidden h-full overflow-hidden bg-light-primary sm:absolute sm:block sm:p-3 md:min-w-fit 2xl:relative ${isOnHover ? "sm:w-max" : "sm:w-16"} transition-all dark:bg-dark-primary`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
@@ -137,9 +166,10 @@ export function Layout({ children, menu }: Layout) {
         {menu}
       </div>
       <div
-        className={`mx-8 my-6 w-[75%] flex-1 transition-all ${isOnHover ? "max-2xl:ms-0" : "max-2xl:ms-24"}`}
+        className={`w-[75%] flex-1 transition-all sm:mx-8 sm:my-6 2xl:ms-8 ${isOnHover ? "sm:ms-0" : "sm:ms-24"}`}
       >
-        <div className="flex h-12 w-full justify-between border-white">
+        {/* screen size above 640px*/}
+        <div className="hidden h-12 w-full justify-between border-white sm:flex">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">
               {dateTime?.date}
@@ -234,7 +264,48 @@ export function Layout({ children, menu }: Layout) {
             </div>
           </div>
         </div>
-        {children}
+        {/* top bar screen size below 640px */}
+        <div className="flex h-16 w-full items-center border-white bg-gray-800 px-6 py-4 sm:hidden">
+          <div className="flex gap-x-3">
+            <img
+              className={`w-7 object-contain transition-all`}
+              src={logo_minimize}
+              // width={"150px"}
+              alt="logo"
+            />
+            <button
+              ref={mobileMenuButtonRef}
+              onClick={() => toggleOpenMobileMenu((prev) => !prev)}
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg p-2 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 md:hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+            >
+              <span className="sr-only">Open main menu</span>
+              <FiMenu size={"24"} />
+            </button>
+          </div>
+          {ReactDOM.createPortal(
+            <div
+              ref={mobileMenuRef}
+              className={`absolute top-0 z-[10] h-full min-w-fit overflow-hidden bg-light-primary p-3 shadow-md transition-all ${openMobileMenu ? "block" : "hidden"} sm:hidden dark:bg-dark-primary`}
+            >
+              <div
+                className={`flex min-h-20 items-start justify-start transition-all`}
+              >
+                <img
+                  className={`mx-auto mt-3 w-28 transition-all`}
+                  src={theme === "dark" ? logo_dark : logo_light}
+                  // width={"150px"}
+                  alt="logo"
+                />
+              </div>
+              {/* <div className="my-4 w-full border-t border-gray-300 dark:border-gray-700"></div> */}
+
+              {menu}
+            </div>,
+            document.body,
+          )}
+        </div>
+        <div className="mx-6 my-4 sm:m-0">{children}</div>
       </div>
     </div>
   );

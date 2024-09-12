@@ -1,6 +1,6 @@
 import Items from "@src/components/item";
 import { Layout } from "@src/layout/layout";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { hoverContext } from "@context/hoverContext";
 import {
   FaChartPie,
@@ -25,6 +25,7 @@ interface SubMenuVisible {
 
 export default function Admin() {
   const [isOnHover, setIsOnHover] = useState<boolean>(false);
+
   // const dispatch = useAppDispatch();
 
   // useEffect(() => {
@@ -74,7 +75,7 @@ function Menu() {
         >
           <Link to={"/"} className="flex w-full items-center px-2 py-3">
             <FaChartPie
-              className={`mr-3 flex-shrink-0 text-lg ${!isOnHover ? "max-2xl:mx-auto" : ""} ${useMatch("/") ? "text-white" : "text-gray-500 dark:text-gray-100"}`}
+              className={`mr-3 flex-shrink-0 text-lg ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} ${useMatch("/") ? "text-white" : "text-gray-500 dark:text-gray-100"}`}
             />
             <span
               className={`text-s text-nowrap ${!isOnHover ? "max-2xl:hidden" : ""} ${useMatch("/") ? "text-white" : "text-gray-900 dark:text-gray-100"}`}
@@ -91,7 +92,7 @@ function Menu() {
             isActive={useMatch("/") ? true : false}
             icon={
               <FaChartPie
-                className={`mr-3 flex-shrink-0 text-lg ${!isOnHover ? "max-2xl:mx-auto" : ""} ${useMatch("/") && (maxXxl || isOnHover) ? "text-white" : "text-gray-500 dark:text-gray-100"}`}
+                className={`mr-3 flex-shrink-0 text-lg ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} ${useMatch("/") && (maxXxl || isOnHover) ? "text-white" : "text-gray-500 dark:text-gray-100"}`}
               />
             }
             onToggleSubMenu={onToggleSubMenu}
@@ -103,7 +104,7 @@ function Menu() {
           itemName="teachers"
           icon={
             <FaUserTie
-              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
             />
           }
           subMenuVisible={subMenuVisible}
@@ -130,7 +131,7 @@ function Menu() {
           itemName="students"
           icon={
             <FaUserGraduate
-              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
             />
           }
           subMenuVisible={subMenuVisible}
@@ -157,7 +158,7 @@ function Menu() {
           itemName="parents"
           icon={
             <FaUserFriends
-              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
             />
           }
           subMenuVisible={subMenuVisible}
@@ -184,7 +185,7 @@ function Menu() {
           itemName="finance"
           icon={
             <FaScaleBalanced
-              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
             />
           }
           containerClass="locked"
@@ -201,7 +202,7 @@ function Menu() {
           itemName="resources"
           icon={
             <FaLayerGroup
-              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
             />
           }
           containerClass="locked"
@@ -219,7 +220,7 @@ function Menu() {
         itemName="settings"
         icon={
           <FaCog
-            className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "max-2xl:mx-auto" : ""} dark:text-gray-100`}
+            className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
           />
         }
         subMenuVisible={subMenuVisible}

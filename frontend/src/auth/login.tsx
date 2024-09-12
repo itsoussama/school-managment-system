@@ -136,15 +136,15 @@ export default function Login() {
       </div>
 
       <div className="flex h-full flex-row-reverse">
-        <div className="flex flex-1 items-center justify-center">
+        <div className="hidden md:flex md:flex-1 md:items-center md:justify-center">
           <img
             className="w-9/12"
             src={theme === "dark" ? learningDarkImg : learningLightImg}
             alt="learning"
           />
         </div>
-        <div className="flex h-full w-full flex-1 items-center justify-center">
-          <div className="h-fit w-2/3 items-center justify-center space-y-4 rounded-m bg-white px-14 py-12 shadow-sharp-dark md:space-y-6 dark:bg-gray-800 dark:shadow-sharp-light">
+        <div className="mx-6 my-12 flex h-full w-full flex-1 items-center justify-center md:mx-0 md:my-0">
+          <div className="h-fit items-center justify-center space-y-4 rounded-m bg-white p-12 py-10 shadow-sharp-dark md:w-2/3 md:space-y-6 md:px-14 md:py-12 dark:bg-gray-800 dark:shadow-sharp-light">
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
               Sign in to your account
             </h1>
