@@ -5,9 +5,12 @@ import { UseTheme } from "@hooks/useTheme";
 import {
   FaBell,
   FaCalendar,
+  FaChartPie,
+  FaCog,
   FaCompress,
   FaExpand,
   FaGripLines,
+  FaUser,
 } from "react-icons/fa";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FaArrowRightFromBracket, FaMessage } from "react-icons/fa6";
@@ -21,6 +24,7 @@ import { logout } from "@src/features/redux/userAsyncActions";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import ReactDOM from "react-dom";
+import { TabBar } from "@src/components/tabBar";
 // import { MegaMenu } from "flowbite-react";
 
 interface Layout {
@@ -270,7 +274,7 @@ export function Layout({ children, menu }: Layout) {
           </div>
         </div>
         {/* //? top bar screen size below 640px */}
-        <div className="flex h-16 w-full items-center border-white bg-gray-800 px-6 py-4 sm:hidden">
+        <div className="fixed z-50 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-gray-800 px-6 py-4 sm:hidden dark:border-gray-700">
           <div className="flex gap-x-3">
             <img
               className={`w-7 object-contain transition-all`}
@@ -288,10 +292,17 @@ export function Layout({ children, menu }: Layout) {
               <FiMenu size={"24"} />
             </button>
           </div>
+          <div className="notifications relative">
+            <span className="absolute flex h-2 w-2 rounded-full">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500"></span>
+            </span>
+            <FaBell className="text-xl text-gray-500" />
+          </div>
           {ReactDOM.createPortal(
             <div
               ref={mobileMenuRef}
-              className={`absolute top-0 z-[10] h-full overflow-hidden bg-light-primary shadow-md outline outline-[rgba(0,0,0,0.5)] transition-all ${openMobileMenu ? "w-1/2 min-w-fit p-3 outline-[9999px]" : "w-0 outline-[0px]"} sm:hidden dark:bg-dark-primary`}
+              className={`fixed left-0 top-0 z-[9999] h-full min-w-fit overflow-hidden bg-light-primary p-3 outline outline-[#00000060] transition-all ${openMobileMenu ? "block outline-[9999px]" : "hidden outline-0"} sm:hidden dark:bg-dark-primary`}
             >
               <div
                 className={`flex min-h-20 items-start justify-start transition-all`}
@@ -310,7 +321,35 @@ export function Layout({ children, menu }: Layout) {
             document.body,
           )}
         </div>
-        <div className="mx-6 my-4 sm:m-0">{children}</div>
+        <div className="mx-6 my-4 pb-20 pt-16 sm:m-0 sm:p-0">{children}</div>
+        <TabBar>
+          <TabBar.Item
+            icon={<FaChartPie size={20} />}
+            label="Overview"
+            isActive={true}
+          />
+          <TabBar.Item
+            icon={<FaMessage size={20} />}
+            label="Chats"
+            isActive={false}
+          />
+          <TabBar.Item
+            icon={<FaCog size={20} />}
+            label="Settings"
+            isActive={false}
+          />
+          <TabBar.Item
+            icon={
+              <img
+                className="h-6 w-6 rounded-full"
+                src="https://i.pravatar.cc/300?img=12"
+                alt=""
+              />
+            }
+            label="Profile"
+            isActive={false}
+          />
+        </TabBar>
       </div>
     </div>
   );
