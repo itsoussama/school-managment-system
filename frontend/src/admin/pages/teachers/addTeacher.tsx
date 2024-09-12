@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { FaHome, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
+import useBreakpoint from "@src/hooks/useBreakpoint";
 
 export interface FormData {
   name?: string;
@@ -51,6 +52,7 @@ export default function AddTeacher() {
 
   const [data, setData] = useState<FormData>();
   const admin = useAppSelector((state) => state.user);
+  const minSm = useBreakpoint("min", "sm");
 
   const handleChange = (property: string, value: string | number[]) => {
     setData((prev) => ({ ...(prev as FormData), [property]: value }));
@@ -76,22 +78,27 @@ export default function AddTeacher() {
   return (
     <div className="flex flex-col">
       <Breadcrumb
-        className="my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white px-5 py-3 text-gray-700 dark:border-gray-700 dark:bg-gray-800"
+        theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
+        className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
         aria-label="Breadcrumb"
       >
-        <Breadcrumb.Item icon={FaHome}>
-          <Link
-            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-            to="/"
-          >
-            {t("home")}
-          </Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <span className="text-gray-600 dark:text-gray-300">
-            {t("teachers")}
-          </span>
-        </Breadcrumb.Item>
+        <Link
+          className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          to="/"
+        >
+          <Breadcrumb.Item icon={FaHome}>
+            {minSm ? t("home") : ""}
+          </Breadcrumb.Item>
+        </Link>
+        {minSm ? (
+          <Breadcrumb.Item>
+            <span className="text-gray-600 dark:text-gray-300">
+              {t("teachers")}
+            </span>
+          </Breadcrumb.Item>
+        ) : (
+          <Breadcrumb.Item>...</Breadcrumb.Item>
+        )}
         <Breadcrumb.Item>{t("new-teacher")}</Breadcrumb.Item>
       </Breadcrumb>
 

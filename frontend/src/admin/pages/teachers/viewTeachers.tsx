@@ -376,7 +376,8 @@ export function ViewTeachers() {
   return (
     <div className="flex w-full flex-col">
       <Breadcrumb
-        className="my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white px-5 py-3 text-gray-700 dark:border-gray-700 dark:bg-gray-800"
+        theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
+        className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
         aria-label="Breadcrumb"
       >
         <Link
