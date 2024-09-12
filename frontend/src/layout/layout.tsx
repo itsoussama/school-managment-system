@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@src/hooks/useReduxEvent";
 import { Dropdown } from "flowbite-react";
 import { logout } from "@src/features/redux/userAsyncActions";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import ReactDOM from "react-dom";
 // import { MegaMenu } from "flowbite-react";
@@ -47,6 +47,7 @@ export function Layout({ children, menu }: Layout) {
   const route = useNavigate();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const location = useLocation();
 
   const onToggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -135,6 +136,10 @@ export function Layout({ children, menu }: Layout) {
   useEffect(() => {
     document.body.className = theme === "dark" ? "dark" : "";
   }, [theme]);
+
+  useEffect(() => {
+    toggleOpenMobileMenu(false);
+  }, [location]);
 
   return (
     <div
