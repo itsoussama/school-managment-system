@@ -5,6 +5,7 @@ import { AdminRouter } from "@admin/routes";
 
 export const routes = createBrowserRouter([
   {
+    index: true,
     path: "/login",
     element: <Login />,
   },

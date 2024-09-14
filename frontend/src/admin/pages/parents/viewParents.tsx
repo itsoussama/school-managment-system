@@ -373,19 +373,21 @@ export function ViewParents() {
               "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
           },
           body: {
-            base: "p-6",
+            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
             popup: "pt-0",
           },
         }}
         onClose={onCloseModal}
       >
-        <Modal.Header>{openModal?.id}</Modal.Header>
+        <Modal.Header>
+          {t("parent-id")}:<b> {openModal?.id}</b>
+        </Modal.Header>
         <Modal.Body>
-          <div className="flex gap-x-8">
-            <div className="flex flex-col items-start rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+          <div className="flex flex-col gap-8 sm:flex-row">
+            <div className="flex flex-col items-center rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
-                imgSource="https://i.pravatar.cc/300"
-                imgSize={{ width: "w-40", height: "h-40" }}
+                imgSource="https://avatar.iran.liara.run/public/girl"
+                className="h-40 w-40"
               />
             </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
@@ -495,20 +497,22 @@ export function ViewParents() {
               "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
           },
           body: {
-            base: "p-6",
+            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
             popup: "pt-0",
           },
         }}
         onClose={onCloseModal}
       >
         <form onSubmit={onSubmitUpdate}>
-          <Modal.Header>{openModal?.id}</Modal.Header>
+          <Modal.Header>
+            {t("parent-id")}:<b> {openModal?.id}</b>
+          </Modal.Header>
           <Modal.Body>
-            <div className="flex gap-x-8">
-              <div className="flex min-w-fit flex-col items-start gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+            <div className="flex flex-col gap-8 sm:flex-row">
+              <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
-                  imgSource="https://i.pravatar.cc/300"
-                  imgSize={{ width: "w-40", height: "h-40" }}
+                  imgSource="https://avatar.iran.liara.run/public/girl"
+                  className="h-40 w-40"
                 />
                 <button className="btn-dark dark:btn-gray">Upload photo</button>
                 <div className="flex flex-col">
@@ -526,7 +530,7 @@ export function ViewParents() {
                   </span>
                 </div>
               </div>
-              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
+              <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                     {t("personal-information")}

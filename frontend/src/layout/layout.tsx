@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@src/hooks/useReduxEvent";
 import { Dropdown } from "flowbite-react";
 import { logout } from "@src/features/redux/userAsyncActions";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useMatch, useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import ReactDOM from "react-dom";
 import { TabBar } from "@src/components/tabBar";
@@ -274,7 +274,7 @@ export function Layout({ children, menu }: Layout) {
           </div>
         </div>
         {/* //? top bar screen size below 640px */}
-        <div className="fixed z-50 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-gray-800 px-6 py-4 sm:hidden dark:border-gray-700">
+        <div className="fixed z-50 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-light-primary px-6 py-4 sm:hidden dark:border-gray-700 dark:bg-dark-primary">
           <div className="flex gap-x-3">
             <img
               className={`w-7 object-contain transition-all`}
@@ -326,17 +326,20 @@ export function Layout({ children, menu }: Layout) {
           <TabBar.Item
             icon={<FaChartPie size={20} />}
             label="Overview"
-            isActive={true}
+            path="/"
+            isActive={useMatch("/") ? true : false}
           />
           <TabBar.Item
             icon={<FaMessage size={20} />}
             label="Chats"
-            isActive={false}
+            path="/chats"
+            isActive={useMatch("/chats") ? true : false}
           />
           <TabBar.Item
             icon={<FaCog size={20} />}
             label="Settings"
-            isActive={false}
+            path="/settings"
+            isActive={useMatch("/settings") ? true : false}
           />
           <TabBar.Item
             icon={
@@ -347,7 +350,8 @@ export function Layout({ children, menu }: Layout) {
               />
             }
             label="Profile"
-            isActive={false}
+            path="/profile"
+            isActive={useMatch("/profile") ? true : false}
           />
         </TabBar>
       </div>

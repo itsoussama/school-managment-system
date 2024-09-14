@@ -191,15 +191,18 @@ export default function AddStudent() {
                 )
               }
             >
-              {getGradesQuery.data?.data.data.map((grade: Grades) => (
-                <Checkbox
-                  htmlFor={grade.label}
-                  label={grade.label}
-                  id={grade.id}
-                  name="grades"
-                  value={grade.label}
-                />
-              ))}
+              {getGradesQuery.data?.data.data.map(
+                (grade: Grades, key: number) => (
+                  <Checkbox
+                    key={key}
+                    htmlFor={grade.label}
+                    label={grade.label}
+                    id={grade.id}
+                    name="grades"
+                    value={grade.label}
+                  />
+                ),
+              )}
             </MultiSelect>
 
             <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>

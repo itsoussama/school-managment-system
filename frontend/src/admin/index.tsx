@@ -1,6 +1,6 @@
 import Items from "@src/components/item";
 import { Layout } from "@src/layout/layout";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { hoverContext } from "@context/hoverContext";
 import {
   FaChartPie,
@@ -13,8 +13,6 @@ import {
 import { FaScaleBalanced } from "react-icons/fa6";
 import { Link, Outlet, useMatch } from "react-router-dom";
 import useBreakpoint from "@hooks/useBreakpoint";
-import { login } from "@redux/userAsyncActions";
-import { useAppDispatch } from "@hooks/useReduxEvent";
 
 interface SubMenuVisible {
   ref: string;

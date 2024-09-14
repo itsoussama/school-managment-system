@@ -1,15 +1,11 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { HTMLAttributes, ReactNode, useEffect, useRef, useState } from "react";
 import { FaImage } from "react-icons/fa6";
 
-interface Image {
+interface Image extends HTMLAttributes<HTMLDivElement> {
   imgSource: string;
-  imgSize: {
-    width: string;
-    height: string;
-  };
 }
 
-function SkeletonProfile({ imgSource, imgSize }: Image) {
+function SkeletonProfile({ imgSource, ...attributs }: Image) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
 
@@ -20,10 +16,10 @@ function SkeletonProfile({ imgSource, imgSize }: Image) {
   }, [imgRef]);
 
   return (
-    <>
+    <div {...attributs}>
       <img
         id="profile"
-        className={`max-${imgSize.width} ${!loaded ? "hidden" : ""} rounded-full`}
+        className={`${!loaded ? "hidden" : ""} h-[inherit] w-[inherit] rounded-full`}
         src={imgSource}
         alt="profile"
         ref={imgRef}
@@ -32,7 +28,7 @@ function SkeletonProfile({ imgSource, imgSize }: Image) {
       {!loaded && (
         <div
           role="status"
-          className={`${imgSize.width} ${imgSize.height} animate-pulse overflow-hidden rounded-full`}
+          className={`h-[inherit] w-[inherit] animate-pulse overflow-hidden rounded-full`}
         >
           <div
             className={`flex h-full w-full items-center justify-center bg-gray-300 dark:bg-gray-700`}
@@ -43,7 +39,7 @@ function SkeletonProfile({ imgSource, imgSize }: Image) {
           <span className="sr-only">Loading...</span>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

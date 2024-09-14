@@ -6,12 +6,17 @@ import AddStudent from "@admin/pages/students/addStudent";
 import { ViewStudents } from "@admin/pages/students/viewStudents";
 import AddParent from "@admin/pages/parents/addParent";
 import { ViewParents } from "@admin/pages/parents/viewParents";
+import Dashboard from "@admin/pages/dashboard";
 
 export const AdminRouter = {
   path: "/",
   element: <Admin />,
   loader: RouteAuthorization,
   children: [
+    {
+      index: true,
+      element: <Dashboard />,
+    },
     {
       path: "teachers",
       children: [

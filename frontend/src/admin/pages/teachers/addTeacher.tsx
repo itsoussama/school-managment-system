@@ -201,15 +201,18 @@ export default function AddTeacher() {
                 )
               }
             >
-              {getSubjectsQuery.data?.data.data.map((subject: Subject) => (
-                <Checkbox
-                  htmlFor={subject.name}
-                  label={subject.name}
-                  id={subject.id}
-                  name="subjects"
-                  value={subject.name}
-                />
-              ))}
+              {getSubjectsQuery.data?.data.data.map(
+                (subject: Subject, key: number) => (
+                  <Checkbox
+                    key={key}
+                    htmlFor={subject.name}
+                    label={subject.name}
+                    id={subject.id}
+                    name="subjects"
+                    value={subject.name}
+                  />
+                ),
+              )}
             </MultiSelect>
 
             <MultiSelect
@@ -222,15 +225,18 @@ export default function AddTeacher() {
                 )
               }
             >
-              {getGradesQuery.data?.data.data.map((grade: Grades) => (
-                <Checkbox
-                  htmlFor={grade.label}
-                  label={grade.label}
-                  id={grade.id}
-                  name="grades"
-                  value={grade.label}
-                />
-              ))}
+              {getGradesQuery.data?.data.data.map(
+                (grade: Grades, key: number) => (
+                  <Checkbox
+                    key={key}
+                    htmlFor={grade.label}
+                    label={grade.label}
+                    id={grade.id}
+                    name="grades"
+                    value={grade.label}
+                  />
+                ),
+              )}
             </MultiSelect>
 
             <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>

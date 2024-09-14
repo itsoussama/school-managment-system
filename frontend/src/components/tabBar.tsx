@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 interface TabBar {
   children: ReactNode;
@@ -7,6 +8,7 @@ interface TabBar {
 interface Item {
   icon: ReactNode;
   label: string;
+  path: string;
   isActive: boolean;
 }
 
@@ -25,14 +27,15 @@ export function TabBar({ children }: TabBar) {
   );
 }
 
-function Item({ icon, label, isActive = false }: Item) {
+function Item({ icon, label, isActive = false, path }: Item) {
   return (
-    <div
+    <Link
+      to={path}
       className={`flex w-full flex-col items-center justify-center gap-y-1 rounded-xs ${isActive ? "text-blue-600" : "text-gray-500"}`}
     >
       {icon}
       <span className="text-sm">{label}</span>
-    </div>
+    </Link>
   );
 }
 
