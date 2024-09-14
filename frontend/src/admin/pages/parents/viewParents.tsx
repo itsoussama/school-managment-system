@@ -41,23 +41,31 @@ import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { DropdownListButton } from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import AddChildModal from "@src/admin/components/addChildModal";
 
 interface Check {
-  id?: string;
+  id?: number;
   status?: boolean;
 }
 
 interface Modal {
-  id: string;
+  id: number;
   type?: "view" | "edit" | "delete";
   open: boolean;
 }
 
+interface ChildModal {
+  id: number;
+  school_id: number;
+  open: boolean;
+}
+
 interface Parent {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone: string;
+  school_id: number;
   role: [
     {
       id: string;
@@ -98,6 +106,11 @@ export function ViewParents() {
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
+  const [openChildModal, setOpenChildModal] = useState<ChildModal>({
+    id: 0,
+    school_id: 0,
+    open: false,
+  });
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [dropDownPos, setDropDownPos] = useState<EventTarget>();
   const [formData, setFormData] = useState<FormData>({
@@ -129,7 +142,7 @@ export function ViewParents() {
 
   const getStudentQuery = useQuery({
     queryKey: ["getParent", openModal?.id],
-    queryFn: () => getUser(openModal?.id as string),
+    queryFn: () => getUser(openModal?.id as number),
     enabled: !!openModal?.id,
   });
 
@@ -177,7 +190,7 @@ export function ViewParents() {
           setCheckAll((prev) => {
             const alreadyChecked = prev.some((item) => item.id === parent.id);
             if (firstCheckbox.checked && !alreadyChecked) {
-              return [...prev, { id: parent.id as string, status: true }];
+              return [...prev, { id: parent.id as number, status: true }];
             }
             return prev;
           });
@@ -188,10 +201,10 @@ export function ViewParents() {
     [getParentsQuery.data?.data, getParentsQuery.isFetched],
   );
 
-  const handleCheck = (id = "") => {
+  const handleCheck = (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
 
-    if (id == "") {
+    if (id) {
       setCheckAll([]);
       handleCheckAll(firstCheckbox);
       // document.getElementsByName("checkbox").forEach((elem) => {
@@ -253,7 +266,7 @@ export function ViewParents() {
     // console.log(formData);
     setUserQuery.mutate(formData as FormData);
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
   };
@@ -261,7 +274,7 @@ export function ViewParents() {
   const onCloseModal = () => {
     setUserQuery.reset();
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
 
@@ -284,9 +297,9 @@ export function ViewParents() {
       return;
     }
 
-    deleteUserQuery.mutate(openModal?.id as string);
+    deleteUserQuery.mutate(openModal?.id as number);
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
   };
@@ -696,6 +709,19 @@ export function ViewParents() {
         </form>
       </Modal>
 
+      <AddChildModal
+        open={openChildModal?.open as boolean}
+        toggleOpen={(isOpen: boolean) =>
+          setOpenChildModal((prev: ChildModal) => ({
+            id: openChildModal?.id as number,
+            school_id: prev?.school_id,
+            open: isOpen,
+          }))
+        }
+        guardian_id={openChildModal.id}
+        school_id={openChildModal?.school_id}
+      />
+
       <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
         {checkAll.find((val) => val.status === true) ? (
           <div className="flex w-full justify-between px-5 py-4">
@@ -831,7 +857,9 @@ export function ViewParents() {
                       <Checkbox
                         id={(key + 1).toString()}
                         name="checkbox"
-                        onChange={(ev) => handleCheck(ev.currentTarget.id)}
+                        onChange={(ev) =>
+                          handleCheck(parseInt(ev.currentTarget.id))
+                        }
                         data-id={key}
                       />
                     </Table.Cell>
@@ -848,7 +876,7 @@ export function ViewParents() {
                         {parent.childrens.length > 2 ? (
                           <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
                             {parent.childrens.map(
-                              (child, key) =>
+                              (_, key) =>
                                 key < 1 && (
                                   <img
                                     key={key}
@@ -865,7 +893,7 @@ export function ViewParents() {
                         ) : parent.childrens.length > 1 ? (
                           <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
                             {parent.childrens.map(
-                              (child, key) =>
+                              (_, key) =>
                                 key < 1 && (
                                   <img
                                     key={key}
@@ -891,13 +919,19 @@ export function ViewParents() {
                             </span>
                           </>
                         ) : (
-                          <a
-                            href="#"
-                            className="flex items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                          <div
+                            className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                            onClick={() =>
+                              setOpenChildModal({
+                                id: parent.id,
+                                school_id: parent.school_id,
+                                open: true,
+                              })
+                            }
                           >
                             <FaUser className="me-2" />
                             {t("add-new-child")}
-                          </a>
+                          </div>
                         )}
                         {dropDownPos && parent.childrens.length > 0 && (
                           <DropdownListButton
@@ -914,7 +948,17 @@ export function ViewParents() {
                               ))}
                             </DropdownListButton.List>
                             <DropdownListButton.Button>
-                              {t("add-new-child")}
+                              <p
+                                onClick={() =>
+                                  setOpenChildModal({
+                                    id: parent.id,
+                                    school_id: parent.school_id,
+                                    open: true,
+                                  })
+                                }
+                              >
+                                {t("add-new-child")}
+                              </p>
                             </DropdownListButton.Button>
                           </DropdownListButton>
                         )}

@@ -125,26 +125,20 @@ function List({ children }: ListProps) {
 function Item({ img, name }: ItemProps) {
   return (
     <li>
-      <a
-        href="#"
-        className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-      >
+      <div className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
         <img className="me-2 h-6 w-6 rounded-full" src={img} alt={name} />
         {name}
-      </a>
+      </div>
     </li>
   );
 }
 
 function Button({ children }: Button) {
   return (
-    <a
-      href="#"
-      className="flex items-center rounded-b-lg border-t border-gray-200 bg-gray-50 p-3 text-sm font-medium text-blue-600 hover:bg-gray-100 hover:underline dark:border-gray-600 dark:bg-gray-700 dark:text-blue-500 dark:hover:bg-gray-600"
-    >
+    <div className="flex cursor-pointer items-center rounded-b-lg border-t border-gray-200 bg-gray-50 p-3 text-sm font-medium text-blue-600 hover:bg-gray-100 hover:underline dark:border-gray-600 dark:bg-gray-700 dark:text-blue-500 dark:hover:bg-gray-600">
       <FaUser className="me-2" />
       {children}
-    </a>
+    </div>
   );
 }
 

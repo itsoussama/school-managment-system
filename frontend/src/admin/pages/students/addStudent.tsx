@@ -10,6 +10,7 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 
 export interface FormData {
+  guardian_id: number | null;
   name?: string;
   firstName?: string;
   lastName?: string;
@@ -50,9 +51,9 @@ export default function AddStudent() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(data);
 
     addStudentQuery.mutate({
+      guardian_id: null,
       name: data?.firstName + " " + data?.lastName,
       email: data?.email as string,
       school_id: admin?.school_id,

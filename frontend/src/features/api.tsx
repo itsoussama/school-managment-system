@@ -71,7 +71,7 @@ const getParents = async (
   return response;
 };
 
-const getUser = async (id: string) => {
+const getUser = async (id: number) => {
   const response = await axiosApi.get("/api/users/" + id);
   return response;
 };
@@ -96,7 +96,7 @@ const setUser = async (formData: UpdateTeacherFromData) => {
   return response;
 };
 
-const deleteUser = async (id: string) => {
+const deleteUser = async (id: number) => {
   const response = await axiosApi.delete("/api/users/" + id);
   return response;
 };

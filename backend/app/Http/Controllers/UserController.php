@@ -153,6 +153,7 @@ class UserController extends Controller
                     'phone' => 'required|string|max:255',
                     'password' => 'required|string|min:8|confirmed',
                     'school_id' => 'required|exists:schools,id',
+                    'guardian_id' => 'integer',
                     'roles' => 'required|array',
                     'roles.*' => 'exists:roles,id',
                     'subjects' => 'required|array',
@@ -161,10 +162,13 @@ class UserController extends Controller
                     'grades.*' => 'exists:grades,id',
                 ]);
                 if ($validation) {
+                    \Log::info($request);
+
                     $user = User::create([
                         'name' => $request->name,
                         'email' => $request->email,
                         'phone' => $request->phone,
+                        'guardian_id' => $request->guardian_id,
                         'password' => bcrypt($request->password),
                     ]);
                     $user->school()->associate($request->school_id);
