@@ -218,8 +218,13 @@ class UserController extends Controller
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
             try {
-                // Validate incoming request
-                info($request->all());
+
+                //! if your data not changeing
+                // To send request using put method, you have to :
+                /**
+                    * change the Put method to POST
+                    * add new data _method: PUT
+                */
                 $validation = $request->validate([
                     'name' => 'nullable|string|max:255',
                     'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
