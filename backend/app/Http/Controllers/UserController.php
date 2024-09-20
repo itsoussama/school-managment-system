@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
@@ -218,51 +219,69 @@ class UserController extends Controller
         if (auth()->user()->hasRole(config('roles.admin'))) {
             try {
                 // Validate incoming request
-                $request->validate([
+                info($request->all());
+                $validation = $request->validate([
                     'name' => 'nullable|string|max:255',
                     'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
-                    'phone' => 'required|string|max:255',
+                    'phone' => 'string|max:255',
                     'password' => 'nullable|string|min:8|confirmed',
                     'school_id' => 'nullable|exists:schools,id',
                     'roles' => 'nullable|array',
                     'roles.*' => 'exists:roles,id',
-                    'subjects' => 'required|array',
+                    'subjects' => 'nullable|array',
                     'subjects.*' => 'exists:subjects,id',
-                    'grades' => 'required|array',
+                    'grades' => 'nullable|array',
                     'grades.*' => 'exists:grades,id',
+                    'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 ]);
 
-                $user->name = $request->input('name', $user->name);
-                $user->email = $request->input('email', $user->email);
-                $user->phone = $request->input('phone', $user->phone);
+                if ($validation) {
+                    $user->name = $request->input('name', $user->name);
+                    $user->email = $request->input('email', $user->email);
+                    $user->phone = $request->input('phone', $user->phone);
 
-                if ($request->filled('password')) {
-                    $user->password = bcrypt($request->input('password'));
+                    if ($request->filled('password')) {
+                        $user->password = bcrypt($request->input('password'));
+                    }
+
+                    // Update the school_id if provided
+                    if ($request->filled('school_id')) {
+                        $user->school_id = $request->input('school_id');
+                    }
+
+
+                    if ($request->hasFile('image')) {
+                        if (Storage::disk('public')->exists($user->imagePath)) {
+                            Storage::disk('public')->delete($user->imagePath);
+                        }
+                        $path = $request->file('image')->store('images', 'public');
+                        $user->imagePath = $path;
+                    }
+
+                    $user->save();
+
+                    // Sync roles if provided
+                    if ($request->has('roles')) {
+                        $user->role()->sync($request->input('roles'));
+                    }
+                    if ($request->has('subjects')) {
+                        $user->subjects()->sync($request->input('subjects'));
+                        $user->grades()->sync($request->grades);
+                    }
+                    if ($request->has('grades')) {
+                        $user->grades()->sync($request->input('grades'));
+                    }
+
+                    // Load relationships and return response
+                    $user->load('school', 'role', 'subjects', 'grades');
+
+                    return response()->json($user, Response::HTTP_OK);
+
+                }else {
+                    return response()->json(['error' => 'Validation Error'], 422);
+
                 }
 
-                // Update the school_id if provided
-                if ($request->filled('school_id')) {
-                    $user->school_id = $request->input('school_id');
-                }
-
-                $user->save();
-
-                // Sync roles if provided
-                if ($request->has('roles')) {
-                    $user->role()->sync($request->input('roles'));
-                }
-                if ($request->has('subjects')) {
-                    $user->subjects()->sync($request->input('subjects'));
-                    $user->grades()->sync($request->grades);
-                }
-                if ($request->has('grades')) {
-                    $user->grades()->sync($request->input('grades'));
-                }
-
-                // Load relationships and return response
-                $user->load('school', 'role', 'subjects', 'grades');
-
-                return response()->json($user, Response::HTTP_OK);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 return response()->json($e->errors(), 422);
             }
@@ -274,6 +293,9 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
+            if (Storage::disk('public')->exists($user->imagePath)) {
+                Storage::disk('public')->delete($user->imagePath);
+            }
             $user->role()->detach();
 
             $user->delete();
