@@ -164,24 +164,29 @@ class UserController extends Controller
                     'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
                 ]);
                 if ($validation) {
-                    $filename = '';
+                    $path = '';
                     if ($request->hasFile('image')) {
-                        $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
-                        $request->file('image')->move(public_path('images/users'), $filename);
+                        // $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
+                        // $request->file('image')->move(public_path('images/users'), $filename);
+                        $path = $request->file('image')->store('images', 'public');
                     }
+                    info('path : ' . $path);
                     $user = User::create([
                         'name' => $request->name,
                         'email' => $request->email,
                         'phone' => $request->phone,
-                        'imagePath' => 'images/users/' .$filename,
                         'guardian_id' => $request->guardian_id,
                         'password' => bcrypt($request->password),
                     ]);
+                    $user->imagePath = $path;
                     $user->school()->associate($request->school_id);
                     $user->role()->sync($request->roles);
                     $user->subjects()->sync($request->subjects);
                     $user->grades()->sync($request->grades);
                     $user->save();
+
+                    // to call the image in frontend `http://localhost:8000/storage/${imagePath}`;
+
                 } else {
                     return $request;
                 }
