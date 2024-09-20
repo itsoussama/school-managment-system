@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -160,14 +161,19 @@ class UserController extends Controller
                     'subjects.*' => 'exists:subjects,id',
                     'grades' => 'required|array',
                     'grades.*' => 'exists:grades,id',
+                    'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
                 ]);
                 if ($validation) {
-                    \Log::info($request);
-
+                    $filename = '';
+                    if ($request->hasFile('image')) {
+                        $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
+                        $request->file('image')->move(public_path('images/users'), $filename);
+                    }
                     $user = User::create([
                         'name' => $request->name,
                         'email' => $request->email,
                         'phone' => $request->phone,
+                        'imagePath' => 'images/users/' .$filename,
                         'guardian_id' => $request->guardian_id,
                         'password' => bcrypt($request->password),
                     ]);

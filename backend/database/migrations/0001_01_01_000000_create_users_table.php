@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique()->nullable();
             $table->string('phone')->nullable();
+            $table->string('imagePath')->nullable();
             $table->string('password')->default(bcrypt('pass123'));
             $table->rememberToken();
             $table->timestamps();
