@@ -38,25 +38,26 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deleteUser, getUser, getStudents, setUser } from "@api";
+import { deleteUser, getUser, getStudents, setStudent } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 
 interface Check {
-  id?: string;
+  id?: number;
   status?: boolean;
 }
 
 interface Modal {
-  id: string;
+  id: number;
   type?: "view" | "edit" | "delete";
   open: boolean;
 }
 
 interface Student {
-  id: string;
+  id: number;
   name: string;
+  imagePath: string;
   email: string;
   phone: string;
   role: [
@@ -78,8 +79,9 @@ interface Student {
     },
   ];
   guardian: {
-    id: string;
-    guardian_id: string;
+    id: number;
+    guardian_id: number;
+    imagePath: string;
     name: string;
     email: string;
     school_id: string;
@@ -88,17 +90,29 @@ interface Student {
 }
 
 export interface FormData {
-  id: string;
+  _method: string;
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  image?: File;
+}
+
+interface Data {
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  image?: File;
 }
 
 interface Sort {
   column: string;
   direction: "asc" | "desc";
 }
+
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewStudents() {
   const queryClient = useQueryClient();
@@ -114,8 +128,10 @@ export function ViewStudents() {
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [formData, setFormData] = useState<FormData>({
-    id: "",
+  const [img, setImg] = useState<FileList>();
+  const [previewImg, setPreviewImg] = useState<string>();
+  const [data, setdata] = useState<Data>({
+    id: 0,
     firstName: "",
     lastName: "",
     email: "",
@@ -146,12 +162,12 @@ export function ViewStudents() {
 
   const getStudentQuery = useQuery({
     queryKey: ["getStudent", openModal?.id],
-    queryFn: () => getUser(openModal?.id as string),
+    queryFn: () => getUser(openModal?.id as number),
     enabled: !!openModal?.id,
   });
 
-  const setUserQuery = useMutation({
-    mutationFn: setUser,
+  const studentMutation = useMutation({
+    mutationFn: setStudent,
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({
         queryKey: ["getStudent"],
@@ -161,10 +177,10 @@ export function ViewStudents() {
         queryKey: ["getStudents"],
       });
 
-      setFormData({
+      setdata({
         id: data?.id,
-        firstName: data?.name,
-        lastName: data?.name,
+        firstName: getUserName(data?.name).firstName,
+        lastName: getUserName(data?.name).lastName,
         email: data?.email,
         phone: data?.phone,
       });
@@ -176,8 +192,8 @@ export function ViewStudents() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getStudents"] });
       // setOpenDeleteModal(undefined);
-      setFormData({
-        id: "",
+      setdata({
+        id: 0,
         firstName: "",
         lastName: "",
         email: "",
@@ -194,7 +210,7 @@ export function ViewStudents() {
           setCheckAll((prev) => {
             const alreadyChecked = prev.some((item) => item.id === Student.id);
             if (firstCheckbox.checked && !alreadyChecked) {
-              return [...prev, { id: Student.id as string, status: true }];
+              return [...prev, { id: Student.id as number, status: true }];
             }
             return prev;
           });
@@ -205,10 +221,10 @@ export function ViewStudents() {
     [getStudentsQuery.data?.data, getStudentsQuery.isFetched],
   );
 
-  const handleCheck = (id = "") => {
+  const handleCheck = (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
 
-    if (id == "") {
+    if (id) {
       setCheckAll([]);
       handleCheckAll(firstCheckbox);
       // document.getElementsByName("checkbox").forEach((elem) => {
@@ -242,8 +258,8 @@ export function ViewStudents() {
   };
 
   const onChange = (event: ChangeEvent) => {
-    setFormData((prev) => ({
-      ...(prev as FormData),
+    setdata((prev) => ({
+      ...(prev as Data),
       [event.target.id]: (event.target as HTMLInputElement).value,
     }));
     // console.log((event.target as HTMLInputElement).value);
@@ -256,10 +272,10 @@ export function ViewStudents() {
       queryFn: () => getUser(id),
     });
 
-    setFormData({
+    setdata({
       id: StudentData?.id,
-      firstName: StudentData?.name,
-      lastName: StudentData?.name,
+      firstName: getUserName(StudentData?.name).firstName,
+      lastName: getUserName(StudentData?.name).lastName,
       email: StudentData?.email,
       phone: StudentData?.phone,
     });
@@ -267,23 +283,36 @@ export function ViewStudents() {
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // console.log(formData);
-    setUserQuery.mutate(formData as FormData);
+
+    const form: FormData = {
+      _method: "PUT",
+      id: data?.id,
+      name: data?.firstName + " " + data?.lastName,
+      email: data?.email,
+      phone: data?.phone,
+    };
+
+    if (img) form["image"] = img[0];
+
+    studentMutation.mutate(form);
+
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
+
+    setPreviewImg(undefined);
   };
 
   const onCloseModal = () => {
-    setUserQuery.reset();
+    studentMutation.reset();
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
 
-    setFormData({
-      id: "",
+    setdata({
+      id: 0,
       firstName: "",
       lastName: "",
       email: "",
@@ -301,9 +330,9 @@ export function ViewStudents() {
       return;
     }
 
-    deleteUserQuery.mutate(openModal?.id as string);
+    deleteUserQuery.mutate(openModal?.id as number);
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
   };
@@ -339,6 +368,33 @@ export function ViewStudents() {
     const target = ev.target as HTMLSelectElement;
     setPage(1);
     setPerPage(parseInt(target.value));
+  };
+
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
+  };
+
+  const readAndPreview = (file: FileList) => {
+    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
+      const fileReader = new FileReader();
+      fileReader.addEventListener("load", (event) => {
+        setPreviewImg(event.target?.result as string);
+      });
+      fileReader.readAsDataURL(file[0]);
+    }
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const file = event.target.files;
+
+      setImg(file);
+      readAndPreview(file as FileList);
+    }
   };
 
   useEffect(() => {
@@ -405,7 +461,11 @@ export function ViewStudents() {
           <div className="flex flex-col gap-8 sm:flex-row">
             <div className="flex flex-col items-center rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
-                imgSource="https://avatar.iran.liara.run/public/girl"
+                imgSource={
+                  getStudentQuery.data?.data.imagePath
+                    ? SERVER_STORAGE + getStudentQuery.data?.data.imagePath
+                    : `https://avatar.iran.liara.run/username?username=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
+                }
                 className="h-40 w-40"
               />
             </div>
@@ -421,12 +481,7 @@ export function ViewStudents() {
                         {fieldTrans("first-name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getStudentQuery.data?.data.name.split(" ")[
-                            getStudentQuery.data?.data.name.split(" ").length -
-                              2
-                          ]
-                        }
+                        {getUserName(getStudentQuery.data?.data.name).firstName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -434,12 +489,7 @@ export function ViewStudents() {
                         {fieldTrans("last-name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getStudentQuery.data?.data.name.split(" ")[
-                            getStudentQuery.data?.data.name.split(" ").length -
-                              1
-                          ]
-                        }
+                        {getUserName(getStudentQuery.data?.data.name).lastName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -530,10 +580,22 @@ export function ViewStudents() {
             <div className="flex flex-col gap-8 sm:flex-row">
               <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
-                  imgSource="https://avatar.iran.liara.run/public/girl"
+                  imgSource={
+                    previewImg
+                      ? previewImg
+                      : getStudentQuery.data?.data.imagePath
+                        ? SERVER_STORAGE + getStudentQuery.data?.data.imagePath
+                        : `https://avatar.iran.liara.run/username?username=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
+                  }
                   className="h-40 w-40"
                 />
-                <button className="btn-dark dark:btn-gray">
+
+                <button className="btn-gray relative overflow-hidden">
+                  <input
+                    type="file"
+                    className="absolute left-0 top-0 cursor-pointer opacity-0"
+                    onChange={handleImageUpload}
+                  />
                   {fieldTrans("upload-photo")}
                 </button>
                 <div className="flex flex-col">
@@ -565,7 +627,7 @@ export function ViewStudents() {
                       placeholder={fieldTrans("first-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
-                      value={formData?.firstName}
+                      value={data?.firstName}
                       onChange={onChange}
                     />
 
@@ -577,7 +639,7 @@ export function ViewStudents() {
                       placeholder={fieldTrans("last-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
-                      value={formData?.lastName}
+                      value={data?.lastName}
                       onChange={onChange}
                     />
 
@@ -601,7 +663,7 @@ export function ViewStudents() {
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
-                      value={formData?.phone}
+                      value={data?.phone}
                       onChange={onChange}
                     />
 
@@ -613,7 +675,7 @@ export function ViewStudents() {
                       placeholder={fieldTrans("email-placeholer")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
-                      value={formData?.email}
+                      value={data?.email}
                       onChange={onChange}
                     />
 
@@ -883,7 +945,7 @@ export function ViewStudents() {
                   >
                     <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                       <Checkbox
-                        id={student.id}
+                        id={student.id.toString()}
                         name="checkbox"
                         checked={
                           checkAll.find((check) => check.id == student.id)
@@ -918,7 +980,11 @@ export function ViewStudents() {
                         <div className="flex items-center gap-x-2">
                           <img
                             className="w-8 rounded-full"
-                            src="https://i.pravatar.cc/300?img=12"
+                            src={
+                              student.guardian.imagePath
+                                ? SERVER_STORAGE + student.guardian.imagePath
+                                : `https://avatar.iran.liara.run/username?username=${getUserName(student.guardian.name).firstName}+${getUserName(student.guardian.name).lastName}`
+                            }
                             alt="profile"
                           />
                           <span>{student.guardian?.name}</span>

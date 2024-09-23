@@ -1,11 +1,10 @@
 import { Checkbox, Input, MultiSelect } from "@src/components/input";
-import { SkeletonProfile } from "@src/components/skeleton";
 import { addStudent, getGrades } from "@src/features/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, Modal } from "flowbite-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaLock, FaUserPlus, FaUserTag } from "react-icons/fa";
+import { FaImage, FaLock, FaUserPlus, FaUserTag } from "react-icons/fa";
 
 interface AddChildModal {
   open: boolean;
@@ -27,6 +26,14 @@ export interface FormData {
   roles: number[];
   subjects: number[];
   grades: number[];
+  image: File;
+}
+
+interface File {
+  lastModified: number;
+  name: string;
+  size: number;
+  type: string;
 }
 
 interface Grades {
@@ -46,6 +53,8 @@ function AddChildModal({
 
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
+  const [img, setImg] = useState<FileList>();
+  const [previewImg, setPreviewImg] = useState<string>();
   const [openModal, setOpenModal] = useState<boolean>(open);
   const [option, setOption] = useState<Options>();
   const [formData, setFormData] = useState<FormData>();
@@ -89,24 +98,51 @@ function AddChildModal({
       roles: [],
       subjects: [],
       grades: [],
+      image: {
+        lastModified: 0,
+        name: "",
+        size: 0,
+        type: "",
+      },
     });
   };
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     // console.log(formData);
-    addStudentQuery.mutate({
-      name: formData?.firstName + " " + formData?.lastName,
-      email: formData?.email as string,
-      school_id: school_id,
-      guardian_id: guardian_id,
-      password: formData?.password as string,
-      password_confirmation: formData?.password_confirmation as string,
-      phone: formData?.phone as string,
-      roles: [3],
-      subjects: [1],
-      grades: formData?.grades as number[],
-    });
+    if (img)
+      addStudentQuery.mutate({
+        name: formData?.firstName + " " + formData?.lastName,
+        email: formData?.email as string,
+        school_id: school_id,
+        guardian_id: guardian_id,
+        password: formData?.password as string,
+        password_confirmation: formData?.password_confirmation as string,
+        phone: formData?.phone as string,
+        roles: [3],
+        subjects: [1],
+        grades: formData?.grades as number[],
+        image: img[0],
+      });
+  };
+
+  const readAndPreview = (file: FileList) => {
+    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
+      const fileReader = new FileReader();
+      fileReader.addEventListener("load", (event) => {
+        setPreviewImg(event.target?.result as string);
+      });
+      fileReader.readAsDataURL(file[0]);
+    }
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const file = event.target.files;
+
+      setImg(file);
+      readAndPreview(file as FileList);
+    }
   };
 
   useEffect(() => {
@@ -136,11 +172,27 @@ function AddChildModal({
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
               <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-                <SkeletonProfile
-                  imgSource="https://avatar.iran.liara.run/public/girl"
-                  className="h-40 w-40"
-                />
-                <button className="btn-dark dark:btn-gray">Upload photo</button>
+                {previewImg ? (
+                  <img
+                    className="h-44 w-44 rounded-full object-cover"
+                    src={previewImg}
+                    alt="profile"
+                  />
+                ) : (
+                  <div
+                    className={`flex h-44 w-44 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700`}
+                  >
+                    <FaImage className="h-10 w-10 text-gray-200 dark:text-gray-600" />
+                  </div>
+                )}
+                <button className="btn-gray relative overflow-hidden">
+                  <input
+                    type="file"
+                    className="absolute left-0 top-0 cursor-pointer opacity-0"
+                    onChange={handleImageUpload}
+                  />
+                  {fieldTrans("upload-photo")}
+                </button>
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-700 dark:text-gray-500">
                     {fieldTrans("accepted-format")}:{" "}
@@ -169,7 +221,6 @@ function AddChildModal({
                       label={fieldTrans("first-name")}
                       placeholder={fieldTrans("first-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      value={formData?.firstName}
                       onChange={(e) =>
                         handleChange(e.target.id, e.target.value)
                       }
@@ -182,7 +233,6 @@ function AddChildModal({
                       label={fieldTrans("last-name")}
                       placeholder={fieldTrans("last-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      value={formData?.lastName}
                       onChange={(e) =>
                         handleChange(e.target.id, e.target.value)
                       }
@@ -194,7 +244,6 @@ function AddChildModal({
                       name="address"
                       label={fieldTrans("address")}
                       placeholder={fieldTrans("address-placeholder")}
-                      value="123 Rue Principale"
                       onChange={(e) => console.log(e.target.value)}
                       custom-style={{ containerStyle: "col-span-full" }}
                     />
@@ -207,7 +256,6 @@ function AddChildModal({
                       placeholder="06 00 00 00"
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      value={formData?.phone}
                       onChange={(e) =>
                         handleChange(e.target.id, e.target.value)
                       }
@@ -220,7 +268,6 @@ function AddChildModal({
                       label={fieldTrans("email")}
                       placeholder={fieldTrans("email-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      value={formData?.email}
                       onChange={(e) =>
                         handleChange(e.target.id, e.target.value)
                       }

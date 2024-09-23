@@ -1,3 +1,4 @@
 {
-    "workbench.externalBrowser": "C:\\Program Files\\Firefox Developer Edition\\firefox.exe"
+    "workbench.externalBrowser": "C:\\Program Files\\Firefox Developer Edition\\firefox.exe",
+    "livePreview.customExternalBrowser": "Firefox"
 }

@@ -155,7 +155,7 @@ class UserController extends Controller
                     'phone' => 'required|string|max:255',
                     'password' => 'required|string|min:8|confirmed',
                     'school_id' => 'required|exists:schools,id',
-                    'guardian_id' => 'integer',
+                    'guardian_id' => 'nullable|integer',
                     'roles' => 'required|array',
                     'roles.*' => 'exists:roles,id',
                     'subjects' => 'required|array',
@@ -222,9 +222,10 @@ class UserController extends Controller
                 //! if your data not changeing
                 // To send request using put method, you have to :
                 /**
-                    * change the Put method to POST
-                    * add new data _method: PUT
-                */
+                 * change the Put method to POST
+                 * add new data _method: PUT
+                 */
+
                 $validation = $request->validate([
                     'name' => 'nullable|string|max:255',
                     'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
@@ -254,10 +255,11 @@ class UserController extends Controller
                         $user->school_id = $request->input('school_id');
                     }
 
-
                     if ($request->hasFile('image')) {
-                        if (Storage::disk('public')->exists($user->imagePath)) {
-                            Storage::disk('public')->delete($user->imagePath);
+                        if ($user->imagePath) {
+                            if (Storage::disk('public')->exists($user->imagePath)) {
+                                Storage::disk('public')->delete($user->imagePath);
+                            }
                         }
                         $path = $request->file('image')->store('images', 'public');
                         $user->imagePath = $path;
@@ -281,12 +283,9 @@ class UserController extends Controller
                     $user->load('school', 'role', 'subjects', 'grades');
 
                     return response()->json($user, Response::HTTP_OK);
-
-                }else {
+                } else {
                     return response()->json(['error' => 'Validation Error'], 422);
-
                 }
-
             } catch (\Illuminate\Validation\ValidationException $e) {
                 return response()->json($e->errors(), 422);
             }

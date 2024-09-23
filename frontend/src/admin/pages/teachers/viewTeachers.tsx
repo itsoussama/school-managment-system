@@ -37,24 +37,24 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deleteUser, getUser, getTeachers, setUser } from "@api";
+import { deleteUser, getUser, getTeachers, setTeacher } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 
 interface Check {
-  id?: string;
+  id?: number;
   status?: boolean;
 }
 
 interface Modal {
-  id: string;
+  id: number;
   type?: "view" | "edit" | "delete";
   open: boolean;
 }
 
 interface Teacher {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone: string;
@@ -79,11 +79,21 @@ interface Teacher {
 }
 
 export interface FormData {
-  id: string;
+  _method: string;
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  image?: File;
+}
+
+interface Data {
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  image?: File;
 }
 
 interface Sort {
@@ -91,35 +101,7 @@ interface Sort {
   direction: "asc" | "desc";
 }
 
-// const teachers = [
-//   {
-//     uid: "T001",
-//     fullName: "Leanne Graham",
-//     subject: "Math",
-//     gradeLevel: "9th, 10th",
-//     email: "test@example.com",
-//     phone: "+212 600 0000",
-//     time_spent: 360000000,
-//   },
-//   {
-//     uid: "T002",
-//     fullName: "Leanne Graham",
-//     subject: "Math",
-//     gradeLevel: "9th, 10th",
-//     email: "test@example.com",
-//     phone: "+212 600 0000",
-//     time_spent: 560000000,
-//   },
-//   {
-//     uid: "T003",
-//     fullName: "Leanne Graham",
-//     subject: "Math",
-//     gradeLevel: "9th, 10th",
-//     email: "test@example.com",
-//     phone: "+212 600 0000",
-//     time_spent: 760000000,
-//   },
-// ];
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewTeachers() {
   const queryClient = useQueryClient();
@@ -135,8 +117,10 @@ export function ViewTeachers() {
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [formData, setFormData] = useState<FormData>({
-    id: "",
+  const [img, setImg] = useState<FileList>();
+  const [previewImg, setPreviewImg] = useState<string>();
+  const [data, setData] = useState<Data>({
+    id: 0,
     firstName: "",
     lastName: "",
     email: "",
@@ -166,12 +150,12 @@ export function ViewTeachers() {
 
   const getTeacherQuery = useQuery({
     queryKey: ["getTeacher", openModal?.id],
-    queryFn: () => getUser(openModal?.id as string),
+    queryFn: () => getUser(openModal?.id as number),
     enabled: !!openModal?.id,
   });
 
-  const setUserQuery = useMutation({
-    mutationFn: setUser,
+  const teacherMutation = useMutation({
+    mutationFn: setTeacher,
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({
         queryKey: ["getTeacher"],
@@ -181,10 +165,10 @@ export function ViewTeachers() {
         queryKey: ["getTeachers"],
       });
 
-      setFormData({
+      setData({
         id: data?.id,
-        firstName: data?.name,
-        lastName: data?.name,
+        firstName: getUserName(data?.name).firstName,
+        lastName: getUserName(data?.name).lastName,
         email: data?.email,
         phone: data?.phone,
       });
@@ -196,8 +180,8 @@ export function ViewTeachers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getTeachers"] });
       // setOpenDeleteModal(undefined);
-      setFormData({
-        id: "",
+      setData({
+        id: 0,
         firstName: "",
         lastName: "",
         email: "",
@@ -214,7 +198,7 @@ export function ViewTeachers() {
           setCheckAll((prev) => {
             const alreadyChecked = prev.some((item) => item.id === teacher.id);
             if (firstCheckbox.checked && !alreadyChecked) {
-              return [...prev, { id: teacher.id as string, status: true }];
+              return [...prev, { id: teacher.id as number, status: true }];
             }
             return prev;
           });
@@ -225,10 +209,10 @@ export function ViewTeachers() {
     [getTeachersQuery.data?.data, getTeachersQuery.isFetched],
   );
 
-  const handleCheck = (id = "") => {
+  const handleCheck = (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
 
-    if (id == "") {
+    if (id) {
       setCheckAll([]);
       handleCheckAll(firstCheckbox);
       // document.getElementsByName("checkbox").forEach((elem) => {
@@ -262,8 +246,8 @@ export function ViewTeachers() {
   };
 
   const onChange = (event: ChangeEvent) => {
-    setFormData((prev) => ({
-      ...(prev as FormData),
+    setData((prev) => ({
+      ...(prev as Data),
       [event.target.id]: (event.target as HTMLInputElement).value,
     }));
     // console.log((event.target as HTMLInputElement).value);
@@ -276,10 +260,10 @@ export function ViewTeachers() {
       queryFn: () => getUser(id),
     });
 
-    setFormData({
+    setData({
       id: teacherData?.id,
-      firstName: teacherData?.name,
-      lastName: teacherData?.name,
+      firstName: getUserName(teacherData?.name).firstName,
+      lastName: getUserName(teacherData?.name).lastName,
       email: teacherData?.email,
       phone: teacherData?.phone,
     });
@@ -287,23 +271,36 @@ export function ViewTeachers() {
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // console.log(formData);
-    setUserQuery.mutate(formData as FormData);
+
+    const form: FormData = {
+      _method: "PUT",
+      id: data?.id,
+      name: data?.firstName + " " + data?.lastName,
+      email: data?.email,
+      phone: data?.phone,
+    };
+
+    if (img) form["image"] = img[0];
+
+    teacherMutation.mutate(form);
+
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
+
+    setPreviewImg(undefined);
   };
 
   const onCloseModal = () => {
-    setUserQuery.reset();
+    teacherMutation.reset();
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
 
-    setFormData({
-      id: "",
+    setData({
+      id: 0,
       firstName: "",
       lastName: "",
       email: "",
@@ -321,9 +318,9 @@ export function ViewTeachers() {
       return;
     }
 
-    deleteUserQuery.mutate(openModal?.id as string);
+    deleteUserQuery.mutate(openModal?.id as number);
     setOpenModal((prev) => ({
-      id: prev?.id as string,
+      id: prev?.id as number,
       open: false,
     }));
   };
@@ -359,6 +356,33 @@ export function ViewTeachers() {
     const target = ev.target as HTMLSelectElement;
     setPage(1);
     setPerPage(parseInt(target.value));
+  };
+
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
+  };
+
+  const readAndPreview = (file: FileList) => {
+    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
+      const fileReader = new FileReader();
+      fileReader.addEventListener("load", (event) => {
+        setPreviewImg(event.target?.result as string);
+      });
+      fileReader.readAsDataURL(file[0]);
+    }
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const file = event.target.files;
+
+      setImg(file);
+      readAndPreview(file as FileList);
+    }
   };
 
   useEffect(() => {
@@ -423,7 +447,11 @@ export function ViewTeachers() {
           <div className="flex flex-col gap-8 sm:flex-row">
             <div className="flex flex-col items-center rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
-                imgSource="https://avatar.iran.liara.run/public/girl"
+                imgSource={
+                  getTeacherQuery.data?.data.imagePath
+                    ? SERVER_STORAGE + getTeacherQuery.data?.data.imagePath
+                    : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.data.name).firstName}+${getUserName(getTeacherQuery.data?.data.name).lastName}`
+                }
                 className="h-40 w-40"
               />
             </div>
@@ -439,12 +467,7 @@ export function ViewTeachers() {
                         {fieldTrans("first-name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getTeacherQuery.data?.data.name.split(" ")[
-                            getTeacherQuery.data?.data.name.split(" ").length -
-                              2
-                          ]
-                        }
+                        {getUserName(getTeacherQuery.data?.data.name).firstName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -452,12 +475,7 @@ export function ViewTeachers() {
                         {fieldTrans("last-name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getTeacherQuery.data?.data.name.split(" ")[
-                            getTeacherQuery.data?.data.name.split(" ").length -
-                              1
-                          ]
-                        }
+                        {getUserName(getTeacherQuery.data?.data.name).lastName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -548,10 +566,22 @@ export function ViewTeachers() {
             <div className="flex flex-col gap-8 sm:flex-row">
               <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
-                  imgSource="https://avatar.iran.liara.run/public/girl"
+                  imgSource={
+                    previewImg
+                      ? previewImg
+                      : getTeacherQuery.data?.data.imagePath
+                        ? SERVER_STORAGE + getTeacherQuery.data?.data.imagePath
+                        : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.data.name).firstName}+${getUserName(getTeacherQuery.data?.data.name).lastName}`
+                  }
                   className="h-40 w-40"
                 />
-                <button className="btn-dark dark:btn-gray">
+
+                <button className="btn-gray relative overflow-hidden">
+                  <input
+                    type="file"
+                    className="absolute left-0 top-0 cursor-pointer opacity-0"
+                    onChange={handleImageUpload}
+                  />
                   {fieldTrans("upload-photo")}
                 </button>
                 <div className="flex flex-col">
@@ -583,7 +613,7 @@ export function ViewTeachers() {
                       placeholder={fieldTrans("first-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getTeacherQuery.isFetching && true}
-                      value={formData?.firstName}
+                      value={data?.firstName}
                       onChange={onChange}
                     />
 
@@ -595,7 +625,7 @@ export function ViewTeachers() {
                       placeholder={fieldTrans("last-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getTeacherQuery.isFetching && true}
-                      value={formData?.lastName}
+                      value={data?.lastName}
                       onChange={onChange}
                     />
 
@@ -619,7 +649,7 @@ export function ViewTeachers() {
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getTeacherQuery.isFetching && true}
-                      value={formData?.phone}
+                      value={data?.phone}
                       onChange={onChange}
                     />
 
@@ -631,7 +661,7 @@ export function ViewTeachers() {
                       placeholder={fieldTrans("email-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getTeacherQuery.isFetching && true}
-                      value={formData?.email}
+                      value={data?.email}
                       onChange={onChange}
                     />
 
@@ -903,7 +933,7 @@ export function ViewTeachers() {
                   >
                     <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                       <Checkbox
-                        id={teacher.id}
+                        id={teacher.id.toString()}
                         name="checkbox"
                         checked={
                           checkAll.find((check) => check.id == teacher.id)

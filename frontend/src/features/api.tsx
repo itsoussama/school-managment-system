@@ -1,5 +1,7 @@
 import AxiosProvider from "@services/axiosProvider";
 import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTeachers";
+import { FormData as UpdateStudentFromData } from "@admin/pages/students/viewStudents";
+import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParents";
 import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
 import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStudent";
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
@@ -77,22 +79,56 @@ const getUser = async (id: number) => {
 };
 
 const addTeacher = async (formData: AddTeacherFromData) => {
-  const response = await axiosApi.post("/api/users/", formData);
+  const response = await axiosApi.post("/api/users/", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response;
 };
 
 const addStudent = async (formData: AddStudentFromData) => {
-  const response = await axiosApi.post("/api/users/", formData);
+  const response = await axiosApi.post("/api/users/", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response;
 };
 
 const addParent = async (formData: AddParentFromData) => {
-  const response = await axiosApi.post("/api/add-parent/", formData);
+  const response = await axiosApi.post("/api/add-parent/", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response;
 };
 
-const setUser = async (formData: UpdateTeacherFromData) => {
-  const response = await axiosApi.put("/api/users/" + formData?.id, formData);
+const setTeacher = async (formData: UpdateTeacherFromData) => {
+  const response = await axiosApi.post("/api/users/" + formData?.id, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response;
+};
+
+const setStudent = async (formData: UpdateStudentFromData) => {
+  const response = await axiosApi.post("/api/users/" + formData?.id, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response;
+};
+
+const setParent = async (formData: UpdateParentFromData) => {
+  const response = await axiosApi.post("/api/users/" + formData?.id, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response;
 };
 
@@ -119,7 +155,9 @@ export {
   addStudent,
   addTeacher,
   addParent,
-  setUser,
+  setTeacher,
+  setStudent,
+  setParent,
   deleteUser,
   getSubjects,
   getGrades,

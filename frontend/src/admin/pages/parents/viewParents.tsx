@@ -36,7 +36,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deleteUser, getUser, getParents, setUser } from "@api";
+import { deleteUser, getUser, getParents, setParent } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { DropdownListButton } from "@src/components/dropdown";
@@ -62,6 +62,7 @@ interface ChildModal {
 
 interface Parent {
   id: number;
+  imagePath: string;
   name: string;
   email: string;
   phone: string;
@@ -75,23 +76,43 @@ interface Parent {
   childrens: [
     {
       id: string;
+      imagePath: string;
       name: string;
     },
   ];
 }
 
 export interface FormData {
-  id: string;
+  _method: string;
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  image?: File;
+}
+
+interface Data {
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
+  image?: File;
+}
+
+interface File {
+  lastModified: number;
+  name: string;
+  size: number;
+  type: string;
 }
 
 interface Sort {
   column: string;
   direction: "asc" | "desc";
 }
+
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewParents() {
   const queryClient = useQueryClient();
@@ -111,10 +132,12 @@ export function ViewParents() {
     school_id: 0,
     open: false,
   });
+  const [img, setImg] = useState<FileList>();
+  const [previewImg, setPreviewImg] = useState<string>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [dropDownPos, setDropDownPos] = useState<EventTarget>();
-  const [formData, setFormData] = useState<FormData>({
-    id: "",
+  const [data, setData] = useState<Data>({
+    id: 0,
     firstName: "",
     lastName: "",
     email: "",
@@ -140,14 +163,14 @@ export function ViewParents() {
     placeholderData: keepPreviousData,
   });
 
-  const getStudentQuery = useQuery({
+  const getParentQuery = useQuery({
     queryKey: ["getParent", openModal?.id],
     queryFn: () => getUser(openModal?.id as number),
     enabled: !!openModal?.id,
   });
 
-  const setUserQuery = useMutation({
-    mutationFn: setUser,
+  const parentMutation = useMutation({
+    mutationFn: setParent,
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({
         queryKey: ["getParent"],
@@ -157,10 +180,10 @@ export function ViewParents() {
         queryKey: ["getParents"],
       });
 
-      setFormData({
+      setData({
         id: data?.id,
-        firstName: data?.name,
-        lastName: data?.name,
+        firstName: getUserName(data?.name).firstName,
+        lastName: getUserName(data?.name).lastName,
         email: data?.email,
         phone: data?.phone,
       });
@@ -172,8 +195,8 @@ export function ViewParents() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getParents"] });
       // setOpenDeleteModal(undefined);
-      setFormData({
-        id: "",
+      setData({
+        id: 0,
         firstName: "",
         lastName: "",
         email: "",
@@ -238,8 +261,8 @@ export function ViewParents() {
   };
 
   const onChange = (event: ChangeEvent) => {
-    setFormData((prev) => ({
-      ...(prev as FormData),
+    setData((prev) => ({
+      ...(prev as Data),
       [event.target.id]: (event.target as HTMLInputElement).value,
     }));
     // console.log((event.target as HTMLInputElement).value);
@@ -247,39 +270,52 @@ export function ViewParents() {
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const { data: StudentData } = await queryClient.ensureQueryData({
-      queryKey: ["getStudent", id],
+    const { data: parentData } = await queryClient.ensureQueryData({
+      queryKey: ["getParent", id],
       queryFn: () => getUser(id),
     });
 
-    setFormData({
-      id: StudentData?.id,
-      firstName: StudentData?.name,
-      lastName: StudentData?.name,
-      email: StudentData?.email,
-      phone: StudentData?.phone,
+    setData({
+      id: parentData?.id,
+      firstName: getUserName(parentData?.name).firstName,
+      lastName: getUserName(parentData?.name).lastName,
+      email: parentData?.email,
+      phone: parentData?.phone,
     });
   };
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // console.log(formData);
-    setUserQuery.mutate(formData as FormData);
+
+    const form: FormData = {
+      _method: "PUT",
+      id: data?.id,
+      name: data?.firstName + " " + data?.lastName,
+      email: data?.email,
+      phone: data?.phone,
+    };
+
+    if (img) form["image"] = img[0];
+
+    parentMutation.mutate(form);
+
     setOpenModal((prev) => ({
       id: prev?.id as number,
       open: false,
     }));
+
+    setPreviewImg(undefined);
   };
 
   const onCloseModal = () => {
-    setUserQuery.reset();
+    parentMutation.reset();
     setOpenModal((prev) => ({
       id: prev?.id as number,
       open: false,
     }));
 
-    setFormData({
-      id: "",
+    setData({
+      id: 0,
       firstName: "",
       lastName: "",
       email: "",
@@ -292,7 +328,7 @@ export function ViewParents() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getStudentQuery.data?.data.name) {
+    if (input.verfication.value !== getParentQuery.data?.data.name) {
       setIsVerficationMatch(false);
       return;
     }
@@ -335,6 +371,33 @@ export function ViewParents() {
     const target = ev.target as HTMLSelectElement;
     setPage(1);
     setPerPage(parseInt(target.value));
+  };
+
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
+  };
+
+  const readAndPreview = (file: FileList) => {
+    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
+      const fileReader = new FileReader();
+      fileReader.addEventListener("load", (event) => {
+        setPreviewImg(event.target?.result as string);
+      });
+      fileReader.readAsDataURL(file[0]);
+    }
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const file = event.target.files;
+
+      setImg(file);
+      readAndPreview(file as FileList);
+    }
   };
 
   useEffect(() => {
@@ -399,7 +462,11 @@ export function ViewParents() {
           <div className="flex flex-col gap-8 sm:flex-row">
             <div className="flex flex-col items-center rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
-                imgSource="https://avatar.iran.liara.run/public/girl"
+                imgSource={
+                  getParentQuery.data?.data.imagePath
+                    ? SERVER_STORAGE + getParentQuery.data?.data.imagePath
+                    : `https://avatar.iran.liara.run/username?username=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
+                }
                 className="h-40 w-40"
               />
             </div>
@@ -408,19 +475,14 @@ export function ViewParents() {
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   {t("personal-information")}
                 </h1>
-                <SkeletonContent isLoaded={getStudentQuery.isFetched}>
+                <SkeletonContent isLoaded={getParentQuery.isFetched}>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                         {fieldTrans("first-name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getStudentQuery.data?.data.name.split(" ")[
-                            getStudentQuery.data?.data.name.split(" ").length -
-                              2
-                          ]
-                        }
+                        {getUserName(getParentQuery.data?.data.name).firstName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -428,12 +490,7 @@ export function ViewParents() {
                         {fieldTrans("last-name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getStudentQuery.data?.data.name.split(" ")[
-                            getStudentQuery.data?.data.name.split(" ").length -
-                              1
-                          ]
-                        }
+                        {getUserName(getParentQuery.data?.data.name).lastName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -441,7 +498,7 @@ export function ViewParents() {
                         {fieldTrans("email")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getStudentQuery.data?.data.email}
+                        {getParentQuery.data?.data.email}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -449,7 +506,7 @@ export function ViewParents() {
                         {fieldTrans("phone-number")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getStudentQuery.data?.data.phone}
+                        {getParentQuery.data?.data.phone}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -524,10 +581,23 @@ export function ViewParents() {
             <div className="flex flex-col gap-8 sm:flex-row">
               <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
-                  imgSource="https://avatar.iran.liara.run/public/girl"
+                  imgSource={
+                    previewImg
+                      ? previewImg
+                      : getParentQuery.data?.data.imagePath
+                        ? SERVER_STORAGE + getParentQuery.data?.data.imagePath
+                        : `https://avatar.iran.liara.run/username?username=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
+                  }
                   className="h-40 w-40"
                 />
-                <button className="btn-dark dark:btn-gray">Upload photo</button>
+                <button className="btn-gray relative overflow-hidden">
+                  <input
+                    type="file"
+                    className="absolute left-0 top-0 cursor-pointer opacity-0"
+                    onChange={handleImageUpload}
+                  />
+                  {fieldTrans("upload-photo")}
+                </button>
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-700 dark:text-gray-500">
                     {fieldTrans("accepted-format")}:{" "}
@@ -556,8 +626,8 @@ export function ViewParents() {
                       label={fieldTrans("first-name")}
                       placeholder={fieldTrans("first-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getStudentQuery.isFetching && true}
-                      value={formData?.firstName}
+                      disabled={getParentQuery.isFetching && true}
+                      value={data?.firstName}
                       onChange={onChange}
                     />
 
@@ -568,8 +638,8 @@ export function ViewParents() {
                       label={fieldTrans("last-name")}
                       placeholder={fieldTrans("last-name-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getStudentQuery.isFetching && true}
-                      value={formData?.lastName}
+                      disabled={getParentQuery.isFetching && true}
+                      value={data?.lastName}
                       onChange={onChange}
                     />
 
@@ -592,8 +662,8 @@ export function ViewParents() {
                       placeholder="06 00 00 00"
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getStudentQuery.isFetching && true}
-                      value={formData?.phone}
+                      disabled={getParentQuery.isFetching && true}
+                      value={data?.phone}
                       onChange={onChange}
                     />
 
@@ -604,8 +674,8 @@ export function ViewParents() {
                       label={fieldTrans("email")}
                       placeholder={fieldTrans("email-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getStudentQuery.isFetching && true}
-                      value={formData?.email}
+                      disabled={getParentQuery.isFetching && true}
+                      value={data?.email}
                       onChange={onChange}
                     />
 
@@ -676,7 +746,7 @@ export function ViewParents() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("delete-modal-title")}
-                <b>{getStudentQuery.data?.data.name}</b>
+                <b>{getParentQuery.data?.data.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -684,7 +754,7 @@ export function ViewParents() {
               </div>
               <p className="text-gray-900 dark:text-white">
                 {t("delete-modal-label")}{" "}
-                <b>{getStudentQuery.data?.data.name}</b>
+                <b>{getParentQuery.data?.data.name}</b>
               </p>
               <Input
                 type="text"
@@ -875,13 +945,17 @@ export function ViewParents() {
                       <div className="flex items-center gap-x-2">
                         {parent.childrens.length > 2 ? (
                           <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                            {parent.childrens.map(
-                              (_, key) =>
+                            {parent.childrens?.map(
+                              (child, key) =>
                                 key < 1 && (
                                   <img
                                     key={key}
                                     className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                    src="https://i.pravatar.cc/300?img=12"
+                                    src={
+                                      child?.imagePath
+                                        ? SERVER_STORAGE + child?.imagePath
+                                        : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                    }
                                     alt="profile"
                                   />
                                 ),
@@ -892,13 +966,17 @@ export function ViewParents() {
                           </div>
                         ) : parent.childrens.length > 1 ? (
                           <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                            {parent.childrens.map(
-                              (_, key) =>
+                            {parent.childrens?.map(
+                              (child, key) =>
                                 key < 1 && (
                                   <img
                                     key={key}
                                     className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                    src="https://i.pravatar.cc/300?img=12"
+                                    src={
+                                      child?.imagePath
+                                        ? SERVER_STORAGE + child?.imagePath
+                                        : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                    }
                                     alt="profile"
                                   />
                                 ),
@@ -907,11 +985,16 @@ export function ViewParents() {
                               {`+${parent.childrens.length - 1}`}
                             </div>
                           </div>
-                        ) : parent.childrens.length == 1 ? (
+                        ) : parent.childrens?.length == 1 ? (
                           <>
                             <img
                               className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                              src="https://i.pravatar.cc/300?img=12"
+                              src={
+                                parent.childrens[0]?.imagePath
+                                  ? SERVER_STORAGE +
+                                    parent.childrens[0]?.imagePath
+                                  : `https://avatar.iran.liara.run/username?username=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
+                              }
                               alt="profile"
                             />
                             <span className="pointer-events-none">
@@ -942,7 +1025,11 @@ export function ViewParents() {
                               {parent.childrens.map((child, key) => (
                                 <DropdownListButton.Item
                                   key={key}
-                                  img="https://i.pravatar.cc/300?img=12"
+                                  img={
+                                    child.imagePath
+                                      ? SERVER_STORAGE + child.imagePath
+                                      : `https://avatar.iran.liara.run/username?username=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
+                                  }
                                   name={child.name}
                                 />
                               ))}

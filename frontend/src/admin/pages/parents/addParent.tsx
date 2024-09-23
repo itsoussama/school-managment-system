@@ -2,9 +2,9 @@ import { Input, MultiSelect, Checkbox } from "@components/input";
 import { addParent, getStudents } from "@api";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaHome, FaLock, FaSearch } from "react-icons/fa";
+import { FaHome, FaImage, FaLock, FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -20,6 +20,7 @@ export interface FormData {
   school_id: number;
   childrens: number[];
   roles: number[];
+  image: File;
 }
 
 interface Childs {
@@ -28,10 +29,19 @@ interface Childs {
   guardian_id: string;
 }
 
+interface File {
+  lastModified: number;
+  name: string;
+  size: number;
+  type: string;
+}
+
 export default function AddParent() {
   const { t } = useTranslation();
   const { t: fieldsTrans } = useTranslation("form-fields");
   const [data, setData] = useState<FormData>();
+  const [img, setImg] = useState<FileList>();
+  const [previewImg, setPreviewImg] = useState<string>();
   const [searchValue, setSearchValue] = useState<string>("");
   const admin = useAppSelector((state) => state.user);
   const minSm = useBreakpoint("min", "sm");
@@ -59,16 +69,37 @@ export default function AddParent() {
     event.preventDefault();
     console.log(data);
 
-    addParentQuery.mutate({
-      name: data?.firstName + " " + data?.lastName,
-      email: data?.email as string,
-      school_id: admin?.school_id,
-      password: data?.password as string,
-      password_confirmation: data?.password_confirmation as string,
-      phone: data?.phone as string,
-      childrens: data?.childrens as number[],
-      roles: [4],
-    });
+    if (img)
+      addParentQuery.mutate({
+        name: data?.firstName + " " + data?.lastName,
+        email: data?.email as string,
+        school_id: admin?.school_id,
+        password: data?.password as string,
+        password_confirmation: data?.password_confirmation as string,
+        phone: data?.phone as string,
+        childrens: data?.childrens as number[],
+        roles: [4],
+        image: img[0],
+      });
+  };
+
+  const readAndPreview = (file: FileList) => {
+    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
+      const fileReader = new FileReader();
+      fileReader.addEventListener("load", (event) => {
+        setPreviewImg(event.target?.result as string);
+      });
+      fileReader.readAsDataURL(file[0]);
+    }
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const file = event.target.files;
+
+      setImg(file);
+      readAndPreview(file as FileList);
+    }
   };
 
   return (
@@ -106,12 +137,27 @@ export default function AddParent() {
             </h1>
           </div>
           <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
-            <img
-              className="rounded-full"
-              src="https://i.pravatar.cc/300?img=12"
-              alt=""
-            />
-            <button className="btn-gray">{fieldsTrans("upload-photo")}</button>
+            {previewImg ? (
+              <img
+                className="h-44 w-44 rounded-full object-cover"
+                src={previewImg}
+                alt="profile"
+              />
+            ) : (
+              <div
+                className={`flex h-44 w-44 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700`}
+              >
+                <FaImage className="h-10 w-10 text-gray-200 dark:text-gray-600" />
+              </div>
+            )}
+            <button className="btn-gray relative overflow-hidden">
+              <input
+                type="file"
+                className="absolute left-0 top-0 cursor-pointer opacity-0"
+                onChange={handleImageUpload}
+              />
+              {fieldsTrans("upload-photo")}
+            </button>
             <div className="flex flex-col">
               <span className="text-sm text-gray-700 dark:text-gray-500">
                 {t("accepted-format")}:{" "}
