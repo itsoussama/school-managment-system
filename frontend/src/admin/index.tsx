@@ -19,8 +19,6 @@ interface SubMenuVisible {
   state: boolean;
 }
 
-// todo: use this context component to get hover value to use in childs
-
 export default function Admin() {
   const [isOnHover, setIsOnHover] = useState<boolean>(false);
 

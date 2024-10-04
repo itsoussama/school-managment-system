@@ -1,13 +1,21 @@
 import { Input, MultiSelect, Checkbox } from "@components/input";
 import { addParent, getStudents } from "@api";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { Breadcrumb, Toast } from "flowbite-react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaHome, FaImage, FaLock, FaSearch } from "react-icons/fa";
+import { FaHome, FaImage, FaLock, FaPlus, FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import { MdThumbUp } from "react-icons/md";
+import ReactDOM from "react-dom";
+import {
+  Alert,
+  AlertColor,
+  alertColor,
+  alertIntialState,
+} from "@src/admin/utils/alert";
 
 export interface FormData {
   name?: string;
@@ -45,6 +53,7 @@ export default function AddParent() {
   const [searchValue, setSearchValue] = useState<string>("");
   const admin = useAppSelector((state) => state.user);
   const minSm = useBreakpoint("min", "sm");
+  const [alert, toggleAlert] = useState<Alert>(alertIntialState);
 
   const getChildrensQuery = useQuery({
     queryKey: ["getChildrens"],
@@ -54,6 +63,26 @@ export default function AddParent() {
 
   const addParentQuery = useMutation({
     mutationFn: addParent,
+    onSuccess: () => {
+      toggleAlert({
+        status: "success",
+        message: {
+          title: "Operation Successful",
+          description: "Your changes have been saved successfully.",
+        },
+        state: true,
+      });
+    },
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: "Something went wrong. Please try again.",
+        },
+        state: true,
+      });
+    },
   });
 
   const handleChange = (property: string, value: string | number[]) => {
@@ -102,8 +131,47 @@ export default function AddParent() {
     }
   };
 
+  useEffect(() => {
+    console.log(alertIntialState.duration);
+
+    if (alertIntialState.duration) {
+      setTimeout(() => {
+        toggleAlert(alertIntialState);
+      }, alertIntialState.duration);
+    }
+  }, [alert.state]);
+
   return (
     <div className="flex flex-col">
+      {ReactDOM.createPortal(
+        alert.state && (
+          <Toast className="fixed right-0 top-0 z-50 m-5 overflow-hidden border border-gray-300 dark:border-gray-700">
+            <div className="absolute left-0 top-0 h-0.5 w-full rounded-lg bg-gray-300 dark:bg-gray-600">
+              <div
+                className={`absolute left-0 top-0 h-full w-0 animate-[fill_${alertIntialState?.duration}ms_ease-in-out_forwards] bg-gray-400 dark:bg-white`}
+              ></div>
+            </div>
+            <div className="flex items-start">
+              <div
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${alertColor[alert.status as AlertColor]}`}
+              >
+                <MdThumbUp className="h-5 w-5" />
+              </div>
+              <div className="ml-3 text-sm font-normal">
+                <span className="mb-1 text-sm font-semibold text-gray-900 dark:text-white">
+                  {alert.message?.title}
+                </span>
+                <div className="mb-2 text-sm font-normal">
+                  {alert.message?.description}
+                </div>
+                <div className="flex gap-2"></div>
+              </div>
+              <Toast.Toggle />
+            </div>
+          </Toast>
+        ),
+        document.body,
+      )}
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
         className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
@@ -243,21 +311,30 @@ export default function AddParent() {
                 )
               }
             >
-              <Input
-                id="search"
-                type="text"
-                icon={
-                  <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                }
-                label=""
-                onKeyUp={(e) => handleSearch(e.target)}
-                placeholder={fieldsTrans("filter-all")}
-                name="search"
-                custom-style={{
-                  inputStyle: "px-8 !py-1",
-                  labelStyle: "mb-0 !inline",
-                }}
-              />
+              <div className="sticky -top-2 z-10 -m-2 h-full space-y-2 bg-white p-2 dark:bg-gray-700">
+                <Input
+                  id="search"
+                  type="text"
+                  icon={
+                    <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  }
+                  label=""
+                  onKeyUp={(e) => handleSearch(e.target)}
+                  placeholder={fieldsTrans("filter-all")}
+                  name="search"
+                  custom-style={{
+                    inputStyle: "px-8 !py-1",
+                    labelStyle: "mb-0 !inline",
+                  }}
+                />
+                <Link
+                  to={"/students/new"}
+                  className="btn-default flex h-8 items-center justify-center"
+                >
+                  <FaPlus size={12} className="me-2" />
+                  {t("add-new-child")}
+                </Link>
+              </div>
               {getChildrensQuery.data?.data.map(
                 (child: Childs, key: number) =>
                   child.name.search(new RegExp(searchValue, "i")) !== -1 && (

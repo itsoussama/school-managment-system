@@ -89,7 +89,9 @@ function Checkbox({
   ...attribute
 }: Input) {
   return (
-    <div className={`flex items-center ${containerStyle}`}>
+    <div
+      className={`flex items-center p-2 hover:bg-gray-200 hover:dark:bg-gray-600 ${containerStyle}`}
+    >
       <div className={`relative flex items-center ${wrapperInputStyle}`}>
         <input
           id={htmlFor}
@@ -109,13 +111,15 @@ function Checkbox({
           </div>
         )}
       </div>
-      <div className={`ml-2 text-sm ${wrapperLabelStyle}`}>
+      <div
+        className={`ml-2 flex flex-row items-center gap-x-2 text-sm ${wrapperLabelStyle}`}
+      >
+        {children}
         <label
           htmlFor={htmlFor}
           className={`text-gray-500 dark:text-gray-300 ${labelStyle}`}
         >
           {label}
-          {children}
         </label>
       </div>
     </div>

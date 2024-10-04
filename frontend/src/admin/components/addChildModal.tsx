@@ -1,10 +1,21 @@
 import { Checkbox, Input, MultiSelect } from "@src/components/input";
-import { addStudent, getGrades } from "@src/features/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { addStudent, getGrades, getStudents } from "@src/features/api";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Card, Modal } from "flowbite-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaImage, FaLock, FaUserPlus, FaUserTag } from "react-icons/fa";
+import {
+  FaImage,
+  FaLock,
+  FaSearch,
+  FaUserPlus,
+  FaUserTag,
+} from "react-icons/fa";
 
 interface AddChildModal {
   open: boolean;
@@ -41,7 +52,16 @@ interface Grades {
   label: string;
 }
 
+interface Childs {
+  id: string;
+  imagePath: string;
+  name: string;
+  guardian_id: string;
+}
+
 type Options = "new" | "exist";
+
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 function AddChildModal({
   open,
@@ -58,6 +78,13 @@ function AddChildModal({
   const [openModal, setOpenModal] = useState<boolean>(open);
   const [option, setOption] = useState<Options>();
   const [formData, setFormData] = useState<FormData>();
+  const [searchValue, setSearchValue] = useState<string>("");
+
+  const getChildrensQuery = useQuery({
+    queryKey: ["getChildrens"],
+    queryFn: () => getStudents(1, -1),
+    placeholderData: keepPreviousData,
+  });
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
@@ -70,6 +97,16 @@ function AddChildModal({
       queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
+
+      setOpenModal(false);
+
+      setPreviewImg(undefined);
+
+      // todo: change state to trigger success message
+    },
+
+    onError: () => {
+      // todo: change state to trigger error message
     },
   });
 
@@ -78,6 +115,11 @@ function AddChildModal({
       ...(prev as FormData),
       [property]: value,
     }));
+  };
+
+  const handleSearch = (e: EventTarget) => {
+    setSearchValue((e as HTMLInputElement).value);
+    // console.log();
   };
 
   const onCloseModal = () => {
@@ -124,6 +166,14 @@ function AddChildModal({
         grades: formData?.grades as number[],
         image: img[0],
       });
+  };
+
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
   };
 
   const readAndPreview = (file: FileList) => {
@@ -347,7 +397,52 @@ function AddChildModal({
           </Modal.Footer>
         </form>
       ) : option === "exist" ? (
-        <span></span>
+        <div className="flex max-h-[70vh] flex-col p-2">
+          <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
+            <Input
+              id="search"
+              type="text"
+              icon={
+                <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+              }
+              label=""
+              onKeyUp={(e) => handleSearch(e.target)}
+              placeholder={fieldTrans("filter-all")}
+              name="search"
+              custom-style={{
+                inputStyle: "px-8 !py-1",
+                labelStyle: "mb-0 !inline",
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-y-3 overflow-y-auto">
+            {getChildrensQuery.data?.data.map(
+              (child: Childs, key: number) =>
+                child.name.search(new RegExp(searchValue, "i")) !== -1 && (
+                  <div>
+                    <Checkbox
+                      key={key}
+                      htmlFor={child.name}
+                      label={child.name}
+                      id={child.id}
+                      name="childrens"
+                      value={child.name}
+                    >
+                      <img
+                        className="h-7 w-7 rounded-full"
+                        src={
+                          child?.imagePath
+                            ? SERVER_STORAGE + child?.imagePath
+                            : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                        }
+                        alt="profile"
+                      />
+                    </Checkbox>
+                  </div>
+                ),
+            )}
+          </div>
+        </div>
       ) : (
         <div className="flex items-center justify-center gap-3 py-9">
           <Card

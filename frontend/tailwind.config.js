@@ -33,6 +33,16 @@ export default {
         "sharp-light":
           "inset 0 1px 0 0 rgba(255, 255, 255, .06), 0 2px 3px -4px rgba(255, 255, 255, .1)",
       },
+
+      animation: {
+        fill: "fill 1s ease-in-out forwards",
+      },
+      keyframes: {
+        fill: {
+          "0%": { width: "0%" },
+          "100%": { width: "100%" },
+        },
+      },
     },
   },
   plugins: [flowbite.plugin()],
