@@ -143,6 +143,31 @@ class UserController extends Controller
         }
     }
 
+    // this function recive an array of existing children and associate to relative parent
+    public function assignChilds(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+
+            $validation = $request->validate([
+                'parent_id' => 'required|exists:users,id',
+                'childrens' => 'required|array|exists:users,id',
+            ]);
+
+            if ($validation) {
+                $childrens = User::whereIn('id', $request->childrens)->get();
+
+                foreach ($childrens as $child) {
+                    $child->guardian_id = $request->parent_id;
+                    $child->save();
+                }
+            } else {
+                return $request;
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
     // Show the form for creating a new resource (not typically used in APIs)
     public function store(Request $request)
     {

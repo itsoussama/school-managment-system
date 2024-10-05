@@ -1,5 +1,5 @@
 import { Checkbox, Input, MultiSelect } from "@src/components/input";
-import { addStudent, getGrades, getStudents } from "@src/features/api";
+import { addStudent, assignChilds, getGrades, getStudents } from "@api";
 import {
   keepPreviousData,
   useMutation,
@@ -79,6 +79,7 @@ function AddChildModal({
   const [option, setOption] = useState<Options>();
   const [formData, setFormData] = useState<FormData>();
   const [searchValue, setSearchValue] = useState<string>("");
+  const [selectedChilds, setSelectedChilds] = useState<number[]>([]);
 
   const getChildrensQuery = useQuery({
     queryKey: ["getChildrens"],
@@ -102,6 +103,17 @@ function AddChildModal({
 
       setPreviewImg(undefined);
 
+      // todo: change state to trigger success message
+    },
+
+    onError: () => {
+      // todo: change state to trigger error message
+    },
+  });
+
+  const assignChildsQuery = useMutation({
+    mutationFn: assignChilds,
+    onSuccess: () => {
       // todo: change state to trigger success message
     },
 
@@ -149,9 +161,21 @@ function AddChildModal({
     });
   };
 
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const getSelectedChilds = (event: ChangeEvent<HTMLInputElement>) => {
+    const ChildId: number = parseInt(event.target?.id);
+    if (event.target.checked) {
+      setSelectedChilds((prev) => [...prev, ChildId]);
+    } else {
+      const filtredChildList = selectedChilds.filter(
+        (childId) => childId !== ChildId,
+      );
+      setSelectedChilds(filtredChildList);
+    }
+  };
+
+  const onSubmitNewChild = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // console.log(formData);
+    console.log("submit");
     if (img)
       addStudentQuery.mutate({
         name: formData?.firstName + " " + formData?.lastName,
@@ -166,6 +190,14 @@ function AddChildModal({
         grades: formData?.grades as number[],
         image: img[0],
       });
+  };
+
+  const onSubmitExistingChilds = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    assignChildsQuery.mutate({
+      parent_id: guardian_id,
+      childrens: selectedChilds,
+    });
   };
 
   const getUserName = (fullName: string) => {
@@ -218,7 +250,7 @@ function AddChildModal({
     >
       <Modal.Header>{t("add-new-child")}</Modal.Header>
       {option === "new" ? (
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmitNewChild}>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
               <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
@@ -397,52 +429,63 @@ function AddChildModal({
           </Modal.Footer>
         </form>
       ) : option === "exist" ? (
-        <div className="flex max-h-[70vh] flex-col p-2">
-          <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
-            <Input
-              id="search"
-              type="text"
-              icon={
-                <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-              }
-              label=""
-              onKeyUp={(e) => handleSearch(e.target)}
-              placeholder={fieldTrans("filter-all")}
-              name="search"
-              custom-style={{
-                inputStyle: "px-8 !py-1",
-                labelStyle: "mb-0 !inline",
-              }}
-            />
+        <form onSubmit={onSubmitExistingChilds}>
+          <div className="flex max-h-[70vh] flex-col p-2">
+            <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
+              <Input
+                id="search"
+                type="text"
+                icon={
+                  <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                }
+                label=""
+                onKeyUp={(e) => handleSearch(e.target)}
+                placeholder={fieldTrans("filter-all")}
+                name="search"
+                custom-style={{
+                  inputStyle: "px-8 !py-1",
+                  labelStyle: "mb-0 !inline",
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-y-3 overflow-y-auto">
+              {getChildrensQuery.data?.data.map(
+                (child: Childs, key: number) =>
+                  child.name.search(new RegExp(searchValue, "i")) !== -1 && (
+                    <div>
+                      <Checkbox
+                        key={key}
+                        htmlFor={child.name}
+                        label={child.name}
+                        id={child.id}
+                        name="childrens"
+                        onChange={getSelectedChilds}
+                        value={child.name}
+                      >
+                        <img
+                          className="h-7 w-7 rounded-full"
+                          src={
+                            child?.imagePath
+                              ? SERVER_STORAGE + child?.imagePath
+                              : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                          }
+                          alt="profile"
+                        />
+                      </Checkbox>
+                    </div>
+                  ),
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-y-3 overflow-y-auto">
-            {getChildrensQuery.data?.data.map(
-              (child: Childs, key: number) =>
-                child.name.search(new RegExp(searchValue, "i")) !== -1 && (
-                  <div>
-                    <Checkbox
-                      key={key}
-                      htmlFor={child.name}
-                      label={child.name}
-                      id={child.id}
-                      name="childrens"
-                      value={child.name}
-                    >
-                      <img
-                        className="h-7 w-7 rounded-full"
-                        src={
-                          child?.imagePath
-                            ? SERVER_STORAGE + child?.imagePath
-                            : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                        }
-                        alt="profile"
-                      />
-                    </Checkbox>
-                  </div>
-                ),
-            )}
-          </div>
-        </div>
+          <Modal.Footer>
+            <button type="submit" className="btn-default !w-auto">
+              {fieldTrans("accept")}
+            </button>
+            <button className="btn-danger !w-auto" onClick={onCloseModal}>
+              {fieldTrans("decline")}
+            </button>
+          </Modal.Footer>
+        </form>
       ) : (
         <div className="flex items-center justify-center gap-3 py-9">
           <Card

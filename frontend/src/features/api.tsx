@@ -147,6 +147,14 @@ const getGrades = async () => {
   return response;
 };
 
+const assignChilds = async (formData: {
+  parent_id: number;
+  childrens: number[];
+}) => {
+  const response = await axiosApi.post("/assign-childs", formData);
+  return response;
+};
+
 export {
   getTeachers,
   getStudents,
@@ -161,4 +169,5 @@ export {
   deleteUser,
   getSubjects,
   getGrades,
+  assignChilds,
 };

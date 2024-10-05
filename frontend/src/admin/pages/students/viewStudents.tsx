@@ -42,6 +42,7 @@ import { deleteUser, getUser, getStudents, setStudent } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import AddParentModal from "@src/admin/components/addParentModal";
 
 interface Check {
   id?: number;
@@ -54,12 +55,19 @@ interface Modal {
   open: boolean;
 }
 
+interface ParentModal {
+  id: number;
+  school_id: number;
+  open: boolean;
+}
+
 interface Student {
   id: number;
   name: string;
   imagePath: string;
   email: string;
   phone: string;
+  school_id: number;
   role: [
     {
       id: string;
@@ -84,7 +92,7 @@ interface Student {
     imagePath: string;
     name: string;
     email: string;
-    school_id: string;
+    school_id: number;
     phone: string;
   };
 }
@@ -127,6 +135,11 @@ export function ViewStudents() {
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
+  const [openParentModal, setOpenParentModal] = useState<ParentModal>({
+    id: 0,
+    school_id: 0,
+    open: false,
+  });
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -777,6 +790,19 @@ export function ViewStudents() {
         </form>
       </Modal>
 
+      <AddParentModal
+        open={openParentModal?.open as boolean}
+        toggleOpen={(isOpen: boolean) =>
+          setOpenParentModal((prev: ParentModal) => ({
+            id: openParentModal?.id as number,
+            school_id: prev?.school_id,
+            open: isOpen,
+          }))
+        }
+        child_id={openParentModal.id}
+        school_id={openParentModal?.school_id}
+      />
+
       <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
         {checkAll.find((val) => val.status === true) ? (
           <div className="flex w-full justify-between px-5 py-4">
@@ -990,13 +1016,19 @@ export function ViewStudents() {
                           <span>{student.guardian?.name}</span>
                         </div>
                       ) : (
-                        <a
-                          href="#"
-                          className="flex items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                        <div
+                          className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                          onClick={() =>
+                            setOpenParentModal({
+                              id: student.id,
+                              school_id: student.school_id,
+                              open: true,
+                            })
+                          }
                         >
                           <FaUser className="me-2" />
                           Assign to a parent
-                        </a>
+                        </div>
                       )}
                     </Table.Cell>
                     <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
