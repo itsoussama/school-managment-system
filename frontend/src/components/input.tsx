@@ -90,7 +90,7 @@ function Checkbox({
 }: Input) {
   return (
     <div
-      className={`flex items-center p-2 hover:bg-gray-200 hover:dark:bg-gray-600 ${containerStyle}`}
+      className={`flex items-center rounded-xs p-2 hover:bg-gray-200 hover:dark:bg-gray-600 ${containerStyle}`}
     >
       <div className={`relative flex items-center ${wrapperInputStyle}`}>
         <input

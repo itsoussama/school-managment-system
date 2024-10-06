@@ -114,6 +114,11 @@ function AddChildModal({
   const assignChildsQuery = useMutation({
     mutationFn: assignChilds,
     onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getParents"],
+      });
+
+      setOpenModal(false);
       // todo: change state to trigger success message
     },
 

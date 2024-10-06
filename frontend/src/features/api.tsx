@@ -151,7 +151,12 @@ const assignChilds = async (formData: {
   parent_id: number;
   childrens: number[];
 }) => {
-  const response = await axiosApi.post("/assign-childs", formData);
+  const response = await axiosApi.post("/api/assign-childs", formData);
+  return response;
+};
+
+const assignParent = async (formData: { child_id: number; parent: number }) => {
+  const response = await axiosApi.post("/api/assign-parent", formData);
   return response;
 };
 
@@ -170,4 +175,5 @@ export {
   getSubjects,
   getGrades,
   assignChilds,
+  assignParent,
 };

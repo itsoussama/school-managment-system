@@ -92,9 +92,13 @@ class UserController extends Controller
                     $query->where('name', config('roles.parent'));
                 }
 
-            )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+            )->orderBy($sortColumn, $sortDirection);
 
-            return response()->json($users, Response::HTTP_OK);
+            if ($perPage == -1) {
+                return response()->json($users->get(), Response::HTTP_OK);
+            }
+
+            return response()->json($users->paginate($perPage), Response::HTTP_OK);
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
@@ -160,6 +164,28 @@ class UserController extends Controller
                     $child->guardian_id = $request->parent_id;
                     $child->save();
                 }
+            } else {
+                return $request;
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
+    public function assignParent(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+
+            $validation = $request->validate([
+                'child_id' => 'required|exists:users,id',
+                'parent' => 'required|exists:users,id',
+            ]);
+
+            if ($validation) {
+                $child = User::find($request->child_id);
+                $child->guardian_id = $request->parent;
+                $child->save();
+                info($child);
             } else {
                 return $request;
             }
