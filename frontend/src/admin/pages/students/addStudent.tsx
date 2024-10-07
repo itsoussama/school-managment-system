@@ -8,6 +8,12 @@ import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import Alert from "@src/components/alert";
+import {
+  alertDuration,
+  alertIntialState,
+  Alert as AlertType,
+} from "@src/admin/utils/alert";
 
 export interface FormData {
   guardian_id: number | null;
@@ -38,6 +44,15 @@ interface File {
 }
 
 export default function AddStudent() {
+  const { t } = useTranslation();
+  const { t: fieldsTrans } = useTranslation("form-fields");
+  const [data, setData] = useState<FormData>();
+  const [img, setImg] = useState<FileList>();
+  const [previewImg, setPreviewImg] = useState<string>();
+  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
+  const admin = useAppSelector((state) => state.user);
+  const minSm = useBreakpoint("min", "sm");
+
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
     queryFn: getGrades,
@@ -45,15 +60,28 @@ export default function AddStudent() {
 
   const addStudentQuery = useMutation({
     mutationFn: addStudent,
-  });
+    onSuccess: () => {
+      toggleAlert({
+        status: "success",
+        message: {
+          title: "Operation Successful",
+          description: " Your changes have been saved successfully.",
+        },
+        state: true,
+      });
+    },
 
-  const { t } = useTranslation();
-  const { t: fieldsTrans } = useTranslation("form-fields");
-  const [data, setData] = useState<FormData>();
-  const [img, setImg] = useState<FileList>();
-  const [previewImg, setPreviewImg] = useState<string>();
-  const admin = useAppSelector((state) => state.user);
-  const minSm = useBreakpoint("min", "sm");
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: "Something went wrong. Please try again later.",
+        },
+        state: true,
+      });
+    },
+  });
 
   const handleChange = (property: string, value: string | number[]) => {
     setData((prev) => ({ ...(prev as FormData), [property]: value }));
@@ -99,6 +127,15 @@ export default function AddStudent() {
 
   return (
     <div className="flex flex-col">
+      <Alert
+        status={alert.status}
+        state={alert.state}
+        duration={alertDuration}
+        title={alert.message.title}
+        description={alert.message.description}
+        close={(value) => toggleAlert(value)}
+      />
+
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
         className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"

@@ -43,6 +43,12 @@ import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddParentModal from "@src/admin/components/addParentModal";
+import Alert from "@src/components/alert";
+import {
+  alertDuration,
+  alertIntialState,
+  Alert as AlertType,
+} from "@src/admin/utils/alert";
 
 interface Check {
   id?: number;
@@ -150,6 +156,7 @@ export function ViewStudents() {
     email: "",
     phone: "",
   });
+  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.user);
   const { t } = useTranslation();
@@ -197,6 +204,26 @@ export function ViewStudents() {
         email: data?.email,
         phone: data?.phone,
       });
+
+      toggleAlert({
+        status: "success",
+        message: {
+          title: "Operation Successful",
+          description: " Your changes have been saved successfully.",
+        },
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: "Something went wrong. Please try again later.",
+        },
+        state: true,
+      });
     },
   });
 
@@ -211,6 +238,26 @@ export function ViewStudents() {
         lastName: "",
         email: "",
         phone: "",
+      });
+
+      toggleAlert({
+        status: "success",
+        message: {
+          title: "Operation Successful",
+          description: " Your changes have been saved successfully.",
+        },
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: "Something went wrong. Please try again later.",
+        },
+        state: true,
       });
     },
   });
@@ -424,6 +471,14 @@ export function ViewStudents() {
 
   return (
     <div className="flex w-full flex-col">
+      <Alert
+        status={alert.status}
+        state={alert.state}
+        duration={alertDuration}
+        title={alert.message.title}
+        description={alert.message.description}
+        close={(value) => toggleAlert(value)}
+      />
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
         className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"

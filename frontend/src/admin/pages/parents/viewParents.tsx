@@ -7,7 +7,6 @@ import {
   Pagination,
   Spinner,
   Table,
-  Toast,
 } from "flowbite-react";
 import React, {
   ChangeEvent,
@@ -43,14 +42,12 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { DropdownListButton } from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddChildModal from "@src/admin/components/addChildModal";
-import { MdThumbUp } from "react-icons/md";
-import ReactDOM from "react-dom";
 import {
-  Alert,
-  AlertColor,
-  alertColor,
+  Alert as AlertType,
   alertIntialState,
+  alertDuration,
 } from "@src/admin/utils/alert";
+import Alert from "@src/components/alert";
 
 interface Check {
   id?: number;
@@ -152,7 +149,7 @@ export function ViewParents() {
     email: "",
     phone: "",
   });
-  const [alert, toggleAlert] = useState<Alert>(alertIntialState);
+  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.user);
   const { t } = useTranslation();
@@ -237,6 +234,26 @@ export function ViewParents() {
         lastName: "",
         email: "",
         phone: "",
+      });
+
+      toggleAlert({
+        status: "success",
+        message: {
+          title: "Operation Successful",
+          description: " Your changes have been saved successfully.",
+        },
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: "Something went wrong. Please try again later.",
+        },
+        state: true,
       });
     },
   });
@@ -429,14 +446,6 @@ export function ViewParents() {
     }
   };
 
-  // const handleAlerts = () => {};
-
-  useEffect(() => {
-    setTimeout(() => {
-      toggleAlert(alertIntialState);
-    }, alertIntialState.duration);
-  }, [alert]);
-
   useEffect(() => {
     const checkedVal = checkAll.filter((val) => val.status === true)
       .length as number;
@@ -451,35 +460,14 @@ export function ViewParents() {
 
   return (
     <div className="flex w-full flex-col">
-      {ReactDOM.createPortal(
-        alert.state && (
-          <Toast className="fixed right-0 top-0 z-50 m-5 overflow-hidden border border-gray-300 dark:border-gray-700">
-            <div className="absolute left-0 top-0 h-0.5 w-full rounded-lg bg-gray-300 dark:bg-gray-600">
-              <div
-                className={`absolute left-0 top-0 h-full w-0 animate-[fill_${alertIntialState.duration}ms_ease-in-out] bg-gray-400 dark:bg-white`}
-              ></div>
-            </div>
-            <div className="flex items-start">
-              <div
-                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${alertColor[alert.status as AlertColor]}`}
-              >
-                <MdThumbUp className="h-5 w-5" />
-              </div>
-              <div className="ml-3 text-sm font-normal">
-                <span className="mb-1 text-sm font-semibold text-gray-900 dark:text-white">
-                  {alert.message?.title}
-                </span>
-                <div className="mb-2 text-sm font-normal">
-                  {alert.message?.description}
-                </div>
-                <div className="flex gap-2"></div>
-              </div>
-              <Toast.Toggle />
-            </div>
-          </Toast>
-        ),
-        document.body,
-      )}
+      <Alert
+        status={alert.status}
+        state={alert.state}
+        duration={alertDuration}
+        title={alert.message.title}
+        description={alert.message.description}
+        close={(value) => toggleAlert(value)}
+      />
 
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}

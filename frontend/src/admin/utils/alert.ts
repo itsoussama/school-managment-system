@@ -1,29 +1,24 @@
+type AlertStatus = "idle" | "success" | "fail"
 export interface Alert {
-    status: string;
-    duration?: number;
-    message?: {
-      title: string;
-      description: string;
-    };
+    status: AlertStatus;
+    message: {
+      title: string,
+      description: string
+    }
     state: boolean;
   }
 
-  export type AlertColor = "success" | "fail";
+  export type AlertColor = AlertStatus;
+
+  export const alertDuration = 7000
   
   const alertIntialState: Alert = {
-    status: "",
-    duration: 7000,
+    status: "idle",
     message: {
-      title: "",
-      description: "",
+      title: '',
+      description: ''
     },
     state: false,
   };
-  
-  const alertColor = {
-    success: "bg-green-100 text-green-500 dark:bg-green-900 dark:text-green-300",
-    fail: "bg-red-100 text-red-500 dark:bg-red-900 dark:text-red-300",
-  };
-  
 
-  export {alertIntialState, alertColor}
+  export {alertIntialState}
