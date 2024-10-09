@@ -1015,7 +1015,7 @@ export function ViewParents() {
                                   />
                                 ),
                             )}
-                            <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500">
+                            <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
                               {`+${parent.childrens.length - 1}`}
                             </div>
                           </div>
@@ -1036,7 +1036,7 @@ export function ViewParents() {
                                   />
                                 ),
                             )}
-                            <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500">
+                            <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
                               {`+${parent.childrens.length - 1}`}
                             </div>
                           </div>

@@ -7,6 +7,7 @@ import { ViewStudents } from "@admin/pages/students/viewStudents";
 import AddParent from "@admin/pages/parents/addParent";
 import { ViewParents } from "@admin/pages/parents/viewParents";
 import Dashboard from "@admin/pages/dashboard";
+import DataManagement from "@admin/pages/configuration/dataManagement";
 
 export const AdminRouter = {
   path: "/",
@@ -53,6 +54,15 @@ export const AdminRouter = {
         {
           path: "manage",
           element: <ViewParents />,
+        },
+      ],
+    },
+    {
+      path: "configuration",
+      children: [
+        {
+          path: "data-management",
+          element: <DataManagement />,
         },
       ],
     },

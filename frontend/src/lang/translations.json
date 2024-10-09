@@ -14,6 +14,9 @@
         "students": "Students",
         "new-student": "New Student",
         "view-students": "Manage Students",
+        "configuration" : "Configuration",
+        "data-management" : "Data Management",
+        "import-export": "Import & Export",
         "student-information": "Student Information",
         "parents": "Parents",
         "new-parent": "New Parent",
@@ -58,6 +61,8 @@
             "manage": "manage"
         },
         "form-fields":{
+        "btn-export" : "Export data",
+        "date": "Date",
             "upload-photo": "Upload Photo",
             "first-name": "First Name",
             "first-name-placeholder": "John",
@@ -102,6 +107,9 @@
         "existing-parent": "Parent existant",
         "add-new-parent": "Ajouter un parent",
         "view-parents": "Gestion des Parents",
+        "configuration" : "Configuration",
+        "data-management" : "Gestion des données",
+        "import-export": "Exporter et importer",
         "parent-information": "Informations parentales",
         "finance": "Finance",
         "resources": "Ressources",
@@ -140,6 +148,8 @@
         "manage": "gerer"  
     },
     "form-fields":{
+        "btn-export" : "Exporter les données",
+        "date": "Date",
         "upload-photo": "Télécharger une photo",
         "first-name": "Prénom",
         "first-name-placeholder": "Jean",

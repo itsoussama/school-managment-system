@@ -160,6 +160,13 @@ const assignParent = async (formData: { child_id: number; parent: number }) => {
   return response;
 };
 
+const exportUser = async () => {
+  const response = await axiosApi.get("/api/export-users", {
+    responseType: "blob",
+  });
+  return { response: response };
+};
+
 export {
   getTeachers,
   getStudents,
@@ -176,4 +183,5 @@ export {
   getGrades,
   assignChilds,
   assignParent,
+  exportUser,
 };

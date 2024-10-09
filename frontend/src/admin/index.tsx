@@ -211,9 +211,10 @@ function Menu() {
         </Items>
       </div>
       <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>
+      {/* configuration */}
       <Items
         itemId="item-6"
-        itemName="settings"
+        itemName="configuration"
         icon={
           <FaCog
             className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -221,11 +222,14 @@ function Menu() {
         }
         subMenuVisible={subMenuVisible}
         onToggleSubMenu={onToggleSubMenu}
-        containerClass="locked"
       >
-        <Items itemId="subitem-1" itemName="sub item" />
-        <Items itemId="subitem-2" itemName="sub item" />
-        <Items itemId="subitem-3" itemName="sub item" />
+        <Link to="/configuration/data-management" state={{ active: true }}>
+          <Items
+            isActive={useMatch("/configuration/data-management") ? true : false}
+            itemId="subitem-1"
+            itemName="data-management"
+          />
+        </Link>
       </Items>
     </div>
   );
