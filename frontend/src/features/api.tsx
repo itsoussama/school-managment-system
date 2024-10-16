@@ -73,8 +73,8 @@ const getParents = async (
   return response;
 };
 
-const getUser = async (id: number) => {
-  const response = await axiosApi.get("/api/users/" + id);
+const getUser = async (id: number, role?: string) => {
+  const response = await axiosApi.get("/api/users/" + id + "?role=" + role);
   return response;
 };
 

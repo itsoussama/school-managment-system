@@ -83,7 +83,14 @@ interface Teacher {
     },
   ];
 }
-
+interface Grade {
+  id: number;
+  label: string;
+}
+interface Subject {
+  id: number;
+  name: string;
+}
 export interface FormData {
   _method: string;
   id: number;
@@ -563,24 +570,44 @@ export function ViewTeachers() {
 
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("personal-information")}
+                  {t("academic-information")}
                 </h1>
                 <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
                       {fieldTrans("subjects")}:
                     </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      Maths
-                    </span>
+                    <div className="flex w-max max-w-36 flex-wrap">
+                      {getTeacherQuery.data?.data.subjects.map(
+                        (subject: Subject, index: number) => (
+                          <Badge
+                            key={index}
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {subject.name}
+                          </Badge>
+                        ),
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
                       {fieldTrans("grade-levels")}:
                     </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      9th, 10th
-                    </span>
+                    <div className="flex w-max max-w-36 flex-wrap">
+                      {getTeacherQuery.data?.data.grades.map(
+                        (grade: Grade, index: number) => (
+                          <Badge
+                            key={index}
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {grade.label}
+                          </Badge>
+                        ),
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">

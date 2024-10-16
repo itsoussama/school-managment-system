@@ -103,6 +103,11 @@ interface Student {
   };
 }
 
+interface Grade {
+  id: number;
+  label: string;
+}
+
 export interface FormData {
   _method: string;
   id: number;
@@ -181,8 +186,8 @@ export function ViewStudents() {
   });
 
   const getStudentQuery = useQuery({
-    queryKey: ["getStudent", openModal?.id],
-    queryFn: () => getUser(openModal?.id as number),
+    queryKey: ["getStudent", openModal?.id, "student"],
+    queryFn: () => getUser(openModal?.id as number, "student"),
     enabled: !!openModal?.id,
   });
 
@@ -508,7 +513,7 @@ export function ViewStudents() {
 
       <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
-        // size={"md"}
+        // size={"xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -584,6 +589,50 @@ export function ViewStudents() {
                         123 Rue Principale
                       </span>
                     </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {t("date-birth")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        2024/01/01
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {t("parent-guardian")}:
+                      </span>
+                      {getStudentQuery.data?.data.guardian ? (
+                        <div className="flex items-center gap-x-2">
+                          <img
+                            className="w-7 rounded-full"
+                            src={
+                              getStudentQuery.data?.data.guardian.imagePath
+                                ? SERVER_STORAGE +
+                                  getStudentQuery.data?.data.guardian.imagePath
+                                : `https://avatar.iran.liara.run/username?username=${getUserName(getStudentQuery.data?.data.guardian.name).firstName}+${getUserName(getStudentQuery.data?.data.guardian.name).lastName}`
+                            }
+                            alt="profile"
+                          />
+                          <span className="text-sm text-dark-primary dark:text-white">
+                            {getStudentQuery.data?.data.guardian?.name}
+                          </span>
+                        </div>
+                      ) : (
+                        <div
+                          className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                          onClick={() =>
+                            setOpenParentModal({
+                              id: getStudentQuery.data?.data.id,
+                              school_id: getStudentQuery.data?.data.school_id,
+                              open: true,
+                            })
+                          }
+                        >
+                          <FaUser className="me-2" />
+                          Assign to a parent
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </SkeletonContent>
               </div>
@@ -594,24 +643,26 @@ export function ViewStudents() {
                 </h1>
                 <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {fieldTrans("subjects")}:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      Maths
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
                       {fieldTrans("grade-levels")}:
                     </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      9th, 10th
-                    </span>
+                    <div className="flex w-max max-w-36 flex-wrap">
+                      {getStudentQuery.data?.data.grades.map(
+                        (grade: Grade, index: number) => (
+                          <Badge
+                            key={index}
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {grade.label}
+                          </Badge>
+                        ),
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {fieldTrans("start-date")}:
+                      {t("enrollement-date")}:
                     </span>
                     <span className="text-base text-gray-900 dark:text-white">
                       2024/01/01

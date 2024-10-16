@@ -1,6 +1,7 @@
 import { Input, RSelect } from "@src/components/input";
 
 import {
+  Badge,
   Breadcrumb,
   Checkbox,
   Modal,
@@ -129,9 +130,7 @@ export function ViewParents() {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
-  const isCheckBoxAll = useRef(false);
   const [checkAll, setCheckAll] = useState<Array<Check>>([]);
-  const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
   const [openChildModal, setOpenChildModal] = useState<ChildModal>({
     id: 0,
@@ -156,6 +155,12 @@ export function ViewParents() {
   const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
 
+  const getAllParentsQuery = useQuery({
+    queryKey: ["getParents"],
+    queryFn: () => getParents(1, -1),
+    placeholderData: keepPreviousData,
+  });
+
   const getParentsQuery = useQuery({
     queryKey: [
       "getParents",
@@ -171,8 +176,8 @@ export function ViewParents() {
   });
 
   const getParentQuery = useQuery({
-    queryKey: ["getParent", openModal?.id],
-    queryFn: () => getUser(openModal?.id as number),
+    queryKey: ["getParent", openModal?.id, "parent"],
+    queryFn: () => getUser(openModal?.id as number, "parent"),
     enabled: !!openModal?.id,
   });
 
@@ -260,51 +265,32 @@ export function ViewParents() {
   // const [selectedItem, setSelectedItem] = useState()
 
   const handleCheckAll = useCallback(
-    (firstCheckbox: HTMLInputElement) => {
-      if (getParentsQuery.isFetched) {
-        getParentsQuery.data?.data.data.forEach((parent: Parent) => {
+    async (firstCheckbox: HTMLInputElement) => {
+      if (getAllParentsQuery.isFetched) {
+        await getAllParentsQuery.data?.data.forEach((parent: Parent) => {
           setCheckAll((prev) => {
-            const alreadyChecked = prev.some((item) => item.id === parent.id);
-            if (firstCheckbox.checked && !alreadyChecked) {
+            const checkedData = prev.some((item) => item.id === parent.id);
+            if (firstCheckbox.checked && !checkedData) {
               return [...prev, { id: parent.id as number, status: true }];
             }
-            return prev;
+            return [...prev, { id: parent.id as number, status: false }];
           });
-          isCheckBoxAll.current = true;
         });
       }
     },
-    [getParentsQuery.data?.data, getParentsQuery.isFetched],
+    [getAllParentsQuery.data?.data, getAllParentsQuery.isFetched],
   );
 
-  const handleCheck = (id?: number) => {
+  const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
+    // console.log(id);
 
-    if (id) {
+    if (!id) {
       setCheckAll([]);
-      handleCheckAll(firstCheckbox);
-      // document.getElementsByName("checkbox").forEach((elem) => {
-      //   const checkbox = elem as HTMLInputElement;
-      //   // console.log(firstCheckbox.ariaChecked);
-
-      //   if (firstCheckbox.checked) {
-      //     checkbox.checked = true;
-      //     setCheckAll((prev) => [
-      //       ...(prev as []),
-      //       { id: id as string, status: true },
-      //     ]);
-      //   } else {
-      //     checkbox.checked = false;
-      //     setCheckAll((prev) => [
-      //       ...(prev as []),
-      //       { id: id as string, status: false },
-      //     ]);
-      //   }
-      // });
+      await handleCheckAll(firstCheckbox);
     } else {
       const getValue = checkAll.find((elem) => elem.id === id);
       const filteredArr = checkAll.filter((elem) => elem.id !== id);
-
       setCheckAll([
         ...(filteredArr as []),
         { id: id, status: !getValue?.status },
@@ -446,17 +432,31 @@ export function ViewParents() {
     }
   };
 
-  useEffect(() => {
-    const checkedVal = checkAll.filter((val) => val.status === true)
-      .length as number;
-    setNumChecked(checkedVal);
-  }, [checkAll]);
+  const countCheckedRow = (data: Check[]) => {
+    let totalChecked = 0;
+    data.forEach((value) => {
+      if (value.status) {
+        totalChecked = totalChecked + 1;
+      }
+    });
+    return totalChecked;
+  };
 
   useEffect(() => {
-    if (isCheckBoxAll) {
-      handleCheckAll(firstCheckboxRef.current as HTMLInputElement);
-    }
-  }, [page, handleCheckAll]);
+    checkAll?.map((item) => {
+      const checkboxElem = document.getElementById(
+        item.id?.toString() as string,
+      ) as HTMLInputElement;
+
+      if (checkboxElem) {
+        if (item.status) {
+          checkboxElem.checked = true;
+        } else {
+          checkboxElem.checked = false;
+        }
+      }
+    });
+  }, [page, checkAll]);
 
   return (
     <div className="flex w-full flex-col">
@@ -580,30 +580,32 @@ export function ViewParents() {
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   {t("academic-information")}
                 </h1>
-                <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {fieldTrans("subjects")}:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      Maths
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {fieldTrans("grade-levels")}:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      9th, 10th
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {fieldTrans("start-date")}:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      2024/01/01
-                    </span>
+                <div className="flex flex-col">
+                  <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
+                    {t("Childs")}:
+                  </span>
+                  <div className="flex w-max max-w-52 flex-wrap">
+                    {(getParentQuery.data?.data as Parent).childrens?.map(
+                      (child, key) => (
+                        <Badge
+                          key={key}
+                          color="dark"
+                          className="mb-1 me-1 whitespace-nowrap rounded-xs"
+                        >
+                          <img
+                            key={key}
+                            className="me-2 inline-block h-5 w-5 rounded-full"
+                            src={
+                              child?.imagePath
+                                ? SERVER_STORAGE + child?.imagePath
+                                : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                            }
+                            alt="profile"
+                          />
+                          {child.name}
+                        </Badge>
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -857,7 +859,7 @@ export function ViewParents() {
                 <FaTrash className="mr-2 text-white" />
 
                 {t("delete-records")}
-                <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
+                <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checkAll)}`}</span>
               </button>
             </div>
           </div>
@@ -980,7 +982,7 @@ export function ViewParents() {
                   >
                     <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                       <Checkbox
-                        id={(key + 1).toString()}
+                        id={parent.id.toString()}
                         name="checkbox"
                         onChange={(ev) =>
                           handleCheck(parseInt(ev.currentTarget.id))

@@ -38,6 +38,8 @@ interface DateTime {
   time: string;
 }
 
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
+
 export function Layout({ children, menu }: Layout) {
   const { t } = useTranslation();
   const { isOnHover, setIsOnHover } = useContext(hoverContext);
@@ -70,9 +72,9 @@ export function Layout({ children, menu }: Layout) {
     setIsOnHover(false);
   };
 
-  const getMyIANATZ = () => {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  };
+  // const getMyIANATZ = () => {
+  //   return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // };
 
   const handleDateTime = useCallback(
     (options: Intl.DateTimeFormatOptions, date: number): string => {
@@ -80,6 +82,14 @@ export function Layout({ children, menu }: Layout) {
     },
     [t],
   );
+
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
+  };
 
   const handleLogout = () => {
     dispatch(logout()).then(
@@ -221,9 +231,13 @@ export function Layout({ children, menu }: Layout) {
                 <div className="profile flex cursor-pointer items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
                   <div className="flex items-center gap-4">
                     <img
-                      className="h-8 w-8 rounded-full"
-                      src="https://i.pravatar.cc/300?img=12"
-                      alt=""
+                      className="w-7 rounded-full"
+                      src={
+                        authUser.imagePath
+                          ? SERVER_STORAGE + authUser.imagePath
+                          : `https://avatar.iran.liara.run/username?username=${getUserName(authUser.name).firstName}+${getUserName(authUser.name).lastName}`
+                      }
+                      alt="profile"
                     />
 
                     <div className="text-sm font-medium dark:text-white">

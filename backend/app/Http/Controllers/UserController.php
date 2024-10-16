@@ -258,6 +258,17 @@ class UserController extends Controller
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
             $user->load('school', 'role', 'subjects', 'grades');
+            $role = request('role');
+            switch ($role) {
+                case 'parent':
+                    $user->load('childrens');
+                    break;
+                case 'student':
+                    $user->load('guardian');
+                    break;
+                default:
+                    break;
+            }
             return response()->json($user, Response::HTTP_OK);
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
