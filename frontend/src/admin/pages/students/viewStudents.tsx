@@ -39,7 +39,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { deleteUser, getUser, getStudents, setStudent, getGrades } from "@api";
-import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
+import {
+  SkeletonContent,
+  SkeletonProfile,
+  SkeletonTable,
+} from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddParentModal from "@src/admin/components/addParentModal";
@@ -978,7 +982,7 @@ export function ViewStudents() {
             }}
             striped
           >
-            <Table.Head className="uppercase">
+            <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
               <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                 <Checkbox
                   id="0"
@@ -1017,19 +1021,21 @@ export function ViewStudents() {
                 <span className="sr-only w-full">Actions</span>
               </Table.HeadCell>
             </Table.Head>
-            <Table.Body ref={tableRef} className="relative divide-y">
-              {getStudentsQuery.isLoading ||
-                (getStudentsQuery.isFetching && (
-                  <Table.Row>
-                    <Table.Cell className="p-0">
-                      <div
-                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
-                      >
-                        <Spinner />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
+            <Table.Body
+              ref={tableRef}
+              className="divide-y divide-gray-300 dark:divide-gray-600"
+            >
+              {getStudentQuery.isFetching && perPage && (
+                <Table.Row>
+                  <Table.Cell className="p-0">
+                    <div
+                      className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                    >
+                      <Spinner />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              )}
               <Table.Row>
                 <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
@@ -1135,84 +1141,89 @@ export function ViewStudents() {
                   />
                 </Table.Cell>
               </Table.Row>
-              {getStudentsQuery.data?.data.data.map(
-                (student: Student, key: number) => (
-                  <Table.Row
-                    key={key}
-                    className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                      <Checkbox
-                        id={student.id.toString()}
-                        name="checkbox"
-                        checked={
-                          checkAll.find((check) => check.id == student.id)
-                            ?.status == true
-                            ? true
-                            : false
-                        }
-                        onChange={() => handleCheck(student.id)}
-                      />
-                    </Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {student.id}
-                    </Table.Cell>
-                    <Table.Cell>{student.name}</Table.Cell>
-
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      <div className="flex w-max max-w-36 flex-wrap">
-                        {student.grades?.map((grade, index) => (
-                          <Badge
-                            key={index}
-                            color={badgeColor[index % badgeColor.length]}
-                            className="mb-1 me-1 rounded-xs"
-                          >
-                            {grade.label}
-                          </Badge>
-                        ))}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell>{/* {student.date_birth} */}-</Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {student.guardian ? (
-                        <div className="flex items-center gap-x-2">
-                          <img
-                            className="w-8 rounded-full"
-                            src={
-                              student.guardian.imagePath
-                                ? SERVER_STORAGE + student.guardian.imagePath
-                                : `https://avatar.iran.liara.run/username?username=${getUserName(student.guardian.name).firstName}+${getUserName(student.guardian.name).lastName}`
-                            }
-                            alt="profile"
-                          />
-                          <span>{student.guardian?.name}</span>
-                        </div>
-                      ) : (
-                        <div
-                          className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
-                          onClick={() =>
-                            setOpenParentModal({
-                              id: student.id,
-                              school_id: student.school_id,
-                              open: true,
-                            })
+              {!getStudentsQuery.isFetchedAfterMount ? (
+                <SkeletonTable cols={11} />
+              ) : (
+                getStudentsQuery.data?.data.data.map(
+                  (student: Student, key: number) => (
+                    <Table.Row
+                      key={key}
+                      className="w-max bg-white dark:bg-gray-800"
+                    >
+                      <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                        <Checkbox
+                          id={student.id.toString()}
+                          name="checkbox"
+                          checked={
+                            checkAll.find((check) => check.id == student.id)
+                              ?.status == true
+                              ? true
+                              : false
                           }
-                        >
-                          <FaUser className="me-2" />
-                          Assign to a parent
+                          onChange={() => handleCheck(student.id)}
+                        />
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {student.id}
+                      </Table.Cell>
+                      <Table.Cell>{student.name}</Table.Cell>
+
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        <div className="flex w-max max-w-36 flex-wrap">
+                          {student.grades?.map((grade, index) => (
+                            <Badge
+                              key={index}
+                              color={badgeColor[index % badgeColor.length]}
+                              className="mb-1 me-1 rounded-xs"
+                            >
+                              {grade.label}
+                            </Badge>
+                          ))}
                         </div>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      -
-                    </Table.Cell>
-                    <Table.Cell>{/* {student.enrollment_date} */}-</Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {student.email}
-                    </Table.Cell>
-                    <Table.Cell>{student.phone}</Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {/* <span>
+                      </Table.Cell>
+                      <Table.Cell>{/* {student.date_birth} */}-</Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {student.guardian ? (
+                          <div className="flex items-center gap-x-2">
+                            <img
+                              className="w-8 rounded-full"
+                              src={
+                                student.guardian.imagePath
+                                  ? SERVER_STORAGE + student.guardian.imagePath
+                                  : `https://avatar.iran.liara.run/username?username=${getUserName(student.guardian.name).firstName}+${getUserName(student.guardian.name).lastName}`
+                              }
+                              alt="profile"
+                            />
+                            <span>{student.guardian?.name}</span>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                            onClick={() =>
+                              setOpenParentModal({
+                                id: student.id,
+                                school_id: student.school_id,
+                                open: true,
+                              })
+                            }
+                          >
+                            <FaUser className="me-2" />
+                            Assign to a parent
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        -
+                      </Table.Cell>
+                      <Table.Cell>
+                        {/* {student.enrollment_date} */}-
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {student.email}
+                      </Table.Cell>
+                      <Table.Cell>{student.phone}</Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {/* <span>
                       {formatDuration(student.time_spent).hour}
                       <span className="text-gray-500 dark:text-gray-400">
                         {" "}
@@ -1229,50 +1240,51 @@ export function ViewStudents() {
                         min
                       </span>
                     </span> */}
-                      -
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex w-fit gap-x-2">
-                        <div
-                          onClick={() =>
-                            setOpenModal({
-                              id: student.id,
-                              type: "view",
-                              open: true,
-                            })
-                          }
-                          className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                        >
-                          <FaEye className="text-blue-600 dark:text-blue-500" />
+                        -
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex w-fit gap-x-2">
+                          <div
+                            onClick={() =>
+                              setOpenModal({
+                                id: student.id,
+                                type: "view",
+                                open: true,
+                              })
+                            }
+                            className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                          >
+                            <FaEye className="text-blue-600 dark:text-blue-500" />
+                          </div>
+                          <div
+                            className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                            onClick={() =>
+                              onOpenEditModal({
+                                id: student.id,
+                                type: "edit",
+                                open: true,
+                              })
+                            }
+                          >
+                            <FaPen className="text-green-600 dark:text-green-500" />
+                          </div>
+                          <div
+                            className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                            onClick={() =>
+                              setOpenModal({
+                                id: student.id,
+                                type: "delete",
+                                open: true,
+                              })
+                            }
+                          >
+                            <FaTrash className="text-red-600 dark:text-red-500" />
+                          </div>
                         </div>
-                        <div
-                          className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                          onClick={() =>
-                            onOpenEditModal({
-                              id: student.id,
-                              type: "edit",
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaPen className="text-green-600 dark:text-green-500" />
-                        </div>
-                        <div
-                          className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                          onClick={() =>
-                            setOpenModal({
-                              id: student.id,
-                              type: "delete",
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaTrash className="text-red-600 dark:text-red-500" />
-                        </div>
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ),
+                      </Table.Cell>
+                    </Table.Row>
+                  ),
+                )
               )}
             </Table.Body>
           </Table>

@@ -45,7 +45,11 @@ import {
   getSubjects,
   getGrades,
 } from "@api";
-import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
+import {
+  SkeletonContent,
+  SkeletonProfile,
+  SkeletonTable,
+} from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import {
@@ -930,7 +934,7 @@ export function ViewTeachers() {
             }}
             striped
           >
-            <Table.Head className="uppercase">
+            <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
               <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                 <Checkbox
                   id="0"
@@ -967,19 +971,21 @@ export function ViewTeachers() {
               </Table.HeadCell>
             </Table.Head>
 
-            <Table.Body ref={tableRef} className="relative divide-y">
-              {getTeachersQuery.isLoading ||
-                (getTeachersQuery.isFetching && (
-                  <Table.Row>
-                    <Table.Cell className="p-0">
-                      <div
-                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
-                      >
-                        <Spinner />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
+            <Table.Body
+              ref={tableRef}
+              className="divide-y divide-gray-300 dark:divide-gray-600"
+            >
+              {getTeachersQuery.isFetching && perPage && (
+                <Table.Row>
+                  <Table.Cell className="p-0">
+                    <div
+                      className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                    >
+                      <Spinner />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              )}
               <Table.Row>
                 <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
@@ -1114,61 +1120,64 @@ export function ViewTeachers() {
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
               </Table.Row>
-              {getTeachersQuery.data?.data.data.map(
-                (teacher: Teacher, key: number) => (
-                  <Table.Row
-                    key={key}
-                    className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                      <Checkbox
-                        id={teacher.id.toString()}
-                        name="checkbox"
-                        checked={
-                          checkAll.find((check) => check.id == teacher.id)
-                            ?.status == true
-                            ? true
-                            : false
-                        }
-                        onChange={() => handleCheck(teacher.id)}
-                      />
-                    </Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      T00{teacher.id}
-                    </Table.Cell>
-                    <Table.Cell>{teacher.name}</Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      <div className="flex w-max max-w-36 flex-wrap">
-                        {teacher.subjects.map((subject, index) => (
-                          <Badge
-                            key={index}
-                            color={badgeColor[index % badgeColor.length]}
-                            className="mb-1 me-1 rounded-xs"
-                          >
-                            {subject.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex w-max max-w-36 flex-wrap">
-                        {teacher.grades.map((grade, index) => (
-                          <Badge
-                            key={index}
-                            color={badgeColor[index % badgeColor.length]}
-                            className="mb-1 me-1 rounded-xs"
-                          >
-                            {grade.label}
-                          </Badge>
-                        ))}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {teacher.email}
-                    </Table.Cell>
-                    <Table.Cell>{teacher.phone}</Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {/* <span>
+              {!getTeachersQuery.isFetchedAfterMount && !perPage ? (
+                <SkeletonTable cols={8} />
+              ) : (
+                getTeachersQuery.data?.data.data.map(
+                  (teacher: Teacher, key: number) => (
+                    <Table.Row
+                      key={key}
+                      className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                        <Checkbox
+                          id={teacher.id.toString()}
+                          name="checkbox"
+                          checked={
+                            checkAll.find((check) => check.id == teacher.id)
+                              ?.status == true
+                              ? true
+                              : false
+                          }
+                          onChange={() => handleCheck(teacher.id)}
+                        />
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        T00{teacher.id}
+                      </Table.Cell>
+                      <Table.Cell>{teacher.name}</Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        <div className="flex w-max max-w-36 flex-wrap">
+                          {teacher.subjects.map((subject, index) => (
+                            <Badge
+                              key={index}
+                              color={badgeColor[index % badgeColor.length]}
+                              className="mb-1 me-1 rounded-xs"
+                            >
+                              {subject.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex w-max max-w-36 flex-wrap">
+                          {teacher.grades.map((grade, index) => (
+                            <Badge
+                              key={index}
+                              color={badgeColor[index % badgeColor.length]}
+                              className="mb-1 me-1 rounded-xs"
+                            >
+                              {grade.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {teacher.email}
+                      </Table.Cell>
+                      <Table.Cell>{teacher.phone}</Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {/* <span>
                       {formatDuration(teacher.time_spent).hour}
                       <span className="text-gray-500 dark:text-gray-400">
                         {" "}
@@ -1185,50 +1194,51 @@ export function ViewTeachers() {
                         min
                       </span>
                     </span> */}
-                      -
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex h-full w-fit gap-x-2">
-                        <div
-                          onClick={() =>
-                            setOpenModal({
-                              id: teacher.id,
-                              type: "view",
-                              open: true,
-                            })
-                          }
-                          className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                        >
-                          <FaEye className="text-blue-600 dark:text-blue-500" />
+                        -
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex h-full w-fit gap-x-2">
+                          <div
+                            onClick={() =>
+                              setOpenModal({
+                                id: teacher.id,
+                                type: "view",
+                                open: true,
+                              })
+                            }
+                            className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                          >
+                            <FaEye className="text-blue-600 dark:text-blue-500" />
+                          </div>
+                          <div
+                            className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                            onClick={() =>
+                              onOpenEditModal({
+                                id: teacher.id,
+                                type: "edit",
+                                open: true,
+                              })
+                            }
+                          >
+                            <FaPen className="text-green-600 dark:text-green-500" />
+                          </div>
+                          <div
+                            className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                            onClick={() =>
+                              setOpenModal({
+                                id: teacher.id,
+                                type: "delete",
+                                open: true,
+                              })
+                            }
+                          >
+                            <FaTrash className="text-red-600 dark:text-red-500" />
+                          </div>
                         </div>
-                        <div
-                          className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                          onClick={() =>
-                            onOpenEditModal({
-                              id: teacher.id,
-                              type: "edit",
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaPen className="text-green-600 dark:text-green-500" />
-                        </div>
-                        <div
-                          className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                          onClick={() =>
-                            setOpenModal({
-                              id: teacher.id,
-                              type: "delete",
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaTrash className="text-red-600 dark:text-red-500" />
-                        </div>
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ),
+                      </Table.Cell>
+                    </Table.Row>
+                  ),
+                )
               )}
             </Table.Body>
           </Table>

@@ -38,7 +38,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { deleteUser, getUser, getParents, setParent } from "@api";
-import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
+import {
+  SkeletonContent,
+  SkeletonProfile,
+  SkeletonTable,
+} from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { DropdownListButton } from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -894,7 +898,17 @@ export function ViewParents() {
                 base: "w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
                 shadow:
                   "absolute left-0 top-0 -z-10 h-full w-full rounded-s bg-white drop-shadow-md dark:bg-black",
-                wrapper: "relative z-auto",
+                wrapper: "relative",
+              },
+              body: {
+                cell: {
+                  base: "px-6 py-4",
+                },
+              },
+              head: {
+                cell: {
+                  base: "bg-gray-50 px-6 py-3 dark:bg-gray-700",
+                },
               },
               row: {
                 base: "group/row group",
@@ -905,7 +919,7 @@ export function ViewParents() {
             }}
             striped
           >
-            <Table.Head className="uppercase">
+            <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
               <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                 <Checkbox
                   id="0"
@@ -940,19 +954,21 @@ export function ViewParents() {
                 <span className="sr-only w-full">Actions</span>
               </Table.HeadCell>
             </Table.Head>
-            <Table.Body ref={tableRef} className="divide-y">
-              {getParentsQuery.isLoading ||
-                (getParentsQuery.isFetching && (
-                  <Table.Row>
-                    <Table.Cell className="p-0">
-                      <div
-                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
-                      >
-                        <Spinner />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
+            <Table.Body
+              ref={tableRef}
+              className="divide-y divide-gray-300 dark:divide-gray-600"
+            >
+              {getParentsQuery.isFetching && perPage && (
+                <Table.Row>
+                  <Table.Cell className="p-0">
+                    <div
+                      className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                    >
+                      <Spinner />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              )}
               <Table.Row>
                 <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
@@ -1028,146 +1044,150 @@ export function ViewParents() {
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
               </Table.Row>
-              {getParentsQuery.data?.data.data.map(
-                (parent: Parent, key: number) => (
-                  <Table.Row
-                    key={key}
-                    className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                      <Checkbox
-                        id={parent.id.toString()}
-                        name="checkbox"
-                        onChange={(ev) =>
-                          handleCheck(parseInt(ev.currentTarget.id))
-                        }
-                        data-id={key}
-                      />
-                    </Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {parent.id}
-                    </Table.Cell>
-                    <Table.Cell>{parent.name}</Table.Cell>
-                    <Table.Cell
-                      className="font-medium text-gray-900 dark:text-gray-300"
-                      onMouseOver={(e) => setDropDownPos(e.currentTarget)}
-                      data-id={key}
+
+              {!getParentsQuery.isFetchedAfterMount ? (
+                <SkeletonTable cols={7} />
+              ) : (
+                getParentsQuery.data?.data.data.map(
+                  (parent: Parent, key: number) => (
+                    <Table.Row
+                      key={key}
+                      className="w-max bg-white dark:bg-gray-800"
                     >
-                      <div className="flex items-center gap-x-2">
-                        {parent.childrens.length > 2 ? (
-                          <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                            {parent.childrens?.map(
-                              (child, key) =>
-                                key < 1 && (
-                                  <img
-                                    key={key}
-                                    className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                    src={
-                                      child?.imagePath
-                                        ? SERVER_STORAGE + child?.imagePath
-                                        : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                                    }
-                                    alt="profile"
-                                  />
-                                ),
-                            )}
-                            <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                              {`+${parent.childrens.length - 1}`}
+                      <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                        <Checkbox
+                          id={parent.id.toString()}
+                          name="checkbox"
+                          onChange={(ev) =>
+                            handleCheck(parseInt(ev.currentTarget.id))
+                          }
+                          data-id={key}
+                        />
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {parent.id}
+                      </Table.Cell>
+                      <Table.Cell>{parent.name}</Table.Cell>
+                      <Table.Cell
+                        className="font-medium text-gray-900 dark:text-gray-300"
+                        onMouseOver={(e) => setDropDownPos(e.currentTarget)}
+                        data-id={key}
+                      >
+                        <div className="flex items-center gap-x-2">
+                          {parent.childrens.length > 2 ? (
+                            <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
+                              {parent.childrens?.map(
+                                (child, key) =>
+                                  key < 1 && (
+                                    <img
+                                      key={key}
+                                      className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                      src={
+                                        child?.imagePath
+                                          ? SERVER_STORAGE + child?.imagePath
+                                          : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                      }
+                                      alt="profile"
+                                    />
+                                  ),
+                              )}
+                              <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
+                                {`+${parent.childrens.length - 1}`}
+                              </div>
                             </div>
-                          </div>
-                        ) : parent.childrens.length > 1 ? (
-                          <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                            {parent.childrens?.map(
-                              (child, key) =>
-                                key < 1 && (
-                                  <img
-                                    key={key}
-                                    className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                    src={
-                                      child?.imagePath
-                                        ? SERVER_STORAGE + child?.imagePath
-                                        : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                                    }
-                                    alt="profile"
-                                  />
-                                ),
-                            )}
-                            <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                              {`+${parent.childrens.length - 1}`}
+                          ) : parent.childrens.length > 1 ? (
+                            <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
+                              {parent.childrens?.map(
+                                (child, key) =>
+                                  key < 1 && (
+                                    <img
+                                      key={key}
+                                      className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                      src={
+                                        child?.imagePath
+                                          ? SERVER_STORAGE + child?.imagePath
+                                          : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                      }
+                                      alt="profile"
+                                    />
+                                  ),
+                              )}
+                              <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
+                                {`+${parent.childrens.length - 1}`}
+                              </div>
                             </div>
-                          </div>
-                        ) : parent.childrens?.length == 1 ? (
-                          <>
-                            <img
-                              className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                              src={
-                                parent.childrens[0]?.imagePath
-                                  ? SERVER_STORAGE +
-                                    parent.childrens[0]?.imagePath
-                                  : `https://avatar.iran.liara.run/username?username=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
-                              }
-                              alt="profile"
-                            />
-                            <span className="pointer-events-none">
-                              {parent.childrens[0]?.name}
-                            </span>
-                          </>
-                        ) : (
-                          <div
-                            className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
-                            onClick={() =>
-                              setOpenChildModal({
-                                id: parent.id,
-                                school_id: parent.school_id,
-                                open: true,
-                              })
-                            }
-                          >
-                            <FaUser className="me-2" />
-                            {t("add-new-child")}
-                          </div>
-                        )}
-                        {dropDownPos && parent.childrens.length > 0 && (
-                          <DropdownListButton
-                            position={dropDownPos}
-                            elemId={key.toString()}
-                          >
-                            <DropdownListButton.List>
-                              {parent.childrens.map((child, key) => (
-                                <DropdownListButton.Item
-                                  key={key}
-                                  img={
-                                    child.imagePath
-                                      ? SERVER_STORAGE + child.imagePath
-                                      : `https://avatar.iran.liara.run/username?username=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
-                                  }
-                                  name={child.name}
-                                />
-                              ))}
-                            </DropdownListButton.List>
-                            <DropdownListButton.Button>
-                              <p
-                                onClick={() =>
-                                  setOpenChildModal({
-                                    id: parent.id,
-                                    school_id: parent.school_id,
-                                    open: true,
-                                  })
+                          ) : parent.childrens?.length == 1 ? (
+                            <>
+                              <img
+                                className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                src={
+                                  parent.childrens[0]?.imagePath
+                                    ? SERVER_STORAGE +
+                                      parent.childrens[0]?.imagePath
+                                    : `https://avatar.iran.liara.run/username?username=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
                                 }
-                              >
-                                {t("add-new-child")}
-                              </p>
-                            </DropdownListButton.Button>
-                          </DropdownListButton>
-                        )}
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {parent.email}
-                    </Table.Cell>
-                    <Table.Cell>{parent.phone}</Table.Cell>
-                    <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                      {/* <span>
+                                alt="profile"
+                              />
+                              <span className="pointer-events-none">
+                                {parent.childrens[0]?.name}
+                              </span>
+                            </>
+                          ) : (
+                            <div
+                              className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                              onClick={() =>
+                                setOpenChildModal({
+                                  id: parent.id,
+                                  school_id: parent.school_id,
+                                  open: true,
+                                })
+                              }
+                            >
+                              <FaUser className="me-2" />
+                              {t("add-new-child")}
+                            </div>
+                          )}
+                          {dropDownPos && parent.childrens.length > 0 && (
+                            <DropdownListButton
+                              position={dropDownPos}
+                              elemId={key.toString()}
+                            >
+                              <DropdownListButton.List>
+                                {parent.childrens.map((child, key) => (
+                                  <DropdownListButton.Item
+                                    key={key}
+                                    img={
+                                      child.imagePath
+                                        ? SERVER_STORAGE + child.imagePath
+                                        : `https://avatar.iran.liara.run/username?username=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
+                                    }
+                                    name={child.name}
+                                  />
+                                ))}
+                              </DropdownListButton.List>
+                              <DropdownListButton.Button>
+                                <p
+                                  onClick={() =>
+                                    setOpenChildModal({
+                                      id: parent.id,
+                                      school_id: parent.school_id,
+                                      open: true,
+                                    })
+                                  }
+                                >
+                                  {t("add-new-child")}
+                                </p>
+                              </DropdownListButton.Button>
+                            </DropdownListButton>
+                          )}
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {parent.email}
+                      </Table.Cell>
+                      <Table.Cell>{parent.phone}</Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {/* <span>
                       {formatDuration(parent.time_spent).hour}
                       <span className="text-gray-500 dark:text-gray-400">
                         {" "}
@@ -1184,49 +1204,50 @@ export function ViewParents() {
                         min
                       </span>
                     </span> */}
-                    </Table.Cell>
-                    <Table.Cell className="flex w-fit gap-x-2">
-                      <div className="flex w-fit gap-x-2">
-                        <div
-                          onClick={() =>
-                            setOpenModal({
-                              id: parent.id,
-                              type: "view",
-                              open: true,
-                            })
-                          }
-                          className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                        >
-                          <FaEye className="text-blue-600 dark:text-blue-500" />
+                      </Table.Cell>
+                      <Table.Cell className="flex w-fit gap-x-2">
+                        <div className="flex w-fit gap-x-2">
+                          <div
+                            onClick={() =>
+                              setOpenModal({
+                                id: parent.id,
+                                type: "view",
+                                open: true,
+                              })
+                            }
+                            className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                          >
+                            <FaEye className="text-blue-600 dark:text-blue-500" />
+                          </div>
+                          <div
+                            className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                            onClick={() =>
+                              onOpenEditModal({
+                                id: parent.id,
+                                type: "edit",
+                                open: true,
+                              })
+                            }
+                          >
+                            <FaPen className="text-green-600 dark:text-green-500" />
+                          </div>
+                          <div
+                            className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                            onClick={() =>
+                              setOpenModal({
+                                id: parent.id,
+                                type: "delete",
+                                open: true,
+                              })
+                            }
+                          >
+                            <FaTrash className="text-red-600 dark:text-red-500" />
+                          </div>
                         </div>
-                        <div
-                          className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                          onClick={() =>
-                            onOpenEditModal({
-                              id: parent.id,
-                              type: "edit",
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaPen className="text-green-600 dark:text-green-500" />
-                        </div>
-                        <div
-                          className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                          onClick={() =>
-                            setOpenModal({
-                              id: parent.id,
-                              type: "delete",
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaTrash className="text-red-600 dark:text-red-500" />
-                        </div>
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ),
+                      </Table.Cell>
+                    </Table.Row>
+                  ),
+                )
               )}
             </Table.Body>
           </Table>

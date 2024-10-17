@@ -1,3 +1,4 @@
+import { Table } from "flowbite-react";
 import { HTMLAttributes, ReactNode, useEffect, useRef, useState } from "react";
 import { FaImage } from "react-icons/fa6";
 
@@ -65,4 +66,21 @@ function SkeletonContent({ isLoaded = false, children }: FCSkeletonContent) {
   );
 }
 
-export { SkeletonProfile, SkeletonContent };
+function SkeletonTable({ rows = 5, cols = 5 }) {
+  return Array(rows)
+    .fill(null)
+    .map((_, key) => (
+      <Table.Row key={key}>
+        <Table.Cell className="sr-only">empty cell</Table.Cell>
+        {Array(cols)
+          .fill(null)
+          .map((_, key) => (
+            <Table.Cell key={key}>
+              <div className="mb-2.5 h-5 animate-pulse rounded-s bg-gray-200 dark:bg-gray-600"></div>
+            </Table.Cell>
+          ))}
+      </Table.Row>
+    ));
+}
+
+export { SkeletonProfile, SkeletonContent, SkeletonTable };
