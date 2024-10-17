@@ -38,7 +38,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deleteUser, getUser, getStudents, setStudent } from "@api";
+import { deleteUser, getUser, getStudents, setStudent, getGrades } from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -49,6 +49,7 @@ import {
   alertIntialState,
   Alert as AlertType,
 } from "@src/admin/utils/alert";
+import { FaRegCircleXmark } from "react-icons/fa6";
 
 interface Check {
   id?: number;
@@ -130,6 +131,10 @@ interface Sort {
   column: string;
   direction: "asc" | "desc";
 }
+interface Filter {
+  name: string;
+  gradelevel: string;
+}
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
@@ -139,6 +144,10 @@ export function ViewStudents() {
 
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
+  const [filter, setFilter] = useState<Filter>({
+    name: "",
+    gradelevel: "",
+  });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
@@ -179,9 +188,19 @@ export function ViewStudents() {
       sort.column,
       sort.direction,
       admin.school_id,
+      filter?.name,
+      filter?.gradelevel,
     ],
     queryFn: () =>
-      getStudents(page, perPage, sort.column, sort.direction, admin.school_id),
+      getStudents(
+        page,
+        perPage,
+        sort.column,
+        sort.direction,
+        admin.school_id,
+        filter?.name,
+        filter?.gradelevel,
+      ),
     placeholderData: keepPreviousData,
   });
 
@@ -189,6 +208,11 @@ export function ViewStudents() {
     queryKey: ["getStudent", openModal?.id, "student"],
     queryFn: () => getUser(openModal?.id as number, "student"),
     enabled: !!openModal?.id,
+  });
+
+  const getGradesQuery = useQuery({
+    queryKey: ["getGrades"],
+    queryFn: getGrades,
   });
 
   const studentMutation = useMutation({
@@ -1015,37 +1039,79 @@ export function ViewStudents() {
                     id="search"
                     type="text"
                     icon={
-                      <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <>
+                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        {filter.name !== "" && (
+                          <FaRegCircleXmark
+                            onClick={() =>
+                              setFilter((prev) => ({ ...prev, name: "" }))
+                            }
+                            className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                          />
+                        )}
+                      </>
                     }
                     label=""
                     placeholder={fieldTrans("filter-all")}
+                    value={filter?.name}
                     name="search"
                     custom-style={{
                       inputStyle: "px-8 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
+                    onChange={(e) =>
+                      setFilter((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
                   />
                 </Table.Cell>
                 <Table.Cell className="p-2">
                   {" "}
                   <RSelect
-                    id="subject"
-                    name="subject"
+                    id="gradelevel"
+                    name="gradelevel"
                     icon={
-                      <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <>
+                        <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        {filter.gradelevel !== "" && (
+                          <FaRegCircleXmark
+                            onClick={() =>
+                              setFilter((prev) => ({ ...prev, gradelevel: "" }))
+                            }
+                            className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                          />
+                        )}
+                      </>
                     }
                     custom-style={{
                       inputStyle: "px-9 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
                     defaultValue={""}
+                    onChange={(e) =>
+                      setFilter((prev) => ({
+                        ...prev,
+                        [e.target.id]:
+                          e.target.options[e.target.selectedIndex].value,
+                      }))
+                    }
                   >
-                    <option value="" disabled>
+                    <option
+                      value=""
+                      selected={filter.gradelevel == "" ? true : false}
+                      disabled
+                    >
                       {fieldTrans("filter-all")}
                     </option>
-                    <option value="math">Math</option>
-                    <option value="lecture">Lecture</option>
-                    <option value="science">Science</option>
+                    {getGradesQuery.data?.data.data.map(
+                      (grade: Grade, index: number) => (
+                        <option key={index} value={grade.id}>
+                          {grade.label}
+                        </option>
+                      ),
+                    )}
                   </RSelect>
                 </Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>

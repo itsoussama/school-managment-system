@@ -49,6 +49,7 @@ import {
   alertDuration,
 } from "@src/admin/utils/alert";
 import Alert from "@src/components/alert";
+import { FaRegCircleXmark } from "react-icons/fa6";
 
 interface Check {
   id?: number;
@@ -119,6 +120,11 @@ interface Sort {
   direction: "asc" | "desc";
 }
 
+interface Filter {
+  name: string;
+  childName: string;
+}
+
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewParents() {
@@ -127,6 +133,10 @@ export function ViewParents() {
 
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
+  const [filter, setFilter] = useState<Filter>({
+    name: "",
+    childName: "",
+  });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
@@ -169,9 +179,19 @@ export function ViewParents() {
       sort.column,
       sort.direction,
       admin.school_id,
+      filter?.name,
+      filter?.childName,
     ],
     queryFn: () =>
-      getParents(page, perPage, sort.column, sort.direction, admin.school_id),
+      getParents(
+        page,
+        perPage,
+        sort.column,
+        sort.direction,
+        admin.school_id,
+        filter?.name,
+        filter?.childName,
+      ),
     placeholderData: keepPreviousData,
   });
 
@@ -942,15 +962,32 @@ export function ViewParents() {
                     id="search"
                     type="text"
                     icon={
-                      <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <>
+                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        {filter.name !== "" && (
+                          <FaRegCircleXmark
+                            onClick={() =>
+                              setFilter((prev) => ({ ...prev, name: "" }))
+                            }
+                            className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                          />
+                        )}
+                      </>
                     }
                     label=""
                     placeholder={fieldTrans("filter-all")}
+                    value={filter.name}
                     name="search"
                     custom-style={{
                       inputStyle: "px-8 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
+                    onChange={(e) =>
+                      setFilter((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
                   />
                 </Table.Cell>
                 <Table.Cell className="p-2">
@@ -958,15 +995,32 @@ export function ViewParents() {
                     id="search"
                     type="text"
                     icon={
-                      <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <>
+                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        {filter.childName !== "" && (
+                          <FaRegCircleXmark
+                            onClick={() =>
+                              setFilter((prev) => ({ ...prev, childName: "" }))
+                            }
+                            className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                          />
+                        )}
+                      </>
                     }
                     label=""
                     placeholder={fieldTrans("filter-all")}
+                    value={filter.childName}
                     name="search"
                     custom-style={{
                       inputStyle: "px-8 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
+                    onChange={(e) =>
+                      setFilter((prev) => ({
+                        ...prev,
+                        childName: e.target.value,
+                      }))
+                    }
                   />
                 </Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>

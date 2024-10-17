@@ -13,6 +13,9 @@ const getTeachers = async (
   sortColumn = "id",
   sortDirection = "asc",
   schoolId: string,
+  name: string = "",
+  subject: string = "",
+  grades: string = "",
 ) => {
   const response = await axiosApi.get(
     "/api/teacher?page=" +
@@ -24,7 +27,13 @@ const getTeachers = async (
       "&sort_direction=" +
       sortDirection +
       "&school_id=" +
-      schoolId,
+      schoolId +
+      "&name=" +
+      name +
+      "&subject=" +
+      subject +
+      "&grades=" +
+      grades,
   );
   return response;
 };
@@ -35,6 +44,8 @@ const getStudents = async (
   sortColumn = "id",
   sortDirection = "asc",
   schoolId = 1,
+  name: string = "",
+  grades: string = "",
 ) => {
   const response = await axiosApi.get(
     "/api/student?page=" +
@@ -46,7 +57,11 @@ const getStudents = async (
       "&sort_direction=" +
       sortDirection +
       "&school_id=" +
-      schoolId,
+      schoolId +
+      "&name=" +
+      name +
+      "&grades=" +
+      grades,
   );
   return response;
 };
@@ -57,6 +72,8 @@ const getParents = async (
   sortColumn = "id",
   sortDirection = "asc",
   schoolId = 1,
+  name: string = "",
+  childName: string = "",
 ) => {
   const response = await axiosApi.get(
     "/api/parent?page=" +
@@ -68,7 +85,11 @@ const getParents = async (
       "&sort_direction=" +
       sortDirection +
       "&school_id=" +
-      schoolId,
+      schoolId +
+      "&name=" +
+      name +
+      "&childName=" +
+      childName,
   );
   return response;
 };

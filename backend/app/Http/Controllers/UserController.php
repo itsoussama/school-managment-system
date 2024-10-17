@@ -39,13 +39,39 @@ class UserController extends Controller
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
 
-            $users = User::with('school', 'role', 'subjects', 'grades')->where('school_id', $school_id)->whereHas(
-                'role',
-                function ($query) {
-                    $query->where('name', config('roles.teacher'));
-                }
+            $users = User::with('school', 'role', 'subjects', 'grades')
+                ->where('school_id', $school_id)
+                ->whereHas(
+                    'role',
+                    function ($query) {
+                        $query->where('name', config('roles.teacher'));
+                    }
 
-            )->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+                )
+                ->when(request('name'), function ($query, $name) {
+                    if (!empty($name)) {
+                        $query->where('name', 'LIKE', '%' . $name . '%');
+                    }
+                })
+                ->whereHas(
+                    'subjects',
+                    function ($query) {
+                        $subject = request('subject');
+                        if (!empty($subject)) {
+                            $query->whereId($subject);
+                        }
+                    }
+                )
+                ->whereHas(
+                    'grades',
+                    function ($query) {
+                        $grades = request('grades');
+                        if (!empty($grades)) {
+                            $query->whereId($grades);
+                        }
+                    }
+                )
+                ->orderBy($sortColumn, $sortDirection)->paginate($perPage);
             return response()->json($users, Response::HTTP_OK);
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
@@ -60,13 +86,30 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
-            $users = User::with('school', 'role', 'subjects', 'grades', 'guardian')->where('school_id', $school_id)->whereHas(
-                'role',
-                function ($query) {
-                    $query->where('name', config('roles.student'));
-                }
+            $users = User::with('school', 'role', 'subjects', 'grades', 'guardian')
+                ->where('school_id', $school_id)
+                ->whereHas(
+                    'role',
+                    function ($query) {
+                        $query->where('name', config('roles.student'));
+                    }
 
-            )->orderBy($sortColumn, $sortDirection);
+                )
+                ->when(request('name'), function ($query, $name) {
+                    if (!empty($name)) {
+                        $query->where('name', 'LIKE', '%' . $name . '%');
+                    }
+                })
+                ->whereHas(
+                    'grades',
+                    function ($query) {
+                        $grades = request('grades');
+                        if (!empty($grades)) {
+                            $query->whereId($grades);
+                        }
+                    }
+                )
+                ->orderBy($sortColumn, $sortDirection);
 
             if ($perPage == -1) {
                 return response()->json($users->get(), Response::HTTP_OK);
@@ -86,13 +129,28 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
-            $users = User::with('school', 'role', 'childrens')->where('school_id', $school_id)->whereHas(
-                'role',
-                function ($query) {
-                    $query->where('name', config('roles.parent'));
-                }
+            $users = User::with('school', 'role', 'childrens')
+                ->where('school_id', $school_id)
+                ->whereHas(
+                    'role',
+                    function ($query) {
+                        $query->where('name', config('roles.parent'));
+                    }
 
-            )->orderBy($sortColumn, $sortDirection);
+                )
+                ->when(request('name'), function ($query, $name) {
+                    if (!empty($name)) {
+                        $query->where('name', 'LIKE', '%' . $name . '%');
+                    }
+                })
+                ->when(request('childName'), function ($query, $childName) {
+                    if (!empty($childName)) {
+                        $query->whereHas('childrens', function ($child) {
+                            $child->where('name', 'LIKE', '%' . request('childName') . '%');
+                        });
+                    }
+                })
+                ->orderBy($sortColumn, $sortDirection);
 
             if ($perPage == -1) {
                 return response()->json($users->get(), Response::HTTP_OK);

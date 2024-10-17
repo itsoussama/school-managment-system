@@ -37,7 +37,14 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deleteUser, getUser, getTeachers, setTeacher } from "@api";
+import {
+  deleteUser,
+  getUser,
+  getTeachers,
+  setTeacher,
+  getSubjects,
+  getGrades,
+} from "@api";
 import { SkeletonContent, SkeletonProfile } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -47,6 +54,7 @@ import {
   Alert as AlertType,
 } from "@src/admin/utils/alert";
 import Alert from "@src/components/alert";
+import { FaRegCircleXmark } from "react-icons/fa6";
 
 interface Check {
   id?: number;
@@ -113,6 +121,11 @@ interface Sort {
   column: string;
   direction: "asc" | "desc";
 }
+interface Filter {
+  name: string;
+  subject: string;
+  gradelevel: string;
+}
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
@@ -122,6 +135,11 @@ export function ViewTeachers() {
 
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
+  const [filter, setFilter] = useState<Filter>({
+    name: "",
+    subject: "",
+    gradelevel: "",
+  });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
@@ -156,9 +174,21 @@ export function ViewTeachers() {
       sort.column,
       sort.direction,
       admin.school_id,
+      filter?.name,
+      filter?.subject,
+      filter?.gradelevel,
     ],
     queryFn: () =>
-      getTeachers(page, perPage, sort.column, sort.direction, admin.school_id),
+      getTeachers(
+        page,
+        perPage,
+        sort.column,
+        sort.direction,
+        admin.school_id,
+        filter?.name,
+        filter?.subject,
+        filter?.gradelevel,
+      ),
     placeholderData: keepPreviousData,
   });
 
@@ -166,6 +196,16 @@ export function ViewTeachers() {
     queryKey: ["getTeacher", openModal?.id],
     queryFn: () => getUser(openModal?.id as number),
     enabled: !!openModal?.id,
+  });
+
+  const getSubjectsQuery = useQuery({
+    queryKey: ["getSubjects"],
+    queryFn: getSubjects,
+  });
+
+  const getGradesQuery = useQuery({
+    queryKey: ["getGrades"],
+    queryFn: getGrades,
   });
 
   const teacherMutation = useMutation({
@@ -948,15 +988,32 @@ export function ViewTeachers() {
                     id="search"
                     type="text"
                     icon={
-                      <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <>
+                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        {filter.name !== "" && (
+                          <FaRegCircleXmark
+                            onClick={() =>
+                              setFilter((prev) => ({ ...prev, name: "" }))
+                            }
+                            className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                          />
+                        )}
+                      </>
                     }
                     label=""
                     placeholder={fieldTrans("filter-all")}
+                    value={filter.name}
                     name="search"
                     custom-style={{
                       inputStyle: "px-8 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
+                    onChange={(e) =>
+                      setFilter((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
                   />
                 </Table.Cell>
                 <Table.Cell className="p-2">
@@ -964,20 +1021,45 @@ export function ViewTeachers() {
                     id="subject"
                     name="subject"
                     icon={
-                      <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <>
+                        <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        {filter.subject !== "" && (
+                          <FaRegCircleXmark
+                            onClick={() =>
+                              setFilter((prev) => ({ ...prev, subject: "" }))
+                            }
+                            className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                          />
+                        )}
+                      </>
                     }
                     custom-style={{
                       inputStyle: "px-9 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
                     defaultValue={""}
+                    onChange={(e) =>
+                      setFilter((prev) => ({
+                        ...prev,
+                        [e.target.id]:
+                          e.target.options[e.target.selectedIndex].value,
+                      }))
+                    }
                   >
-                    <option value="" disabled>
+                    <option
+                      value=""
+                      selected={filter.subject == "" ? true : false}
+                      disabled
+                    >
                       {fieldTrans("filter-all")}
                     </option>
-                    <option value="math">Math</option>
-                    <option value="lecture">Lecture</option>
-                    <option value="science">Science</option>
+                    {getSubjectsQuery.data?.data.data.map(
+                      (subject: Subject, index: number) => (
+                        <option key={index} value={subject.id}>
+                          {subject.name}
+                        </option>
+                      ),
+                    )}
                   </RSelect>
                 </Table.Cell>
                 <Table.Cell className="p-2">
@@ -985,20 +1067,45 @@ export function ViewTeachers() {
                     id="gradelevel"
                     name="gradelevel"
                     icon={
-                      <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <>
+                        <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        {filter.gradelevel !== "" && (
+                          <FaRegCircleXmark
+                            onClick={() =>
+                              setFilter((prev) => ({ ...prev, gradelevel: "" }))
+                            }
+                            className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                          />
+                        )}
+                      </>
                     }
                     custom-style={{
                       inputStyle: "px-9 !py-1",
                       labelStyle: "mb-0 !inline",
                     }}
                     defaultValue=""
+                    onChange={(e) =>
+                      setFilter((prev) => ({
+                        ...prev,
+                        [e.target.id]:
+                          e.target.options[e.target.selectedIndex].value,
+                      }))
+                    }
                   >
-                    <option value="" disabled>
+                    <option
+                      value=""
+                      selected={filter.gradelevel == "" ? true : false}
+                      disabled
+                    >
                       {fieldTrans("filter-all")}
                     </option>
-                    <option value="grade_1">Grade 1</option>
-                    <option value="grade_2">Grade 2</option>
-                    <option value="grade_3">Grade 3</option>
+                    {getGradesQuery.data?.data.data.map(
+                      (grade: Grade, index: number) => (
+                        <option key={index} value={grade.id}>
+                          {grade.label}
+                        </option>
+                      ),
+                    )}
                   </RSelect>
                 </Table.Cell>
 
