@@ -1025,17 +1025,18 @@ export function ViewStudents() {
               ref={tableRef}
               className="divide-y divide-gray-300 dark:divide-gray-600"
             >
-              {getStudentQuery.isFetching && perPage && (
-                <Table.Row>
-                  <Table.Cell className="p-0">
-                    <div
-                      className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
-                    >
-                      <Spinner />
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              )}
+              {getStudentsQuery.isFetching &&
+                (getStudentsQuery.isRefetching || perPage) && (
+                  <Table.Row>
+                    <Table.Cell className="p-0">
+                      <div
+                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                      >
+                        <Spinner />
+                      </div>
+                    </Table.Cell>
+                  </Table.Row>
+                )}
               <Table.Row>
                 <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
@@ -1141,7 +1142,8 @@ export function ViewStudents() {
                   />
                 </Table.Cell>
               </Table.Row>
-              {!getStudentsQuery.isFetchedAfterMount ? (
+              {getStudentsQuery.isFetching &&
+              !(getStudentsQuery.isRefetching || perPage) ? (
                 <SkeletonTable cols={11} />
               ) : (
                 getStudentsQuery.data?.data.data.map(
