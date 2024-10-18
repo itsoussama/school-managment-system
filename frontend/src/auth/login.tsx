@@ -179,7 +179,7 @@ export default function Login() {
                   id="remember"
                   label="Remember me"
                   onChange={handleChange}
-                ></Checkbox>
+                />
                 <Link
                   to={"/auth/forget-password/request-link"}
                   className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"

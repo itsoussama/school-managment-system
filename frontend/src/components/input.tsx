@@ -33,6 +33,9 @@ interface Field {
 }
 
 interface Input extends Field, InputHTMLAttributes<HTMLInputElement> {}
+interface Checkbox extends Field, InputHTMLAttributes<HTMLInputElement> {
+  image?: React.ReactNode;
+}
 interface Select extends Field, SelectHTMLAttributes<HTMLSelectElement> {}
 
 function Input({
@@ -85,12 +88,12 @@ function Checkbox({
     wrapperLabelStyle = "",
   } = {},
   error = null,
-  children,
+  image,
   ...attribute
-}: Input) {
+}: Checkbox) {
   return (
     <div
-      className={`flex items-center rounded-xs p-2 hover:bg-gray-200 hover:dark:bg-gray-600 ${containerStyle}`}
+      className={`flex items-center rounded-xs px-2 ${image ? "py-2" : "py-1"} hover:bg-gray-200 hover:dark:bg-gray-600 ${containerStyle}`}
     >
       <div className={`relative flex items-center ${wrapperInputStyle}`}>
         <input
@@ -114,7 +117,7 @@ function Checkbox({
       <div
         className={`ml-2 flex flex-row items-center gap-x-2 text-sm ${wrapperLabelStyle}`}
       >
-        {children}
+        {image}
         <label
           htmlFor={htmlFor}
           className={`text-gray-500 dark:text-gray-300 ${labelStyle}`}

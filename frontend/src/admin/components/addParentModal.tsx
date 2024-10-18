@@ -398,6 +398,17 @@ export default function AddParentModal({
                         label={parent.name}
                         id={parent.id}
                         name="childrens"
+                        image={
+                          <img
+                            className="h-7 w-7 rounded-full"
+                            src={
+                              parent?.imagePath
+                                ? SERVER_STORAGE + parent?.imagePath
+                                : `https://avatar.iran.liara.run/username?username=${getUserName(parent?.name).firstName}+${getUserName(parent?.name).lastName}`
+                            }
+                            alt="profile"
+                          />
+                        }
                         onChange={getSelectedParent}
                         disabled={
                           selectedParent &&
@@ -409,17 +420,7 @@ export default function AddParentModal({
                           containerStyle: `${selectedParent && selectedParent != parseInt(parent.id) ? "disable" : ""}`,
                         }}
                         value={parent.name}
-                      >
-                        <img
-                          className="h-7 w-7 rounded-full"
-                          src={
-                            parent?.imagePath
-                              ? SERVER_STORAGE + parent?.imagePath
-                              : `https://avatar.iran.liara.run/username?username=${getUserName(parent?.name).firstName}+${getUserName(parent?.name).lastName}`
-                          }
-                          alt="profile"
-                        />
-                      </Checkbox>
+                      />
                     </div>
                   ),
               )}

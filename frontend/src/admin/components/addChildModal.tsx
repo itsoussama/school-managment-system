@@ -464,19 +464,20 @@ function AddChildModal({
                         label={child.name}
                         id={child.id}
                         name="childrens"
+                        image={
+                          <img
+                            className="h-7 w-7 rounded-full"
+                            src={
+                              child?.imagePath
+                                ? SERVER_STORAGE + child?.imagePath
+                                : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                            }
+                            alt="profile"
+                          />
+                        }
                         onChange={getSelectedChilds}
                         value={child.name}
-                      >
-                        <img
-                          className="h-7 w-7 rounded-full"
-                          src={
-                            child?.imagePath
-                              ? SERVER_STORAGE + child?.imagePath
-                              : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                          }
-                          alt="profile"
-                        />
-                      </Checkbox>
+                      />
                     </div>
                   ),
               )}
