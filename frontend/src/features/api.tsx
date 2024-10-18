@@ -12,7 +12,7 @@ const getTeachers = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: string,
+  schoolId: number,
   name: string = "",
   subject: string = "",
   grades: string = "",
@@ -43,7 +43,7 @@ const getStudents = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId = 1,
+  schoolId: number,
   name: string = "",
   grades: string = "",
 ) => {
@@ -71,7 +71,7 @@ const getParents = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId = 1,
+  schoolId: number,
   name: string = "",
   childName: string = "",
 ) => {

@@ -74,8 +74,8 @@ export default function AddParentModal({
   const [selectedParent, setSelectedParent] = useState<number | null>(null);
 
   const getParentsQuery = useQuery({
-    queryKey: ["getParents"],
-    queryFn: () => getParents(1, -1),
+    queryKey: ["getAllParents"],
+    queryFn: () => getParents(1, -1, undefined, undefined, 1),
     placeholderData: keepPreviousData,
   });
 

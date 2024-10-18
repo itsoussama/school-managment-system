@@ -147,9 +147,7 @@ export function ViewTeachers() {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
-  const isCheckBoxAll = useRef(false);
-  const [checkAll, setCheckAll] = useState<Array<Check>>([]);
-  const [numChecked, setNumChecked] = useState<number>(0);
+  const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [img, setImg] = useState<FileList>();
@@ -169,6 +167,12 @@ export function ViewTeachers() {
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   const minSm = useBreakpoint("min", "sm");
   // const userId = useRef<string>(null)
+
+  const getAllTeachersQuery = useQuery({
+    queryKey: ["getAllTeachers"],
+    queryFn: () => getTeachers(1, -1, undefined, undefined, 1),
+    placeholderData: keepPreviousData,
+  });
 
   const getTeachersQuery = useQuery({
     queryKey: [
@@ -289,53 +293,33 @@ export function ViewTeachers() {
   });
   // const [selectedItem, setSelectedItem] = useState()
 
-  const handleCheckAll = useCallback(
-    (firstCheckbox: HTMLInputElement) => {
-      if (getTeachersQuery.isFetched) {
-        getTeachersQuery.data?.data.data.forEach((teacher: Teacher) => {
-          setCheckAll((prev) => {
-            const alreadyChecked = prev.some((item) => item.id === teacher.id);
-            if (firstCheckbox.checked && !alreadyChecked) {
+  const handleChecks = useCallback(
+    async (firstCheckbox: HTMLInputElement) => {
+      if (getAllTeachersQuery.isFetched) {
+        await getAllTeachersQuery.data?.data.forEach((teacher: Teacher) => {
+          setChecks((prev) => {
+            const checkedData = prev.some((item) => item.id === teacher.id);
+            if (firstCheckbox.checked && !checkedData) {
               return [...prev, { id: teacher.id as number, status: true }];
             }
-            return prev;
+            return [...prev, { id: teacher.id as number, status: false }];
           });
-          isCheckBoxAll.current = true;
         });
       }
     },
-    [getTeachersQuery.data?.data, getTeachersQuery.isFetched],
+    [getAllTeachersQuery.data?.data, getAllTeachersQuery.isFetched],
   );
 
-  const handleCheck = (id?: number) => {
+  const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
 
-    if (id) {
-      setCheckAll([]);
-      handleCheckAll(firstCheckbox);
-      // document.getElementsByName("checkbox").forEach((elem) => {
-      //   const checkbox = elem as HTMLInputElement;
-      //   // console.log(firstCheckbox.ariaChecked);
-
-      //   if (firstCheckbox.checked) {
-      //     checkbox.checked = true;
-      //     setCheckAll((prev) => [
-      //       ...(prev as []),
-      //       { id: id as string, status: true },
-      //     ]);
-      //   } else {
-      //     checkbox.checked = false;
-      //     setCheckAll((prev) => [
-      //       ...(prev as []),
-      //       { id: id as string, status: false },
-      //     ]);
-      //   }
-      // });
+    if (!id) {
+      setChecks([]);
+      await handleChecks(firstCheckbox);
     } else {
-      const getValue = checkAll.find((elem) => elem.id === id);
-      const filteredArr = checkAll.filter((elem) => elem.id !== id);
-
-      setCheckAll([
+      const getValue = checks.find((elem) => elem.id === id);
+      const filteredArr = checks.filter((elem) => elem.id !== id);
+      setChecks([
         ...(filteredArr as []),
         { id: id, status: !getValue?.status },
       ]);
@@ -483,17 +467,36 @@ export function ViewTeachers() {
     }
   };
 
-  useEffect(() => {
-    const checkedVal = checkAll.filter((val) => val.status === true)
-      .length as number;
-    setNumChecked(checkedVal);
-  }, [checkAll]);
+  const countCheckedRow = (data: Check[]) => {
+    let totalChecked = 0;
+    data.forEach((value) => {
+      if (value.status) {
+        totalChecked = totalChecked + 1;
+      }
+    });
+    if (totalChecked == data.length) {
+      (firstCheckboxRef.current as HTMLInputElement).checked = true;
+    }
+    return totalChecked;
+  };
 
   useEffect(() => {
-    if (isCheckBoxAll) {
-      handleCheckAll(firstCheckboxRef.current as HTMLInputElement);
-    }
-  }, [page, handleCheckAll]);
+    console.log("checks");
+
+    checks?.map((item) => {
+      const checkboxElem = document.getElementById(
+        item.id?.toString() as string,
+      ) as HTMLInputElement;
+
+      if (checkboxElem) {
+        if (item.status) {
+          checkboxElem.checked = true;
+        } else {
+          checkboxElem.checked = false;
+        }
+      }
+    });
+  }, [page, perPage, checks]);
 
   return (
     <div className="flex w-full flex-col">
@@ -890,7 +893,7 @@ export function ViewTeachers() {
       </Modal>
 
       <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
-        {checkAll.find((val) => val.status === true) ? (
+        {checks.find((val) => val.status === true) ? (
           <div className="flex w-full justify-between px-5 py-4">
             <div className="flex items-center gap-x-4">
               {/* <CheckboxDropdown /> */}
@@ -898,7 +901,7 @@ export function ViewTeachers() {
               <button className="btn-danger !m-0 flex w-max items-center">
                 <FaTrash className="mr-2 text-white" />
                 {t("delete-records")}
-                <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
+                <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checks)}`}</span>
               </button>
             </div>
           </div>
@@ -1135,13 +1138,10 @@ export function ViewTeachers() {
                         <Checkbox
                           id={teacher.id.toString()}
                           name="checkbox"
-                          checked={
-                            checkAll.find((check) => check.id == teacher.id)
-                              ?.status == true
-                              ? true
-                              : false
+                          onChange={(ev) =>
+                            handleCheck(parseInt(ev.currentTarget.id))
                           }
-                          onChange={() => handleCheck(teacher.id)}
+                          data-id={key}
                         />
                       </Table.Cell>
                       <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">

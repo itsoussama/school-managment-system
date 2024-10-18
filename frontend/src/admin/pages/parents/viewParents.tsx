@@ -170,8 +170,8 @@ export function ViewParents() {
   const minSm = useBreakpoint("min", "sm");
 
   const getAllParentsQuery = useQuery({
-    queryKey: ["getParents"],
-    queryFn: () => getParents(1, -1),
+    queryKey: ["getAllParents"],
+    queryFn: () => getParents(1, -1, undefined, undefined, 1),
     placeholderData: keepPreviousData,
   });
 
@@ -288,7 +288,7 @@ export function ViewParents() {
   });
   // const [selectedItem, setSelectedItem] = useState()
 
-  const handleCheckAll = useCallback(
+  const handleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllParentsQuery.isFetched) {
         await getAllParentsQuery.data?.data.forEach((parent: Parent) => {
@@ -311,7 +311,7 @@ export function ViewParents() {
 
     if (!id) {
       setCheckAll([]);
-      await handleCheckAll(firstCheckbox);
+      await handleChecks(firstCheckbox);
     } else {
       const getValue = checkAll.find((elem) => elem.id === id);
       const filteredArr = checkAll.filter((elem) => elem.id !== id);
@@ -463,6 +463,9 @@ export function ViewParents() {
         totalChecked = totalChecked + 1;
       }
     });
+    if (totalChecked == data.length) {
+      (firstCheckboxRef.current as HTMLInputElement).checked = true;
+    }
     return totalChecked;
   };
 
@@ -480,7 +483,7 @@ export function ViewParents() {
         }
       }
     });
-  }, [page, checkAll]);
+  }, [page, perPage, checkAll]);
 
   return (
     <div className="flex w-full flex-col">

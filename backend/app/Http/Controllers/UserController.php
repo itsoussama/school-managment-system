@@ -71,8 +71,13 @@ class UserController extends Controller
                         }
                     }
                 )
-                ->orderBy($sortColumn, $sortDirection)->paginate($perPage);
-            return response()->json($users, Response::HTTP_OK);
+                ->orderBy($sortColumn, $sortDirection);
+
+            if ($perPage == -1) {
+                return response()->json($users->get(), Response::HTTP_OK);
+            }
+
+            return response()->json($users->paginate($perPage), Response::HTTP_OK);
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }

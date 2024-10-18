@@ -82,8 +82,8 @@ function AddChildModal({
   const [selectedChilds, setSelectedChilds] = useState<number[]>([]);
 
   const getChildrensQuery = useQuery({
-    queryKey: ["getChildrens"],
-    queryFn: () => getStudents(1, -1),
+    queryKey: ["getAllStudents"],
+    queryFn: () => getStudents(1, -1, undefined, undefined, 1),
     placeholderData: keepPreviousData,
   });
 

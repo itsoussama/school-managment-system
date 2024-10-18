@@ -156,7 +156,7 @@ export function ViewStudents() {
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
   const isCheckBoxAll = useRef(false);
-  const [checkAll, setCheckAll] = useState<Array<Check>>([]);
+  const [checks, setChecks] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
   const [openParentModal, setOpenParentModal] = useState<ParentModal>({
@@ -183,6 +183,11 @@ export function ViewStudents() {
   const minSm = useBreakpoint("min", "sm");
 
   // const userId = useRef<string>(null)
+  const getAllStudentsQuery = useQuery({
+    queryKey: ["getAllStudents"],
+    queryFn: () => getStudents(1, -1, undefined, undefined, 1),
+    placeholderData: keepPreviousData,
+  });
 
   const getStudentsQuery = useQuery({
     queryKey: [
@@ -296,53 +301,33 @@ export function ViewStudents() {
   });
   // const [selectedItem, setSelectedItem] = useState()
 
-  const handleCheckAll = useCallback(
-    (firstCheckbox: HTMLInputElement) => {
-      if (getStudentsQuery.isFetched) {
-        getStudentsQuery.data?.data.data.forEach((Student: Student) => {
-          setCheckAll((prev) => {
-            const alreadyChecked = prev.some((item) => item.id === Student.id);
-            if (firstCheckbox.checked && !alreadyChecked) {
-              return [...prev, { id: Student.id as number, status: true }];
+  const handleChecks = useCallback(
+    async (firstCheckbox: HTMLInputElement) => {
+      if (getAllStudentsQuery.isFetched) {
+        await getAllStudentsQuery.data?.data.forEach((student: Student) => {
+          setChecks((prev) => {
+            const checkedData = prev.some((item) => item.id === student.id);
+            if (firstCheckbox.checked && !checkedData) {
+              return [...prev, { id: student.id as number, status: true }];
             }
-            return prev;
+            return [...prev, { id: student.id as number, status: false }];
           });
-          isCheckBoxAll.current = true;
         });
       }
     },
-    [getStudentsQuery.data?.data, getStudentsQuery.isFetched],
+    [getAllStudentsQuery.data?.data, getAllStudentsQuery.isFetched],
   );
 
-  const handleCheck = (id?: number) => {
+  const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
 
-    if (id) {
-      setCheckAll([]);
-      handleCheckAll(firstCheckbox);
-      // document.getElementsByName("checkbox").forEach((elem) => {
-      //   const checkbox = elem as HTMLInputElement;
-      //   // console.log(firstCheckbox.ariaChecked);
-
-      //   if (firstCheckbox.checked) {
-      //     checkbox.checked = true;
-      //     setCheckAll((prev) => [
-      //       ...(prev as []),
-      //       { id: id as string, status: true },
-      //     ]);
-      //   } else {
-      //     checkbox.checked = false;
-      //     setCheckAll((prev) => [
-      //       ...(prev as []),
-      //       { id: id as string, status: false },
-      //     ]);
-      //   }
-      // });
+    if (!id) {
+      setChecks([]);
+      await handleChecks(firstCheckbox);
     } else {
-      const getValue = checkAll.find((elem) => elem.id === id);
-      const filteredArr = checkAll.filter((elem) => elem.id !== id);
-
-      setCheckAll([
+      const getValue = checks.find((elem) => elem.id === id);
+      const filteredArr = checks.filter((elem) => elem.id !== id);
+      setChecks([
         ...(filteredArr as []),
         { id: id, status: !getValue?.status },
       ]);
@@ -491,16 +476,16 @@ export function ViewStudents() {
   };
 
   useEffect(() => {
-    const checkedVal = checkAll.filter((val) => val.status === true)
+    const checkedVal = checks.filter((val) => val.status === true)
       .length as number;
     setNumChecked(checkedVal);
-  }, [checkAll]);
+  }, [checks]);
 
   useEffect(() => {
     if (isCheckBoxAll) {
-      handleCheckAll(firstCheckboxRef.current as HTMLInputElement);
+      handleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
-  }, [page, handleCheckAll]);
+  }, [page, handleChecks]);
 
   return (
     <div className="flex w-full flex-col">
@@ -938,7 +923,7 @@ export function ViewStudents() {
       />
 
       <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
-        {checkAll.find((val) => val.status === true) ? (
+        {checks.find((val) => val.status === true) ? (
           <div className="flex w-full justify-between px-5 py-4">
             <div className="flex items-center gap-x-4">
               {/* <CheckboxDropdown /> */}
@@ -1157,7 +1142,7 @@ export function ViewStudents() {
                           id={student.id.toString()}
                           name="checkbox"
                           checked={
-                            checkAll.find((check) => check.id == student.id)
+                            checks.find((check) => check.id == student.id)
                               ?.status == true
                               ? true
                               : false
