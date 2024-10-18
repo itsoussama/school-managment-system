@@ -452,11 +452,11 @@ class UserController extends Controller
             ], 422);
         }
     }
-    public function unblockUser(User $user)
+    public function unblockUser(Request $request)
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
             try {
-                $userStatus = $user->update(['blocked' => false]);
+                $userStatus = User::whereId($request->user_id)->update(['blocked' => false]);
                 return response()->json(['success' => 'Users unblocked Successfully', 'userStatus' => $userStatus]);
             } catch (ValidationException $e) {
                 return response()->json([
@@ -468,11 +468,11 @@ class UserController extends Controller
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
     }
-    public function blockUser(User $user)
+    public function blockUser(Request $request)
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
             try {
-                $userStatus = $user->update(['blocked' => true]);
+                $userStatus = User::whereId($request->user_id)->update(['blocked' => true]);
                 return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
             } catch (ValidationException $e) {
                 return response()->json([
