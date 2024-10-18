@@ -452,4 +452,36 @@ class UserController extends Controller
             ], 422);
         }
     }
+    public function unblockUser(User $user)
+    {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+            try {
+                $userStatus = $user->update(['blocked' => false]);
+                return response()->json(['success' => 'Users unblocked Successfully', 'userStatus' => $userStatus]);
+            } catch (ValidationException $e) {
+                return response()->json([
+                    'message' => 'Validation failed for some rows.',
+                    'error' => $e->errors()
+                ], 422);
+            }
+        }else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+    public function blockUser(User $user)
+    {
+        if (auth()->user()->hasRole(config('roles.admin'))) {
+            try {
+                $userStatus = $user->update(['blocked' => true]);
+                return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
+            } catch (ValidationException $e) {
+                return response()->json([
+                    'message' => 'Validation failed for some rows.',
+                    'error' => $e->errors()
+                ], 422);
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
 }
