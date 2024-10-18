@@ -27,6 +27,8 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
         Route::post('/add-parent', [UserController::class, 'addParent']);
         Route::post('/assign-childs', [UserController::class, 'assignChilds']);
         Route::post('/assign-parent', [UserController::class, 'assignParent']);
+        Route::post('/block', [UserController::class, 'blockUser']);
+        Route::post('/unblock', [UserController::class, 'unblockUser']);
     });
     Route::middleware('role:' . config('roles.admin') . ',' . config('roles.teacher'))->group(function () {
         Route::apiResource('categories', CategoryController::class);

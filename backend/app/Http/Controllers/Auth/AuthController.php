@@ -22,6 +22,9 @@ class AuthController extends Controller
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+        if ($user->blocked) {
+            return response()->json(['error' => 'User is blocked'], 403);
+        }
         $accessToken = $user->createToken('access_token', [TokenAbility::ACCESS_API->value], Carbon::now()->addMinutes(config('sanctum.ac_expiration')));
         $refreshToken = $user->createToken('refresh_token', [TokenAbility::ISSUE_ACCESS_TOKEN->value], Carbon::now()->addMinutes(config('sanctum.rt_expiration')));
         return response()->json([
@@ -39,6 +42,9 @@ class AuthController extends Controller
     }
     public function refreshToken(Request $request)
     {
+        if ($request->user()->blocked) {
+            return response()->json(['error' => 'User is blocked'], 403);
+        }
         $user = $request->user();
         $user->tokens()->whereNotIn('id', function ($query) use ($user) {
             $query->select('id')
