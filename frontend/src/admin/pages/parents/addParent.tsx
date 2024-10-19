@@ -55,7 +55,7 @@ export default function AddParent() {
 
   const getChildrensQuery = useQuery({
     queryKey: ["getChildrens"],
-    queryFn: () => getStudents(1, -1),
+    queryFn: () => getStudents(1, -1, undefined, undefined, 1), // should get the school id from admin user
     placeholderData: keepPreviousData,
   });
 
@@ -96,18 +96,32 @@ export default function AddParent() {
     event.preventDefault();
     console.log(data);
 
-    if (img)
-      addParentQuery.mutate({
-        name: data?.firstName + " " + data?.lastName,
-        email: data?.email as string,
-        school_id: admin?.school_id,
-        password: data?.password as string,
-        password_confirmation: data?.password_confirmation as string,
-        phone: data?.phone as string,
-        childrens: data?.childrens as number[],
-        roles: [4],
-        image: img[0],
+    try {
+      if (img) {
+        addParentQuery.mutate({
+          name: data?.firstName + " " + data?.lastName,
+          email: data?.email as string,
+          school_id: admin?.school_id,
+          password: data?.password as string,
+          password_confirmation: data?.password_confirmation as string,
+          phone: data?.phone as string,
+          childrens: data?.childrens as number[],
+          roles: [4],
+          image: img[0],
+        });
+      } else {
+        throw new Error("image not found");
+      }
+    } catch (e) {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: (e as Error).message,
+        },
+        state: true,
       });
+    }
   };
 
   const readAndPreview = (file: FileList) => {
