@@ -358,7 +358,22 @@ export function ViewParents() {
       phone: data?.phone,
     };
 
-    if (img) form["image"] = img[0];
+    try {
+      if (img) {
+        form["image"] = img[0];
+      } else {
+        throw new Error("image not found");
+      }
+    } catch (e) {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: (e as Error).message,
+        },
+        state: true,
+      });
+    }
 
     parentMutation.mutate(form);
   };
@@ -612,26 +627,42 @@ export function ViewParents() {
                     {t("Childs")}:
                   </span>
                   <div className="flex w-max max-w-52 flex-wrap">
-                    {(getParentQuery.data?.data as Parent).childrens?.map(
-                      (child, key) => (
-                        <Badge
-                          key={key}
-                          color="dark"
-                          className="mb-1 me-1 whitespace-nowrap rounded-xs"
-                        >
-                          <img
+                    {getParentQuery.data?.data.childrens.length > 0 ? (
+                      (getParentQuery.data?.data as Parent).childrens?.map(
+                        (child, key) => (
+                          <Badge
                             key={key}
-                            className="me-2 inline-block h-5 w-5 rounded-full"
-                            src={
-                              child?.imagePath
-                                ? SERVER_STORAGE + child?.imagePath
-                                : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                            }
-                            alt="profile"
-                          />
-                          {child.name}
-                        </Badge>
-                      ),
+                            color="dark"
+                            className="mb-1 me-1 whitespace-nowrap rounded-xs"
+                          >
+                            <img
+                              key={key}
+                              className="me-2 inline-block h-5 w-5 rounded-full"
+                              src={
+                                child?.imagePath
+                                  ? SERVER_STORAGE + child?.imagePath
+                                  : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                              }
+                              alt="profile"
+                            />
+                            {child.name}
+                          </Badge>
+                        ),
+                      )
+                    ) : (
+                      <div
+                        className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                        onClick={() =>
+                          setOpenChildModal({
+                            id: getParentQuery.data?.data.id,
+                            school_id: getParentQuery.data?.data.school_id,
+                            open: true,
+                          })
+                        }
+                      >
+                        <FaUser className="me-2" />
+                        {t("add-new-child")}
+                      </div>
                     )}
                   </div>
                 </div>

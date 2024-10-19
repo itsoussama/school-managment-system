@@ -422,8 +422,11 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         if (auth()->user()->hasRole(config('roles.admin'))) {
-            if (Storage::disk('public')->exists($user->imagePath)) {
-                Storage::disk('public')->delete($user->imagePath);
+
+            if (!empty($user->imagePath)) {
+                if (Storage::disk('public')->exists($user->imagePath)) {
+                    Storage::disk('public')->delete($user->imagePath);
+                }
             }
             $user->role()->detach();
 

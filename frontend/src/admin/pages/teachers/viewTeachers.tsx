@@ -362,7 +362,22 @@ export function ViewTeachers() {
       phone: data?.phone,
     };
 
-    if (img) form["image"] = img[0];
+    try {
+      if (img) {
+        form["image"] = img[0];
+      } else {
+        throw new Error("image not found");
+      }
+    } catch (e) {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: (e as Error).message,
+        },
+        state: true,
+      });
+    }
 
     teacherMutation.mutate(form);
 

@@ -99,20 +99,33 @@ export default function AddTeacher() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log(data);
-
-    if (img)
-      addTeacherQuery.mutate({
-        name: data?.firstName + " " + data?.lastName,
-        email: data?.email as string,
-        school_id: admin?.school_id,
-        password: data?.password as string,
-        password_confirmation: data?.password_confirmation as string,
-        phone: data?.phone as string,
-        roles: [2],
-        subjects: data?.subjects as number[],
-        grades: data?.grades as number[],
-        image: img[0],
+    try {
+      if (img) {
+        addTeacherQuery.mutate({
+          name: data?.firstName + " " + data?.lastName,
+          email: data?.email as string,
+          school_id: admin?.school_id,
+          password: data?.password as string,
+          password_confirmation: data?.password_confirmation as string,
+          phone: data?.phone as string,
+          roles: [2],
+          subjects: data?.subjects as number[],
+          grades: data?.grades as number[],
+          image: img[0],
+        });
+      } else {
+        throw new Error("image not found");
+      }
+    } catch (e) {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: (e as Error).message,
+        },
+        state: true,
       });
+    }
   };
 
   const readAndPreview = (file: FileList) => {

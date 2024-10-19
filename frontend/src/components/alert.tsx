@@ -73,7 +73,10 @@ export default function Alert({
             <div className="mb-2 text-sm font-normal">{description}</div>
             <div className="flex gap-2"></div>
           </div>
-          <Toast.Toggle onDismiss={() => close(alertIntialState)} />
+          <Toast.Toggle
+            className="absolute right-0 top-0 m-2"
+            onDismiss={() => close(alertIntialState)}
+          />
         </div>
       </Toast>
     ),
