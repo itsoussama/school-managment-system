@@ -472,7 +472,7 @@ class UserController extends Controller
                     'error' => $e->errors()
                 ], 422);
             }
-        }else {
+        } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
     }

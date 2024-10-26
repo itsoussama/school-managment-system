@@ -181,6 +181,16 @@ const assignParent = async (formData: { child_id: number; parent: number }) => {
   return response;
 };
 
+const blockUser = async (formData: { user_id: number }) => {
+  const response = await axiosApi.post("/api/block", formData);
+  return response;
+};
+
+const unblockUser = async (formData: { user_id: number }) => {
+  const response = await axiosApi.post("/api/unblock", formData);
+  return response;
+};
+
 const exportUser = async () => {
   const response = await axiosApi.get("/api/export-users", {
     responseType: "blob",
@@ -204,5 +214,7 @@ export {
   getGrades,
   assignChilds,
   assignParent,
+  blockUser,
+  unblockUser,
   exportUser,
 };

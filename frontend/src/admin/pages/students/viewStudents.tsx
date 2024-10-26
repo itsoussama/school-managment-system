@@ -8,6 +8,7 @@ import {
   Pagination,
   Spinner,
   Table,
+  ToggleSwitch,
 } from "flowbite-react";
 import React, {
   ChangeEvent,
@@ -38,7 +39,15 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { deleteUser, getUser, getStudents, setStudent, getGrades } from "@api";
+import {
+  deleteUser,
+  getUser,
+  getStudents,
+  setStudent,
+  getGrades,
+  blockUser,
+  unblockUser,
+} from "@api";
 import {
   SkeletonContent,
   SkeletonProfile,
@@ -62,7 +71,7 @@ interface Check {
 
 interface Modal {
   id: number;
-  type?: "view" | "edit" | "delete";
+  type?: "view" | "edit" | "delete" | "block";
   open: boolean;
 }
 
@@ -97,6 +106,7 @@ interface Student {
       label: string;
     },
   ];
+  blocked?: boolean;
   guardian: {
     id: number;
     guardian_id: number;
@@ -129,6 +139,10 @@ interface Data {
   email: string;
   phone: string;
   image?: File;
+}
+
+interface BlockSwitch {
+  [key: string]: boolean;
 }
 
 interface Sort {
@@ -174,6 +188,7 @@ export function ViewStudents() {
     email: "",
     phone: "",
   });
+  const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.user);
@@ -297,6 +312,20 @@ export function ViewStudents() {
         },
         state: true,
       });
+    },
+  });
+
+  const blockUserMutation = useMutation({
+    mutationFn: blockUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getParents"] });
+    },
+  });
+
+  const unBlockUserMutation = useMutation({
+    mutationFn: unblockUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getParents"] });
     },
   });
   // const [selectedItem, setSelectedItem] = useState()
@@ -449,6 +478,32 @@ export function ViewStudents() {
     }
   };
 
+  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const userId: number = openModal?.id as number;
+
+    if (!blockSwitch[userId]) {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [userId]: true,
+      }));
+      blockUserMutation.mutate({ user_id: userId });
+    } else {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [userId]: false,
+      }));
+      unBlockUserMutation.mutate({ user_id: userId });
+    }
+
+    setOpenModal((prev) => ({
+      id: prev?.id as number,
+      open: false,
+    }));
+  };
+
   // const formatDuration = (duration: number) => {
   //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
   //   const remainingMilliseconds = duration % (1000 * 60 * 60);
@@ -501,6 +556,16 @@ export function ViewStudents() {
       handleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
   }, [page, handleChecks]);
+
+  useEffect(() => {
+    if (getStudentsQuery.isFetched) {
+      let data = {};
+      getStudentsQuery.data?.data.data.map((student: Student) => {
+        data = { ...data, [student.id]: !!student.blocked };
+      });
+      setBlockSwitch(data);
+    }
+  }, [getStudentsQuery.data, getStudentsQuery.isFetched]);
 
   return (
     <div className="flex w-full flex-col">
@@ -560,7 +625,7 @@ export function ViewStudents() {
         </Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8 sm:flex-row">
-            <div className="flex flex-col items-center rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+            <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource={
                   getStudentQuery.data?.data.imagePath
@@ -569,6 +634,26 @@ export function ViewStudents() {
                 }
                 className="h-40 w-40"
               />
+              <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                  {t("active-deactivate")}
+                </span>
+                <ToggleSwitch
+                  theme={{
+                    toggle: {
+                      base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
+                    },
+                  }}
+                  checked={blockSwitch[getStudentQuery.data?.data.id] || false}
+                  onChange={() =>
+                    setOpenModal({
+                      id: getStudentQuery.data?.data.id,
+                      type: "block",
+                      open: true,
+                    })
+                  }
+                />
+              </div>
             </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
@@ -924,6 +1009,64 @@ export function ViewStudents() {
         </form>
       </Modal>
 
+      {/* block / unblock user */}
+      <Modal
+        show={openModal?.type === "block" ? openModal?.open : false}
+        onClose={onCloseModal}
+        size={"md"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6",
+            popup: "pt-0",
+          },
+        }}
+      >
+        <form onSubmit={onSubmitBlock}>
+          <Modal.Header>{t("block-modal")}</Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-x-8">
+              <p className="mb-3 text-gray-600 dark:text-gray-300">
+                {t("block-modal-title")}{" "}
+                <b>{getStudentQuery.data?.data.name}</b>
+              </p>
+              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
+                <FaExclamationTriangle className="text-white" size={53} />
+                <p className="text-white">{t("delete-modal-message")}</p>
+              </div> */}
+              {/* <p className="text-gray-900 dark:text-white">
+                {t("delete-modal-label")}{" "}
+                <b>{getParentQuery.data?.data.name}</b>
+              </p> */}
+              {/* <Input
+                type="text"
+                id="verfication"
+                name="verfication"
+                placeholder="John doe"
+                error={
+                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
+                }
+                required
+              /> */}
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <button type="submit" className="btn-danger !w-auto">
+              {getStudentQuery.data?.data.blocked == 0
+                ? t("block-modal-block-btn")
+                : t("block-modal-unblock-btn")}
+            </button>
+            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+              {t("block-modal-cancel-btn")}
+            </button>
+          </Modal.Footer>
+        </form>
+      </Modal>
+
       <AddParentModal
         open={openParentModal?.open as boolean}
         toggleOpen={(isOpen: boolean) =>
@@ -1017,6 +1160,7 @@ export function ViewStudents() {
               <Table.HeadCell>{fieldTrans("email")}</Table.HeadCell>
               <Table.HeadCell>{fieldTrans("phone-number")}</Table.HeadCell>
               <Table.HeadCell>{t("active-time")}</Table.HeadCell>
+              <Table.HeadCell>{t("active-deactivate")}</Table.HeadCell>
               <Table.HeadCell className="w-0">
                 <span className="sr-only w-full">Actions</span>
               </Table.HeadCell>
@@ -1243,6 +1387,23 @@ export function ViewStudents() {
                       </span>
                     </span> */}
                         -
+                      </Table.Cell>
+                      <Table.Cell>
+                        <ToggleSwitch
+                          theme={{
+                            toggle: {
+                              base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
+                            },
+                          }}
+                          checked={blockSwitch[student.id] || false}
+                          onChange={() =>
+                            setOpenModal({
+                              id: student.id,
+                              type: "block",
+                              open: true,
+                            })
+                          }
+                        />
                       </Table.Cell>
                       <Table.Cell>
                         <div className="flex w-fit gap-x-2">
