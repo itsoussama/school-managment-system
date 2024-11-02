@@ -22,8 +22,15 @@ interface DataError {
 }
 
 export default function Login() {
-  const [data, setData] = useState<Data>();
-  const [formError, setFormError] = useState<DataError>();
+  const [data, setData] = useState<Data>({
+    email: "",
+    password: "",
+  }); // for testing purpose
+  const [formError, setFormError] = useState<DataError>({
+    email: "",
+    password: "",
+    form: "",
+  });
   const [theme] = UseTheme();
   // const [isPasswordHidden, setIsPasswordHidden] = useState<boolean>(true);
 
@@ -56,10 +63,12 @@ export default function Login() {
   // functions
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const target = event.target as HTMLFormElement;
+    // const target = event.target as HTMLFormElement;
 
+    console.log(formError);
     if (formError?.email === "" && formError?.password === "") {
-      if (target.email.value !== "" && target.password.value !== "") {
+      // if (target.email.value !== "" && target.password.value !== "") {
+      if (data.email !== "" && data.password !== "") {
         const response = await dispatch(login(data as Data));
 
         if (response.meta.requestStatus === "fulfilled") {
