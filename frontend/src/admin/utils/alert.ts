@@ -1,16 +1,14 @@
 type AlertStatus = "idle" | "success" | "fail"
 export interface Alert {
-    status: AlertStatus;
+    status: AlertStatus,
     message: {
       title: string,
-      description: string
+      description: string | Array<string>
     }
-    state: boolean;
+    state: boolean
   }
 
   export type AlertColor = AlertStatus;
-
-  export const alertDuration = 7000
   
   const alertIntialState: Alert = {
     status: "idle",

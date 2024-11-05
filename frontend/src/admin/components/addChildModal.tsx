@@ -16,11 +16,7 @@ import {
   FaUserPlus,
   FaUserTag,
 } from "react-icons/fa";
-import {
-  alertDuration,
-  alertIntialState,
-  Alert as AlertType,
-} from "@admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@admin/utils/alert";
 import Alert from "@components/alert";
 
 interface AddChildModal {
@@ -213,6 +209,7 @@ function AddChildModal({
           title: "Operation Failed",
           description: (e as Error).message,
         },
+        duration: 7000,
         state: true,
       });
     }
@@ -262,7 +259,7 @@ function AddChildModal({
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alertDuration}
+        duration={alert.duration}
         title={alert.message.title}
         description={alert.message.description}
         close={(value) => toggleAlert(value)}

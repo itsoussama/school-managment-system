@@ -35,7 +35,7 @@ export default {
       },
 
       animation: {
-        fill: "fill 1s ease-in-out forwards",
+        fill: "fill",
       },
       keyframes: {
         fill: {

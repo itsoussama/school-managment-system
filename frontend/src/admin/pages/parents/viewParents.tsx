@@ -20,7 +20,6 @@ import React, {
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
-  FaEye,
   FaHome,
   FaLock,
   FaPen,
@@ -55,13 +54,9 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { DropdownListButton } from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddChildModal from "@src/admin/components/addChildModal";
-import {
-  Alert as AlertType,
-  alertIntialState,
-  alertDuration,
-} from "@src/admin/utils/alert";
+import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
 import Alert from "@src/components/alert";
-import { FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 
 interface Check {
   id?: number;
@@ -110,6 +105,8 @@ export interface FormData {
   email: string;
   phone: string;
   image?: File;
+  password?: string;
+  password_confirmation?: string;
 }
 
 interface Data {
@@ -117,8 +114,19 @@ interface Data {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
+  confirm_password: string;
   phone: string;
   image?: File;
+}
+
+interface DataError {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirm_password: string;
 }
 
 interface BlockSwitch {
@@ -174,7 +182,19 @@ export function ViewParents() {
     lastName: "",
     email: "",
     phone: "",
+    password: "",
+    confirm_password: "",
   });
+  const [formError, setFormError] = useState<DataError>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+    phone: "",
+  });
+  const [changePassword, toggleChangePassword] = useState<boolean>(false);
+  // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
@@ -236,14 +256,17 @@ export function ViewParents() {
         lastName: getUserName(data?.name).lastName,
         email: data?.email,
         phone: data?.phone,
+        password: "",
+        confirm_password: "",
       });
 
       toggleAlert({
         status: "success",
         message: {
           title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
+          description: "Your changes have been saved successfully.",
         },
+
         state: true,
       });
 
@@ -261,6 +284,7 @@ export function ViewParents() {
           title: "Operation Failed",
           description: "Something went wrong. Please try again later.",
         },
+
         state: true,
       });
     },
@@ -277,14 +301,17 @@ export function ViewParents() {
         lastName: "",
         email: "",
         phone: "",
+        password: "",
+        confirm_password: "",
       });
 
       toggleAlert({
         status: "success",
         message: {
           title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
+          description: "Your changes have been saved successfully.",
         },
+
         state: true,
       });
     },
@@ -296,6 +323,7 @@ export function ViewParents() {
           title: "Operation Failed",
           description: "Something went wrong. Please try again later.",
         },
+
         state: true,
       });
     },
@@ -305,6 +333,9 @@ export function ViewParents() {
     mutationFn: blockUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getParents"] });
+      queryClient.invalidateQueries({
+        queryKey: ["getParent"],
+      });
     },
   });
 
@@ -312,26 +343,21 @@ export function ViewParents() {
     mutationFn: unblockUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getParents"] });
+      queryClient.invalidateQueries({
+        queryKey: ["getParent"],
+      });
     },
   });
+
   // const [selectedItem, setSelectedItem] = useState()
 
-  const handleChecks = useCallback(
-    async (firstCheckbox: HTMLInputElement) => {
-      if (getAllParentsQuery.isFetched) {
-        await getAllParentsQuery.data?.data.forEach((parent: Parent) => {
-          setCheckAll((prev) => {
-            const checkedData = prev.some((item) => item.id === parent.id);
-            if (firstCheckbox.checked && !checkedData) {
-              return [...prev, { id: parent.id as number, status: true }];
-            }
-            return [...prev, { id: parent.id as number, status: false }];
-          });
-        });
-      }
-    },
-    [getAllParentsQuery.data?.data, getAllParentsQuery.isFetched],
-  );
+  const onChange = (event: ChangeEvent) => {
+    setData((prev) => ({
+      ...(prev as Data),
+      [event.target.id]: (event.target as HTMLInputElement).value,
+    }));
+    // console.log((event.target as HTMLInputElement).value);
+  };
 
   const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
@@ -351,92 +377,75 @@ export function ViewParents() {
     }
   };
 
-  const onChange = (event: ChangeEvent) => {
-    setData((prev) => ({
-      ...(prev as Data),
-      [event.target.id]: (event.target as HTMLInputElement).value,
-    }));
-    // console.log((event.target as HTMLInputElement).value);
-  };
+  const handleChecks = useCallback(
+    async (firstCheckbox: HTMLInputElement) => {
+      if (getAllParentsQuery.isFetched) {
+        await getAllParentsQuery.data?.data.forEach((parent: Parent) => {
+          setCheckAll((prev) => {
+            const checkedData = prev.some((item) => item.id === parent.id);
+            if (firstCheckbox.checked && !checkedData) {
+              return [...prev, { id: parent.id as number, status: true }];
+            }
+            return [...prev, { id: parent.id as number, status: false }];
+          });
+        });
+      }
+    },
+    [getAllParentsQuery.data?.data, getAllParentsQuery.isFetched],
+  );
 
-  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-    setOpenModal({ id: id, type: type, open: isOpen });
-    const { data: parentData } = await queryClient.ensureQueryData({
-      queryKey: ["getParent", id],
-      queryFn: () => getUser(id),
-    });
+  const handleClientError = (field: HTMLFormElement) => {
+    // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
+    const passwordValidation = /[0-9]{8}/;
 
-    setData({
-      id: parentData?.id,
-      firstName: getUserName(parentData?.name).firstName,
-      lastName: getUserName(parentData?.name).lastName,
-      email: parentData?.email,
-      phone: parentData?.phone,
-    });
-  };
-
-  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const form: FormData = {
-      _method: "PUT",
-      id: data?.id,
-      name: data?.firstName + " " + data?.lastName,
-      email: data?.email,
-      phone: data?.phone,
+    // Error messages for empty or invalid fields
+    const messages = {
+      password:
+        "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      confirm_password: "Passwords do not match. Please try again.",
     };
 
-    try {
-      if (img) {
-        form["image"] = img[0];
+    const isEmpty = (value: string) => value.trim() === "";
+    let error = false;
+
+    // Function to set error messages and update the error flag
+    const setError = (fieldName: string, message: string) => {
+      setFormError((prev) => ({
+        ...prev,
+        [fieldName]: message,
+      }));
+      error = true;
+    };
+
+    // Clear error messages if validation is successful
+    const clearError = (fieldName: string) => {
+      setFormError((prev) => ({
+        ...prev,
+        [fieldName]: "",
+      }));
+    };
+
+    // Validate password field
+    if (changePassword) {
+      if (isEmpty(field.password.value)) {
+        setError("password", "Password field is required.");
+      } else if (!passwordValidation.test(field.password.value)) {
+        setError("password", messages.password);
       } else {
-        throw new Error("image not found");
+        clearError("password");
       }
-    } catch (e) {
-      toggleAlert({
-        status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: (e as Error).message,
-        },
-        state: true,
-      });
+
+      // Validate confirm password field
+      if (isEmpty(field.confirm_password.value)) {
+        setError("confirm_password", "Please confirm your password.");
+      } else if (field.password.value !== field.confirm_password.value) {
+        setError("confirm_password", messages.confirm_password);
+      } else {
+        clearError("confirm_password");
+      }
     }
 
-    parentMutation.mutate(form);
-  };
-
-  const onCloseModal = () => {
-    parentMutation.reset();
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
-
-    setData({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-    });
-  };
-
-  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsVerficationMatch(true);
-    const input = event.target as HTMLFormElement;
-
-    if (input.verfication.value !== getParentQuery.data?.data.name) {
-      setIsVerficationMatch(false);
-      return;
-    }
-
-    deleteUserQuery.mutate(openModal?.id as number);
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
+    return error;
   };
 
   const handleSort = (column: string) => {
@@ -456,6 +465,74 @@ export function ViewParents() {
         setSortPosition(0);
         return;
     }
+  };
+
+  const handlePerPage = (ev: ChangeEvent) => {
+    const target = ev.target as HTMLSelectElement;
+    setPage(1);
+    setPerPage(parseInt(target.value));
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const file = event.target.files;
+
+      setImg(file);
+      readAndPreview(file as FileList);
+    }
+  };
+
+  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const input = event.target as HTMLFormElement;
+
+    if (!handleClientError(input)) {
+      const form: FormData = {
+        _method: "PUT",
+        id: data?.id,
+        name: data?.firstName + " " + data?.lastName,
+        email: data?.email,
+        phone: data?.phone,
+      };
+
+      if (img) {
+        form["image"] = img[0];
+      }
+
+      if (data?.password) {
+        form["password"] = data?.password;
+        form["password_confirmation"] = data?.confirm_password;
+      }
+
+      parentMutation.mutate(form);
+    } else {
+      toggleAlert({
+        status: "fail",
+        message: {
+          title: "Operation Failed",
+          description: "Something went wrong. Please try again later.",
+        },
+
+        state: true,
+      });
+    }
+  };
+
+  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsVerficationMatch(true);
+    const input = event.target as HTMLFormElement;
+
+    if (input.verfication.value !== getParentQuery.data?.data.name) {
+      setIsVerficationMatch(false);
+      return;
+    }
+
+    deleteUserQuery.mutate(openModal?.id as number);
+    setOpenModal((prev) => ({
+      id: prev?.id as number,
+      open: false,
+    }));
   };
 
   const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
@@ -484,6 +561,53 @@ export function ViewParents() {
     }));
   };
 
+  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
+    setOpenModal({ id: id, type: type, open: isOpen });
+    const { data: parentData } = await queryClient.ensureQueryData({
+      queryKey: ["getParent", id],
+      queryFn: () => getUser(id),
+    });
+
+    setData({
+      id: parentData?.id,
+      firstName: getUserName(parentData?.name).firstName,
+      lastName: getUserName(parentData?.name).lastName,
+      email: parentData?.email,
+      phone: parentData?.phone,
+      password: "",
+      confirm_password: "",
+    });
+  };
+
+  const onCloseModal = () => {
+    parentMutation.reset();
+    setOpenModal((prev) => ({
+      id: prev?.id as number,
+      open: false,
+    }));
+
+    toggleChangePassword(false);
+
+    setData({
+      id: 0,
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirm_password: "",
+    });
+
+    setFormError({
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirm_password: "",
+      phone: "",
+    });
+  };
+
   // const formatDuration = (duration: number) => {
   //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
   //   const remainingMilliseconds = duration % (1000 * 60 * 60);
@@ -491,12 +615,6 @@ export function ViewParents() {
 
   //   return { hour: convertToHour, minute: convertToMinute };
   // };
-
-  const handlePerPage = (ev: ChangeEvent) => {
-    const target = ev.target as HTMLSelectElement;
-    setPage(1);
-    setPerPage(parseInt(target.value));
-  };
 
   const getUserName = (fullName: string) => {
     const nameParts = fullName?.trim().split(/\s+/);
@@ -513,15 +631,6 @@ export function ViewParents() {
         setPreviewImg(event.target?.result as string);
       });
       fileReader.readAsDataURL(file[0]);
-    }
-  };
-
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files;
-
-      setImg(file);
-      readAndPreview(file as FileList);
     }
   };
 
@@ -569,9 +678,14 @@ export function ViewParents() {
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alertDuration}
         title={alert.message.title}
-        description={alert.message.description}
+        description={
+          Object.entries(formError).some((val) => val[1] !== "")
+            ? Object.entries(formError)
+                .filter((err) => err[1] !== "")
+                .map((t) => t[1])
+            : alert.message.description
+        }
         close={(value) => toggleAlert(value)}
       />
 
@@ -878,35 +992,54 @@ export function ViewParents() {
                       onChange={onChange}
                     />
 
-                    <Input
-                      type="password"
-                      id="password"
-                      name="password"
-                      label={fieldTrans("password")}
-                      placeholder="●●●●●●●"
-                      custom-style={{
-                        inputStyle: "px-10",
-                      }}
-                      icon={
-                        <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                      }
-                      onChange={(e) => console.log(e.target.value)}
-                    />
+                    <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
 
-                    <Input
-                      type="password"
-                      id="password_confirmation"
-                      name="password_confirmation"
-                      label={fieldTrans("confirm-password")}
-                      placeholder="●●●●●●●"
-                      custom-style={{
-                        inputStyle: "px-10",
-                      }}
-                      icon={
-                        <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                      }
-                      onChange={(e) => console.log(e.target.value)}
-                    />
+                    {changePassword ? (
+                      <>
+                        <Input
+                          type="password"
+                          id="password"
+                          name="password"
+                          label={fieldTrans("password")}
+                          placeholder="●●●●●●●"
+                          error={formError.password}
+                          value={data?.password}
+                          custom-style={{
+                            inputStyle: "px-10",
+                          }}
+                          icon={
+                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          }
+                          onChange={onChange}
+                        />
+
+                        <Input
+                          type="password"
+                          id="confirm_password"
+                          name="confirm_password"
+                          label={fieldTrans("confirm-password")}
+                          placeholder="●●●●●●●"
+                          error={formError.confirm_password}
+                          value={data?.confirm_password}
+                          custom-style={{
+                            inputStyle: "px-10",
+                          }}
+                          icon={
+                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          }
+                          onChange={onChange}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => toggleChangePassword(true)}
+                          className="btn-default !w-auto"
+                        >
+                          {t("change-password-btn")}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

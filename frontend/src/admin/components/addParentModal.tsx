@@ -16,11 +16,7 @@ import {
   FaUserTag,
 } from "react-icons/fa";
 import { Card, Modal } from "flowbite-react";
-import {
-  alertDuration,
-  alertIntialState,
-  Alert as AlertType,
-} from "@admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@admin/utils/alert";
 import Alert from "@components/alert";
 
 interface AddParentModal {
@@ -177,6 +173,7 @@ export default function AddParentModal({
           title: "Operation Failed",
           description: (e as Error).message,
         },
+        duration: 7000,
         state: true,
       });
     }
@@ -218,7 +215,7 @@ export default function AddParentModal({
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alertDuration}
+        duration={alert.duration}
         title={alert.message.title}
         description={alert.message.description}
         close={(value) => toggleAlert(value)}

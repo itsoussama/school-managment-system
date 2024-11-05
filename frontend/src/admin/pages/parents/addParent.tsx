@@ -5,14 +5,10 @@ import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock, FaPlus, FaSearch } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import {
-  Alert as AlertType,
-  alertDuration,
-  alertIntialState,
-} from "@src/admin/utils/alert";
+import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
 import Alert from "@src/components/alert";
 
 export interface FormData {
@@ -52,6 +48,7 @@ export default function AddParent() {
   const admin = useAppSelector((state) => state.user);
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
+  const redirect = useNavigate();
 
   const getChildrensQuery = useQuery({
     queryKey: ["getChildrens"],
@@ -68,8 +65,10 @@ export default function AddParent() {
           title: "Operation Successful",
           description: "Your changes have been saved successfully.",
         },
+        duration: 7000,
         state: true,
       });
+      redirect("/parents/manage");
     },
     onError: () => {
       toggleAlert({
@@ -78,6 +77,7 @@ export default function AddParent() {
           title: "Operation Failed",
           description: "Something went wrong. Please try again.",
         },
+        duration: 7000,
         state: true,
       });
     },
@@ -119,6 +119,7 @@ export default function AddParent() {
           title: "Operation Failed",
           description: (e as Error).message,
         },
+        duration: 7000,
         state: true,
       });
     }
@@ -148,7 +149,7 @@ export default function AddParent() {
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alertDuration}
+        duration={alert.duration}
         title={alert.message.title}
         description={alert.message.description}
         close={(value) => toggleAlert(value)}

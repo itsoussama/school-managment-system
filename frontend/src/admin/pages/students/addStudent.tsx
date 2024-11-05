@@ -5,15 +5,11 @@ import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import Alert from "@src/components/alert";
-import {
-  alertDuration,
-  alertIntialState,
-  Alert as AlertType,
-} from "@src/admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
 
 export interface FormData {
   guardian_id: number | null;
@@ -52,6 +48,7 @@ export default function AddStudent() {
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const admin = useAppSelector((state) => state.user);
   const minSm = useBreakpoint("min", "sm");
+  const redirect = useNavigate();
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
@@ -67,8 +64,11 @@ export default function AddStudent() {
           title: "Operation Successful",
           description: " Your changes have been saved successfully.",
         },
+        duration: 7000,
         state: true,
       });
+
+      redirect("/students/manage");
     },
 
     onError: () => {
@@ -78,6 +78,7 @@ export default function AddStudent() {
           title: "Operation Failed",
           description: "Something went wrong. Please try again later.",
         },
+        duration: 7000,
         state: true,
       });
     },
@@ -114,6 +115,7 @@ export default function AddStudent() {
           title: "Operation Failed",
           description: (e as Error).message,
         },
+        duration: 7000,
         state: true,
       });
     }
@@ -143,7 +145,7 @@ export default function AddStudent() {
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alertDuration}
+        duration={alert.duration}
         title={alert.message.title}
         description={alert.message.description}
         close={(value) => toggleAlert(value)}

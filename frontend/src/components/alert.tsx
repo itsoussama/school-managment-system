@@ -9,12 +9,14 @@ import {
 import { FaXmark } from "react-icons/fa6";
 import { useCallback, useEffect } from "react";
 
+const ALERT_DURATION = import.meta.env.VITE_ALERT_DURATION;
+
 interface AlertProps {
-  duration: number;
+  // duration?: 7000;
   status: string;
   state: boolean;
   title: string;
-  description: string;
+  description: string | string[];
   close: (props: AlertUtil) => void;
 }
 
@@ -34,7 +36,7 @@ const alertUi = {
 };
 
 export default function Alert({
-  duration = 5000,
+  // duration,
   status,
   state,
   title,
@@ -46,18 +48,24 @@ export default function Alert({
   }, [close]);
 
   useEffect(() => {
-    const alertTimeOut = setTimeout(resetAlert, duration);
+    console.log(ALERT_DURATION);
+    const alertTimeOut = setTimeout(resetAlert, ALERT_DURATION);
     return () => {
       clearTimeout(alertTimeOut);
     };
-  }, [state, duration, resetAlert]);
+  }, [state, resetAlert]);
+
+  // useEffect(() => {
+  //   // setAlertDuration(duration);
+  //   console.log(alertDuration);
+  // }, [duration]);
 
   return ReactDOM.createPortal(
     state && (
       <Toast className="fixed right-0 top-0 z-50 m-5 overflow-hidden border border-gray-300 dark:border-gray-700">
         <div className="absolute left-0 top-0 h-0.5 w-full rounded-lg bg-gray-300 dark:bg-gray-600">
           <div
-            className={`absolute left-0 top-0 h-full w-0 animate-[fill_${duration}ms_ease-in-out_forwards] bg-gray-400 dark:bg-white`}
+            className={`absolute left-0 top-0 h-full w-0 animate-[fill_7s_ease-in-out_both] bg-gray-400 dark:bg-white`}
           ></div>
         </div>
         <div className="flex items-start">
@@ -70,7 +78,11 @@ export default function Alert({
             <span className="mb-1 text-sm font-semibold text-gray-900 dark:text-white">
               {title}
             </span>
-            <div className="mb-2 text-sm font-normal">{description}</div>
+            <div className="mb-2 text-sm font-normal">
+              {typeof description == "string"
+                ? description
+                : description.map((v, i) => <div key={i}>{v}</div>)}
+            </div>
             <div className="flex gap-2"></div>
           </div>
           <Toast.Toggle
