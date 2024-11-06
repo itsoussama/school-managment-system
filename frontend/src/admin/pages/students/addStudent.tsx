@@ -64,7 +64,6 @@ export default function AddStudent() {
           title: "Operation Successful",
           description: " Your changes have been saved successfully.",
         },
-        duration: 7000,
         state: true,
       });
 
@@ -78,7 +77,6 @@ export default function AddStudent() {
           title: "Operation Failed",
           description: "Something went wrong. Please try again later.",
         },
-        duration: 7000,
         state: true,
       });
     },
@@ -115,7 +113,6 @@ export default function AddStudent() {
           title: "Operation Failed",
           description: (e as Error).message,
         },
-        duration: 7000,
         state: true,
       });
     }
@@ -145,7 +142,6 @@ export default function AddStudent() {
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alert.duration}
         title={alert.message.title}
         description={alert.message.description}
         close={(value) => toggleAlert(value)}

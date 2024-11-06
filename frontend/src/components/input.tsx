@@ -186,8 +186,11 @@ function MultiSelect({
   name,
   onSelectItem,
   children,
-}: MultiSelectProps) {
-  const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>([]);
+  externalSelectedItems = [],
+}: MultiSelectProps & { externalSelectedItems?: SelectedData[] }) {
+  const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>(
+    externalSelectedItems,
+  );
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [dropdownStyles, setDropdownStyles] = useState<{
     width: number;
@@ -202,9 +205,9 @@ function MultiSelect({
   const handleItemsChange = (event: ChangeEvent) => {
     const target = event.target as HTMLInputElement;
     let itemsCollection: SelectedData[];
-    if ((event.target as HTMLInputElement).type == "checkbox") {
-      const hasItem = selectedItems.find((item) => item.id == target.id);
-      console.log((event.target as HTMLInputElement).type);
+
+    if (target.type === "checkbox") {
+      const hasItem = selectedItems.find((item) => item.id === target.id);
 
       if (hasItem) {
         const newItemsSet = selectedItems.filter(
@@ -215,15 +218,12 @@ function MultiSelect({
       } else {
         itemsCollection = [
           ...selectedItems,
-          {
-            id: (event.target as HTMLInputElement).id,
-            label: (event.target as HTMLInputElement).value,
-          },
+          { id: target.id, label: target.value },
         ];
         setSelectedItems(itemsCollection);
       }
 
-      onSelectItem(itemsCollection);
+      onSelectItem(itemsCollection); // Notify parent
     }
   };
 
@@ -231,17 +231,19 @@ function MultiSelect({
     event.stopPropagation();
     const target = event.target as HTMLSpanElement;
 
+    // Uncheck the corresponding checkbox in the dropdown list
     document.getElementsByName(name).forEach((item) => {
       if ((item as HTMLInputElement).id == target.parentElement?.id) {
         (item as HTMLInputElement).checked = false;
       }
     });
 
+    // Filter out the deleted item
     const newItemsSet = selectedItems.filter(
       (item) => item.id !== target.parentElement?.id,
     );
     setSelectedItems(newItemsSet);
-    onSelectItem(newItemsSet);
+    onSelectItem(newItemsSet); // Notify parent
   };
 
   const clonedChildren = React.Children.map(children, (child) => {
@@ -289,6 +291,13 @@ function MultiSelect({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    // Check if externalSelectedItems is different from selectedItems
+    if (externalSelectedItems && externalSelectedItems.length) {
+      setSelectedItems(externalSelectedItems);
+    }
+  }, [externalSelectedItems]);
 
   return (
     <div className="relative">

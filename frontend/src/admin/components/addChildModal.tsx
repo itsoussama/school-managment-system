@@ -209,7 +209,6 @@ function AddChildModal({
           title: "Operation Failed",
           description: (e as Error).message,
         },
-        duration: 7000,
         state: true,
       });
     }
@@ -259,7 +258,6 @@ function AddChildModal({
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alert.duration}
         title={alert.message.title}
         description={alert.message.description}
         close={(value) => toggleAlert(value)}

@@ -1,7 +1,7 @@
 import { Input, MultiSelect, Checkbox } from "@components/input";
 import { addParent, getStudents } from "@api";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import { Breadcrumb } from "flowbite-react";
+import { Breadcrumb, Modal } from "flowbite-react";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock, FaPlus, FaSearch } from "react-icons/fa";
@@ -10,6 +10,7 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
 import Alert from "@src/components/alert";
+import { DropdownListButton } from "@src/components/dropdown";
 
 export interface FormData {
   name?: string;
@@ -27,8 +28,14 @@ export interface FormData {
 
 interface Childs {
   id: string;
+  imagePath: string;
   name: string;
   guardian_id: string;
+}
+
+interface DataChilds {
+  id: string;
+  label: string;
 }
 
 interface File {
@@ -38,12 +45,18 @@ interface File {
   type: string;
 }
 
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
+
 export default function AddParent() {
   const { t } = useTranslation();
   const { t: fieldsTrans } = useTranslation("form-fields");
   const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  // const [formData, setFormData] = useState<FormData>();
+  const [selectedChilds, setSelectedChilds] = useState<number[]>([]);
+  const [dataChild, setDataChild] = useState<DataChilds[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const admin = useAppSelector((state) => state.user);
   const minSm = useBreakpoint("min", "sm");
@@ -65,7 +78,6 @@ export default function AddParent() {
           title: "Operation Successful",
           description: "Your changes have been saved successfully.",
         },
-        duration: 7000,
         state: true,
       });
       redirect("/parents/manage");
@@ -77,7 +89,6 @@ export default function AddParent() {
           title: "Operation Failed",
           description: "Something went wrong. Please try again.",
         },
-        duration: 7000,
         state: true,
       });
     },
@@ -90,6 +101,12 @@ export default function AddParent() {
   const handleSearch = (e: EventTarget) => {
     setSearchValue((e as HTMLInputElement).value);
     // console.log();
+  };
+
+  const handleSelectedChild = (childs: Array<DataChilds>) => {
+    const childId = childs.map((childs) => parseInt(childs.id));
+    setSelectedChilds(childId);
+    setDataChild(childs);
   };
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -119,10 +136,58 @@ export default function AddParent() {
           title: "Operation Failed",
           description: (e as Error).message,
         },
-        duration: 7000,
         state: true,
       });
     }
+  };
+
+  const onCloseModal = () => {
+    // addStudentQuery.reset();
+    setOpenModal(false);
+    setSearchValue("");
+    // setFormData({
+    //   name: "",
+    //   firstName: "",
+    //   lastName: "",
+    //   guardian_id: 0,
+    //   phone: "",
+    //   email: "",
+    //   password: "",
+    //   password_confirmation: "",
+    //   school_id: 0,
+    //   roles: [],
+    //   subjects: [],
+    //   grades: [],
+    //   image: {
+    //     lastModified: 0,
+    //     name: "",
+    //     size: 0,
+    //     type: "",
+    //   },
+    // });
+  };
+
+  const getSelectedChilds = (event: ChangeEvent<HTMLInputElement>) => {
+    const child = event.target;
+    const ChildId: number = parseInt(event.target?.id);
+    if (event.target.checked) {
+      setSelectedChilds((prev) => [...prev, ChildId]);
+      setDataChild((prev) => [...prev, { id: child.id, label: child.value }]);
+    } else {
+      const filtredChildList = selectedChilds.filter(
+        (childId) => childId !== ChildId,
+      );
+      setSelectedChilds(filtredChildList);
+      setDataChild(dataChild.filter((data) => data.id !== child.id));
+    }
+  };
+
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
   };
 
   const readAndPreview = (file: FileList) => {
@@ -149,7 +214,6 @@ export default function AddParent() {
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alert.duration}
         title={alert.message.title}
         description={alert.message.description}
         close={(value) => toggleAlert(value)}
@@ -179,6 +243,90 @@ export default function AddParent() {
         )}
         <Breadcrumb.Item>{t("new-parent")}</Breadcrumb.Item>
       </Breadcrumb>
+
+      <Modal
+        show={openModal}
+        size={"4xl"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
+            popup: "pt-0",
+          },
+        }}
+        onClose={onCloseModal}
+      >
+        <Modal.Header>{t("add-new-child")}</Modal.Header>
+        <div className="flex max-h-[70vh] flex-col p-2">
+          <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
+            <Input
+              id="search"
+              type="text"
+              icon={
+                <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+              }
+              label=""
+              onKeyUp={(e) => handleSearch(e.target)}
+              placeholder={fieldsTrans("filter-all")}
+              name="search"
+              custom-style={{
+                inputStyle: "px-8 !py-1",
+                labelStyle: "mb-0 !inline",
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-y-3 overflow-y-auto">
+            {getChildrensQuery.data?.data.map(
+              (child: Childs, key: number) =>
+                child.name.search(new RegExp(searchValue, "i")) !== -1 && (
+                  <div>
+                    <Checkbox
+                      key={key}
+                      htmlFor={child.name}
+                      label={child.name}
+                      id={child.id}
+                      name="childrens"
+                      image={
+                        <img
+                          className="h-7 w-7 rounded-full"
+                          src={
+                            child?.imagePath
+                              ? SERVER_STORAGE + child?.imagePath
+                              : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                          }
+                          alt="profile"
+                        />
+                      }
+                      onChange={getSelectedChilds}
+                      checked={
+                        selectedChilds.includes(parseInt(child.id))
+                          ? true
+                          : false
+                      }
+                      value={child.name}
+                    />
+                  </div>
+                ),
+            )}
+          </div>
+        </div>
+        <Modal.Footer>
+          <button
+            type="submit"
+            className="btn-default !w-auto"
+            onClick={onCloseModal}
+          >
+            {fieldsTrans("accept")}
+          </button>
+          {/* <button className="btn-danger !w-auto" onClick={onCloseModal}>
+            {fieldsTrans("decline")}
+          </button> */}
+        </Modal.Footer>
+      </Modal>
 
       <div className="flex flex-wrap gap-5">
         <div className="item flex min-w-72 flex-1 flex-col gap-4">
@@ -287,15 +435,11 @@ export default function AddParent() {
             <MultiSelect
               label={fieldsTrans("childrens")}
               name="childrens"
-              onSelectItem={(items) =>
-                handleChange(
-                  "childrens",
-                  items.map((item) => parseInt(item.id)),
-                )
-              }
+              externalSelectedItems={dataChild}
+              onSelectItem={(items) => handleSelectedChild(items)}
             >
               <div className="sticky -top-2 z-10 -m-2 h-full space-y-2 bg-white p-2 dark:bg-gray-700">
-                <Input
+                {/* <Input
                   id="search"
                   type="text"
                   icon={
@@ -309,7 +453,7 @@ export default function AddParent() {
                     inputStyle: "px-8 !py-1",
                     labelStyle: "mb-0 !inline",
                   }}
-                />
+                /> */}
                 <Link
                   to={"/students/new"}
                   className="btn-default flex h-8 items-center justify-center"
@@ -317,20 +461,14 @@ export default function AddParent() {
                   <FaPlus size={12} className="me-2" />
                   {t("add-new-child")}
                 </Link>
+                <button
+                  className="btn-default flex h-8 items-center justify-center"
+                  onClick={() => setOpenModal(true)}
+                >
+                  <FaPlus size={12} className="me-2" />
+                  {t("existing-child")}
+                </button>
               </div>
-              {getChildrensQuery.data?.data.map(
-                (child: Childs, key: number) =>
-                  child.name.search(new RegExp(searchValue, "i")) !== -1 && (
-                    <Checkbox
-                      key={key}
-                      htmlFor={child.name}
-                      label={child.name}
-                      id={child.id}
-                      name="childrens"
-                      value={child.name}
-                    />
-                  ),
-              )}
             </MultiSelect>
 
             <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
