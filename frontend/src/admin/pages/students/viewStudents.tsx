@@ -1235,7 +1235,7 @@ export function ViewStudents() {
                 base: "w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
                 shadow:
                   "absolute left-0 top-0 -z-10 h-full w-full rounded-s bg-white drop-shadow-md dark:bg-black",
-                wrapper: "relative",
+                wrapper: "",
               },
               body: {
                 cell: {
