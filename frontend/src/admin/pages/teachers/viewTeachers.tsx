@@ -1238,7 +1238,7 @@ export function ViewTeachers() {
               <Table.HeadCell>{t("active-time")}</Table.HeadCell>
               <Table.HeadCell>{t("active-deactivate")}</Table.HeadCell>
               <Table.HeadCell className="w-0">
-                <span className="sr-only w-full">Actions</span>
+                <span className="w-full">Actions</span>
               </Table.HeadCell>
             </Table.Head>
 
