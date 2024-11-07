@@ -1203,7 +1203,7 @@ export function ViewParents() {
           <Table
             theme={{
               root: {
-                base: "w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
+                base: "w-full relative whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
                 shadow:
                   "absolute left-0 top-0 -z-10 h-full w-full rounded-s bg-white drop-shadow-md dark:bg-black",
                 wrapper: "",
@@ -1272,7 +1272,7 @@ export function ViewParents() {
                   <Table.Row>
                     <Table.Cell className="p-0">
                       <div
-                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                        className={`table-loader absolute left-0 top-0 z-[1] grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
                       >
                         <Spinner />
                       </div>
@@ -1353,11 +1353,12 @@ export function ViewParents() {
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
                 <Table.Cell className="p-2"></Table.Cell>
+                <Table.Cell className="p-2"></Table.Cell>
               </Table.Row>
 
               {getParentsQuery.isFetching &&
               !(getParentsQuery.isRefetching || perPage) ? (
-                <SkeletonTable cols={7} />
+                <SkeletonTable cols={8} />
               ) : (
                 getParentsQuery.data?.data.data.map(
                   (parent: Parent, key: number) => (
@@ -1365,7 +1366,7 @@ export function ViewParents() {
                       key={key}
                       className="w-max bg-white dark:bg-gray-800"
                     >
-                      <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                      <Table.Cell className="sticky left-0 z-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                         <Checkbox
                           id={parent.id.toString()}
                           name="checkbox"

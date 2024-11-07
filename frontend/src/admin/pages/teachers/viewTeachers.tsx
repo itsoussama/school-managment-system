@@ -1180,7 +1180,7 @@ export function ViewTeachers() {
           <Table
             theme={{
               root: {
-                base: "w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
+                base: "w-full relative whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
                 shadow:
                   "absolute left-0 top-0 -z-10 h-full w-full rounded-s bg-white drop-shadow-md dark:bg-black",
                 wrapper: "",
@@ -1251,7 +1251,7 @@ export function ViewTeachers() {
                   <Table.Row>
                     <Table.Cell className="p-0">
                       <div
-                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                        className={`table-loader absolute left-0 top-0 z-[1] grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
                       >
                         <Spinner />
                       </div>
@@ -1394,7 +1394,7 @@ export function ViewTeachers() {
               </Table.Row>
               {getTeachersQuery.isFetching &&
               !(getTeachersQuery.isRefetching || perPage) ? (
-                <SkeletonTable cols={8} />
+                <SkeletonTable cols={9} />
               ) : (
                 getTeachersQuery.data?.data.data.map(
                   (teacher: Teacher, key: number) => (
