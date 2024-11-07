@@ -51,7 +51,7 @@ export default function AddTeacher() {
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
-  const admin = useAppSelector((state) => state.user);
+  const admin = useAppSelector((state) => state.userSlice.user);
   const minSm = useBreakpoint("min", "sm");
   const redirect = useNavigate();
 
@@ -148,40 +148,39 @@ export default function AddTeacher() {
   };
 
   return (
-    <TransitionAnimation>
-      <div className="flex flex-col">
-        <Alert
-          status={alert.status}
-          state={alert.state}
-          title={alert.message.title}
-          description={alert.message.description}
-          close={(value) => toggleAlert(value)}
-        />
-        <Breadcrumb
-          theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
-          className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
-          aria-label="Breadcrumb"
+    <div className="flex flex-col">
+      <Alert
+        status={alert.status}
+        state={alert.state}
+        title={alert.message.title}
+        description={alert.message.description}
+        close={(value) => toggleAlert(value)}
+      />
+      <Breadcrumb
+        theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
+        className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
+        aria-label="Breadcrumb"
+      >
+        <Link
+          className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          to="/"
         >
-          <Link
-            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-            to="/"
-          >
-            <Breadcrumb.Item icon={FaHome}>
-              {minSm ? t("home") : ""}
-            </Breadcrumb.Item>
-          </Link>
-          {minSm ? (
-            <Breadcrumb.Item>
-              <span className="text-gray-600 dark:text-gray-300">
-                {t("teachers")}
-              </span>
-            </Breadcrumb.Item>
-          ) : (
-            <Breadcrumb.Item>...</Breadcrumb.Item>
-          )}
-          <Breadcrumb.Item>{t("new-teacher")}</Breadcrumb.Item>
-        </Breadcrumb>
-
+          <Breadcrumb.Item icon={FaHome}>
+            {minSm ? t("home") : ""}
+          </Breadcrumb.Item>
+        </Link>
+        {minSm ? (
+          <Breadcrumb.Item>
+            <span className="text-gray-600 dark:text-gray-300">
+              {t("teachers")}
+            </span>
+          </Breadcrumb.Item>
+        ) : (
+          <Breadcrumb.Item>...</Breadcrumb.Item>
+        )}
+        <Breadcrumb.Item>{t("new-teacher")}</Breadcrumb.Item>
+      </Breadcrumb>
+      <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
@@ -372,7 +371,7 @@ export default function AddTeacher() {
             </form>
           </div>
         </div>
-      </div>
-    </TransitionAnimation>
+      </TransitionAnimation>
+    </div>
   );
 }

@@ -36,8 +36,7 @@ export default {
 
       animation: {
         fill: "fill",
-        "fade-fwd":
-          "fade-fwd 0.6s cubic-bezier(0.390, 0.575, 0.565, 1.000) alternate forwards",
+        "fade-fwd": "fade-fwd 0.4s ease-in-out alternate forwards",
       },
       keyframes: {
         fill: {

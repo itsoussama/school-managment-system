@@ -1,9 +1,16 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import userSlice from "@redux/userSlice";
+import animationSlice from "@redux/animationSlice";
 
+const rootReducer = combineReducers({
+  userSlice,
+  animationSlice
+})
 export const store = configureStore({
-    reducer: userSlice,
+    reducer: rootReducer,
   });
+
+  // console.log(store.getState())
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>

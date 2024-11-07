@@ -59,7 +59,7 @@ export default function AddParent() {
   const [selectedChilds, setSelectedChilds] = useState<number[]>([]);
   const [dataChild, setDataChild] = useState<DataChilds[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
-  const admin = useAppSelector((state) => state.user);
+  const admin = useAppSelector((state) => state.userSlice.user);
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const redirect = useNavigate();
@@ -211,125 +211,124 @@ export default function AddParent() {
   };
 
   return (
-    <TransitionAnimation>
-      <div className="flex flex-col">
-        <Alert
-          status={alert.status}
-          state={alert.state}
-          title={alert.message.title}
-          description={alert.message.description}
-          close={(value) => toggleAlert(value)}
-        />
+    <div className="flex flex-col">
+      <Alert
+        status={alert.status}
+        state={alert.state}
+        title={alert.message.title}
+        description={alert.message.description}
+        close={(value) => toggleAlert(value)}
+      />
 
-        <Breadcrumb
-          theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
-          className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
-          aria-label="Breadcrumb"
-        >
-          <Breadcrumb.Item icon={FaHome}>
-            <Link
-              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-              to="/"
-            >
-              {minSm ? t("home") : ""}
-            </Link>
+      <Breadcrumb
+        theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
+        className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
+        aria-label="Breadcrumb"
+      >
+        <Breadcrumb.Item icon={FaHome}>
+          <Link
+            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+            to="/"
+          >
+            {minSm ? t("home") : ""}
+          </Link>
+        </Breadcrumb.Item>
+        {minSm ? (
+          <Breadcrumb.Item>
+            <span className="text-gray-600 dark:text-gray-300">
+              {t("parents")}
+            </span>
           </Breadcrumb.Item>
-          {minSm ? (
-            <Breadcrumb.Item>
-              <span className="text-gray-600 dark:text-gray-300">
-                {t("parents")}
-              </span>
-            </Breadcrumb.Item>
-          ) : (
-            <Breadcrumb.Item>...</Breadcrumb.Item>
-          )}
-          <Breadcrumb.Item>{t("new-parent")}</Breadcrumb.Item>
-        </Breadcrumb>
+        ) : (
+          <Breadcrumb.Item>...</Breadcrumb.Item>
+        )}
+        <Breadcrumb.Item>{t("new-parent")}</Breadcrumb.Item>
+      </Breadcrumb>
 
-        <Modal
-          show={openModal}
-          size={"4xl"}
-          theme={{
-            content: {
-              base: "relative h-full w-full p-4 md:h-auto",
-              inner:
-                "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-            },
-            body: {
-              base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
-              popup: "pt-0",
-            },
-          }}
-          onClose={onCloseModal}
-        >
-          <Modal.Header>{t("add-new-child")}</Modal.Header>
-          <div className="flex max-h-[70vh] flex-col p-2">
-            <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
-              <Input
-                id="search"
-                type="text"
-                icon={
-                  <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                }
-                label=""
-                onKeyUp={(e) => handleSearch(e.target)}
-                placeholder={fieldsTrans("filter-all")}
-                name="search"
-                custom-style={{
-                  inputStyle: "px-8 !py-1",
-                  labelStyle: "mb-0 !inline",
-                }}
-              />
-            </div>
-            <div className="flex flex-col gap-y-3 overflow-y-auto">
-              {getChildrensQuery.data?.data.map(
-                (child: Childs, key: number) =>
-                  child.name.search(new RegExp(searchValue, "i")) !== -1 && (
-                    <div>
-                      <Checkbox
-                        key={key}
-                        htmlFor={child.name}
-                        label={child.name}
-                        id={child.id}
-                        name="childrens"
-                        image={
-                          <img
-                            className="h-7 w-7 rounded-full"
-                            src={
-                              child?.imagePath
-                                ? SERVER_STORAGE + child?.imagePath
-                                : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                            }
-                            alt="profile"
-                          />
-                        }
-                        onChange={getSelectedChilds}
-                        checked={
-                          selectedChilds.includes(parseInt(child.id))
-                            ? true
-                            : false
-                        }
-                        value={child.name}
-                      />
-                    </div>
-                  ),
-              )}
-            </div>
+      <Modal
+        show={openModal}
+        size={"4xl"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
+            popup: "pt-0",
+          },
+        }}
+        onClose={onCloseModal}
+      >
+        <Modal.Header>{t("add-new-child")}</Modal.Header>
+        <div className="flex max-h-[70vh] flex-col p-2">
+          <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
+            <Input
+              id="search"
+              type="text"
+              icon={
+                <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+              }
+              label=""
+              onKeyUp={(e) => handleSearch(e.target)}
+              placeholder={fieldsTrans("filter-all")}
+              name="search"
+              custom-style={{
+                inputStyle: "px-8 !py-1",
+                labelStyle: "mb-0 !inline",
+              }}
+            />
           </div>
-          <Modal.Footer>
-            <button
-              type="submit"
-              className="btn-default !w-auto"
-              onClick={onCloseModal}
-            >
-              {fieldsTrans("accept")}
-            </button>
-            {/* <button className="btn-danger !w-auto" onClick={onCloseModal}>
+          <div className="flex flex-col gap-y-3 overflow-y-auto">
+            {getChildrensQuery.data?.data.map(
+              (child: Childs, key: number) =>
+                child.name.search(new RegExp(searchValue, "i")) !== -1 && (
+                  <div>
+                    <Checkbox
+                      key={key}
+                      htmlFor={child.name}
+                      label={child.name}
+                      id={child.id}
+                      name="childrens"
+                      image={
+                        <img
+                          className="h-7 w-7 rounded-full"
+                          src={
+                            child?.imagePath
+                              ? SERVER_STORAGE + child?.imagePath
+                              : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                          }
+                          alt="profile"
+                        />
+                      }
+                      onChange={getSelectedChilds}
+                      checked={
+                        selectedChilds.includes(parseInt(child.id))
+                          ? true
+                          : false
+                      }
+                      value={child.name}
+                    />
+                  </div>
+                ),
+            )}
+          </div>
+        </div>
+        <Modal.Footer>
+          <button
+            type="submit"
+            className="btn-default !w-auto"
+            onClick={onCloseModal}
+          >
+            {fieldsTrans("accept")}
+          </button>
+          {/* <button className="btn-danger !w-auto" onClick={onCloseModal}>
             {fieldsTrans("decline")}
           </button> */}
-          </Modal.Footer>
-        </Modal>
-
+        </Modal.Footer>
+      </Modal>
+      <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
@@ -511,7 +510,7 @@ export default function AddParent() {
             </form>
           </div>
         </div>
-      </div>
-    </TransitionAnimation>
+      </TransitionAnimation>
+    </div>
   );
 }

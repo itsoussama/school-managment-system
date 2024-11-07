@@ -25,7 +25,7 @@ body:has(.dark) #root {
   background-color: var(--dark-secondary);
 }
 
-.layout-content {
+.parent-animation {
   perspective: 500px;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;

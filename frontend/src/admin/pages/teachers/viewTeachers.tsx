@@ -191,7 +191,7 @@ export function ViewTeachers() {
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
-  const admin = useAppSelector((state) => state.user);
+  const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
@@ -671,481 +671,471 @@ export function ViewTeachers() {
   }, [getTeachersQuery.data, getTeachersQuery.isFetched]);
 
   return (
-    <TransitionAnimation>
-      <div className="flex w-full flex-col">
-        <Alert
-          status={alert.status}
-          state={alert.state}
-          title={alert.message.title}
-          description={alert.message.description}
-          close={(value) => toggleAlert(value)}
-        />
-        <Breadcrumb
-          theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
-          className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
-          aria-label="Breadcrumb"
+    <div className="flex w-full flex-col">
+      <Alert
+        status={alert.status}
+        state={alert.state}
+        title={alert.message.title}
+        description={alert.message.description}
+        close={(value) => toggleAlert(value)}
+      />
+      <Breadcrumb
+        theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
+        className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
+        aria-label="Breadcrumb"
+      >
+        <Link
+          className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          to="/"
         >
-          <Link
-            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-            to="/"
-          >
-            <Breadcrumb.Item icon={FaHome}>
-              {minSm ? t("home") : ""}
-            </Breadcrumb.Item>
-          </Link>
-          {minSm ? (
-            <Breadcrumb.Item>
-              <span className="text-gray-600 dark:text-gray-300">
-                {t("teachers")}
-              </span>
-            </Breadcrumb.Item>
-          ) : (
-            <Breadcrumb.Item>...</Breadcrumb.Item>
-          )}
-          <Breadcrumb.Item>{t("view-teachers")}</Breadcrumb.Item>
-        </Breadcrumb>
+          <Breadcrumb.Item icon={FaHome}>
+            {minSm ? t("home") : ""}
+          </Breadcrumb.Item>
+        </Link>
+        {minSm ? (
+          <Breadcrumb.Item>
+            <span className="text-gray-600 dark:text-gray-300">
+              {t("teachers")}
+            </span>
+          </Breadcrumb.Item>
+        ) : (
+          <Breadcrumb.Item>...</Breadcrumb.Item>
+        )}
+        <Breadcrumb.Item>{t("view-teachers")}</Breadcrumb.Item>
+      </Breadcrumb>
 
-        <Modal
-          show={openModal?.type === "view" ? openModal?.open : false}
-          // size={"md"}
-          theme={{
-            content: {
-              base: "relative h-full w-full p-4 md:h-auto",
-              inner:
-                "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-            },
-            body: {
-              base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
-              popup: "pt-0",
-            },
-          }}
-          onClose={onCloseModal}
-        >
+      <Modal
+        show={openModal?.type === "view" ? openModal?.open : false}
+        // size={"md"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
+            popup: "pt-0",
+          },
+        }}
+        onClose={onCloseModal}
+      >
+        <Modal.Header>
+          {t("teacher-id")}:<b> {openModal?.id}</b>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="flex flex-col gap-8 sm:flex-row">
+            <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+              <SkeletonProfile
+                imgSource={
+                  getTeacherQuery.data?.data.imagePath
+                    ? SERVER_STORAGE + getTeacherQuery.data?.data.imagePath
+                    : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.data.name).firstName}+${getUserName(getTeacherQuery.data?.data.name).lastName}`
+                }
+                className="h-40 w-40"
+              />
+              <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                  {t("active-deactivate")}
+                </span>
+                <ToggleSwitch
+                  theme={{
+                    toggle: {
+                      base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
+                    },
+                  }}
+                  checked={blockSwitch[getTeacherQuery.data?.data.id] || false}
+                  onChange={() =>
+                    setOpenModal({
+                      id: getTeacherQuery.data?.data.id,
+                      type: "block",
+                      open: true,
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
+              <div className="w-full space-y-3">
+                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
+                  {t("personal-information")}
+                </h1>
+                <SkeletonContent isLoaded={getTeacherQuery.isFetched}>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("first-name")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        {getUserName(getTeacherQuery.data?.data.name).firstName}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("last-name")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        {getUserName(getTeacherQuery.data?.data.name).lastName}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("email")}:
+                      </span>
+                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                        {getTeacherQuery.data?.data.email}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("phone-number")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        {getTeacherQuery.data?.data.phone}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("address")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        123 Rue Principale
+                      </span>
+                    </div>
+                  </div>
+                </SkeletonContent>
+              </div>
+
+              <div className="w-full space-y-3">
+                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
+                  {t("academic-information")}
+                </h1>
+                <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                  <div className="flex flex-col">
+                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
+                      {fieldTrans("subjects")}:
+                    </span>
+                    <div className="flex w-max max-w-36 flex-wrap">
+                      {getTeacherQuery.data?.data.subjects.map(
+                        (subject: Subject, index: number) => (
+                          <Badge
+                            key={index}
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {subject.name}
+                          </Badge>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
+                      {fieldTrans("grade-levels")}:
+                    </span>
+                    <div className="flex w-max max-w-36 flex-wrap">
+                      {getTeacherQuery.data?.data.grades.map(
+                        (grade: Grade, index: number) => (
+                          <Badge
+                            key={index}
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {grade.label}
+                          </Badge>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                      {fieldTrans("start-date")}:
+                    </span>
+                    <span className="text-base text-gray-900 dark:text-white">
+                      2024/01/01
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
+        show={openModal?.type === "edit" ? openModal?.open : false}
+        size={"4xl"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
+            popup: "pt-0",
+          },
+        }}
+        onClose={onCloseModal}
+      >
+        <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
             {t("teacher-id")}:<b> {openModal?.id}</b>
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+              <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
                   imgSource={
-                    getTeacherQuery.data?.data.imagePath
-                      ? SERVER_STORAGE + getTeacherQuery.data?.data.imagePath
-                      : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.data.name).firstName}+${getUserName(getTeacherQuery.data?.data.name).lastName}`
+                    previewImg
+                      ? previewImg
+                      : getTeacherQuery.data?.data.imagePath
+                        ? SERVER_STORAGE + getTeacherQuery.data?.data.imagePath
+                        : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.data.name).firstName}+${getUserName(getTeacherQuery.data?.data.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
-                <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
-                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                    {t("active-deactivate")}
-                  </span>
-                  <ToggleSwitch
-                    theme={{
-                      toggle: {
-                        base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                      },
-                    }}
-                    checked={
-                      blockSwitch[getTeacherQuery.data?.data.id] || false
-                    }
-                    onChange={() =>
-                      setOpenModal({
-                        id: getTeacherQuery.data?.data.id,
-                        type: "block",
-                        open: true,
-                      })
-                    }
+
+                <button className="btn-gray relative overflow-hidden">
+                  <input
+                    type="file"
+                    className="absolute left-0 top-0 cursor-pointer opacity-0"
+                    onChange={handleImageUpload}
                   />
+                  {fieldTrans("upload-photo")}
+                </button>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-700 dark:text-gray-500">
+                    {t("accepted-format")}:{" "}
+                    <span className="text-gray-500 dark:text-gray-400">
+                      jpg, jpeg, png
+                    </span>
+                  </span>
+                  <span className="text-xs text-gray-700 dark:text-gray-500">
+                    {t("maximum-size")}:{" "}
+                    <span className="text-gray-500 dark:text-gray-400">
+                      1024 mb
+                    </span>
+                  </span>
                 </div>
               </div>
-              <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
+              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                     {t("personal-information")}
                   </h1>
-                  <SkeletonContent isLoaded={getTeacherQuery.isFetched}>
-                    <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("first-name")}:
-                        </span>
-                        <span className="text-base text-gray-900 dark:text-white">
-                          {
-                            getUserName(getTeacherQuery.data?.data.name)
-                              .firstName
-                          }
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("last-name")}:
-                        </span>
-                        <span className="text-base text-gray-900 dark:text-white">
-                          {
-                            getUserName(getTeacherQuery.data?.data.name)
-                              .lastName
-                          }
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("email")}:
-                        </span>
-                        <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                          {getTeacherQuery.data?.data.email}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("phone-number")}:
-                        </span>
-                        <span className="text-base text-gray-900 dark:text-white">
-                          {getTeacherQuery.data?.data.phone}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("address")}:
-                        </span>
-                        <span className="text-base text-gray-900 dark:text-white">
-                          123 Rue Principale
-                        </span>
-                      </div>
-                    </div>
-                  </SkeletonContent>
-                </div>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                    <Input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      label={fieldTrans("first-name")}
+                      placeholder={fieldTrans("first-name-placeholder")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getTeacherQuery.isFetching && true}
+                      value={data?.firstName}
+                      onChange={onChange}
+                    />
 
-                <div className="w-full space-y-3">
-                  <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("academic-information")}
-                  </h1>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("subjects")}:
-                      </span>
-                      <div className="flex w-max max-w-36 flex-wrap">
-                        {getTeacherQuery.data?.data.subjects.map(
-                          (subject: Subject, index: number) => (
-                            <Badge
-                              key={index}
-                              color={badgeColor[index % badgeColor.length]}
-                              className="mb-1 me-1 rounded-xs"
-                            >
-                              {subject.name}
-                            </Badge>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("grade-levels")}:
-                      </span>
-                      <div className="flex w-max max-w-36 flex-wrap">
-                        {getTeacherQuery.data?.data.grades.map(
-                          (grade: Grade, index: number) => (
-                            <Badge
-                              key={index}
-                              color={badgeColor[index % badgeColor.length]}
-                              className="mb-1 me-1 rounded-xs"
-                            >
-                              {grade.label}
-                            </Badge>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("start-date")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        2024/01/01
-                      </span>
-                    </div>
+                    <Input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      label={fieldTrans("last-name")}
+                      placeholder={fieldTrans("last-name-placeholder")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getTeacherQuery.isFetching && true}
+                      value={data?.lastName}
+                      onChange={onChange}
+                    />
+
+                    <Input
+                      type="text"
+                      id="address"
+                      name="address"
+                      label={fieldTrans("address")}
+                      placeholder={fieldTrans("address-placeholder")}
+                      value="123 Rue Principale"
+                      onChange={(e) => console.log(e.target.value)}
+                      custom-style={{ containerStyle: "col-span-full" }}
+                    />
+
+                    <Input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      label={fieldTrans("phone-number")}
+                      placeholder="06 00 00 00"
+                      pattern="(06|05)[0-9]{6}"
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getTeacherQuery.isFetching && true}
+                      value={data?.phone}
+                      onChange={onChange}
+                    />
+
+                    <Input
+                      type="email"
+                      id="email"
+                      name="email"
+                      label={fieldTrans("email")}
+                      placeholder={fieldTrans("email-placeholder")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getTeacherQuery.isFetching && true}
+                      value={data?.email}
+                      onChange={onChange}
+                    />
+
+                    <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
+
+                    {changePassword ? (
+                      <>
+                        <Input
+                          type="password"
+                          id="password"
+                          name="password"
+                          label={fieldTrans("password")}
+                          placeholder="●●●●●●●"
+                          error={formError.password}
+                          value={data?.password}
+                          custom-style={{
+                            inputStyle: "px-10",
+                          }}
+                          icon={
+                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          }
+                          onChange={onChange}
+                        />
+
+                        <Input
+                          type="password"
+                          id="confirm_password"
+                          name="confirm_password"
+                          label={fieldTrans("confirm-password")}
+                          placeholder="●●●●●●●"
+                          error={formError.confirm_password}
+                          value={data?.confirm_password}
+                          custom-style={{
+                            inputStyle: "px-10",
+                          }}
+                          icon={
+                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          }
+                          onChange={onChange}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => toggleChangePassword(true)}
+                          className="btn-default !w-auto"
+                        >
+                          {t("change-password-btn")}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </Modal.Body>
-        </Modal>
+          <Modal.Footer>
+            <button type="submit" className="btn-default !w-auto">
+              {fieldTrans("accept")}
+            </button>
+            <button className="btn-danger !w-auto" onClick={onCloseModal}>
+              {fieldTrans("decline")}
+            </button>
+          </Modal.Footer>
+        </form>
+      </Modal>
 
-        <Modal
-          show={openModal?.type === "edit" ? openModal?.open : false}
-          size={"4xl"}
-          theme={{
-            content: {
-              base: "relative h-full w-full p-4 md:h-auto",
-              inner:
-                "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-            },
-            body: {
-              base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
-              popup: "pt-0",
-            },
-          }}
-          onClose={onCloseModal}
-        >
-          <form onSubmit={onSubmitUpdate}>
-            <Modal.Header>
-              {t("teacher-id")}:<b> {openModal?.id}</b>
-            </Modal.Header>
-            <Modal.Body>
-              <div className="flex flex-col gap-8 sm:flex-row">
-                <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-                  <SkeletonProfile
-                    imgSource={
-                      previewImg
-                        ? previewImg
-                        : getTeacherQuery.data?.data.imagePath
-                          ? SERVER_STORAGE +
-                            getTeacherQuery.data?.data.imagePath
-                          : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.data.name).firstName}+${getUserName(getTeacherQuery.data?.data.name).lastName}`
-                    }
-                    className="h-40 w-40"
-                  />
-
-                  <button className="btn-gray relative overflow-hidden">
-                    <input
-                      type="file"
-                      className="absolute left-0 top-0 cursor-pointer opacity-0"
-                      onChange={handleImageUpload}
-                    />
-                    {fieldTrans("upload-photo")}
-                  </button>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-gray-700 dark:text-gray-500">
-                      {t("accepted-format")}:{" "}
-                      <span className="text-gray-500 dark:text-gray-400">
-                        jpg, jpeg, png
-                      </span>
-                    </span>
-                    <span className="text-xs text-gray-700 dark:text-gray-500">
-                      {t("maximum-size")}:{" "}
-                      <span className="text-gray-500 dark:text-gray-400">
-                        1024 mb
-                      </span>
-                    </span>
-                  </div>
-                </div>
-                <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
-                  <div className="w-full space-y-3">
-                    <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                      {t("personal-information")}
-                    </h1>
-                    <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                      <Input
-                        type="text"
-                        id="firstName"
-                        name="firstName"
-                        label={fieldTrans("first-name")}
-                        placeholder={fieldTrans("first-name-placeholder")}
-                        custom-style={{ inputStyle: "disabled:opacity-50" }}
-                        disabled={getTeacherQuery.isFetching && true}
-                        value={data?.firstName}
-                        onChange={onChange}
-                      />
-
-                      <Input
-                        type="text"
-                        id="lastName"
-                        name="lastName"
-                        label={fieldTrans("last-name")}
-                        placeholder={fieldTrans("last-name-placeholder")}
-                        custom-style={{ inputStyle: "disabled:opacity-50" }}
-                        disabled={getTeacherQuery.isFetching && true}
-                        value={data?.lastName}
-                        onChange={onChange}
-                      />
-
-                      <Input
-                        type="text"
-                        id="address"
-                        name="address"
-                        label={fieldTrans("address")}
-                        placeholder={fieldTrans("address-placeholder")}
-                        value="123 Rue Principale"
-                        onChange={(e) => console.log(e.target.value)}
-                        custom-style={{ containerStyle: "col-span-full" }}
-                      />
-
-                      <Input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        label={fieldTrans("phone-number")}
-                        placeholder="06 00 00 00"
-                        pattern="(06|05)[0-9]{6}"
-                        custom-style={{ inputStyle: "disabled:opacity-50" }}
-                        disabled={getTeacherQuery.isFetching && true}
-                        value={data?.phone}
-                        onChange={onChange}
-                      />
-
-                      <Input
-                        type="email"
-                        id="email"
-                        name="email"
-                        label={fieldTrans("email")}
-                        placeholder={fieldTrans("email-placeholder")}
-                        custom-style={{ inputStyle: "disabled:opacity-50" }}
-                        disabled={getTeacherQuery.isFetching && true}
-                        value={data?.email}
-                        onChange={onChange}
-                      />
-
-                      <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
-
-                      {changePassword ? (
-                        <>
-                          <Input
-                            type="password"
-                            id="password"
-                            name="password"
-                            label={fieldTrans("password")}
-                            placeholder="●●●●●●●"
-                            error={formError.password}
-                            value={data?.password}
-                            custom-style={{
-                              inputStyle: "px-10",
-                            }}
-                            icon={
-                              <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                            }
-                            onChange={onChange}
-                          />
-
-                          <Input
-                            type="password"
-                            id="confirm_password"
-                            name="confirm_password"
-                            label={fieldTrans("confirm-password")}
-                            placeholder="●●●●●●●"
-                            error={formError.confirm_password}
-                            value={data?.confirm_password}
-                            custom-style={{
-                              inputStyle: "px-10",
-                            }}
-                            icon={
-                              <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                            }
-                            onChange={onChange}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => toggleChangePassword(true)}
-                            className="btn-default !w-auto"
-                          >
-                            {t("change-password-btn")}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
+      <Modal
+        show={openModal?.type === "delete" ? openModal?.open : false}
+        onClose={onCloseModal}
+        size={"md"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6",
+            popup: "pt-0",
+          },
+        }}
+      >
+        <form onSubmit={onSubmitDelete}>
+          <Modal.Header>{t("delete-modal")}</Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-x-8">
+              <p className="mb-3 text-gray-600 dark:text-gray-300">
+                {t("delete-modal-title")}{" "}
+                <b>{getTeacherQuery.data?.data.name}</b>
+              </p>
+              <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
+                <FaExclamationTriangle className="text-white" size={53} />
+                <p className="text-white">{t("delete-modal-message")}</p>
               </div>
-            </Modal.Body>
-            <Modal.Footer>
-              <button type="submit" className="btn-default !w-auto">
-                {fieldTrans("accept")}
-              </button>
-              <button className="btn-danger !w-auto" onClick={onCloseModal}>
-                {fieldTrans("decline")}
-              </button>
-            </Modal.Footer>
-          </form>
-        </Modal>
+              <p className="text-gray-900 dark:text-white">
+                {t("delete-modal-label")}{" "}
+                <b>{getTeacherQuery.data?.data.name}</b>
+              </p>
+              <Input
+                type="text"
+                id="verfication"
+                name="verfication"
+                placeholder="John doe"
+                error={!isVerficationMatch ? t("delete-modal-error") : null}
+                required
+              />
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <button type="submit" className="btn-danger !w-auto">
+              {t("delete-modal-delete-btn")}
+            </button>
+            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+              {t("delete-modal-cancel-btn")}
+            </button>
+          </Modal.Footer>
+        </form>
+      </Modal>
 
-        <Modal
-          show={openModal?.type === "delete" ? openModal?.open : false}
-          onClose={onCloseModal}
-          size={"md"}
-          theme={{
-            content: {
-              base: "relative h-full w-full p-4 md:h-auto",
-              inner:
-                "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-            },
-            body: {
-              base: "p-6",
-              popup: "pt-0",
-            },
-          }}
-        >
-          <form onSubmit={onSubmitDelete}>
-            <Modal.Header>{t("delete-modal")}</Modal.Header>
-            <Modal.Body>
-              <div className="flex flex-col gap-x-8">
-                <p className="mb-3 text-gray-600 dark:text-gray-300">
-                  {t("delete-modal-title")}{" "}
-                  <b>{getTeacherQuery.data?.data.name}</b>
-                </p>
-                <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                  <FaExclamationTriangle className="text-white" size={53} />
-                  <p className="text-white">{t("delete-modal-message")}</p>
-                </div>
-                <p className="text-gray-900 dark:text-white">
-                  {t("delete-modal-label")}{" "}
-                  <b>{getTeacherQuery.data?.data.name}</b>
-                </p>
-                <Input
-                  type="text"
-                  id="verfication"
-                  name="verfication"
-                  placeholder="John doe"
-                  error={!isVerficationMatch ? t("delete-modal-error") : null}
-                  required
-                />
-              </div>
-            </Modal.Body>
-            <Modal.Footer>
-              <button type="submit" className="btn-danger !w-auto">
-                {t("delete-modal-delete-btn")}
-              </button>
-              <button className="btn-outline !w-auto" onClick={onCloseModal}>
-                {t("delete-modal-cancel-btn")}
-              </button>
-            </Modal.Footer>
-          </form>
-        </Modal>
-
-        {/* block / unblock user */}
-        <Modal
-          show={openModal?.type === "block" ? openModal?.open : false}
-          onClose={onCloseModal}
-          size={"md"}
-          theme={{
-            content: {
-              base: "relative h-full w-full p-4 md:h-auto",
-              inner:
-                "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-            },
-            body: {
-              base: "p-6",
-              popup: "pt-0",
-            },
-          }}
-        >
-          <form onSubmit={onSubmitBlock}>
-            <Modal.Header>{t("block-modal")}</Modal.Header>
-            <Modal.Body>
-              <div className="flex flex-col gap-x-8">
-                <p className="mb-3 text-gray-600 dark:text-gray-300">
-                  {t("block-modal-title")}{" "}
-                  <b>{getTeacherQuery.data?.data.name}</b>
-                </p>
-                {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
+      {/* block / unblock user */}
+      <Modal
+        show={openModal?.type === "block" ? openModal?.open : false}
+        onClose={onCloseModal}
+        size={"md"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6",
+            popup: "pt-0",
+          },
+        }}
+      >
+        <form onSubmit={onSubmitBlock}>
+          <Modal.Header>{t("block-modal")}</Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-x-8">
+              <p className="mb-3 text-gray-600 dark:text-gray-300">
+                {t("block-modal-title")}{" "}
+                <b>{getTeacherQuery.data?.data.name}</b>
+              </p>
+              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
                 <p className="text-white">{t("delete-modal-message")}</p>
               </div> */}
-                {/* <p className="text-gray-900 dark:text-white">
+              {/* <p className="text-gray-900 dark:text-white">
                 {t("delete-modal-label")}{" "}
                 <b>{getParentQuery.data?.data.name}</b>
               </p> */}
-                {/* <Input
+              {/* <Input
                 type="text"
                 id="verfication"
                 name="verfication"
@@ -1155,21 +1145,21 @@ export function ViewTeachers() {
                 }
                 required
               /> */}
-              </div>
-            </Modal.Body>
-            <Modal.Footer>
-              <button type="submit" className="btn-danger !w-auto">
-                {getTeacherQuery.data?.data.blocked == 0
-                  ? t("block-modal-block-btn")
-                  : t("block-modal-unblock-btn")}
-              </button>
-              <button className="btn-outline !w-auto" onClick={onCloseModal}>
-                {t("block-modal-cancel-btn")}
-              </button>
-            </Modal.Footer>
-          </form>
-        </Modal>
-
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <button type="submit" className="btn-danger !w-auto">
+              {getTeacherQuery.data?.data.blocked == 0
+                ? t("block-modal-block-btn")
+                : t("block-modal-unblock-btn")}
+            </button>
+            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+              {t("block-modal-cancel-btn")}
+            </button>
+          </Modal.Footer>
+        </form>
+      </Modal>
+      <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
           {checks.find((val) => val.status === true) ? (
             <div className="flex w-full justify-between px-5 py-4">
@@ -1595,7 +1585,7 @@ export function ViewTeachers() {
             </div>
           </div>
         </div>
-      </div>
-    </TransitionAnimation>
+      </TransitionAnimation>
+    </div>
   );
 }
