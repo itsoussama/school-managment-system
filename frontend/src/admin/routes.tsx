@@ -8,6 +8,7 @@ import AddParent from "@admin/pages/parents/addParent";
 import { ViewParents } from "@admin/pages/parents/viewParents";
 import Dashboard from "@admin/pages/dashboard";
 import DataManagement from "@admin/pages/configuration/dataManagement";
+import { TransitionAnimation } from "@src/components/animation";
 
 export const AdminRouter = {
   path: "/",

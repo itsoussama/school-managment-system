@@ -25,6 +25,13 @@ body:has(.dark) #root {
   background-color: var(--dark-secondary);
 }
 
+.layout-content {
+  perspective: 500px;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  -webkit-perspective: 500px;
+}
+
 @media (min-width: 640px) {
   body {
     height: 100vh;

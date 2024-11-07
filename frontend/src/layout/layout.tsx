@@ -335,7 +335,9 @@ export function Layout({ children, menu }: Layout) {
             document.body,
           )}
         </div>
-        <div className="mx-6 my-4 pb-20 pt-16 sm:m-0 sm:p-0">{children}</div>
+        <div className="layout-content mx-6 my-4 pb-20 pt-16 sm:m-0 sm:p-0">
+          {children}
+        </div>
         <TabBar>
           <TabBar.Item
             icon={<FaChartPie size={20} />}
