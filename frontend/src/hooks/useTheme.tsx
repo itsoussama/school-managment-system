@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAppDispatch } from "./useReduxEvent";
+import { toggleThemeMode } from "@src/features/redux/themeModeSlice";
 
 type Theme = "dark" | "light";
 
@@ -8,6 +10,7 @@ export function UseTheme() {
   const [state, setState] = useState<Theme>(
     (localstorage.getItem("color-preferd") as Theme) ?? "dark",
   );
+  const dispatch = useAppDispatch();
 
   // todo: check if there is no initial value in the localstorage then add the default mode based on the device mode
   // todo: when changing mode we want to change also the value in the local storage
@@ -16,13 +19,15 @@ export function UseTheme() {
     (ev: MediaQueryListEvent) => {
       if (ev.matches) {
         setState("dark");
+        dispatch(toggleThemeMode("dark"));
         localstorage.setItem("color-preferd", "dark");
       } else {
         setState("light");
+        dispatch(toggleThemeMode("light"));
         localstorage.setItem("color-preferd", "light");
       }
     },
-    [localstorage],
+    [localstorage, dispatch],
   );
 
   const updateTheme = (value: Theme) => setState(value);

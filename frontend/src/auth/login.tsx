@@ -187,6 +187,7 @@ export default function Login() {
                   name="remember"
                   id="remember"
                   label="Remember me"
+                  htmlFor="remember"
                   onChange={handleChange}
                 />
                 <Link

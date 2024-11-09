@@ -2,7 +2,7 @@ import { Input, MultiSelect, Checkbox } from "@components/input";
 import { addParent, getStudents } from "@api";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb, Modal } from "flowbite-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock, FaPlus, FaSearch } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,7 +10,6 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
 import Alert from "@src/components/alert";
-import { DropdownListButton } from "@src/components/dropdown";
 import { TransitionAnimation } from "@src/components/animation";
 
 export interface FormData {
@@ -108,6 +107,8 @@ export default function AddParent() {
     const childId = childs.map((childs) => parseInt(childs.id));
     setSelectedChilds(childId);
     setDataChild(childs);
+
+    handleChange("childrens", childId);
   };
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -210,6 +211,10 @@ export default function AddParent() {
     }
   };
 
+  useEffect(() => {
+    handleChange("childrens", selectedChilds);
+  }, [selectedChilds]);
+
   return (
     <div className="flex flex-col">
       <Alert
@@ -287,7 +292,7 @@ export default function AddParent() {
                   <div>
                     <Checkbox
                       key={key}
-                      htmlFor={child.name}
+                      htmlFor={child.id}
                       label={child.name}
                       id={child.id}
                       name="childrens"
@@ -297,7 +302,7 @@ export default function AddParent() {
                           src={
                             child?.imagePath
                               ? SERVER_STORAGE + child?.imagePath
-                              : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                              : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
                           }
                           alt="profile"
                         />

@@ -48,7 +48,6 @@ export default function Alert({
   }, [close]);
 
   useEffect(() => {
-    console.log(ALERT_DURATION);
     const alertTimeOut = setTimeout(resetAlert, ALERT_DURATION);
     return () => {
       clearTimeout(alertTimeOut);

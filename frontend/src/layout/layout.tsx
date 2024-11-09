@@ -25,6 +25,7 @@ import { useLocation, useMatch, useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import ReactDOM from "react-dom";
 import { TabBar } from "@src/components/tabBar";
+import { toggleThemeMode } from "@src/features/redux/themeModeSlice";
 // import { MegaMenu } from "flowbite-react";
 
 interface Layout {
@@ -235,7 +236,7 @@ export function Layout({ children, menu }: Layout) {
                       src={
                         authUser.imagePath
                           ? SERVER_STORAGE + authUser.imagePath
-                          : `https://avatar.iran.liara.run/username?username=${getUserName(authUser.name).firstName}+${getUserName(authUser.name).lastName}`
+                          : `https://ui-avatars.com/api/?background=random&name=${getUserName(authUser.name).firstName}+${getUserName(authUser.name).lastName}`
                       }
                       alt="profile"
                     />
@@ -276,12 +277,16 @@ export function Layout({ children, menu }: Layout) {
               {theme === "dark" ? (
                 <MdLightMode
                   className="cursor-pointer text-xl text-gray-500"
-                  onClick={() => setTheme("light")}
+                  onClick={() => (
+                    setTheme("light"), dispatch(toggleThemeMode("light"))
+                  )}
                 />
               ) : (
                 <MdDarkMode
                   className="cursor-pointer text-xl text-gray-500"
-                  onClick={() => setTheme("dark")}
+                  onClick={() => (
+                    setTheme("dark"), dispatch(toggleThemeMode("dark"))
+                  )}
                 />
               )}
             </div>

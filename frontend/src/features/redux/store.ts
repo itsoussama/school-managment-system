@@ -1,10 +1,12 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import userSlice from "@redux/userSlice";
 import animationSlice from "@redux/animationSlice";
+import themeModeSlice from "@redux/themeModeSlice";
 
 const rootReducer = combineReducers({
   userSlice,
-  animationSlice
+  animationSlice,
+  themeModeSlice
 })
 export const store = configureStore({
     reducer: rootReducer,

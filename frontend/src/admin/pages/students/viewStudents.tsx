@@ -743,7 +743,7 @@ export function ViewStudents() {
                 imgSource={
                   getStudentQuery.data?.data.imagePath
                     ? SERVER_STORAGE + getStudentQuery.data?.data.imagePath
-                    : `https://avatar.iran.liara.run/username?username=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
+                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
                 }
                 className="h-40 w-40"
               />
@@ -835,7 +835,7 @@ export function ViewStudents() {
                               getStudentQuery.data?.data.guardian.imagePath
                                 ? SERVER_STORAGE +
                                   getStudentQuery.data?.data.guardian.imagePath
-                                : `https://avatar.iran.liara.run/username?username=${getUserName(getStudentQuery.data?.data.guardian.name).firstName}+${getUserName(getStudentQuery.data?.data.guardian.name).lastName}`
+                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.data.guardian.name).firstName}+${getUserName(getStudentQuery.data?.data.guardian.name).lastName}`
                             }
                             alt="profile"
                           />
@@ -930,7 +930,7 @@ export function ViewStudents() {
                       ? previewImg
                       : getStudentQuery.data?.data.imagePath
                         ? SERVER_STORAGE + getStudentQuery.data?.data.imagePath
-                        : `https://avatar.iran.liara.run/username?username=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
+                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
@@ -1472,7 +1472,7 @@ export function ViewStudents() {
                                   student.guardian.imagePath
                                     ? SERVER_STORAGE +
                                       student.guardian.imagePath
-                                    : `https://avatar.iran.liara.run/username?username=${getUserName(student.guardian.name).firstName}+${getUserName(student.guardian.name).lastName}`
+                                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(student.guardian.name).firstName}+${getUserName(student.guardian.name).lastName}`
                                 }
                                 alt="profile"
                               />

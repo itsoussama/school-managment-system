@@ -1,4 +1,5 @@
 import useBreakpoint from "@hooks/useBreakpoint";
+import { TransitionAnimation } from "@src/components/animation";
 import { RSelect } from "@src/components/input";
 import { exportUser } from "@src/features/api";
 import { Breadcrumb } from "flowbite-react";
@@ -70,40 +71,41 @@ export default function DataManagement() {
         )}
         <Breadcrumb.Item>{t("data-management")}</Breadcrumb.Item>
       </Breadcrumb>
-
-      <div className="flex flex-wrap gap-5">
-        <div className="item flex min-w-72 flex-1 flex-col gap-4">
-          <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {t("import-export")}
-            </h1>
-          </div>
-          <div>
-            <form
-              action=""
-              onSubmit={onSubmit}
-              className="relative grid grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark sm:grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] dark:bg-dark-primary dark:shadow-sharp-light"
-            >
-              <RSelect
-                id="date"
-                name="test"
-                label={tfield("date")}
-                custom-style={{ inputStyle: "disabled:disable" }}
-                // disabled
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
-                defaultValue={""}
+      <TransitionAnimation>
+        <div className="flex flex-wrap gap-5">
+          <div className="item flex min-w-72 flex-1 flex-col gap-4">
+            <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {t("import-export")}
+              </h1>
+            </div>
+            <div>
+              <form
+                action=""
+                onSubmit={onSubmit}
+                className="relative grid grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark sm:grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] dark:bg-dark-primary dark:shadow-sharp-light"
               >
-                <option value="">None</option>
-                <option value="2024">2024</option>
-              </RSelect>
+                <RSelect
+                  id="date"
+                  name="test"
+                  label={tfield("date")}
+                  custom-style={{ inputStyle: "disabled:disable" }}
+                  // disabled
+                  onChange={(e) => handleChange(e.target.id, e.target.value)}
+                  defaultValue={""}
+                >
+                  <option value="">None</option>
+                  <option value="2024">2024</option>
+                </RSelect>
 
-              <button className="btn-default m-0 mt-auto" type="submit">
-                {tfield("btn-export")}
-              </button>
-            </form>
+                <button className="btn-default m-0 mt-auto" type="submit">
+                  {tfield("btn-export")}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
+      </TransitionAnimation>
     </div>
   );
 }

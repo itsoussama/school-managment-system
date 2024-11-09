@@ -299,7 +299,7 @@ export default function AddTeacher() {
                   (subject: Subject, key: number) => (
                     <Checkbox
                       key={key}
-                      htmlFor={subject.name}
+                      htmlFor={subject.id}
                       label={subject.name}
                       id={subject.id}
                       name="subjects"
@@ -323,7 +323,7 @@ export default function AddTeacher() {
                   (grade: Grades, key: number) => (
                     <Checkbox
                       key={key}
-                      htmlFor={grade.label}
+                      htmlFor={grade.id}
                       label={grade.label}
                       id={grade.id}
                       name="grades"

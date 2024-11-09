@@ -741,7 +741,7 @@ export function ViewParents() {
                 imgSource={
                   getParentQuery.data?.data.imagePath
                     ? SERVER_STORAGE + getParentQuery.data?.data.imagePath
-                    : `https://avatar.iran.liara.run/username?username=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
+                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
                 }
                 className="h-40 w-40"
               />
@@ -840,7 +840,7 @@ export function ViewParents() {
                               src={
                                 child?.imagePath
                                   ? SERVER_STORAGE + child?.imagePath
-                                  : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                  : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
                               }
                               alt="profile"
                             />
@@ -900,7 +900,7 @@ export function ViewParents() {
                       ? previewImg
                       : getParentQuery.data?.data.imagePath
                         ? SERVER_STORAGE + getParentQuery.data?.data.imagePath
-                        : `https://avatar.iran.liara.run/username?username=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
+                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
@@ -1402,7 +1402,7 @@ export function ViewParents() {
                                         src={
                                           child?.imagePath
                                             ? SERVER_STORAGE + child?.imagePath
-                                            : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
                                         }
                                         alt="profile"
                                       />
@@ -1423,7 +1423,7 @@ export function ViewParents() {
                                         src={
                                           child?.imagePath
                                             ? SERVER_STORAGE + child?.imagePath
-                                            : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
                                         }
                                         alt="profile"
                                       />
@@ -1441,7 +1441,7 @@ export function ViewParents() {
                                     parent.childrens[0]?.imagePath
                                       ? SERVER_STORAGE +
                                         parent.childrens[0]?.imagePath
-                                      : `https://avatar.iran.liara.run/username?username=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
+                                      : `https://ui-avatars.com/api/?background=random&name=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
                                   }
                                   alt="profile"
                                 />
@@ -1476,7 +1476,7 @@ export function ViewParents() {
                                       img={
                                         child.imagePath
                                           ? SERVER_STORAGE + child.imagePath
-                                          : `https://avatar.iran.liara.run/username?username=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
+                                          : `https://ui-avatars.com/api/?background=random&name=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
                                       }
                                       name={child.name}
                                     />

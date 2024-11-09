@@ -186,10 +186,10 @@ function MultiSelect({
   name,
   onSelectItem,
   children,
-  externalSelectedItems = [],
-}: MultiSelectProps & { externalSelectedItems?: SelectedData[] }) {
+  externalSelectedItems = null,
+}: MultiSelectProps & { externalSelectedItems?: SelectedData[] | null }) {
   const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>(
-    externalSelectedItems,
+    externalSelectedItems ?? [],
   );
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [dropdownStyles, setDropdownStyles] = useState<{
@@ -294,7 +294,9 @@ function MultiSelect({
 
   useEffect(() => {
     // Check if externalSelectedItems is different from selectedItems
-    if (externalSelectedItems && externalSelectedItems.length) {
+    if (externalSelectedItems) {
+      console.log(externalSelectedItems);
+
       setSelectedItems(externalSelectedItems);
     }
   }, [externalSelectedItems]);

@@ -643,8 +643,6 @@ export function ViewTeachers() {
   };
 
   useEffect(() => {
-    console.log("checks");
-
     checks?.map((item) => {
       const checkboxElem = document.getElementById(
         item.id?.toString() as string,

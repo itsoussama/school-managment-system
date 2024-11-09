@@ -293,7 +293,7 @@ export default function AddStudent() {
                   (grade: Grades, key: number) => (
                     <Checkbox
                       key={key}
-                      htmlFor={grade.label}
+                      htmlFor={grade.id}
                       label={grade.label}
                       id={grade.id}
                       name="grades"
