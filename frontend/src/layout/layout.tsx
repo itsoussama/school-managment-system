@@ -48,7 +48,7 @@ export function Layout({ children, menu }: Layout) {
   const [isFullScreen, toggleFullScreen] = useState<boolean>(false);
   const [dateTime, setDateTime] = useState<DateTime>({ date: "", time: "" });
   const minXxl = useBreakpoint("min", "2xl");
-  const authUser = useAppSelector((state) => state.user);
+  const authUser = useAppSelector((state) => state.userSlice.user);
   const dispatch = useAppDispatch();
   const route = useNavigate();
   const mobileMenuRef = useRef<HTMLDivElement>(null);

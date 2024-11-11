@@ -435,9 +435,10 @@ class UserController extends Controller
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
     }
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new UsersExport, 'users.xlsx');
+        $filters = $request->only(['name', 'email']);
+        return Excel::download(new UsersExport($filters), 'users.xlsx');
     }
 
     public function import(Request $request)

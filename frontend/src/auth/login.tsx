@@ -35,7 +35,7 @@ export default function Login() {
   // const [isPasswordHidden, setIsPasswordHidden] = useState<boolean>(true);
 
   // selector
-  const auth = useAppSelector((state) => state);
+  const auth = useAppSelector((state) => state.userSlice);
 
   // dispatcher
   const dispatch = useAppDispatch();

@@ -57,6 +57,7 @@ import AddChildModal from "@src/admin/components/addChildModal";
 import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
 import Alert from "@src/components/alert";
 import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
+import { TransitionAnimation } from "@src/components/animation";
 
 interface Check {
   id?: number;
@@ -198,7 +199,7 @@ export function ViewParents() {
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
-  const admin = useAppSelector((state) => state.user);
+  const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
@@ -1181,324 +1182,329 @@ export function ViewParents() {
         school_id={openChildModal?.school_id}
       />
 
-      <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
-        {checkAll.find((val) => val.status === true) ? (
-          <div className="flex w-full justify-between px-5 py-4">
-            <div className="flex items-center gap-x-4">
-              {/* <CheckboxDropdown /> */}
+      <TransitionAnimation>
+        <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
+          {checkAll.find((val) => val.status === true) ? (
+            <div className="flex w-full justify-between px-5 py-4">
+              <div className="flex items-center gap-x-4">
+                {/* <CheckboxDropdown /> */}
 
-              <button className="btn-danger !m-0 flex w-max items-center">
-                <FaTrash className="mr-2 text-white" />
+                <button className="btn-danger !m-0 flex w-max items-center">
+                  <FaTrash className="mr-2 text-white" />
 
-                {t("delete-records")}
-                <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checkAll)}`}</span>
-              </button>
+                  {t("delete-records")}
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checkAll)}`}</span>
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          ""
-        )}
+          ) : (
+            ""
+          )}
 
-        <div className="w-full overflow-x-auto rounded-lg">
-          <Table
-            theme={{
-              root: {
-                base: "w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
-                shadow:
-                  "absolute left-0 top-0 -z-10 h-full w-full rounded-s bg-white drop-shadow-md dark:bg-black",
-                wrapper: "",
-              },
-              body: {
-                cell: {
-                  base: "px-6 py-4",
+          <div className="w-full overflow-x-auto rounded-lg">
+            <Table
+              theme={{
+                root: {
+                  base: "w-full relative whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
+                  shadow:
+                    "absolute left-0 top-0 -z-10 h-full w-full rounded-s drop-shadow-md",
+                  wrapper: "",
                 },
-              },
-              head: {
-                cell: {
-                  base: "bg-gray-50 px-6 py-3 dark:bg-gray-700",
+                body: {
+                  cell: {
+                    base: "px-6 py-4",
+                  },
                 },
-              },
-              row: {
-                base: "group/row group",
-                hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
-                striped:
-                  "odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700",
-              },
-            }}
-            striped
-          >
-            <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
-              <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                <Checkbox
-                  id="0"
-                  ref={firstCheckboxRef}
-                  onChange={() => handleCheck()}
-                />
-              </Table.HeadCell>
-              <Table.HeadCell>{t("parent-id")}</Table.HeadCell>
-              <Table.HeadCell>
-                <div className="flex items-center justify-center gap-x-3">
-                  <span className="inline-block">{t("full-name")}</span>
-                  <div
-                    className="flex flex-col"
-                    onClick={() => handleSort("name")}
-                  >
-                    <FaSortUp
-                      className={`h-2.5 ${sortPosition === 2 ? "text-gray-600" : "text-gray-400"}`}
-                      viewBox="0 -140 320 412"
-                    />
-                    <FaSortDown
-                      className={`h-2.5 ${sortPosition === 1 ? "text-gray-600" : "text-gray-400"}`}
-                      viewBox="0 240 320 412"
-                    />
-                  </div>
-                </div>
-              </Table.HeadCell>
-              <Table.HeadCell>{t("Childs")}</Table.HeadCell>
-              <Table.HeadCell>{fieldTrans("email")}</Table.HeadCell>
-              <Table.HeadCell>{fieldTrans("phone-number")}</Table.HeadCell>
-              <Table.HeadCell>{t("active-time")}</Table.HeadCell>
-              <Table.HeadCell>{t("active-deactivate")}</Table.HeadCell>
-              <Table.HeadCell className="w-0">
-                <span className="w-full">Actions</span>
-              </Table.HeadCell>
-            </Table.Head>
-            <Table.Body
-              ref={tableRef}
-              className="divide-y divide-gray-300 dark:divide-gray-600"
+                head: {
+                  cell: {
+                    base: "bg-gray-50 px-6 py-3 dark:bg-gray-700",
+                  },
+                },
+                row: {
+                  base: "group/row group",
+                  hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
+                  striped:
+                    "odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700",
+                },
+              }}
+              striped
             >
-              {getParentsQuery.isFetching &&
-                (getParentsQuery.isRefetching || perPage) && (
-                  <Table.Row>
-                    <Table.Cell className="p-0">
-                      <div
-                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
-                      >
-                        <Spinner />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-              <Table.Row>
-                <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2">
-                  {/* <div className="h-2 w-12 bg-red-600"></div> */}
-                  <Input
-                    id="search"
-                    type="text"
-                    icon={
-                      <>
-                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                        {filter.name !== "" && (
-                          <FaRegCircleXmark
-                            onClick={() =>
-                              setFilter((prev) => ({ ...prev, name: "" }))
-                            }
-                            className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                          />
-                        )}
-                      </>
-                    }
-                    label=""
-                    placeholder={fieldTrans("filter-all")}
-                    value={filter.name}
-                    name="search"
-                    custom-style={{
-                      inputStyle: "px-8 !py-1",
-                      labelStyle: "mb-0 !inline",
-                    }}
-                    onChange={(e) =>
-                      setFilter((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
+              <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
+                <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                  <Checkbox
+                    id="0"
+                    ref={firstCheckboxRef}
+                    onChange={() => handleCheck()}
                   />
-                </Table.Cell>
-                <Table.Cell className="p-2">
-                  <Input
-                    id="search"
-                    type="text"
-                    icon={
-                      <>
-                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                        {filter.childName !== "" && (
-                          <FaRegCircleXmark
-                            onClick={() =>
-                              setFilter((prev) => ({ ...prev, childName: "" }))
-                            }
-                            className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                          />
-                        )}
-                      </>
-                    }
-                    label=""
-                    placeholder={fieldTrans("filter-all")}
-                    value={filter.childName}
-                    name="search"
-                    custom-style={{
-                      inputStyle: "px-8 !py-1",
-                      labelStyle: "mb-0 !inline",
-                    }}
-                    onChange={(e) =>
-                      setFilter((prev) => ({
-                        ...prev,
-                        childName: e.target.value,
-                      }))
-                    }
-                  />
-                </Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-              </Table.Row>
-
-              {getParentsQuery.isFetching &&
-              !(getParentsQuery.isRefetching || perPage) ? (
-                <SkeletonTable cols={7} />
-              ) : (
-                getParentsQuery.data?.data.data.map(
-                  (parent: Parent, key: number) => (
-                    <Table.Row
-                      key={key}
-                      className="w-max bg-white dark:bg-gray-800"
+                </Table.HeadCell>
+                <Table.HeadCell>{t("parent-id")}</Table.HeadCell>
+                <Table.HeadCell>
+                  <div className="flex items-center justify-center gap-x-3">
+                    <span className="inline-block">{t("full-name")}</span>
+                    <div
+                      className="flex flex-col"
+                      onClick={() => handleSort("name")}
                     >
-                      <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                        <Checkbox
-                          id={parent.id.toString()}
-                          name="checkbox"
-                          onChange={(ev) =>
-                            handleCheck(parseInt(ev.currentTarget.id))
-                          }
-                          data-id={key}
-                        />
-                      </Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        {parent.id}
-                      </Table.Cell>
-                      <Table.Cell>{parent.name}</Table.Cell>
-                      <Table.Cell
-                        className="font-medium text-gray-900 dark:text-gray-300"
-                        onMouseOver={(e) => setDropDownPos(e.currentTarget)}
-                        data-id={key}
-                      >
-                        <div className="flex items-center gap-x-2">
-                          {parent.childrens.length > 2 ? (
-                            <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                              {parent.childrens?.map(
-                                (child, key) =>
-                                  key < 1 && (
-                                    <img
-                                      key={key}
-                                      className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                      src={
-                                        child?.imagePath
-                                          ? SERVER_STORAGE + child?.imagePath
-                                          : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                                      }
-                                      alt="profile"
-                                    />
-                                  ),
-                              )}
-                              <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                                {`+${parent.childrens.length - 1}`}
-                              </div>
-                            </div>
-                          ) : parent.childrens.length > 1 ? (
-                            <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                              {parent.childrens?.map(
-                                (child, key) =>
-                                  key < 1 && (
-                                    <img
-                                      key={key}
-                                      className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                      src={
-                                        child?.imagePath
-                                          ? SERVER_STORAGE + child?.imagePath
-                                          : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                                      }
-                                      alt="profile"
-                                    />
-                                  ),
-                              )}
-                              <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                                {`+${parent.childrens.length - 1}`}
-                              </div>
-                            </div>
-                          ) : parent.childrens?.length == 1 ? (
-                            <>
-                              <img
-                                className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                src={
-                                  parent.childrens[0]?.imagePath
-                                    ? SERVER_STORAGE +
-                                      parent.childrens[0]?.imagePath
-                                    : `https://avatar.iran.liara.run/username?username=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
-                                }
-                                alt="profile"
-                              />
-                              <span className="pointer-events-none">
-                                {parent.childrens[0]?.name}
-                              </span>
-                            </>
-                          ) : (
-                            <div
-                              className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
-                              onClick={() =>
-                                setOpenChildModal({
-                                  id: parent.id,
-                                  school_id: parent.school_id,
-                                  open: true,
-                                })
-                              }
-                            >
-                              <FaUser className="me-2" />
-                              {t("add-new-child")}
-                            </div>
-                          )}
-                          {dropDownPos && parent.childrens.length > 0 && (
-                            <DropdownListButton
-                              position={dropDownPos}
-                              elemId={key.toString()}
-                            >
-                              <DropdownListButton.List>
-                                {parent.childrens.map((child, key) => (
-                                  <DropdownListButton.Item
-                                    key={key}
-                                    img={
-                                      child.imagePath
-                                        ? SERVER_STORAGE + child.imagePath
-                                        : `https://avatar.iran.liara.run/username?username=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
-                                    }
-                                    name={child.name}
-                                  />
-                                ))}
-                              </DropdownListButton.List>
-                              <DropdownListButton.Button>
-                                <p
-                                  onClick={() =>
-                                    setOpenChildModal({
-                                      id: parent.id,
-                                      school_id: parent.school_id,
-                                      open: true,
-                                    })
-                                  }
-                                >
-                                  {t("add-new-child")}
-                                </p>
-                              </DropdownListButton.Button>
-                            </DropdownListButton>
-                          )}
+                      <FaSortUp
+                        className={`h-2.5 ${sortPosition === 2 ? "text-gray-600" : "text-gray-400"}`}
+                        viewBox="0 -140 320 412"
+                      />
+                      <FaSortDown
+                        className={`h-2.5 ${sortPosition === 1 ? "text-gray-600" : "text-gray-400"}`}
+                        viewBox="0 240 320 412"
+                      />
+                    </div>
+                  </div>
+                </Table.HeadCell>
+                <Table.HeadCell>{t("Childs")}</Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("email")}</Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("phone-number")}</Table.HeadCell>
+                <Table.HeadCell>{t("active-time")}</Table.HeadCell>
+                <Table.HeadCell>{t("active-deactivate")}</Table.HeadCell>
+                <Table.HeadCell className="w-0">
+                  <span className="w-full">Actions</span>
+                </Table.HeadCell>
+              </Table.Head>
+              <Table.Body
+                ref={tableRef}
+                className="divide-y divide-gray-300 dark:divide-gray-600"
+              >
+                {getParentsQuery.isFetching &&
+                  (getParentsQuery.isRefetching || perPage) && (
+                    <Table.Row>
+                      <Table.Cell className="p-0">
+                        <div
+                          className={`table-loader absolute left-0 top-0 z-[1] grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                        >
+                          <Spinner />
                         </div>
                       </Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        {parent.email}
-                      </Table.Cell>
-                      <Table.Cell>{parent.phone}</Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        {/* <span>
+                    </Table.Row>
+                  )}
+                <Table.Row>
+                  <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2">
+                    {/* <div className="h-2 w-12 bg-red-600"></div> */}
+                    <Input
+                      id="search"
+                      type="text"
+                      icon={
+                        <>
+                          <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          {filter.name !== "" && (
+                            <FaRegCircleXmark
+                              onClick={() =>
+                                setFilter((prev) => ({ ...prev, name: "" }))
+                              }
+                              className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                            />
+                          )}
+                        </>
+                      }
+                      label=""
+                      placeholder={fieldTrans("filter-all")}
+                      value={filter.name}
+                      name="search"
+                      custom-style={{
+                        inputStyle: "px-8 !py-1",
+                        labelStyle: "mb-0 !inline",
+                      }}
+                      onChange={(e) =>
+                        setFilter((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                    />
+                  </Table.Cell>
+                  <Table.Cell className="p-2">
+                    <Input
+                      id="search"
+                      type="text"
+                      icon={
+                        <>
+                          <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          {filter.childName !== "" && (
+                            <FaRegCircleXmark
+                              onClick={() =>
+                                setFilter((prev) => ({
+                                  ...prev,
+                                  childName: "",
+                                }))
+                              }
+                              className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                            />
+                          )}
+                        </>
+                      }
+                      label=""
+                      placeholder={fieldTrans("filter-all")}
+                      value={filter.childName}
+                      name="search"
+                      custom-style={{
+                        inputStyle: "px-8 !py-1",
+                        labelStyle: "mb-0 !inline",
+                      }}
+                      onChange={(e) =>
+                        setFilter((prev) => ({
+                          ...prev,
+                          childName: e.target.value,
+                        }))
+                      }
+                    />
+                  </Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                </Table.Row>
+
+                {getParentsQuery.isFetching &&
+                !(getParentsQuery.isRefetching || perPage) ? (
+                  <SkeletonTable cols={8} />
+                ) : (
+                  getParentsQuery.data?.data.data.map(
+                    (parent: Parent, key: number) => (
+                      <Table.Row
+                        key={key}
+                        className="w-max bg-white dark:bg-gray-800"
+                      >
+                        <Table.Cell className="sticky left-0 z-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                          <Checkbox
+                            id={parent.id.toString()}
+                            name="checkbox"
+                            onChange={(ev) =>
+                              handleCheck(parseInt(ev.currentTarget.id))
+                            }
+                            data-id={key}
+                          />
+                        </Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {parent.id}
+                        </Table.Cell>
+                        <Table.Cell>{parent.name}</Table.Cell>
+                        <Table.Cell
+                          className="font-medium text-gray-900 dark:text-gray-300"
+                          onMouseOver={(e) => setDropDownPos(e.currentTarget)}
+                          data-id={key}
+                        >
+                          <div className="flex items-center gap-x-2">
+                            {parent.childrens.length > 2 ? (
+                              <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
+                                {parent.childrens?.map(
+                                  (child, key) =>
+                                    key < 1 && (
+                                      <img
+                                        key={key}
+                                        className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                        src={
+                                          child?.imagePath
+                                            ? SERVER_STORAGE + child?.imagePath
+                                            : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                        }
+                                        alt="profile"
+                                      />
+                                    ),
+                                )}
+                                <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
+                                  {`+${parent.childrens.length - 1}`}
+                                </div>
+                              </div>
+                            ) : parent.childrens.length > 1 ? (
+                              <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
+                                {parent.childrens?.map(
+                                  (child, key) =>
+                                    key < 1 && (
+                                      <img
+                                        key={key}
+                                        className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                        src={
+                                          child?.imagePath
+                                            ? SERVER_STORAGE + child?.imagePath
+                                            : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                        }
+                                        alt="profile"
+                                      />
+                                    ),
+                                )}
+                                <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
+                                  {`+${parent.childrens.length - 1}`}
+                                </div>
+                              </div>
+                            ) : parent.childrens?.length == 1 ? (
+                              <>
+                                <img
+                                  className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                  src={
+                                    parent.childrens[0]?.imagePath
+                                      ? SERVER_STORAGE +
+                                        parent.childrens[0]?.imagePath
+                                      : `https://avatar.iran.liara.run/username?username=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
+                                  }
+                                  alt="profile"
+                                />
+                                <span className="pointer-events-none">
+                                  {parent.childrens[0]?.name}
+                                </span>
+                              </>
+                            ) : (
+                              <div
+                                className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                                onClick={() =>
+                                  setOpenChildModal({
+                                    id: parent.id,
+                                    school_id: parent.school_id,
+                                    open: true,
+                                  })
+                                }
+                              >
+                                <FaUser className="me-2" />
+                                {t("add-new-child")}
+                              </div>
+                            )}
+                            {dropDownPos && parent.childrens.length > 0 && (
+                              <DropdownListButton
+                                position={dropDownPos}
+                                elemId={key.toString()}
+                              >
+                                <DropdownListButton.List>
+                                  {parent.childrens.map((child, key) => (
+                                    <DropdownListButton.Item
+                                      key={key}
+                                      img={
+                                        child.imagePath
+                                          ? SERVER_STORAGE + child.imagePath
+                                          : `https://avatar.iran.liara.run/username?username=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
+                                      }
+                                      name={child.name}
+                                    />
+                                  ))}
+                                </DropdownListButton.List>
+                                <DropdownListButton.Button>
+                                  <p
+                                    onClick={() =>
+                                      setOpenChildModal({
+                                        id: parent.id,
+                                        school_id: parent.school_id,
+                                        open: true,
+                                      })
+                                    }
+                                  >
+                                    {t("add-new-child")}
+                                  </p>
+                                </DropdownListButton.Button>
+                              </DropdownListButton>
+                            )}
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {parent.email}
+                        </Table.Cell>
+                        <Table.Cell>{parent.phone}</Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {/* <span>
                       {formatDuration(parent.time_spent).hour}
                       <span className="text-gray-500 dark:text-gray-400">
                         {" "}
@@ -1515,120 +1521,122 @@ export function ViewParents() {
                         min
                       </span>
                     </span> */}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <ToggleSwitch
-                          theme={{
-                            toggle: {
-                              base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                            },
-                          }}
-                          checked={blockSwitch[parent.id] || false}
-                          onChange={() =>
-                            setOpenModal({
-                              id: parent.id,
-                              type: "block",
-                              open: true,
-                            })
-                          }
-                        />
-                      </Table.Cell>
-                      <Table.Cell className="flex w-fit gap-x-2">
-                        <div className="flex w-fit gap-x-2">
-                          <div
-                            onClick={() =>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <ToggleSwitch
+                            theme={{
+                              toggle: {
+                                base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
+                              },
+                            }}
+                            checked={blockSwitch[parent.id] || false}
+                            onChange={() =>
                               setOpenModal({
                                 id: parent.id,
-                                type: "view",
+                                type: "block",
                                 open: true,
                               })
                             }
-                            className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                          >
-                            <FaEye className="text-blue-600 dark:text-blue-500" />
+                          />
+                        </Table.Cell>
+                        <Table.Cell className="flex w-fit gap-x-2">
+                          <div className="flex w-fit gap-x-2">
+                            <div
+                              onClick={() =>
+                                setOpenModal({
+                                  id: parent.id,
+                                  type: "view",
+                                  open: true,
+                                })
+                              }
+                              className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                            >
+                              <FaEye className="text-blue-600 dark:text-blue-500" />
+                            </div>
+                            <div
+                              className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                              onClick={() =>
+                                onOpenEditModal({
+                                  id: parent.id,
+                                  type: "edit",
+                                  open: true,
+                                })
+                              }
+                            >
+                              <FaPen className="text-green-600 dark:text-green-500" />
+                            </div>
+                            <div
+                              className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                              onClick={() =>
+                                setOpenModal({
+                                  id: parent.id,
+                                  type: "delete",
+                                  open: true,
+                                })
+                              }
+                            >
+                              <FaTrash className="text-red-600 dark:text-red-500" />
+                            </div>
                           </div>
-                          <div
-                            className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                            onClick={() =>
-                              onOpenEditModal({
-                                id: parent.id,
-                                type: "edit",
-                                open: true,
-                              })
-                            }
-                          >
-                            <FaPen className="text-green-600 dark:text-green-500" />
-                          </div>
-                          <div
-                            className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                            onClick={() =>
-                              setOpenModal({
-                                id: parent.id,
-                                type: "delete",
-                                open: true,
-                              })
-                            }
-                          >
-                            <FaTrash className="text-red-600 dark:text-red-500" />
-                          </div>
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  ),
-                )
-              )}
-            </Table.Body>
-          </Table>
-        </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ),
+                  )
+                )}
+              </Table.Body>
+            </Table>
+          </div>
 
-        <div className="flex w-full items-center justify-between px-5 py-4">
-          <span className="text-gray-500 dark:text-gray-400">
-            {t("records-number")}{" "}
-            <span className="font-semibold text-gray-900 dark:text-white">
-              {getParentsQuery.data?.data.from}-{getParentsQuery.data?.data.to}
-            </span>{" "}
-            {t("total-records")}{" "}
-            <span className="font-semibold text-gray-900 dark:text-white">
-              {getParentsQuery.data?.data.total}
+          <div className="flex w-full items-center justify-between px-5 py-4">
+            <span className="text-gray-500 dark:text-gray-400">
+              {t("records-number")}{" "}
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {getParentsQuery.data?.data.from}-
+                {getParentsQuery.data?.data.to}
+              </span>{" "}
+              {t("total-records")}{" "}
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {getParentsQuery.data?.data.total}
+              </span>
             </span>
-          </span>
-          <div className="flex items-center gap-x-4">
-            <RSelect
-              id="row-num"
-              name="row-num"
-              onChange={handlePerPage}
-              custom-style={{ inputStyle: "!py-2" }}
-              defaultValue={getParentsQuery.data?.data.per_page}
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={15}>15</option>
-              <option value={20}>20</option>
-            </RSelect>
-            <Pagination
-              layout={minSm ? "pagination" : "navigation"}
-              showIcons
-              currentPage={page}
-              onPageChange={(page) =>
-                !getParentsQuery.isPlaceholderData && setPage(page)
-              }
-              totalPages={getParentsQuery.data?.data.last_page ?? 1}
-              nextLabel={minSm ? t("next") : ""}
-              previousLabel={minSm ? t("previous") : ""}
-              theme={{
-                pages: {
-                  next: {
-                    base: "rounded-r-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+            <div className="flex items-center gap-x-4">
+              <RSelect
+                id="row-num"
+                name="row-num"
+                onChange={handlePerPage}
+                custom-style={{ inputStyle: "!py-2" }}
+                defaultValue={getParentsQuery.data?.data.per_page}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={20}>20</option>
+              </RSelect>
+              <Pagination
+                layout={minSm ? "pagination" : "navigation"}
+                showIcons
+                currentPage={page}
+                onPageChange={(page) =>
+                  !getParentsQuery.isPlaceholderData && setPage(page)
+                }
+                totalPages={getParentsQuery.data?.data.last_page ?? 1}
+                nextLabel={minSm ? t("next") : ""}
+                previousLabel={minSm ? t("previous") : ""}
+                theme={{
+                  pages: {
+                    next: {
+                      base: "rounded-r-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+                    },
+                    previous: {
+                      base: "ml-0 rounded-l-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+                    },
                   },
-                  previous: {
-                    base: "ml-0 rounded-l-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </TransitionAnimation>
     </div>
   );
 }

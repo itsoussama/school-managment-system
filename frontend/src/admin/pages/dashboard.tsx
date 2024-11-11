@@ -2,6 +2,10 @@ import { Breadcrumb } from "flowbite-react";
 import { useTranslation } from "react-i18next";
 import { FaHome } from "react-icons/fa";
 import Chart from "react-apexcharts";
+import { TransitionAnimation } from "@src/components/animation";
+import { useAppDispatch } from "@src/hooks/useReduxEvent";
+import { toggleAnimation } from "@src/features/redux/animationSlice";
+import { useState } from "react";
 
 const colorPalette = {
   black: "#000",
@@ -449,20 +453,21 @@ function Dashboard() {
 
         <Breadcrumb.Item>{t("overview")}</Breadcrumb.Item>
       </Breadcrumb>
-
-      <div>
-        <div className="flex w-full flex-col rounded-s bg-dark-primary p-5">
-          <h1 className="ms-4 text-xl font-semibold text-white">
-            Metric Title
-          </h1>
-          <Chart
-            options={chartProps.options}
-            series={chartProps.series}
-            // width={450}
-            type="line"
-          />
+      <TransitionAnimation>
+        <div>
+          <div className="flex w-full flex-col rounded-s bg-dark-primary p-5">
+            <h1 className="ms-4 text-xl font-semibold text-white">
+              Metric Title
+            </h1>
+            <Chart
+              options={chartProps.options}
+              series={chartProps.series}
+              // width={450}
+              type="line"
+            />
+          </div>
         </div>
-      </div>
+      </TransitionAnimation>
     </div>
   );
 }

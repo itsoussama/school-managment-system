@@ -58,6 +58,7 @@ import useBreakpoint from "@src/hooks/useBreakpoint";
 import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
 import Alert from "@src/components/alert";
 import { FaRegCircleXmark } from "react-icons/fa6";
+import { TransitionAnimation } from "@src/components/animation";
 
 interface Check {
   id?: number;
@@ -190,7 +191,7 @@ export function ViewTeachers() {
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
-  const admin = useAppSelector((state) => state.user);
+  const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
@@ -1158,296 +1159,299 @@ export function ViewTeachers() {
           </Modal.Footer>
         </form>
       </Modal>
+      <TransitionAnimation>
+        <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
+          {checks.find((val) => val.status === true) ? (
+            <div className="flex w-full justify-between px-5 py-4">
+              <div className="flex items-center gap-x-4">
+                {/* <CheckboxDropdown /> */}
 
-      <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
-        {checks.find((val) => val.status === true) ? (
-          <div className="flex w-full justify-between px-5 py-4">
-            <div className="flex items-center gap-x-4">
-              {/* <CheckboxDropdown /> */}
-
-              <button className="btn-danger !m-0 flex w-max items-center">
-                <FaTrash className="mr-2 text-white" />
-                {t("delete-records")}
-                <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checks)}`}</span>
-              </button>
+                <button className="btn-danger !m-0 flex w-max items-center">
+                  <FaTrash className="mr-2 text-white" />
+                  {t("delete-records")}
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checks)}`}</span>
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          ""
-        )}
+          ) : (
+            ""
+          )}
 
-        <div className="w-full overflow-x-auto rounded-lg">
-          <Table
-            theme={{
-              root: {
-                base: "w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
-                shadow:
-                  "absolute left-0 top-0 -z-10 h-full w-full rounded-s bg-white drop-shadow-md dark:bg-black",
-                wrapper: "",
-              },
-              body: {
-                cell: {
-                  base: "px-6 py-4",
+          <div className="w-full overflow-x-auto rounded-lg">
+            <Table
+              theme={{
+                root: {
+                  base: "w-full relative whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
+                  shadow:
+                    "absolute left-0 top-0 -z-10 h-full w-full rounded-s drop-shadow-md",
+                  wrapper: "",
                 },
-              },
-              head: {
-                cell: {
-                  base: "bg-gray-50 px-6 py-3 dark:bg-gray-700",
+                body: {
+                  cell: {
+                    base: "px-6 py-4",
+                  },
                 },
-              },
-              row: {
-                base: "group/row group",
-                hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
-                striped:
-                  "odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700",
-              },
-            }}
-            striped
-          >
-            <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
-              <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                <Checkbox
-                  id="0"
-                  ref={firstCheckboxRef}
-                  onChange={() => handleCheck()}
-                />
-              </Table.HeadCell>
-              <Table.HeadCell>{t("teacher-id")}</Table.HeadCell>
-              <Table.HeadCell>
-                <div className="flex items-center justify-center gap-x-3">
-                  <span className="inline-block">{t("full-name")}</span>
-                  <div
-                    className="flex flex-col"
-                    onClick={() => handleSort("name")}
-                  >
-                    <FaSortUp
-                      className={`h-2.5 ${sortPosition === 2 ? "text-gray-600" : "text-gray-400"}`}
-                      viewBox="0 -140 320 412"
-                    />
-                    <FaSortDown
-                      className={`h-2.5 ${sortPosition === 1 ? "text-gray-600" : "text-gray-400"}`}
-                      viewBox="0 240 320 412"
-                    />
-                  </div>
-                </div>
-              </Table.HeadCell>
-              <Table.HeadCell>{fieldTrans("subjects")}</Table.HeadCell>
-              <Table.HeadCell>{fieldTrans("grade-levels")}</Table.HeadCell>
-              <Table.HeadCell>{fieldTrans("email")}</Table.HeadCell>
-              <Table.HeadCell>{fieldTrans("phone-number")}</Table.HeadCell>
-              <Table.HeadCell>{t("active-time")}</Table.HeadCell>
-              <Table.HeadCell>{t("active-deactivate")}</Table.HeadCell>
-              <Table.HeadCell className="w-0">
-                <span className="w-full">Actions</span>
-              </Table.HeadCell>
-            </Table.Head>
-
-            <Table.Body
-              ref={tableRef}
-              className="divide-y divide-gray-300 dark:divide-gray-600"
+                head: {
+                  cell: {
+                    base: "bg-gray-50 px-6 py-3 dark:bg-gray-700",
+                  },
+                },
+                row: {
+                  base: "group/row group",
+                  hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
+                  striped:
+                    "odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700",
+                },
+              }}
+              striped
             >
-              {getTeachersQuery.isFetching &&
-                (getTeachersQuery.isRefetching || perPage) && (
-                  <Table.Row>
-                    <Table.Cell className="p-0">
-                      <div
-                        className={`table-loader absolute left-0 top-0 z-auto grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
-                      >
-                        <Spinner />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-              <Table.Row>
-                <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2">
-                  <Input
-                    id="search"
-                    type="text"
-                    icon={
-                      <>
-                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                        {filter.name !== "" && (
-                          <FaRegCircleXmark
-                            onClick={() =>
-                              setFilter((prev) => ({ ...prev, name: "" }))
-                            }
-                            className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                          />
-                        )}
-                      </>
-                    }
-                    label=""
-                    placeholder={fieldTrans("filter-all")}
-                    value={filter.name}
-                    name="search"
-                    custom-style={{
-                      inputStyle: "px-8 !py-1",
-                      labelStyle: "mb-0 !inline",
-                    }}
-                    onChange={(e) =>
-                      setFilter((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
+              <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
+                <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                  <Checkbox
+                    id="0"
+                    ref={firstCheckboxRef}
+                    onChange={() => handleCheck()}
                   />
-                </Table.Cell>
-                <Table.Cell className="p-2">
-                  <RSelect
-                    id="subject"
-                    name="subject"
-                    icon={
-                      <>
-                        <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                        {filter.subject !== "" && (
-                          <FaRegCircleXmark
-                            onClick={() =>
-                              setFilter((prev) => ({ ...prev, subject: "" }))
-                            }
-                            className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                          />
-                        )}
-                      </>
-                    }
-                    custom-style={{
-                      inputStyle: "px-9 !py-1",
-                      labelStyle: "mb-0 !inline",
-                    }}
-                    defaultValue={""}
-                    onChange={(e) =>
-                      setFilter((prev) => ({
-                        ...prev,
-                        [e.target.id]:
-                          e.target.options[e.target.selectedIndex].value,
-                      }))
-                    }
-                  >
-                    <option
-                      value=""
-                      selected={filter.subject == "" ? true : false}
-                      disabled
+                </Table.HeadCell>
+                <Table.HeadCell>{t("teacher-id")}</Table.HeadCell>
+                <Table.HeadCell>
+                  <div className="flex items-center justify-center gap-x-3">
+                    <span className="inline-block">{t("full-name")}</span>
+                    <div
+                      className="flex flex-col"
+                      onClick={() => handleSort("name")}
                     >
-                      {fieldTrans("filter-all")}
-                    </option>
-                    {getSubjectsQuery.data?.data.data.map(
-                      (subject: Subject, index: number) => (
-                        <option key={index} value={subject.id}>
-                          {subject.name}
-                        </option>
-                      ),
-                    )}
-                  </RSelect>
-                </Table.Cell>
-                <Table.Cell className="p-2">
-                  <RSelect
-                    id="gradelevel"
-                    name="gradelevel"
-                    icon={
-                      <>
-                        <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                        {filter.gradelevel !== "" && (
-                          <FaRegCircleXmark
-                            onClick={() =>
-                              setFilter((prev) => ({ ...prev, gradelevel: "" }))
-                            }
-                            className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                          />
-                        )}
-                      </>
-                    }
-                    custom-style={{
-                      inputStyle: "px-9 !py-1",
-                      labelStyle: "mb-0 !inline",
-                    }}
-                    defaultValue=""
-                    onChange={(e) =>
-                      setFilter((prev) => ({
-                        ...prev,
-                        [e.target.id]:
-                          e.target.options[e.target.selectedIndex].value,
-                      }))
-                    }
-                  >
-                    <option
-                      value=""
-                      selected={filter.gradelevel == "" ? true : false}
-                      disabled
-                    >
-                      {fieldTrans("filter-all")}
-                    </option>
-                    {getGradesQuery.data?.data.data.map(
-                      (grade: Grade, index: number) => (
-                        <option key={index} value={grade.id}>
-                          {grade.label}
-                        </option>
-                      ),
-                    )}
-                  </RSelect>
-                </Table.Cell>
+                      <FaSortUp
+                        className={`h-2.5 ${sortPosition === 2 ? "text-gray-600" : "text-gray-400"}`}
+                        viewBox="0 -140 320 412"
+                      />
+                      <FaSortDown
+                        className={`h-2.5 ${sortPosition === 1 ? "text-gray-600" : "text-gray-400"}`}
+                        viewBox="0 240 320 412"
+                      />
+                    </div>
+                  </div>
+                </Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("subjects")}</Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("grade-levels")}</Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("email")}</Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("phone-number")}</Table.HeadCell>
+                <Table.HeadCell>{t("active-time")}</Table.HeadCell>
+                <Table.HeadCell>{t("active-deactivate")}</Table.HeadCell>
+                <Table.HeadCell className="w-0">
+                  <span className="w-full">Actions</span>
+                </Table.HeadCell>
+              </Table.Head>
 
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-                <Table.Cell className="p-2"></Table.Cell>
-              </Table.Row>
-              {getTeachersQuery.isFetching &&
-              !(getTeachersQuery.isRefetching || perPage) ? (
-                <SkeletonTable cols={8} />
-              ) : (
-                getTeachersQuery.data?.data.data.map(
-                  (teacher: Teacher, key: number) => (
-                    <Table.Row
-                      key={key}
-                      className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
+              <Table.Body
+                ref={tableRef}
+                className="divide-y divide-gray-300 dark:divide-gray-600"
+              >
+                {getTeachersQuery.isFetching &&
+                  (getTeachersQuery.isRefetching || perPage) && (
+                    <Table.Row>
+                      <Table.Cell className="p-0">
+                        <div
+                          className={`table-loader absolute left-0 top-0 z-[1] grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                        >
+                          <Spinner />
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  )}
+                <Table.Row>
+                  <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2">
+                    <Input
+                      id="search"
+                      type="text"
+                      icon={
+                        <>
+                          <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          {filter.name !== "" && (
+                            <FaRegCircleXmark
+                              onClick={() =>
+                                setFilter((prev) => ({ ...prev, name: "" }))
+                              }
+                              className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                            />
+                          )}
+                        </>
+                      }
+                      label=""
+                      placeholder={fieldTrans("filter-all")}
+                      value={filter.name}
+                      name="search"
+                      custom-style={{
+                        inputStyle: "px-8 !py-1",
+                        labelStyle: "mb-0 !inline",
+                      }}
+                      onChange={(e) =>
+                        setFilter((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                    />
+                  </Table.Cell>
+                  <Table.Cell className="p-2">
+                    <RSelect
+                      id="subject"
+                      name="subject"
+                      icon={
+                        <>
+                          <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          {filter.subject !== "" && (
+                            <FaRegCircleXmark
+                              onClick={() =>
+                                setFilter((prev) => ({ ...prev, subject: "" }))
+                              }
+                              className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                            />
+                          )}
+                        </>
+                      }
+                      custom-style={{
+                        inputStyle: "px-9 !py-1",
+                        labelStyle: "mb-0 !inline",
+                      }}
+                      defaultValue={""}
+                      onChange={(e) =>
+                        setFilter((prev) => ({
+                          ...prev,
+                          [e.target.id]:
+                            e.target.options[e.target.selectedIndex].value,
+                        }))
+                      }
                     >
-                      <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                        <Checkbox
-                          id={teacher.id.toString()}
-                          name="checkbox"
-                          onChange={(ev) =>
-                            handleCheck(parseInt(ev.currentTarget.id))
-                          }
-                          data-id={key}
-                        />
-                      </Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        T00{teacher.id}
-                      </Table.Cell>
-                      <Table.Cell>{teacher.name}</Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        <div className="flex w-max max-w-36 flex-wrap">
-                          {teacher.subjects.map((subject, index) => (
-                            <Badge
-                              key={index}
-                              color={badgeColor[index % badgeColor.length]}
-                              className="mb-1 me-1 rounded-xs"
-                            >
-                              {subject.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex w-max max-w-36 flex-wrap">
-                          {teacher.grades.map((grade, index) => (
-                            <Badge
-                              key={index}
-                              color={badgeColor[index % badgeColor.length]}
-                              className="mb-1 me-1 rounded-xs"
-                            >
-                              {grade.label}
-                            </Badge>
-                          ))}
-                        </div>
-                      </Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        {teacher.email}
-                      </Table.Cell>
-                      <Table.Cell>{teacher.phone}</Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        {/* <span>
+                      <option
+                        value=""
+                        selected={filter.subject == "" ? true : false}
+                        disabled
+                      >
+                        {fieldTrans("filter-all")}
+                      </option>
+                      {getSubjectsQuery.data?.data.data.map(
+                        (subject: Subject, index: number) => (
+                          <option key={index} value={subject.id}>
+                            {subject.name}
+                          </option>
+                        ),
+                      )}
+                    </RSelect>
+                  </Table.Cell>
+                  <Table.Cell className="p-2">
+                    <RSelect
+                      id="gradelevel"
+                      name="gradelevel"
+                      icon={
+                        <>
+                          <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          {filter.gradelevel !== "" && (
+                            <FaRegCircleXmark
+                              onClick={() =>
+                                setFilter((prev) => ({
+                                  ...prev,
+                                  gradelevel: "",
+                                }))
+                              }
+                              className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                            />
+                          )}
+                        </>
+                      }
+                      custom-style={{
+                        inputStyle: "px-9 !py-1",
+                        labelStyle: "mb-0 !inline",
+                      }}
+                      defaultValue=""
+                      onChange={(e) =>
+                        setFilter((prev) => ({
+                          ...prev,
+                          [e.target.id]:
+                            e.target.options[e.target.selectedIndex].value,
+                        }))
+                      }
+                    >
+                      <option
+                        value=""
+                        selected={filter.gradelevel == "" ? true : false}
+                        disabled
+                      >
+                        {fieldTrans("filter-all")}
+                      </option>
+                      {getGradesQuery.data?.data.data.map(
+                        (grade: Grade, index: number) => (
+                          <option key={index} value={grade.id}>
+                            {grade.label}
+                          </option>
+                        ),
+                      )}
+                    </RSelect>
+                  </Table.Cell>
+
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                </Table.Row>
+                {getTeachersQuery.isFetching &&
+                !(getTeachersQuery.isRefetching || perPage) ? (
+                  <SkeletonTable cols={9} />
+                ) : (
+                  getTeachersQuery.data?.data.data.map(
+                    (teacher: Teacher, key: number) => (
+                      <Table.Row
+                        key={key}
+                        className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                          <Checkbox
+                            id={teacher.id.toString()}
+                            name="checkbox"
+                            onChange={(ev) =>
+                              handleCheck(parseInt(ev.currentTarget.id))
+                            }
+                            data-id={key}
+                          />
+                        </Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          T00{teacher.id}
+                        </Table.Cell>
+                        <Table.Cell>{teacher.name}</Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          <div className="flex w-max max-w-36 flex-wrap">
+                            {teacher.subjects.map((subject, index) => (
+                              <Badge
+                                key={index}
+                                color={badgeColor[index % badgeColor.length]}
+                                className="mb-1 me-1 rounded-xs"
+                              >
+                                {subject.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex w-max max-w-36 flex-wrap">
+                            {teacher.grades.map((grade, index) => (
+                              <Badge
+                                key={index}
+                                color={badgeColor[index % badgeColor.length]}
+                                className="mb-1 me-1 rounded-xs"
+                              >
+                                {grade.label}
+                              </Badge>
+                            ))}
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {teacher.email}
+                        </Table.Cell>
+                        <Table.Cell>{teacher.phone}</Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {/* <span>
                       {formatDuration(teacher.time_spent).hour}
                       <span className="text-gray-500 dark:text-gray-400">
                         {" "}
@@ -1464,123 +1468,124 @@ export function ViewTeachers() {
                         min
                       </span>
                     </span> */}
-                        -
-                      </Table.Cell>
-                      <Table.Cell>
-                        <ToggleSwitch
-                          theme={{
-                            toggle: {
-                              base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                            },
-                          }}
-                          checked={blockSwitch[teacher.id] || false}
-                          onChange={() =>
-                            setOpenModal({
-                              id: teacher.id,
-                              type: "block",
-                              open: true,
-                            })
-                          }
-                        />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex h-full w-fit gap-x-2">
-                          <div
-                            onClick={() =>
+                          -
+                        </Table.Cell>
+                        <Table.Cell>
+                          <ToggleSwitch
+                            theme={{
+                              toggle: {
+                                base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
+                              },
+                            }}
+                            checked={blockSwitch[teacher.id] || false}
+                            onChange={() =>
                               setOpenModal({
                                 id: teacher.id,
-                                type: "view",
+                                type: "block",
                                 open: true,
                               })
                             }
-                            className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                          >
-                            <FaEye className="text-blue-600 dark:text-blue-500" />
+                          />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex h-full w-fit gap-x-2">
+                            <div
+                              onClick={() =>
+                                setOpenModal({
+                                  id: teacher.id,
+                                  type: "view",
+                                  open: true,
+                                })
+                              }
+                              className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                            >
+                              <FaEye className="text-blue-600 dark:text-blue-500" />
+                            </div>
+                            <div
+                              className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                              onClick={() =>
+                                onOpenEditModal({
+                                  id: teacher.id,
+                                  type: "edit",
+                                  open: true,
+                                })
+                              }
+                            >
+                              <FaPen className="text-green-600 dark:text-green-500" />
+                            </div>
+                            <div
+                              className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                              onClick={() =>
+                                setOpenModal({
+                                  id: teacher.id,
+                                  type: "delete",
+                                  open: true,
+                                })
+                              }
+                            >
+                              <FaTrash className="text-red-600 dark:text-red-500" />
+                            </div>
                           </div>
-                          <div
-                            className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                            onClick={() =>
-                              onOpenEditModal({
-                                id: teacher.id,
-                                type: "edit",
-                                open: true,
-                              })
-                            }
-                          >
-                            <FaPen className="text-green-600 dark:text-green-500" />
-                          </div>
-                          <div
-                            className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                            onClick={() =>
-                              setOpenModal({
-                                id: teacher.id,
-                                type: "delete",
-                                open: true,
-                              })
-                            }
-                          >
-                            <FaTrash className="text-red-600 dark:text-red-500" />
-                          </div>
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  ),
-                )
-              )}
-            </Table.Body>
-          </Table>
-        </div>
-        {/* <p>`${getTeachers}`</p> */}
+                        </Table.Cell>
+                      </Table.Row>
+                    ),
+                  )
+                )}
+              </Table.Body>
+            </Table>
+          </div>
+          {/* <p>`${getTeachers}`</p> */}
 
-        <div className="flex w-full items-center justify-between px-5 py-4">
-          <span className="text-gray-500 dark:text-gray-400">
-            {t("records-number")}{" "}
-            <span className="font-semibold text-gray-900 dark:text-white">
-              {getTeachersQuery.data?.data.from}-
-              {getTeachersQuery.data?.data.to}
-            </span>{" "}
-            {t("total-records")}{" "}
-            <span className="font-semibold text-gray-900 dark:text-white">
-              {getTeachersQuery.data?.data.total}
+          <div className="flex w-full items-center justify-between px-5 py-4">
+            <span className="text-gray-500 dark:text-gray-400">
+              {t("records-number")}{" "}
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {getTeachersQuery.data?.data.from}-
+                {getTeachersQuery.data?.data.to}
+              </span>{" "}
+              {t("total-records")}{" "}
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {getTeachersQuery.data?.data.total}
+              </span>
             </span>
-          </span>
-          <div className="flex items-center gap-x-4">
-            <RSelect
-              id="row-num"
-              name="row-num"
-              onChange={handlePerPage}
-              custom-style={{ inputStyle: "!py-2" }}
-              defaultValue={getTeachersQuery.data?.data.per_page}
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={15}>15</option>
-              <option value={20}>20</option>
-            </RSelect>
-            <Pagination
-              layout={minSm ? "pagination" : "navigation"}
-              showIcons
-              currentPage={page}
-              onPageChange={(page) =>
-                !getTeachersQuery.isPlaceholderData && setPage(page)
-              }
-              totalPages={getTeachersQuery.data?.data.last_page ?? 1}
-              nextLabel={minSm ? t("next") : ""}
-              previousLabel={minSm ? t("previous") : ""}
-              theme={{
-                pages: {
-                  next: {
-                    base: "rounded-r-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+            <div className="flex items-center gap-x-4">
+              <RSelect
+                id="row-num"
+                name="row-num"
+                onChange={handlePerPage}
+                custom-style={{ inputStyle: "!py-2" }}
+                defaultValue={getTeachersQuery.data?.data.per_page}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={20}>20</option>
+              </RSelect>
+              <Pagination
+                layout={minSm ? "pagination" : "navigation"}
+                showIcons
+                currentPage={page}
+                onPageChange={(page) =>
+                  !getTeachersQuery.isPlaceholderData && setPage(page)
+                }
+                totalPages={getTeachersQuery.data?.data.last_page ?? 1}
+                nextLabel={minSm ? t("next") : ""}
+                previousLabel={minSm ? t("previous") : ""}
+                theme={{
+                  pages: {
+                    next: {
+                      base: "rounded-r-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+                    },
+                    previous: {
+                      base: "ml-0 rounded-l-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+                    },
                   },
-                  previous: {
-                    base: "ml-0 rounded-l-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </TransitionAnimation>
     </div>
   );
 }
