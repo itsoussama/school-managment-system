@@ -21,8 +21,11 @@ class CategoryController extends Controller
 
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $categories = Category::orderBy($sortColumn, $sortDirection)->paginate($perPage);
-        return response()->json($categories, 200);
+        $categories = Category::orderBy($sortColumn, $sortDirection);
+        if ($perPage == -1) {
+            return response()->json($categories->get(), 200);
+        }
+        return response()->json($categories->paginate($perPage), 200);
     }
 
     /**

@@ -19,8 +19,13 @@ class ResourceController extends Controller
 
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $resources = Resource::with(['school', 'categories'])->orderBy($sortColumn, $sortDirection)->paginate($perPage);
-        return response()->json($resources, Response::HTTP_OK);
+        $resources = Resource::with(['school', 'categories'])->orderBy($sortColumn, $sortDirection);
+
+        if ($perPage == -1) {
+            return response()->json($resources->get(), Response::HTTP_OK);
+        }
+
+        return response()->json($resources->paginate($perPage), Response::HTTP_OK);
     }
 
     /**
@@ -31,16 +36,20 @@ class ResourceController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'label' => 'required|string|max:255',
-            'qty' => 'required|integer',
-            'school_id' => 'required|exists:schools,id',
-            'category_id' => 'required|exists:categories,id',
-        ]);
+        try {
+            $request->validate([
+                'label' => 'required|string|max:255',
+                'qty' => 'required|integer',
+                'school_id' => 'required|exists:schools,id',
+                'category_id' => 'required|exists:categories,id',
+            ]);
 
-        $resource = Resource::create($request->all());
-        $resource->load(['school', 'categories']);
-        return response()->json($resource, Response::HTTP_CREATED);
+            $resource = Resource::create($request->all());
+            $resource->load(['school', 'categories']);
+            return response()->json($resource, Response::HTTP_CREATED);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 422);
+        };
     }
 
     /**

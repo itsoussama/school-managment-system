@@ -20,6 +20,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
+  FaEye,
   FaHome,
   FaLock,
   FaPen,
@@ -29,7 +30,8 @@ import {
   FaTrash,
   FaUser,
 } from "react-icons/fa";
-import { Link, useLocation, useNavigation } from "react-router-dom";
+import { IoFilter } from "react-icons/io5";
+import { Link } from "react-router-dom";
 
 import {
   keepPreviousData,
@@ -40,10 +42,11 @@ import {
 import {
   deleteUser,
   getUser,
-  getParents,
-  setParent,
-  unblockUser,
+  getStudents,
+  setStudent,
+  getGrades,
   blockUser,
+  unblockUser,
 } from "@api";
 import {
   SkeletonContent,
@@ -51,12 +54,11 @@ import {
   SkeletonTable,
 } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { DropdownListButton } from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import AddChildModal from "@src/admin/components/addChildModal";
-import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
+import AddParentModal from "@src/admin/components/addParentModal";
 import Alert from "@src/components/alert";
-import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
+import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
+import { FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 
 interface Check {
@@ -70,33 +72,52 @@ interface Modal {
   open: boolean;
 }
 
-interface ChildModal {
+interface ParentModal {
   id: number;
   school_id: number;
   open: boolean;
 }
 
-interface Parent {
+interface Student {
   id: number;
-  imagePath: string;
   name: string;
+  imagePath: string;
   email: string;
   phone: string;
   school_id: number;
-  blocked?: boolean;
   role: [
     {
       id: string;
       name: string;
     },
   ];
-  childrens: [
+  subjects: [
     {
       id: string;
-      imagePath: string;
       name: string;
     },
   ];
+  grades: [
+    {
+      id: string;
+      label: string;
+    },
+  ];
+  blocked?: boolean;
+  guardian: {
+    id: number;
+    guardian_id: number;
+    imagePath: string;
+    name: string;
+    email: string;
+    school_id: number;
+    phone: string;
+  };
+}
+
+interface Grade {
+  id: number;
+  label: string;
 }
 
 export interface FormData {
@@ -134,50 +155,42 @@ interface BlockSwitch {
   [key: string]: boolean;
 }
 
-interface File {
-  lastModified: number;
-  name: string;
-  size: number;
-  type: string;
-}
-
 interface Sort {
   column: string;
   direction: "asc" | "desc";
 }
-
 interface Filter {
   name: string;
-  childName: string;
+  gradelevel: string;
 }
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
-export function ViewParents() {
+export function ViewResources() {
   const queryClient = useQueryClient();
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
-  const location = useLocation();
 
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
     name: "",
-    childName: "",
+    gradelevel: "",
   });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
-  const [checkAll, setCheckAll] = useState<Array<Check>>([]);
+  const isCheckBoxAll = useRef(false);
+  const [checks, setChecks] = useState<Array<Check>>([]);
+  const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [openChildModal, setOpenChildModal] = useState<ChildModal>({
+  const [openParentModal, setOpenParentModal] = useState<ParentModal>({
     id: 0,
     school_id: 0,
     open: false,
   });
+  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [dropDownPos, setDropDownPos] = useState<EventTarget>();
   const [data, setData] = useState<Data>({
     id: 0,
     firstName: "",
@@ -196,60 +209,66 @@ export function ViewParents() {
     phone: "",
   });
   const [changePassword, toggleChangePassword] = useState<boolean>(false);
-  // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
+  const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   const minSm = useBreakpoint("min", "sm");
 
-  const getAllParentsQuery = useQuery({
-    queryKey: ["getAllParents"],
-    queryFn: () => getParents(1, -1, undefined, undefined, 1),
+  // const userId = useRef<string>(null)
+  const getAllStudentsQuery = useQuery({
+    queryKey: ["getAllStudents"],
+    queryFn: () => getStudents(1, -1, undefined, undefined, 1),
     placeholderData: keepPreviousData,
   });
 
-  const getParentsQuery = useQuery({
+  const getStudentsQuery = useQuery({
     queryKey: [
-      "getParents",
+      "getStudents",
       page,
       perPage,
       sort.column,
       sort.direction,
       admin.school_id,
       filter?.name,
-      filter?.childName,
+      filter?.gradelevel,
     ],
     queryFn: () =>
-      getParents(
+      getStudents(
         page,
         perPage,
         sort.column,
         sort.direction,
         admin.school_id,
         filter?.name,
-        filter?.childName,
+        filter?.gradelevel,
       ),
     placeholderData: keepPreviousData,
   });
 
-  const getParentQuery = useQuery({
-    queryKey: ["getParent", openModal?.id, "parent"],
-    queryFn: () => getUser(openModal?.id as number, "parent"),
+  const getStudentQuery = useQuery({
+    queryKey: ["getStudent", openModal?.id, "student"],
+    queryFn: () => getUser(openModal?.id as number, "student"),
     enabled: !!openModal?.id,
   });
 
-  const parentMutation = useMutation({
-    mutationFn: setParent,
+  const getGradesQuery = useQuery({
+    queryKey: ["getGrades"],
+    queryFn: getGrades,
+  });
+
+  const studentMutation = useMutation({
+    mutationFn: setStudent,
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({
-        queryKey: ["getParent"],
+        queryKey: ["getStudent"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getParents"],
+        queryKey: ["getStudents"],
       });
 
       setData({
@@ -266,9 +285,8 @@ export function ViewParents() {
         status: "success",
         message: {
           title: "Operation Successful",
-          description: "Your changes have been saved successfully.",
+          description: " Your changes have been saved successfully.",
         },
-
         state: true,
       });
 
@@ -279,6 +297,7 @@ export function ViewParents() {
 
       setPreviewImg(undefined);
     },
+
     onError: () => {
       toggleAlert({
         status: "fail",
@@ -295,7 +314,7 @@ export function ViewParents() {
   const deleteUserQuery = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
+      queryClient.invalidateQueries({ queryKey: ["getStudents"] });
       // setOpenDeleteModal(undefined);
       setData({
         id: 0,
@@ -311,7 +330,7 @@ export function ViewParents() {
         status: "success",
         message: {
           title: "Operation Successful",
-          description: "Your changes have been saved successfully.",
+          description: " Your changes have been saved successfully.",
         },
 
         state: true,
@@ -331,26 +350,6 @@ export function ViewParents() {
     },
   });
 
-  const blockUserMutation = useMutation({
-    mutationFn: blockUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
-      queryClient.invalidateQueries({
-        queryKey: ["getParent"],
-      });
-    },
-  });
-
-  const unBlockUserMutation = useMutation({
-    mutationFn: unblockUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
-      queryClient.invalidateQueries({
-        queryKey: ["getParent"],
-      });
-    },
-  });
-
   // const [selectedItem, setSelectedItem] = useState()
 
   const onChange = (event: ChangeEvent) => {
@@ -360,41 +359,6 @@ export function ViewParents() {
     }));
     // console.log((event.target as HTMLInputElement).value);
   };
-
-  const handleCheck = async (id?: number) => {
-    const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
-    // console.log(id);
-
-    if (!id) {
-      setCheckAll([]);
-      await handleChecks(firstCheckbox);
-    } else {
-      const getValue = checkAll.find((elem) => elem.id === id);
-      const filteredArr = checkAll.filter((elem) => elem.id !== id);
-      setCheckAll([
-        ...(filteredArr as []),
-        { id: id, status: !getValue?.status },
-      ]);
-      firstCheckbox.checked = false;
-    }
-  };
-
-  const handleChecks = useCallback(
-    async (firstCheckbox: HTMLInputElement) => {
-      if (getAllParentsQuery.isFetched) {
-        await getAllParentsQuery.data?.data.forEach((parent: Parent) => {
-          setCheckAll((prev) => {
-            const checkedData = prev.some((item) => item.id === parent.id);
-            if (firstCheckbox.checked && !checkedData) {
-              return [...prev, { id: parent.id as number, status: true }];
-            }
-            return [...prev, { id: parent.id as number, status: false }];
-          });
-        });
-      }
-    },
-    [getAllParentsQuery.data?.data, getAllParentsQuery.isFetched],
-  );
 
   const handleClientError = (field: HTMLFormElement) => {
     // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
@@ -449,6 +413,40 @@ export function ViewParents() {
 
     return error;
   };
+
+  const handleCheck = async (id?: number) => {
+    const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
+
+    if (!id) {
+      setChecks([]);
+      await handleChecks(firstCheckbox);
+    } else {
+      const getValue = checks.find((elem) => elem.id === id);
+      const filteredArr = checks.filter((elem) => elem.id !== id);
+      setChecks([
+        ...(filteredArr as []),
+        { id: id, status: !getValue?.status },
+      ]);
+      firstCheckbox.checked = false;
+    }
+  };
+
+  const handleChecks = useCallback(
+    async (firstCheckbox: HTMLInputElement) => {
+      if (getAllStudentsQuery.isFetched) {
+        await getAllStudentsQuery.data?.data.forEach((student: Student) => {
+          setChecks((prev) => {
+            const checkedData = prev.some((item) => item.id === student.id);
+            if (firstCheckbox.checked && !checkedData) {
+              return [...prev, { id: student.id as number, status: true }];
+            }
+            return [...prev, { id: student.id as number, status: false }];
+          });
+        });
+      }
+    },
+    [getAllStudentsQuery.data?.data, getAllStudentsQuery.isFetched],
+  );
 
   const handleSort = (column: string) => {
     setSortPosition((prev) => prev + 1);
@@ -506,7 +504,7 @@ export function ViewParents() {
         form["password_confirmation"] = data?.confirm_password;
       }
 
-      parentMutation.mutate(form);
+      studentMutation.mutate(form);
     } else {
       toggleAlert({
         status: "fail",
@@ -525,7 +523,7 @@ export function ViewParents() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getParentQuery.data?.data.name) {
+    if (input.verfication.value !== getStudentQuery.data?.data.name) {
       setIsVerficationMatch(false);
       return;
     }
@@ -565,24 +563,24 @@ export function ViewParents() {
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const { data: parentData } = await queryClient.ensureQueryData({
-      queryKey: ["getParent", id],
+    const { data: StudentData } = await queryClient.ensureQueryData({
+      queryKey: ["getStudent", id],
       queryFn: () => getUser(id),
     });
 
     setData({
-      id: parentData?.id,
-      firstName: getUserName(parentData?.name).firstName,
-      lastName: getUserName(parentData?.name).lastName,
-      email: parentData?.email,
-      phone: parentData?.phone,
+      id: StudentData?.id,
+      firstName: getUserName(StudentData?.name).firstName,
+      lastName: getUserName(StudentData?.name).lastName,
+      email: StudentData?.email,
+      phone: StudentData?.phone,
       password: "",
       confirm_password: "",
     });
   };
 
   const onCloseModal = () => {
-    parentMutation.reset();
+    studentMutation.reset();
     setOpenModal((prev) => ({
       id: prev?.id as number,
       open: false,
@@ -636,56 +634,27 @@ export function ViewParents() {
     }
   };
 
-  const countCheckedRow = (data: Check[]) => {
-    let totalChecked = 0;
-    data.forEach((value) => {
-      if (value.status) {
-        totalChecked = totalChecked + 1;
-      }
-    });
-    if (totalChecked == data.length) {
-      (firstCheckboxRef.current as HTMLInputElement).checked = true;
+  useEffect(() => {
+    const checkedVal = checks.filter((val) => val.status === true)
+      .length as number;
+    setNumChecked(checkedVal);
+  }, [checks]);
+
+  useEffect(() => {
+    if (isCheckBoxAll) {
+      handleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
-    return totalChecked;
-  };
+  }, [page, handleChecks]);
 
   useEffect(() => {
-    const alertState = location.state?.alert;
-    toggleAlert({
-      status: alertState?.status,
-      message: {
-        title: alertState?.message.title,
-        description: alertState?.message.description,
-      },
-      state: alertState?.state,
-    });
-  }, [location]);
-
-  useEffect(() => {
-    checkAll?.map((item) => {
-      const checkboxElem = document.getElementById(
-        item.id?.toString() as string,
-      ) as HTMLInputElement;
-
-      if (checkboxElem) {
-        if (item.status) {
-          checkboxElem.checked = true;
-        } else {
-          checkboxElem.checked = false;
-        }
-      }
-    });
-  }, [page, perPage, checkAll]);
-
-  useEffect(() => {
-    if (getParentsQuery.isFetched) {
+    if (getStudentsQuery.isFetched) {
       let data = {};
-      getParentsQuery.data?.data.data.map((parent: Parent) => {
-        data = { ...data, [parent.id]: !!parent.blocked };
+      getStudentsQuery.data?.data.data.map((student: Student) => {
+        data = { ...data, [student.id]: !!student.blocked };
       });
       setBlockSwitch(data);
     }
-  }, [getParentsQuery.data, getParentsQuery.isFetched]);
+  }, [getStudentsQuery.data, getStudentsQuery.isFetched]);
 
   return (
     <div className="flex w-full flex-col">
@@ -702,7 +671,6 @@ export function ViewParents() {
         }
         close={(value) => toggleAlert(value)}
       />
-
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
         className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
@@ -719,18 +687,20 @@ export function ViewParents() {
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("parents")}
+              {t("students")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("view-parents")}</Breadcrumb.Item>
+        <Breadcrumb.Item className="whitespace-nowrap">
+          {t("view-students")}
+        </Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
-        // size={"md"}
+        // size={"xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -745,139 +715,53 @@ export function ViewParents() {
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {t("parent-id")}:<b> {openModal?.id}</b>
+          {t("student-id")}:<b> {openModal?.id}</b>
         </Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8 sm:flex-row">
             <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource={
-                  getParentQuery.data?.data.imagePath
-                    ? SERVER_STORAGE + getParentQuery.data?.data.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
+                  getStudentQuery.data?.data.imagePath
+                    ? SERVER_STORAGE + getStudentQuery.data?.data.imagePath
+                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
                 }
                 className="h-40 w-40"
               />
-              <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                  {t("active-deactivate")}
-                </span>
-                <ToggleSwitch
-                  theme={{
-                    toggle: {
-                      base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                    },
-                  }}
-                  checked={blockSwitch[getParentQuery.data?.data.id] || false}
-                  onChange={() =>
-                    setOpenModal({
-                      id: getParentQuery.data?.data.id,
-                      type: "block",
-                      open: true,
-                    })
-                  }
-                />
-              </div>
             </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   {t("personal-information")}
                 </h1>
-                <SkeletonContent isLoaded={getParentQuery.isFetched}>
+                <SkeletonContent isLoaded={getStudentQuery.isFetched}>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("first-name")}:
+                        {fieldTrans("label")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getParentQuery.data?.data.name).firstName}
+                        {getUserName(getStudentQuery.data?.data.name).firstName}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("last-name")}:
+                        {fieldTrans("quantity")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getParentQuery.data?.data.name).lastName}
+                        {getUserName(getStudentQuery.data?.data.name).lastName}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("email")}:
+                        {fieldTrans("category")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getParentQuery.data?.data.email}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("phone-number")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getParentQuery.data?.data.phone}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("address")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        123 Rue Principale
+                        {getStudentQuery.data?.data.email}
                       </span>
                     </div>
                   </div>
                 </SkeletonContent>
-              </div>
-
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("academic-information")}
-                </h1>
-                <div className="flex flex-col">
-                  <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                    {t("Childs")}:
-                  </span>
-                  <div className="flex w-max max-w-52 flex-wrap">
-                    {getParentQuery.data?.data.childrens.length > 0 ? (
-                      (getParentQuery.data?.data as Parent).childrens?.map(
-                        (child, key) => (
-                          <Badge
-                            key={key}
-                            color="dark"
-                            className="mb-1 me-1 whitespace-nowrap rounded-xs"
-                          >
-                            <img
-                              key={key}
-                              className="me-2 inline-block h-5 w-5 rounded-full"
-                              src={
-                                child?.imagePath
-                                  ? SERVER_STORAGE + child?.imagePath
-                                  : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                              }
-                              alt="profile"
-                            />
-                            {child.name}
-                          </Badge>
-                        ),
-                      )
-                    ) : (
-                      <div
-                        className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
-                        onClick={() =>
-                          setOpenChildModal({
-                            id: getParentQuery.data?.data.id,
-                            school_id: getParentQuery.data?.data.school_id,
-                            open: true,
-                          })
-                        }
-                      >
-                        <FaUser className="me-2" />
-                        {t("add-new-child")}
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -902,7 +786,7 @@ export function ViewParents() {
       >
         <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
-            {t("parent-id")}:<b> {openModal?.id}</b>
+            {t("student-id")}:<b> {openModal?.id}</b>
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
@@ -911,12 +795,13 @@ export function ViewParents() {
                   imgSource={
                     previewImg
                       ? previewImg
-                      : getParentQuery.data?.data.imagePath
-                        ? SERVER_STORAGE + getParentQuery.data?.data.imagePath
-                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
+                      : getStudentQuery.data?.data.imagePath
+                        ? SERVER_STORAGE + getStudentQuery.data?.data.imagePath
+                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
+
                 <button className="btn-gray relative overflow-hidden">
                   <input
                     type="file"
@@ -927,20 +812,20 @@ export function ViewParents() {
                 </button>
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {fieldTrans("accepted-format")}:{" "}
+                    {t("accepted-format")}:{" "}
                     <span className="text-gray-500 dark:text-gray-400">
                       jpg, jpeg, png
                     </span>
                   </span>
                   <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {fieldTrans("maximum-size")}:{" "}
+                    {t("maximum-size")}:{" "}
                     <span className="text-gray-500 dark:text-gray-400">
                       1024 mb
                     </span>
                   </span>
                 </div>
               </div>
-              <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
+              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                     {t("personal-information")}
@@ -948,112 +833,27 @@ export function ViewParents() {
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
-                      id="firstName"
-                      name="firstName"
-                      label={fieldTrans("first-name")}
-                      placeholder={fieldTrans("first-name-placeholder")}
+                      id="label"
+                      name="label"
+                      label={fieldTrans("Label")}
+                      placeholder={fieldTrans("Label-placeholder")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getParentQuery.isFetching && true}
+                      disabled={getStudentQuery.isFetching && true}
                       value={data?.firstName}
                       onChange={onChange}
                     />
 
                     <Input
                       type="text"
-                      id="lastName"
-                      name="lastName"
-                      label={fieldTrans("last-name")}
-                      placeholder={fieldTrans("last-name-placeholder")}
+                      id="quantity"
+                      name="quantity"
+                      label={fieldTrans("quantity")}
+                      placeholder="20"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getParentQuery.isFetching && true}
+                      disabled={getStudentQuery.isFetching && true}
                       value={data?.lastName}
                       onChange={onChange}
                     />
-
-                    <Input
-                      type="text"
-                      id="address"
-                      name="address"
-                      label={fieldTrans("address")}
-                      placeholder={fieldTrans("address-placeholder")}
-                      value="123 Rue Principale"
-                      onChange={(e) => console.log(e.target.value)}
-                      custom-style={{ containerStyle: "col-span-full" }}
-                    />
-
-                    <Input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      label={fieldTrans("phone-number")}
-                      placeholder="06 00 00 00"
-                      pattern="(06|05)[0-9]{6}"
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getParentQuery.isFetching && true}
-                      value={data?.phone}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="email"
-                      id="email"
-                      name="email"
-                      label={fieldTrans("email")}
-                      placeholder={fieldTrans("email-placeholder")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getParentQuery.isFetching && true}
-                      value={data?.email}
-                      onChange={onChange}
-                    />
-
-                    <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
-
-                    {changePassword ? (
-                      <>
-                        <Input
-                          type="password"
-                          id="password"
-                          name="password"
-                          label={fieldTrans("password")}
-                          placeholder="●●●●●●●"
-                          error={formError.password}
-                          value={data?.password}
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          }
-                          onChange={onChange}
-                        />
-
-                        <Input
-                          type="password"
-                          id="confirm_password"
-                          name="confirm_password"
-                          label={fieldTrans("confirm-password")}
-                          placeholder="●●●●●●●"
-                          error={formError.confirm_password}
-                          value={data?.confirm_password}
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          }
-                          onChange={onChange}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => toggleChangePassword(true)}
-                          className="btn-default !w-auto"
-                        >
-                          {t("change-password-btn")}
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1091,8 +891,8 @@ export function ViewParents() {
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("delete-modal-title")}
-                <b>{getParentQuery.data?.data.name}</b>
+                {t("delete-modal-title")}{" "}
+                <b>{getStudentQuery.data?.data.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -1100,16 +900,14 @@ export function ViewParents() {
               </div>
               <p className="text-gray-900 dark:text-white">
                 {t("delete-modal-label")}{" "}
-                <b>{getParentQuery.data?.data.name}</b>
+                <b>{getStudentQuery.data?.data.name}</b>
               </p>
               <Input
                 type="text"
                 id="verfication"
                 name="verfication"
                 placeholder="John doe"
-                error={
-                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
-                }
+                error={!isVerficationMatch ? t("delete-modal-error") : null}
                 required
               />
             </div>
@@ -1125,88 +923,17 @@ export function ViewParents() {
         </form>
       </Modal>
 
-      {/* block / unblock user */}
-      <Modal
-        show={openModal?.type === "block" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitBlock}>
-          <Modal.Header>{t("block-modal")}</Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("block-modal-title")} <b>{getParentQuery.data?.data.name}</b>
-              </p>
-              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("delete-modal-message")}</p>
-              </div> */}
-              {/* <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")}{" "}
-                <b>{getParentQuery.data?.data.name}</b>
-              </p> */}
-              {/* <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={
-                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
-                }
-                required
-              /> */}
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
-              {getParentQuery.data?.data.blocked == 0
-                ? t("block-modal-block-btn")
-                : t("block-modal-unblock-btn")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("block-modal-cancel-btn")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
-
-      <AddChildModal
-        open={openChildModal?.open as boolean}
-        toggleOpen={(isOpen: boolean) =>
-          setOpenChildModal((prev: ChildModal) => ({
-            id: openChildModal?.id as number,
-            school_id: prev?.school_id,
-            open: isOpen,
-          }))
-        }
-        guardian_id={openChildModal.id}
-        school_id={openChildModal?.school_id}
-      />
-
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
-          {checkAll.find((val) => val.status === true) ? (
+          {checks.find((val) => val.status === true) ? (
             <div className="flex w-full justify-between px-5 py-4">
               <div className="flex items-center gap-x-4">
                 {/* <CheckboxDropdown /> */}
 
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
-
                   {t("delete-records")}
-                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checkAll)}`}</span>
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
                 </button>
               </div>
             </div>
@@ -1250,10 +977,10 @@ export function ViewParents() {
                     onChange={() => handleCheck()}
                   />
                 </Table.HeadCell>
-                <Table.HeadCell>{t("parent-id")}</Table.HeadCell>
+                <Table.HeadCell>{t("item-id")}</Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center justify-center gap-x-3">
-                    <span className="inline-block">{t("full-name")}</span>
+                    <span className="inline-block">{fieldTrans("label")}</span>
                     <div
                       className="flex flex-col"
                       onClick={() => handleSort("name")}
@@ -1269,11 +996,8 @@ export function ViewParents() {
                     </div>
                   </div>
                 </Table.HeadCell>
-                <Table.HeadCell>{t("Childs")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("email")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("phone-number")}</Table.HeadCell>
-                <Table.HeadCell>{t("active-time")}</Table.HeadCell>
-                <Table.HeadCell>{t("active-deactivate")}</Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("quantity")}</Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("category")}</Table.HeadCell>
                 <Table.HeadCell className="w-0">
                   <span className="w-full">Actions</span>
                 </Table.HeadCell>
@@ -1282,8 +1006,8 @@ export function ViewParents() {
                 ref={tableRef}
                 className="divide-y divide-gray-300 dark:divide-gray-600"
               >
-                {getParentsQuery.isFetching &&
-                  (getParentsQuery.isRefetching || perPage) && (
+                {getStudentsQuery.isFetching &&
+                  (getStudentsQuery.isRefetching || perPage) && (
                     <Table.Row>
                       <Table.Cell className="p-0">
                         <div
@@ -1317,7 +1041,7 @@ export function ViewParents() {
                       }
                       label=""
                       placeholder={fieldTrans("filter-all")}
-                      value={filter.name}
+                      value={filter?.name}
                       name="search"
                       custom-style={{
                         inputStyle: "px-8 !py-1",
@@ -1332,232 +1056,111 @@ export function ViewParents() {
                     />
                   </Table.Cell>
                   <Table.Cell className="p-2">
-                    <Input
-                      id="search"
-                      type="text"
+                    {" "}
+                    <RSelect
+                      id="gradelevel"
+                      name="gradelevel"
                       icon={
                         <>
-                          <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.childName !== "" && (
+                          <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          {filter.gradelevel !== "" && (
                             <FaRegCircleXmark
                               onClick={() =>
                                 setFilter((prev) => ({
                                   ...prev,
-                                  childName: "",
+                                  gradelevel: "",
                                 }))
                               }
-                              className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                              className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
                             />
                           )}
                         </>
                       }
+                      custom-style={{
+                        inputStyle: "px-9 !py-1",
+                        labelStyle: "mb-0 !inline",
+                      }}
+                      defaultValue={""}
+                      onChange={(e) =>
+                        setFilter((prev) => ({
+                          ...prev,
+                          [e.target.id]:
+                            e.target.options[e.target.selectedIndex].value,
+                        }))
+                      }
+                    >
+                      <option
+                        value=""
+                        selected={filter.gradelevel == "" ? true : false}
+                        disabled
+                      >
+                        {fieldTrans("filter-all")}
+                      </option>
+                      {getGradesQuery.data?.data.data.map(
+                        (grade: Grade, index: number) => (
+                          <option key={index} value={grade.id}>
+                            {grade.label}
+                          </option>
+                        ),
+                      )}
+                    </RSelect>
+                  </Table.Cell>
+                  <Table.Cell className="p-2">
+                    {/* <div className="h-2 w-12 bg-red-600"></div> */}
+                    <Input
+                      id="search"
+                      type="text"
+                      icon={
+                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      }
                       label=""
                       placeholder={fieldTrans("filter-all")}
-                      value={filter.childName}
                       name="search"
                       custom-style={{
                         inputStyle: "px-8 !py-1",
                         labelStyle: "mb-0 !inline",
                       }}
-                      onChange={(e) =>
-                        setFilter((prev) => ({
-                          ...prev,
-                          childName: e.target.value,
-                        }))
-                      }
                     />
                   </Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
                 </Table.Row>
-
-                {getParentsQuery.isFetching &&
-                !(getParentsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={8} />
+                {getStudentsQuery.isFetching &&
+                !(getStudentsQuery.isRefetching || perPage) ? (
+                  <SkeletonTable cols={12} />
                 ) : (
-                  getParentsQuery.data?.data.data.map(
-                    (parent: Parent, key: number) => (
+                  getStudentsQuery.data?.data.data.map(
+                    (student: Student, key: number) => (
                       <Table.Row
                         key={key}
                         className="w-max bg-white dark:bg-gray-800"
                       >
-                        <Table.Cell className="sticky left-0 z-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                        <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
-                            id={parent.id.toString()}
+                            id={student.id.toString()}
                             name="checkbox"
-                            onChange={(ev) =>
-                              handleCheck(parseInt(ev.currentTarget.id))
+                            checked={
+                              checks.find((check) => check.id == student.id)
+                                ?.status == true
+                                ? true
+                                : false
                             }
-                            data-id={key}
+                            onChange={() => handleCheck(student.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {parent.id}
+                          {student.id}
                         </Table.Cell>
-                        <Table.Cell>{parent.name}</Table.Cell>
-                        <Table.Cell
-                          className="font-medium text-gray-900 dark:text-gray-300"
-                          onMouseOver={(e) => setDropDownPos(e.currentTarget)}
-                          data-id={key}
-                        >
-                          <div className="flex items-center gap-x-2">
-                            {parent.childrens.length > 2 ? (
-                              <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                                {parent.childrens?.map(
-                                  (child, key) =>
-                                    key < 1 && (
-                                      <img
-                                        key={key}
-                                        className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                        src={
-                                          child?.imagePath
-                                            ? SERVER_STORAGE + child?.imagePath
-                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                                        }
-                                        alt="profile"
-                                      />
-                                    ),
-                                )}
-                                <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                                  {`+${parent.childrens.length - 1}`}
-                                </div>
-                              </div>
-                            ) : parent.childrens.length > 1 ? (
-                              <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                                {parent.childrens?.map(
-                                  (child, key) =>
-                                    key < 1 && (
-                                      <img
-                                        key={key}
-                                        className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                        src={
-                                          child?.imagePath
-                                            ? SERVER_STORAGE + child?.imagePath
-                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                                        }
-                                        alt="profile"
-                                      />
-                                    ),
-                                )}
-                                <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                                  {`+${parent.childrens.length - 1}`}
-                                </div>
-                              </div>
-                            ) : parent.childrens?.length == 1 ? (
-                              <>
-                                <img
-                                  className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                  src={
-                                    parent.childrens[0]?.imagePath
-                                      ? SERVER_STORAGE +
-                                        parent.childrens[0]?.imagePath
-                                      : `https://ui-avatars.com/api/?background=random&name=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
-                                  }
-                                  alt="profile"
-                                />
-                                <span className="pointer-events-none">
-                                  {parent.childrens[0]?.name}
-                                </span>
-                              </>
-                            ) : (
-                              <div
-                                className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
-                                onClick={() =>
-                                  setOpenChildModal({
-                                    id: parent.id,
-                                    school_id: parent.school_id,
-                                    open: true,
-                                  })
-                                }
-                              >
-                                <FaUser className="me-2" />
-                                {t("add-new-child")}
-                              </div>
-                            )}
-                            {dropDownPos && parent.childrens.length > 0 && (
-                              <DropdownListButton
-                                position={dropDownPos}
-                                elemId={key.toString()}
-                              >
-                                <DropdownListButton.List>
-                                  {parent.childrens.map((child, key) => (
-                                    <DropdownListButton.Item
-                                      key={key}
-                                      img={
-                                        child.imagePath
-                                          ? SERVER_STORAGE + child.imagePath
-                                          : `https://ui-avatars.com/api/?background=random&name=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
-                                      }
-                                      name={child.name}
-                                    />
-                                  ))}
-                                </DropdownListButton.List>
-                                <DropdownListButton.Button>
-                                  <p
-                                    onClick={() =>
-                                      setOpenChildModal({
-                                        id: parent.id,
-                                        school_id: parent.school_id,
-                                        open: true,
-                                      })
-                                    }
-                                  >
-                                    {t("add-new-child")}
-                                  </p>
-                                </DropdownListButton.Button>
-                              </DropdownListButton>
-                            )}
-                          </div>
-                        </Table.Cell>
+                        <Table.Cell>{student.name}</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {parent.email}
+                          {student.id}
                         </Table.Cell>
-                        <Table.Cell>{parent.phone}</Table.Cell>
-                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {/* <span>
-                      {formatDuration(parent.time_spent).hour}
-                      <span className="text-gray-500 dark:text-gray-400">
-                        {" "}
-                        h{" "}
-                      </span>
-                      {formatDuration(parent.time_spent).minute > 0
-                        ? formatDuration(parent.time_spent).minute
-                        : ""}
-                      <span
-                        className="text-gray-500 dark:text-gray-400"
-                        hidden={formatDuration(parent.time_spent).minute <= 0}
-                      >
-                        {" "}
-                        min
-                      </span>
-                    </span> */}
-                        </Table.Cell>
+                        <Table.Cell>{student.name}</Table.Cell>
+
                         <Table.Cell>
-                          <ToggleSwitch
-                            theme={{
-                              toggle: {
-                                base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                              },
-                            }}
-                            checked={blockSwitch[parent.id] || false}
-                            onChange={() =>
-                              setOpenModal({
-                                id: parent.id,
-                                type: "block",
-                                open: true,
-                              })
-                            }
-                          />
-                        </Table.Cell>
-                        <Table.Cell className="flex w-fit gap-x-2">
                           <div className="flex w-fit gap-x-2">
                             <div
                               onClick={() =>
                                 setOpenModal({
-                                  id: parent.id,
+                                  id: student.id,
                                   type: "view",
                                   open: true,
                                 })
@@ -1570,7 +1173,7 @@ export function ViewParents() {
                               className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                               onClick={() =>
                                 onOpenEditModal({
-                                  id: parent.id,
+                                  id: student.id,
                                   type: "edit",
                                   open: true,
                                 })
@@ -1582,7 +1185,7 @@ export function ViewParents() {
                               className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                               onClick={() =>
                                 setOpenModal({
-                                  id: parent.id,
+                                  id: student.id,
                                   type: "delete",
                                   open: true,
                                 })
@@ -1604,12 +1207,12 @@ export function ViewParents() {
             <span className="text-gray-500 dark:text-gray-400">
               {t("records-number")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getParentsQuery.data?.data.from}-
-                {getParentsQuery.data?.data.to}
+                {getStudentsQuery.data?.data.from}-
+                {getStudentsQuery.data?.data.to}
               </span>{" "}
               {t("total-records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getParentsQuery.data?.data.total}
+                {getStudentsQuery.data?.data.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
@@ -1618,7 +1221,7 @@ export function ViewParents() {
                 name="row-num"
                 onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getParentsQuery.data?.data.per_page}
+                defaultValue={getStudentsQuery.data?.data.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -1630,9 +1233,9 @@ export function ViewParents() {
                 showIcons
                 currentPage={page}
                 onPageChange={(page) =>
-                  !getParentsQuery.isPlaceholderData && setPage(page)
+                  !getStudentsQuery.isPlaceholderData && setPage(page)
                 }
-                totalPages={getParentsQuery.data?.data.last_page ?? 1}
+                totalPages={getStudentsQuery.data?.data.last_page ?? 1}
                 nextLabel={minSm ? t("next") : ""}
                 previousLabel={minSm ? t("previous") : ""}
                 theme={{

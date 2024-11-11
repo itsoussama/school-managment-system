@@ -170,7 +170,7 @@ function Menu() {
           <Link to="Parents/manage" state={{ active: true }}>
             <Items
               isActive={useMatch("/Parents/manage") ? true : false}
-              itemId="subitem-1"
+              itemId="subitem-2"
               itemName="view-parents"
             />
           </Link>
@@ -201,13 +201,24 @@ function Menu() {
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
             />
           }
-          containerClass="locked"
+          // containerClass="locked"
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Items itemId="subitem-1" itemName="sub item" />
-          <Items itemId="subitem-2" itemName="sub item" />
-          <Items itemId="subitem-3" itemName="sub item" />
+          <Link to="Resources/new" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/Resources/new") ? true : false}
+              itemId="subitem-1"
+              itemName="new-resource"
+            />
+          </Link>
+          <Link to="Resources/manage" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/Resources/manage") ? true : false}
+              itemId="subitem-2"
+              itemName="view-resources"
+            />
+          </Link>
         </Items>
       </div>
       <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>

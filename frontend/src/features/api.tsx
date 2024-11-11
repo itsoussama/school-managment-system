@@ -5,6 +5,7 @@ import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParen
 import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
 import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStudent";
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
+import { FormData as AddResourceFromData } from "@src/admin/pages/resources/addResources";
 const axiosApi = AxiosProvider();
 
 const getTeachers = async (
@@ -198,23 +199,88 @@ const exportUser = async () => {
   return { response: response };
 };
 
+const getResources = async () => {
+  const response = await axiosApi.get("/api/resources");
+  return response.data?.data;
+};
+
+const getResource = async (id: number) => {
+  const response = await axiosApi.get("/api/resources/" + id);
+  return response.data?.data;
+};
+
+const addResource = async (formData: AddResourceFromData) => {
+  const response = await axiosApi.post("/api/resources", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data?.data;
+};
+
+const setResource = async (formData: AddResourceFromData) => {
+  const response = await axiosApi.post(
+    "/api/resources/" + formData?.id,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data?.data;
+};
+
+const deleteResource = async (id: number) => {
+  const response = await axiosApi.delete("/api/resources/" + id);
+  return response.data?.data;
+};
+
+const getCategories = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  schoolId: number,
+) => {
+  const response = await axiosApi.get(
+    "/api/categories?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&school_id=" +
+      schoolId,
+  );
+  return response?.data;
+};
+
 export {
   getTeachers,
-  getStudents,
-  getParents,
-  getUser,
-  addStudent,
   addTeacher,
-  addParent,
   setTeacher,
+  getStudents,
+  addStudent,
   setStudent,
+  getParents,
+  addParent,
   setParent,
+  getUser,
   deleteUser,
-  getSubjects,
-  getGrades,
   assignChilds,
   assignParent,
   blockUser,
   unblockUser,
   exportUser,
+  getSubjects,
+  getGrades,
+  getResources,
+  getResource,
+  addResource,
+  setResource,
+  deleteResource,
+  getCategories,
 };

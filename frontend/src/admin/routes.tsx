@@ -8,6 +8,8 @@ import AddParent from "@admin/pages/parents/addParent";
 import { ViewParents } from "@admin/pages/parents/viewParents";
 import Dashboard from "@admin/pages/dashboard";
 import DataManagement from "@admin/pages/configuration/dataManagement";
+import AddResources from "./pages/resources/addResources";
+import { ViewResources } from "./pages/resources/viewResources";
 
 export const AdminRouter = {
   path: "/",
@@ -54,6 +56,19 @@ export const AdminRouter = {
         {
           path: "manage",
           element: <ViewParents />,
+        },
+      ],
+    },
+    {
+      path: "resources",
+      children: [
+        {
+          path: "new",
+          element: <AddResources />,
+        },
+        {
+          path: "manage",
+          element: <ViewResources />,
         },
       ],
     },

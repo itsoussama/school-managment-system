@@ -495,7 +495,7 @@ function AddChildModal({
                               src={
                                 child?.imagePath
                                   ? SERVER_STORAGE + child?.imagePath
-                                  : `https://avatar.iran.liara.run/username?username=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                  : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
                               }
                               alt="profile"
                             />

@@ -173,7 +173,6 @@ export default function AddParentModal({
           title: "Operation Failed",
           description: (e as Error).message,
         },
-        duration: 7000,
         state: true,
       });
     }
@@ -215,7 +214,6 @@ export default function AddParentModal({
       <Alert
         status={alert.status}
         state={alert.state}
-        duration={alert.duration}
         title={alert.message.title}
         description={alert.message.description}
         close={(value) => toggleAlert(value)}
@@ -431,7 +429,7 @@ export default function AddParentModal({
                               src={
                                 parent?.imagePath
                                   ? SERVER_STORAGE + parent?.imagePath
-                                  : `https://avatar.iran.liara.run/username?username=${getUserName(parent?.name).firstName}+${getUserName(parent?.name).lastName}`
+                                  : `https://ui-avatars.com/api/?background=random&name=${getUserName(parent?.name).firstName}+${getUserName(parent?.name).lastName}`
                               }
                               alt="profile"
                             />

@@ -72,15 +72,18 @@ export default function AddParent() {
   const addParentQuery = useMutation({
     mutationFn: addParent,
     onSuccess: () => {
-      toggleAlert({
-        status: "success",
-        message: {
-          title: "Operation Successful",
-          description: "Your changes have been saved successfully.",
+      redirect("/parents/manage", {
+        state: {
+          alert: {
+            status: "success",
+            message: {
+              title: "Operation Successful",
+              description: "Your changes have been saved successfully.",
+            },
+            state: true,
+          },
         },
-        state: true,
       });
-      redirect("/parents/manage");
     },
     onError: () => {
       toggleAlert({
@@ -289,7 +292,7 @@ export default function AddParent() {
             {getChildrensQuery.data?.data.map(
               (child: Childs, key: number) =>
                 child.name.search(new RegExp(searchValue, "i")) !== -1 && (
-                  <div>
+                  <div key={key}>
                     <Checkbox
                       key={key}
                       htmlFor={child.id}
