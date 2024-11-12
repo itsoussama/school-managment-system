@@ -14,12 +14,31 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class UsersExport implements FromCollection, WithHeadings, WithStyles
 {
+    protected $filters;
+
+    // Accept filters via the constructor
+    public function __construct($filters = [])
+    {
+        $this->filters = $filters;
+    }
+
     /**
     * @return \Illuminate\Support\Collection
     */
+
     public function collection()
     {
-        return User::select('name', 'email')->get();
+        $query = User::query();
+
+        // Apply filters
+        if (!empty($this->filters['name'])) {
+            $query->where('name', 'like', '%' . $this->filters['name'] . '%');
+        }
+
+        if (!empty($this->filters['email'])) {
+            $query->where('email', 'like', '%' . $this->filters['email'] . '%');
+        }
+        return $query->get(['name', 'email']);
     }
     public function headings(): array
     {
@@ -62,5 +81,9 @@ class UsersExport implements FromCollection, WithHeadings, WithStyles
                 ],
             ],
         ]);
+
+        foreach (range('A', 'B') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
     }
 }
