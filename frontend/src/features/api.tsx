@@ -2,6 +2,7 @@ import AxiosProvider from "@services/axiosProvider";
 import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTeachers";
 import { FormData as UpdateStudentFromData } from "@admin/pages/students/viewStudents";
 import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParents";
+import { FormData as UpdateResourceFromData } from "@admin/pages/resources/viewResources";
 import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
 import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStudent";
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
@@ -199,14 +200,43 @@ const exportUser = async () => {
   return { response: response };
 };
 
-const getResources = async () => {
-  const response = await axiosApi.get("/api/resources");
-  return response.data?.data;
+const getResources = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  schoolId: number,
+  label = "",
+  maxQty = 0,
+  minQty = 0,
+  category_id = 0,
+) => {
+  const response = await axiosApi.get(
+    "/api/resources?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&school_id=" +
+      schoolId +
+      "&label=" +
+      label +
+      "&maxQty=" +
+      maxQty +
+      "&minQty=" +
+      minQty +
+      "&category_id=" +
+      category_id,
+  );
+  return response.data;
 };
 
 const getResource = async (id: number) => {
   const response = await axiosApi.get("/api/resources/" + id);
-  return response.data?.data;
+  return response?.data;
 };
 
 const addResource = async (formData: AddResourceFromData) => {
@@ -215,10 +245,10 @@ const addResource = async (formData: AddResourceFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response.data?.data;
+  return response.data;
 };
 
-const setResource = async (formData: AddResourceFromData) => {
+const setResource = async (formData: UpdateResourceFromData) => {
   const response = await axiosApi.post(
     "/api/resources/" + formData?.id,
     formData,
@@ -228,12 +258,12 @@ const setResource = async (formData: AddResourceFromData) => {
       },
     },
   );
-  return response.data?.data;
+  return response.data;
 };
 
 const deleteResource = async (id: number) => {
   const response = await axiosApi.delete("/api/resources/" + id);
-  return response.data?.data;
+  return response.data;
 };
 
 const getCategories = async (

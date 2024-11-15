@@ -240,10 +240,7 @@ export default function AddResources() {
                 label={fieldsTrans("category")}
                 name="category_id"
                 onSelectItem={(items) =>
-                  handleChange(
-                    "category_id",
-                    items.map((item) => parseInt(item.id)),
-                  )
+                  handleChange("category_id", items[0].id)
                 }
               >
                 {getCategoriesQuery.data?.map(

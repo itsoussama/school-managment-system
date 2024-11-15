@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\resource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Mockery\Undefined;
 
 class ResourceController extends Controller
 {
@@ -19,7 +20,37 @@ class ResourceController extends Controller
 
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $resources = Resource::with(['school', 'categories'])->orderBy($sortColumn, $sortDirection);
+        $school_id = $request->input('school_id');
+        $resources = Resource::with(['school', 'categories'])
+            ->where('school_id', $school_id)
+            ->when(request('label'), function ($query, $label) {
+                if (!empty($label)) {
+                    $query->where('label', 'LIKE', '%' . $label . '%');
+                }
+            })
+            ->where(function ($query) {
+
+                if (!empty(request('maxQty')) && !empty(request('minQty'))) {
+                    $query->whereBetween('qty', [request('minQty'), request('maxQty')]);
+                    \Log::info("between");
+                } else if (!empty(request('minQty'))) {
+                    $query->where('qty', '>=', request('minQty'));
+                    \Log::info("min");
+                } else if (!empty(request('maxQty'))) {
+                    $query->where('qty', '<=', request('maxQty'));
+                    \Log::info("max");
+                }
+            })
+            ->whereHas(
+                'categories',
+                function ($query) {
+                    $categories = request('category_id');
+                    if (!empty($categories)) {
+                        $query->whereId($categories);
+                    }
+                }
+            )
+            ->orderBy($sortColumn, $sortDirection);
 
         if ($perPage == -1) {
             return response()->json($resources->get(), Response::HTTP_OK);

@@ -51,7 +51,7 @@ import {
   SkeletonTable,
 } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { DropdownListButton } from "@src/components/dropdown";
+import Dropdown from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddChildModal from "@src/admin/components/addChildModal";
 import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
@@ -1400,71 +1400,94 @@ export function ViewParents() {
                         <Table.Cell>{parent.name}</Table.Cell>
                         <Table.Cell
                           className="font-medium text-gray-900 dark:text-gray-300"
-                          onMouseOver={(e) => setDropDownPos(e.currentTarget)}
-                          data-id={key}
+                          // onMouseOver={(e) => setDropDownPos(e.currentTarget)}
+                          // data-id={key}
                         >
-                          <div className="flex items-center gap-x-2">
-                            {parent.childrens.length > 2 ? (
-                              <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                                {parent.childrens?.map(
-                                  (child, key) =>
-                                    key < 1 && (
+                          <Dropdown
+                            triggerEvent="hover"
+                            element={
+                              <div className="flex items-center gap-x-2">
+                                {parent.childrens.length > 2 ? (
+                                  <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
+                                    {parent.childrens?.map(
+                                      (child, key) =>
+                                        key < 1 && (
+                                          <img
+                                            key={key}
+                                            className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                            src={
+                                              child?.imagePath
+                                                ? SERVER_STORAGE +
+                                                  child?.imagePath
+                                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                            }
+                                            alt="profile"
+                                          />
+                                        ),
+                                    )}
+                                    <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
+                                      {`+${parent.childrens.length - 1}`}
+                                    </div>
+                                  </div>
+                                ) : parent.childrens.length > 1 ? (
+                                  <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
+                                    {parent.childrens?.map(
+                                      (child, key) =>
+                                        key < 1 && (
+                                          <img
+                                            key={key}
+                                            className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
+                                            src={
+                                              child?.imagePath
+                                                ? SERVER_STORAGE +
+                                                  child?.imagePath
+                                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                            }
+                                            alt="profile"
+                                          />
+                                        ),
+                                    )}
+                                    <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
+                                      {`+${parent.childrens.length - 1}`}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  parent.childrens?.length == 1 && (
+                                    <>
                                       <img
-                                        key={key}
                                         className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
                                         src={
-                                          child?.imagePath
-                                            ? SERVER_STORAGE + child?.imagePath
-                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                          parent.childrens[0]?.imagePath
+                                            ? SERVER_STORAGE +
+                                              parent.childrens[0]?.imagePath
+                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
                                         }
                                         alt="profile"
                                       />
-                                    ),
+                                      <span className="pointer-events-none">
+                                        {parent.childrens[0]?.name}
+                                      </span>
+                                    </>
+                                  )
                                 )}
-                                <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                                  {`+${parent.childrens.length - 1}`}
-                                </div>
                               </div>
-                            ) : parent.childrens.length > 1 ? (
-                              <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                                {parent.childrens?.map(
-                                  (child, key) =>
-                                    key < 1 && (
-                                      <img
-                                        key={key}
-                                        className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                        src={
-                                          child?.imagePath
-                                            ? SERVER_STORAGE + child?.imagePath
-                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                                        }
-                                        alt="profile"
-                                      />
-                                    ),
-                                )}
-                                <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                                  {`+${parent.childrens.length - 1}`}
-                                </div>
-                              </div>
-                            ) : parent.childrens?.length == 1 ? (
-                              <>
-                                <img
-                                  className="h-10 w-10 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                                  src={
-                                    parent.childrens[0]?.imagePath
-                                      ? SERVER_STORAGE +
-                                        parent.childrens[0]?.imagePath
-                                      : `https://ui-avatars.com/api/?background=random&name=${getUserName(parent.childrens[0]?.name).firstName}+${getUserName(parent.childrens[0]?.name).lastName}`
+                            }
+                          >
+                            <Dropdown.List>
+                              {parent.childrens.map((child, key) => (
+                                <Dropdown.Item
+                                  key={key}
+                                  img={
+                                    child.imagePath
+                                      ? SERVER_STORAGE + child.imagePath
+                                      : `https://ui-avatars.com/api/?background=random&name=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
                                   }
-                                  alt="profile"
+                                  name={child.name}
                                 />
-                                <span className="pointer-events-none">
-                                  {parent.childrens[0]?.name}
-                                </span>
-                              </>
-                            ) : (
-                              <div
-                                className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                              ))}
+                            </Dropdown.List>
+                            <Dropdown.Button>
+                              <p
                                 onClick={() =>
                                   setOpenChildModal({
                                     id: parent.id,
@@ -1473,44 +1496,25 @@ export function ViewParents() {
                                   })
                                 }
                               >
-                                <FaUser className="me-2" />
                                 {t("add-new-child")}
-                              </div>
-                            )}
-                            {dropDownPos && parent.childrens.length > 0 && (
-                              <DropdownListButton
-                                position={dropDownPos}
-                                elemId={key.toString()}
-                              >
-                                <DropdownListButton.List>
-                                  {parent.childrens.map((child, key) => (
-                                    <DropdownListButton.Item
-                                      key={key}
-                                      img={
-                                        child.imagePath
-                                          ? SERVER_STORAGE + child.imagePath
-                                          : `https://ui-avatars.com/api/?background=random&name=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
-                                      }
-                                      name={child.name}
-                                    />
-                                  ))}
-                                </DropdownListButton.List>
-                                <DropdownListButton.Button>
-                                  <p
-                                    onClick={() =>
-                                      setOpenChildModal({
-                                        id: parent.id,
-                                        school_id: parent.school_id,
-                                        open: true,
-                                      })
-                                    }
-                                  >
-                                    {t("add-new-child")}
-                                  </p>
-                                </DropdownListButton.Button>
-                              </DropdownListButton>
-                            )}
-                          </div>
+                              </p>
+                            </Dropdown.Button>
+                          </Dropdown>
+                          {parent.childrens?.length < 1 && (
+                            <div
+                              className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                              onClick={() =>
+                                setOpenChildModal({
+                                  id: parent.id,
+                                  school_id: parent.school_id,
+                                  open: true,
+                                })
+                              }
+                            >
+                              <FaUser className="me-2" />
+                              {t("add-new-child")}
+                            </div>
+                          )}
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                           {parent.email}

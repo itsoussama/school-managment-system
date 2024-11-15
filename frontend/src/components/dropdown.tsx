@@ -1,149 +1,216 @@
-import React, {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { FaUser } from "react-icons/fa6";
 
-interface DropdownListButton {
-  children: ReactNode;
-  position?: EventTarget;
-  elemId?: string;
+type TriggerEvent = "click" | "hover";
+
+interface DropdownProps {
+  element: React.ReactNode;
+  children: React.ReactNode;
+  triggerEvent?: TriggerEvent; // Condition to trigger dropdown via click or hover
+  closeOnEvent?: "click" | "hover" | "both";
+  additionalStyle?: {
+    containerStyle: string;
+  };
 }
+
 interface ListProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
+
 interface ItemProps {
   img: string;
   name: string;
 }
 
-interface Button {
+interface ButtonProps {
   children: React.ReactNode;
 }
 
-function DropdownListButton({
+function Dropdown({
+  element,
   children,
-  position,
-  elemId,
-}: DropdownListButton) {
+  triggerEvent = "click",
+  closeOnEvent = "click",
+  additionalStyle,
+}: DropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{
     top: number;
     left: number;
     maxHeight: number;
   } | null>(null);
-  const [isVisible, setIsVisible] = useState<boolean>(false);
 
-  const subComponentList = Object.keys(DropdownListButton);
+  const toggleDropdown = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const availableSpace = window.innerHeight - rect?.bottom;
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        maxHeight: Math.max(availableSpace - 20, 70),
+      });
+    }
+    setIsVisible((prev) => !prev);
+  }, []);
 
-  const subComponents = subComponentList.map((key) => {
-    return React.Children.map(children, (child) =>
-      child?.type.name === key ? child : null,
-    );
-  });
+  const handleOutsideClick = useCallback((event: MouseEvent) => {
+    if (
+      dropdownRef.current &&
+      triggerRef.current &&
+      !dropdownRef.current.contains(event.target as Node) &&
+      !triggerRef.current.contains(event.target as Node)
+    ) {
+      setIsVisible(false);
+    }
+  }, []);
 
-  const onToggleDropDown = useCallback(
-    (event: MouseEvent) => {
-      const element = position as HTMLDivElement;
+  const handleMouseLeave = useCallback(() => {
+    setIsVisible(false);
+  }, []);
 
-      // if (dropdownRef.current) {
-      if (
-        dropdownRef.current &&
-        element &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        !element.contains(event.target as Node)
-      ) {
-        setIsVisible(false);
-      } else {
-        if (elemId == element.dataset.id) {
-          const rect = element.getBoundingClientRect();
-          const availableSpace = window.innerHeight - rect?.bottom;
+  const handleMouseEnterDropdown = useCallback(() => {
+    setIsVisible(true);
+  }, []);
 
-          setDropdownPosition({
-            top: rect?.top + element.clientHeight,
-            left: rect?.left,
-            maxHeight: Math.max(availableSpace - 20, 70),
-          });
-          setIsVisible(true);
-        }
-      }
+  const handleMouseEnterTrigger = useCallback(() => {
+    setIsVisible(true);
+  }, []);
 
-      // }
-    },
-    [position],
-  );
-
-  // useEffect(() => {
-  //   onVisible();
-  // }, [onVisible]);
-
+  // Add event listeners for hover and click triggers
   useEffect(() => {
-    // console.log(visible);
+    if (triggerEvent === "click") {
+      triggerRef.current?.addEventListener("click", toggleDropdown);
+    } else if (triggerEvent === "hover") {
+      triggerRef.current?.addEventListener(
+        "mouseenter",
+        handleMouseEnterTrigger,
+      );
+      dropdownRef.current?.addEventListener(
+        "mouseenter",
+        handleMouseEnterDropdown,
+      );
+      triggerRef.current?.addEventListener("mouseleave", handleMouseLeave);
+      dropdownRef.current?.addEventListener("mouseleave", handleMouseLeave);
+    }
 
-    document.addEventListener("mouseover", onToggleDropDown);
-    // // dropdownRef.addEventListener("mouseleave", handleMouseLeave);
+    if (isVisible) {
+      if (closeOnEvent === "click" || closeOnEvent === "both") {
+        document.addEventListener("mousedown", handleOutsideClick);
+      }
+      if (closeOnEvent === "hover" || closeOnEvent === "both") {
+        dropdownRef.current?.addEventListener("mouseleave", handleMouseLeave);
+      }
+    }
 
     return () => {
-      document.removeEventListener("mouseover", onToggleDropDown);
-      //   // triggerElement.removeEventListener("mouseleave", handleMouseLeave);
-    };
-    // console.log(position);
-  }, [onToggleDropDown]);
+      if (triggerEvent === "click") {
+        triggerRef.current?.removeEventListener("click", toggleDropdown);
+      } else if (triggerEvent === "hover") {
+        triggerRef.current?.removeEventListener(
+          "mouseenter",
+          handleMouseEnterTrigger,
+        );
+        dropdownRef.current?.removeEventListener(
+          "mouseenter",
+          handleMouseEnterDropdown,
+        );
+        triggerRef.current?.removeEventListener("mouseleave", handleMouseLeave);
+        dropdownRef.current?.removeEventListener(
+          "mouseleave",
+          handleMouseLeave,
+        );
+      }
 
-  return ReactDOM.createPortal(
-    <div
-      // id="dropdownUsers"
-      ref={dropdownRef}
-      className={`absolute ${!isVisible ? "hidden" : ""} z-10 flex w-56 flex-col rounded-lg bg-white shadow dark:bg-gray-700`}
-      style={{
-        top: dropdownPosition?.top,
-        left: dropdownPosition?.left,
-        maxHeight: dropdownPosition?.maxHeight,
-      }}
-    >
-      {subComponents.map((component) => component)}
-    </div>,
-    document.body,
+      document.removeEventListener("mousedown", handleOutsideClick);
+      dropdownRef.current?.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, [
+    isVisible,
+    triggerEvent,
+    closeOnEvent,
+    toggleDropdown,
+    handleOutsideClick,
+    handleMouseLeave,
+    handleMouseEnterDropdown,
+    handleMouseEnterTrigger,
+  ]);
+
+  // Position the dropdown after it becomes visible
+  useEffect(() => {
+    if (isVisible && dropdownRef.current && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const availableSpace = window.innerHeight - rect?.bottom;
+
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        maxHeight: Math.max(availableSpace - 20, 70),
+      });
+    }
+  }, [isVisible]);
+
+  return (
+    <>
+      {/* Trigger element */}
+      <div ref={triggerRef}>{element}</div>
+
+      {/* Dropdown content */}
+      {isVisible &&
+        ReactDOM.createPortal(
+          <div
+            ref={dropdownRef}
+            className={`absolute z-10 w-auto min-w-[inherit] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow dark:border-gray-600 dark:bg-gray-700 ${additionalStyle?.containerStyle}`}
+            style={{
+              top: dropdownPosition?.top,
+              left: dropdownPosition?.left,
+              maxHeight: dropdownPosition?.maxHeight,
+            }}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 
+// List component for dropdown items
 function List({ children }: ListProps) {
   return (
-    <ul
-      className="max-h-[inherit] overflow-y-auto py-2 text-gray-700 dark:text-gray-200"
-      aria-labelledby="dropdownUsersButton"
-    >
+    <ul className="max-h-[inherit] overflow-y-auto py-2 text-gray-700 dark:text-gray-200">
       {children}
     </ul>
   );
 }
 
+// Item component to display each item within the List
 function Item({ img, name }: ItemProps) {
   return (
     <li>
       <div className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-        <img className="me-2 h-6 w-6 rounded-full" src={img} alt={name} />
+        <img className="mr-2 h-6 w-6 rounded-full" src={img} alt={name} />
         {name}
       </div>
     </li>
   );
 }
 
-function Button({ children }: Button) {
+// Button component for any action within the dropdown
+function Button({ children }: ButtonProps) {
   return (
     <div className="flex cursor-pointer items-center rounded-b-lg border-t border-gray-200 bg-gray-50 p-3 text-sm font-medium text-blue-600 hover:bg-gray-100 hover:underline dark:border-gray-600 dark:bg-gray-700 dark:text-blue-500 dark:hover:bg-gray-600">
-      <FaUser className="me-2" />
+      <FaUser className="mr-2" />
       {children}
     </div>
   );
 }
 
-DropdownListButton.List = List;
-DropdownListButton.Item = Item;
-DropdownListButton.Button = Button;
+// Exporting Dropdown with subcomponents as properties
+Dropdown.List = List;
+Dropdown.Item = Item;
+Dropdown.Button = Button;
 
-export { DropdownListButton };
+export default Dropdown;

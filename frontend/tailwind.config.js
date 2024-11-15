@@ -13,13 +13,6 @@ export default {
       full: "100%",
     },
 
-    // fontSize: {
-    //   l: "32px",
-    //   m: "24px",
-    //   s: "16px",
-    //   xs: "14px",
-    // },
-
     extend: {
       colors: {
         "light-primary": "#FFFFFF",
