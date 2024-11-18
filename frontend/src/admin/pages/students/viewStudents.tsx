@@ -31,7 +31,7 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { IoFilter } from "react-icons/io5";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   keepPreviousData,
@@ -217,11 +217,21 @@ export function ViewStudents() {
   const { t: fieldTrans } = useTranslation("form-fields");
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   const minSm = useBreakpoint("min", "sm");
+  const location = useLocation();
 
   // const userId = useRef<string>(null)
   const getAllStudentsQuery = useQuery({
-    queryKey: ["getAllStudents"],
-    queryFn: () => getStudents(1, -1, undefined, undefined, 1),
+    queryKey: ["getAllStudents", filter?.name, filter?.gradelevel],
+    queryFn: () =>
+      getStudents(
+        1,
+        -1,
+        undefined,
+        undefined,
+        admin.school_id,
+        filter?.name,
+        filter?.gradelevel,
+      ),
     placeholderData: keepPreviousData,
   });
 
@@ -271,6 +281,10 @@ export function ViewStudents() {
         queryKey: ["getStudents"],
       });
 
+      queryClient.invalidateQueries({
+        queryKey: ["getAllStudents"],
+      });
+
       setData({
         id: data?.id,
         firstName: getUserName(data?.name).firstName,
@@ -283,17 +297,12 @@ export function ViewStudents() {
 
       toggleAlert({
         status: "success",
-        message: {
-          title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
-        },
+        message: "Operation Successful",
         state: true,
       });
 
-      setOpenModal((prev) => ({
-        id: prev?.id as number,
-        open: false,
-      }));
+      setOpenModal(undefined);
+      setPage(1);
 
       setPreviewImg(undefined);
     },
@@ -301,11 +310,7 @@ export function ViewStudents() {
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -314,8 +319,21 @@ export function ViewStudents() {
   const deleteUserQuery = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getStudents"] });
+      queryClient.invalidateQueries({
+        queryKey: ["getStudent"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getStudents"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllStudents"],
+      });
       // setOpenDeleteModal(undefined);
+      setOpenModal(undefined);
+      setPage(1);
+
       setData({
         id: 0,
         firstName: "",
@@ -328,11 +346,7 @@ export function ViewStudents() {
 
       toggleAlert({
         status: "success",
-        message: {
-          title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
-        },
-
+        message: "Operation Successful",
         state: true,
       });
     },
@@ -340,11 +354,7 @@ export function ViewStudents() {
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -353,9 +363,29 @@ export function ViewStudents() {
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
       queryClient.invalidateQueries({
-        queryKey: ["getParent"],
+        queryKey: ["getStudent"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getStudents"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllStudents"],
+      });
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
       });
     },
   });
@@ -363,18 +393,45 @@ export function ViewStudents() {
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
       queryClient.invalidateQueries({
-        queryKey: ["getParent"],
+        queryKey: ["getStudent"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getStudents"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllStudents"],
+      });
+
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
       });
     },
   });
   // const [selectedItem, setSelectedItem] = useState()
 
   const onChange = (event: ChangeEvent) => {
+    const inputElem = event.target as HTMLInputElement;
+    const selectElem = event.target as HTMLSelectElement;
+    // if (event?.target.nodeType)
     setData((prev) => ({
       ...(prev as Data),
-      [event.target.id]: (event.target as HTMLInputElement).value,
+      [event.target.id]:
+        event?.target.nodeName == "SELECT"
+          ? selectElem.options[selectElem.selectedIndex].value
+          : inputElem.value,
     }));
     // console.log((event.target as HTMLInputElement).value);
   };
@@ -527,11 +584,7 @@ export function ViewStudents() {
     } else {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     }
@@ -548,10 +601,6 @@ export function ViewStudents() {
     }
 
     deleteUserQuery.mutate(openModal?.id as number);
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
   };
 
   const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
@@ -573,11 +622,6 @@ export function ViewStudents() {
       }));
       unBlockUserMutation.mutate({ user_id: userId });
     }
-
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -600,10 +644,7 @@ export function ViewStudents() {
 
   const onCloseModal = () => {
     studentMutation.reset();
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
+    setOpenModal(undefined);
 
     toggleChangePassword(false);
 
@@ -654,6 +695,16 @@ export function ViewStudents() {
   };
 
   useEffect(() => {
+    const alertState = location.state?.alert;
+    toggleAlert({
+      status: alertState?.status,
+      message: alertState?.message,
+      state: alertState?.state,
+    });
+    window.history.replaceState({}, "");
+  }, [location]);
+
+  useEffect(() => {
     const checkedVal = checks.filter((val) => val.status === true)
       .length as number;
     setNumChecked(checkedVal);
@@ -680,14 +731,7 @@ export function ViewStudents() {
       <Alert
         status={alert.status}
         state={alert.state}
-        title={alert.message.title}
-        description={
-          Object.entries(formError).some((val) => val[1] !== "")
-            ? Object.entries(formError)
-                .filter((err) => err[1] !== "")
-                .map((t) => t[1])
-            : alert.message.description
-        }
+        message={alert.message}
         close={(value) => toggleAlert(value)}
       />
       <Breadcrumb
@@ -1260,6 +1304,7 @@ export function ViewStudents() {
               <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
                 <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                   <Checkbox
+                    className="rounded-xs"
                     id="0"
                     ref={firstCheckboxRef}
                     onChange={() => handleCheck()}
@@ -1433,6 +1478,7 @@ export function ViewStudents() {
                       >
                         <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
+                            className="rounded-xs"
                             id={student.id.toString()}
                             name="checkbox"
                             checked={

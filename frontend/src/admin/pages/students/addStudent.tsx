@@ -59,25 +59,21 @@ export default function AddStudent() {
   const addStudentQuery = useMutation({
     mutationFn: addStudent,
     onSuccess: () => {
-      toggleAlert({
-        status: "success",
-        message: {
-          title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
+      redirect("/students/manage", {
+        state: {
+          alert: {
+            status: "success",
+            message: "Operation Successful",
+            state: true,
+          },
         },
-        state: true,
       });
-
-      redirect("/students/manage");
     },
 
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -110,10 +106,7 @@ export default function AddStudent() {
     } catch (e) {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: (e as Error).message,
-        },
+        message: "Operation Failed",
         state: true,
       });
     }
@@ -143,8 +136,7 @@ export default function AddStudent() {
       <Alert
         status={alert.status}
         state={alert.state}
-        title={alert.message.title}
-        description={alert.message.description}
+        message={alert.message}
         close={(value) => toggleAlert(value)}
       />
 
@@ -293,7 +285,6 @@ export default function AddStudent() {
                   (grade: Grades, key: number) => (
                     <Checkbox
                       key={key}
-                      htmlFor={grade.id}
                       label={grade.label}
                       id={grade.id}
                       name="grades"

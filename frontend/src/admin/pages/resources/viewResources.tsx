@@ -27,7 +27,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { IoFilter } from "react-icons/io5";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   keepPreviousData,
@@ -62,7 +62,7 @@ interface Check {
 
 interface Modal {
   id: number;
-  type?: "view" | "edit" | "delete" | "block";
+  type?: "view" | "edit" | "delete";
   open: boolean;
 }
 
@@ -125,7 +125,7 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 export function ViewResources() {
   const queryClient = useQueryClient();
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
-
+  const location = useLocation();
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
@@ -163,8 +163,25 @@ export function ViewResources() {
 
   // const userId = useRef<string>(null)
   const getAllResourcesQuery = useQuery({
-    queryKey: ["getAllResources"],
-    queryFn: () => getResources(1, -1, undefined, undefined, admin?.school_id),
+    queryKey: [
+      "getAllResources",
+      filter?.label,
+      filter?.maxQty,
+      filter?.minQty,
+      filter?.category_id,
+    ],
+    queryFn: () =>
+      getResources(
+        1,
+        -1,
+        undefined,
+        undefined,
+        admin?.school_id,
+        filter?.label,
+        filter?.maxQty,
+        filter?.minQty,
+        filter?.category_id,
+      ),
     placeholderData: keepPreviousData,
   });
 
@@ -231,17 +248,12 @@ export function ViewResources() {
 
       toggleAlert({
         status: "success",
-        message: {
-          title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
-        },
+        message: "Operation Successful",
         state: true,
       });
 
-      setOpenModal((prev) => ({
-        id: prev?.id as number,
-        open: false,
-      }));
+      setOpenModal(undefined);
+      setPage(1);
 
       setPreviewImg(undefined);
     },
@@ -249,11 +261,7 @@ export function ViewResources() {
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -286,11 +294,7 @@ export function ViewResources() {
 
       toggleAlert({
         status: "success",
-        message: {
-          title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
-        },
-
+        message: "Operation Successful",
         state: true,
       });
     },
@@ -298,11 +302,7 @@ export function ViewResources() {
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -482,7 +482,7 @@ export function ViewResources() {
     //   toggleAlert({
     //     status: "fail",
     //     message: {
-    //       title: "Operation Failed",
+    //       message: "Operation Failed",
     //       description: "Something went wrong. Please try again later.",
     //     },
 
@@ -502,7 +502,6 @@ export function ViewResources() {
     }
 
     deleteResourceQuery.mutate(openModal?.id as number);
-    setOpenModal(undefined);
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -564,6 +563,16 @@ export function ViewResources() {
   };
 
   useEffect(() => {
+    const alertState = location.state?.alert;
+    toggleAlert({
+      status: alertState?.status,
+      message: alertState?.message,
+      state: alertState?.state,
+    });
+    window.history.replaceState({}, "");
+  }, [location]);
+
+  useEffect(() => {
     const checkedVal = checks.filter((val) => val.status === true)
       .length as number;
     setNumChecked(checkedVal);
@@ -580,14 +589,7 @@ export function ViewResources() {
       <Alert
         status={alert.status}
         state={alert.state}
-        title={alert.message.title}
-        description={
-          Object.entries(formError).some((val) => val[1] !== "")
-            ? Object.entries(formError)
-                .filter((err) => err[1] !== "")
-                .map((t) => t[1])
-            : alert.message.description
-        }
+        message={alert.message}
         close={(value) => toggleAlert(value)}
       />
       <Breadcrumb
@@ -912,6 +914,7 @@ export function ViewResources() {
               <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
                 <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                   <Checkbox
+                    className="rounded-xs"
                     id="0"
                     ref={firstCheckboxRef}
                     onChange={() => handleCheck()}
@@ -919,7 +922,7 @@ export function ViewResources() {
                 </Table.HeadCell>
                 <Table.HeadCell>{t("item-id")}</Table.HeadCell>
                 <Table.HeadCell>
-                  <div className="flex items-center justify-center gap-x-3">
+                  <div className="flex items-center gap-x-3">
                     <span className="inline-block">{fieldTrans("label")}</span>
                     <div
                       className="flex flex-col"
@@ -1001,10 +1004,46 @@ export function ViewResources() {
                   <Table.Cell className="p-2">
                     <div>
                       <Dropdown
-                        additionalStyle={{ containerStyle: "px-2" }}
+                        additionalStyle={{ containerStyle: "px-2 rounded-s" }}
                         element={
-                          <span className="relative block w-full rounded-s border border-gray-300 bg-gray-50 px-2.5 py-1 text-gray-900 focus:border-blue-600 focus:ring-blue-600 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500">
-                            {filter.minQty && filter.maxQty ? (
+                          <div className="relative">
+                            <Input
+                              type="text"
+                              readOnly
+                              icon={
+                                <>
+                                  <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                                  {(filter.maxQty !== undefined ||
+                                    filter.minQty !== undefined) && (
+                                    <FaRegCircleXmark
+                                      onClick={() =>
+                                        setFilter((prev) => ({
+                                          ...prev,
+                                          maxQty: undefined,
+                                          minQty: undefined,
+                                        }))
+                                      }
+                                      className="absolute right-0 top-1/2 mr-6 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                                    />
+                                  )}
+                                </>
+                              }
+                              custom-style={{
+                                inputStyle: "cursor-default px-8 !py-1",
+                                labelStyle: "mb-0 !inline",
+                              }}
+                              placeholder={fieldTrans("filter-all")}
+                              value={
+                                filter.minQty && filter.maxQty
+                                  ? filter.minQty + " ⇆ " + filter.maxQty
+                                  : filter.minQty
+                                    ? "≥ " + filter.minQty
+                                    : filter.maxQty
+                                      ? "≤ " + filter.maxQty
+                                      : ""
+                              }
+                            />
+                            {/* {filter.minQty && filter.maxQty ? (
                               <span>
                                 {filter.minQty} &#8646; {filter.maxQty}
                               </span>
@@ -1013,11 +1052,11 @@ export function ViewResources() {
                             ) : filter.maxQty ? (
                               <span>&#8924; {filter.maxQty}</span>
                             ) : (
-                              <span>none</span>
-                            )}
+                              <span className="text-gray-400">none</span>
+                            )} */}
 
                             <FaChevronDown className="absolute right-0 top-1/2 mr-2 -translate-y-1/2 text-[11px] text-[#7f868e36] dark:text-gray-400" />
-                          </span>
+                          </div>
                         }
                       >
                         <form onSubmit={handleFilter}>
@@ -1027,7 +1066,7 @@ export function ViewResources() {
                                 id="minQty"
                                 type="number"
                                 custom-style={{
-                                  containerStyle: "max-w-16",
+                                  containerStyle: "w-auto",
                                   inputStyle: "py-1",
                                 }}
                                 placeholder="min"
@@ -1037,7 +1076,7 @@ export function ViewResources() {
                                 id="maxQty"
                                 type="number"
                                 custom-style={{
-                                  containerStyle: "max-w-16",
+                                  containerStyle: "w-auto",
                                   inputStyle: "py-1",
                                 }}
                                 placeholder="max"
@@ -1135,6 +1174,7 @@ export function ViewResources() {
                       >
                         <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
+                            className="rounded-xs"
                             id={resource.id.toString()}
                             name="checkbox"
                             checked={

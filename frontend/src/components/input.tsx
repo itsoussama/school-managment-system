@@ -98,6 +98,7 @@ function Checkbox({
       <div className={`relative flex items-center ${wrapperInputStyle}`}>
         <input
           id={htmlFor}
+          name={htmlFor}
           type="checkbox"
           className={`peer h-4 w-4 appearance-none rounded-xs border-gray-300 bg-gray-100 text-blue-600 checked:border-0 checked:bg-blue-800 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 ${inputStyle}`}
           {...attribute}
@@ -304,14 +305,14 @@ function MultiSelect({
   return (
     <div className="relative">
       <label
-        htmlFor="dropdown"
+        htmlFor={name}
         className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
       >
         {label}
       </label>
       <div className="relative" ref={dropdownRef}>
         <div
-          id="dropdown"
+          id={name}
           className="dropdown relative flex h-10 w-full items-center overflow-y-scroll rounded-s border border-gray-300 bg-gray-50 px-2 text-gray-900 focus:border-2 focus:border-blue-600 focus:outline-none focus:ring-blue-600 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
           tabIndex={0}
           onClick={() => openDropDown()}

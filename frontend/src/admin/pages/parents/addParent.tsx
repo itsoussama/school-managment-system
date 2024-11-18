@@ -65,7 +65,7 @@ export default function AddParent() {
 
   const getChildrensQuery = useQuery({
     queryKey: ["getChildrens"],
-    queryFn: () => getStudents(1, -1, undefined, undefined, 1), // should get the school id from admin user
+    queryFn: () => getStudents(1, -1, undefined, undefined, admin.school_id), // should get the school id from admin user
     placeholderData: keepPreviousData,
   });
 
@@ -76,10 +76,7 @@ export default function AddParent() {
         state: {
           alert: {
             status: "success",
-            message: {
-              title: "Operation Successful",
-              description: "Your changes have been saved successfully.",
-            },
+            message: "Operation Successful",
             state: true,
           },
         },
@@ -88,10 +85,7 @@ export default function AddParent() {
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again.",
-        },
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -137,10 +131,7 @@ export default function AddParent() {
     } catch (e) {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: (e as Error).message,
-        },
+        message: "Operation Failed",
         state: true,
       });
     }
@@ -223,8 +214,7 @@ export default function AddParent() {
       <Alert
         status={alert.status}
         state={alert.state}
-        title={alert.message.title}
-        description={alert.message.description}
+        message={alert.message}
         close={(value) => toggleAlert(value)}
       />
 

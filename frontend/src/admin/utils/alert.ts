@@ -1,10 +1,7 @@
 type AlertStatus = "idle" | "success" | "fail"
 export interface Alert {
     status: AlertStatus,
-    message: {
-      title: string,
-      description: string | Array<string>
-    }
+      message: string,
     state: boolean
   }
 
@@ -12,10 +9,7 @@ export interface Alert {
   
   const alertIntialState: Alert = {
     status: "idle",
-    message: {
-      title: '',
-      description: ''
-    },
+    message: "",
     state: false,
   };
 

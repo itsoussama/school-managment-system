@@ -1,37 +1,56 @@
 import { Toast } from "flowbite-react";
-import { MdThumbUp } from "react-icons/md";
 import ReactDOM from "react-dom";
 import {
   AlertColor,
   alertIntialState,
   Alert as AlertUtil,
 } from "@src/admin/utils/alert";
-import { FaXmark } from "react-icons/fa6";
-import { useCallback, useEffect } from "react";
+import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
+import React, { useCallback, useEffect } from "react";
 
 const ALERT_DURATION = import.meta.env.VITE_ALERT_DURATION;
+
+interface AlertUI {
+  [key: string]: {
+    style: {
+      base?: string;
+      content?: string;
+      dismiss?: string;
+    };
+    icon: React.ReactElement | "";
+  };
+}
 
 interface AlertProps {
   // duration?: 7000;
   status: string;
   state: boolean;
-  title: string;
-  description: string | string[];
+  message: string;
   close: (props: AlertUtil) => void;
 }
 
-const alertUi = {
+const alertUi: AlertUI = {
   idle: {
-    style: "",
+    style: {},
     icon: "",
   },
   success: {
-    style: "bg-green-100 text-green-500 dark:bg-green-900 dark:text-green-300",
-    icon: <MdThumbUp className="h-5 w-5" />,
+    style: {
+      base: "!bg-green-200 dark:border-green-900 dark:!bg-green-800",
+      content: "text-green-700 dark:text-green-200",
+      dismiss: "text-green-400 dark:text-green-300",
+    },
+    icon: (
+      <FaCircleCheck className="h-4 w-4 text-green-600 dark:text-green-200" />
+    ),
   },
   fail: {
-    style: "bg-red-100 text-red-500 dark:bg-red-900 dark:text-red-300",
-    icon: <FaXmark className="h-5 w-5" />,
+    style: {
+      base: "!bg-red-200 dark:border-red-900 dark:!bg-red-800",
+      content: "text-red-700 dark:text-red-100",
+      dismiss: "text-red-400 dark:text-red-300",
+    },
+    icon: <FaCircleXmark className="h-4 w-4 text-red-600 dark:text-red-300" />,
   },
 };
 
@@ -39,8 +58,7 @@ export default function Alert({
   // duration,
   status,
   state,
-  title,
-  description,
+  message,
   close,
 }: AlertProps) {
   const resetAlert = useCallback(() => {
@@ -61,31 +79,36 @@ export default function Alert({
 
   return ReactDOM.createPortal(
     state && (
-      <Toast className="fixed right-0 top-0 z-50 m-5 overflow-hidden border border-gray-300 dark:border-gray-700">
-        <div className="absolute left-0 top-0 h-0.5 w-full rounded-lg bg-gray-300 dark:bg-gray-600">
+      <Toast
+        theme={{
+          toggle: {
+            base: "",
+            icon: alertUi[status as AlertColor].style.dismiss,
+          },
+        }}
+        className={`fixed right-1/2 top-0 z-50 mt-5 w-auto animate-slide-in overflow-hidden border p-3 ${alertUi[status as AlertColor].style.base} `}
+        style={{ translate: "50% 0" }}
+      >
+        {/* <div
+          className={`absolute left-0 top-0 h-0.5 w-full rounded-lg bg-gray-300 dark:bg-gray-600`}
+        >
           <div
             className={`absolute left-0 top-0 h-full w-0 animate-[fill_7s_ease-in-out_both] bg-gray-400 dark:bg-white`}
           ></div>
-        </div>
-        <div className="flex items-start">
+        </div> */}
+        <div className="flex items-center">
           <div
-            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${alertUi[status as AlertColor].style}`}
+            className={`inline-flex shrink-0 items-center justify-center rounded-s`}
           >
             {alertUi[status as AlertColor].icon}
           </div>
-          <div className="ml-3 text-sm font-normal">
-            <span className="mb-1 text-sm font-semibold text-gray-900 dark:text-white">
-              {title}
-            </span>
-            <div className="mb-2 text-sm font-normal">
-              {typeof description == "string"
-                ? description
-                : description.map((v, i) => <div key={i}>{v}</div>)}
-            </div>
-            <div className="flex gap-2"></div>
+          <div
+            className={`ml-3 mr-12 text-sm font-normal ${alertUi[status as AlertColor].style.content}`}
+          >
+            {message}
           </div>
           <Toast.Toggle
-            className="absolute right-0 top-0 m-2"
+            className=""
             onDismiss={() => close(alertIntialState)}
           />
         </div>

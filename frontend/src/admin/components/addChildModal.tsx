@@ -18,6 +18,7 @@ import {
 } from "react-icons/fa";
 import { alertIntialState, Alert as AlertType } from "@admin/utils/alert";
 import Alert from "@components/alert";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
 
 interface AddChildModal {
   open: boolean;
@@ -83,10 +84,11 @@ function AddChildModal({
   const [searchValue, setSearchValue] = useState<string>("");
   const [selectedChilds, setSelectedChilds] = useState<number[]>([]);
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
+  const admin = useAppSelector((state) => state.userSlice.user);
 
   const getChildrensQuery = useQuery({
     queryKey: ["getAllStudents"],
-    queryFn: () => getStudents(1, -1, undefined, undefined, 1),
+    queryFn: () => getStudents(1, -1, undefined, undefined, admin.school_id),
     placeholderData: keepPreviousData,
   });
 
@@ -103,14 +105,23 @@ function AddChildModal({
       });
 
       setOpenModal(false);
+      toggleOpen(false);
 
       setPreviewImg(undefined);
 
-      // todo: change state to trigger success message
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
     },
 
     onError: () => {
-      // todo: change state to trigger error message
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
     },
   });
 
@@ -122,11 +133,20 @@ function AddChildModal({
       });
 
       setOpenModal(false);
-      // todo: change state to trigger success message
+      toggleOpen(false);
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
     },
 
     onError: () => {
-      // todo: change state to trigger error message
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
     },
   });
 
@@ -205,10 +225,7 @@ function AddChildModal({
     } catch (e) {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: (e as Error).message,
-        },
+        message: "Operation Failed",
         state: true,
       });
     }
@@ -258,8 +275,7 @@ function AddChildModal({
       <Alert
         status={alert.status}
         state={alert.state}
-        title={alert.message.title}
-        description={alert.message.description}
+        message={alert.message}
         close={(value) => toggleAlert(value)}
       />
       <Modal

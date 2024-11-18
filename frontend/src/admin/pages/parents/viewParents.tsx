@@ -29,7 +29,7 @@ import {
   FaTrash,
   FaUser,
 } from "react-icons/fa";
-import { Link, useLocation, useNavigation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   keepPreviousData,
@@ -167,7 +167,9 @@ export function ViewParents() {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
-  const [checkAll, setCheckAll] = useState<Array<Check>>([]);
+  const isCheckBoxAll = useRef(false);
+  const [numChecked, setNumChecked] = useState<number>(0);
+  const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
   const [openChildModal, setOpenChildModal] = useState<ChildModal>({
     id: 0,
@@ -177,7 +179,6 @@ export function ViewParents() {
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [dropDownPos, setDropDownPos] = useState<EventTarget>();
   const [data, setData] = useState<Data>({
     id: 0,
     firstName: "",
@@ -206,8 +207,17 @@ export function ViewParents() {
   const minSm = useBreakpoint("min", "sm");
 
   const getAllParentsQuery = useQuery({
-    queryKey: ["getAllParents"],
-    queryFn: () => getParents(1, -1, undefined, undefined, 1),
+    queryKey: ["getAllParents", filter?.name, filter?.childName],
+    queryFn: () =>
+      getParents(
+        1,
+        -1,
+        undefined,
+        undefined,
+        admin.school_id,
+        filter?.name,
+        filter?.childName,
+      ),
     placeholderData: keepPreviousData,
   });
 
@@ -252,6 +262,10 @@ export function ViewParents() {
         queryKey: ["getParents"],
       });
 
+      queryClient.invalidateQueries({
+        queryKey: ["getAllParents"],
+      });
+
       setData({
         id: data?.id,
         firstName: getUserName(data?.name).firstName,
@@ -264,29 +278,19 @@ export function ViewParents() {
 
       toggleAlert({
         status: "success",
-        message: {
-          title: "Operation Successful",
-          description: "Your changes have been saved successfully.",
-        },
-
+        message: "Operation Successful",
         state: true,
       });
 
-      setOpenModal((prev) => ({
-        id: prev?.id as number,
-        open: false,
-      }));
+      setOpenModal(undefined);
+      setPage(1);
 
       setPreviewImg(undefined);
     },
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -295,8 +299,21 @@ export function ViewParents() {
   const deleteUserQuery = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
-      // setOpenDeleteModal(undefined);
+      queryClient.invalidateQueries({
+        queryKey: ["getParent"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getParents"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllParents"],
+      });
+
+      setOpenModal(undefined);
+      setPage(1);
+
       setData({
         id: 0,
         firstName: "",
@@ -309,11 +326,7 @@ export function ViewParents() {
 
       toggleAlert({
         status: "success",
-        message: {
-          title: "Operation Successful",
-          description: "Your changes have been saved successfully.",
-        },
-
+        message: "Operation Successful",
         state: true,
       });
     },
@@ -321,11 +334,7 @@ export function ViewParents() {
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -334,9 +343,30 @@ export function ViewParents() {
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
       queryClient.invalidateQueries({
         queryKey: ["getParent"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getParents"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllParents"],
+      });
+
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
       });
     },
   });
@@ -344,9 +374,30 @@ export function ViewParents() {
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
       queryClient.invalidateQueries({
         queryKey: ["getParent"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getParents"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllParents"],
+      });
+
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
       });
     },
   });
@@ -354,11 +405,16 @@ export function ViewParents() {
   // const [selectedItem, setSelectedItem] = useState()
 
   const onChange = (event: ChangeEvent) => {
+    const inputElem = event.target as HTMLInputElement;
+    const selectElem = event.target as HTMLSelectElement;
+    // if (event?.target.nodeType)
     setData((prev) => ({
       ...(prev as Data),
-      [event.target.id]: (event.target as HTMLInputElement).value,
+      [event.target.id]:
+        event?.target.nodeName == "SELECT"
+          ? selectElem.options[selectElem.selectedIndex].value
+          : inputElem.value,
     }));
-    // console.log((event.target as HTMLInputElement).value);
   };
 
   const handleCheck = async (id?: number) => {
@@ -366,12 +422,12 @@ export function ViewParents() {
     // console.log(id);
 
     if (!id) {
-      setCheckAll([]);
+      setChecks([]);
       await handleChecks(firstCheckbox);
     } else {
-      const getValue = checkAll.find((elem) => elem.id === id);
-      const filteredArr = checkAll.filter((elem) => elem.id !== id);
-      setCheckAll([
+      const getValue = checks.find((elem) => elem.id === id);
+      const filteredArr = checks.filter((elem) => elem.id !== id);
+      setChecks([
         ...(filteredArr as []),
         { id: id, status: !getValue?.status },
       ]);
@@ -383,7 +439,7 @@ export function ViewParents() {
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllParentsQuery.isFetched) {
         await getAllParentsQuery.data?.data.forEach((parent: Parent) => {
-          setCheckAll((prev) => {
+          setChecks((prev) => {
             const checkedData = prev.some((item) => item.id === parent.id);
             if (firstCheckbox.checked && !checkedData) {
               return [...prev, { id: parent.id as number, status: true }];
@@ -510,11 +566,7 @@ export function ViewParents() {
     } else {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     }
@@ -531,10 +583,6 @@ export function ViewParents() {
     }
 
     deleteUserQuery.mutate(openModal?.id as number);
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
   };
 
   const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
@@ -556,11 +604,6 @@ export function ViewParents() {
       }));
       unBlockUserMutation.mutate({ user_id: userId });
     }
-
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -583,10 +626,7 @@ export function ViewParents() {
 
   const onCloseModal = () => {
     parentMutation.reset();
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
+    setOpenModal(undefined);
 
     toggleChangePassword(false);
 
@@ -636,46 +676,27 @@ export function ViewParents() {
     }
   };
 
-  const countCheckedRow = (data: Check[]) => {
-    let totalChecked = 0;
-    data.forEach((value) => {
-      if (value.status) {
-        totalChecked = totalChecked + 1;
-      }
-    });
-    if (totalChecked == data.length) {
-      (firstCheckboxRef.current as HTMLInputElement).checked = true;
-    }
-    return totalChecked;
-  };
-
   useEffect(() => {
     const alertState = location.state?.alert;
     toggleAlert({
       status: alertState?.status,
-      message: {
-        title: alertState?.message.title,
-        description: alertState?.message.description,
-      },
+      message: alertState?.message,
       state: alertState?.state,
     });
+    window.history.replaceState({}, "");
   }, [location]);
 
   useEffect(() => {
-    checkAll?.map((item) => {
-      const checkboxElem = document.getElementById(
-        item.id?.toString() as string,
-      ) as HTMLInputElement;
+    const checkedVal = checks.filter((val) => val.status === true)
+      .length as number;
+    setNumChecked(checkedVal);
+  }, [checks]);
 
-      if (checkboxElem) {
-        if (item.status) {
-          checkboxElem.checked = true;
-        } else {
-          checkboxElem.checked = false;
-        }
-      }
-    });
-  }, [page, perPage, checkAll]);
+  useEffect(() => {
+    if (isCheckBoxAll) {
+      handleChecks(firstCheckboxRef.current as HTMLInputElement);
+    }
+  }, [page, handleChecks]);
 
   useEffect(() => {
     if (getParentsQuery.isFetched) {
@@ -692,14 +713,7 @@ export function ViewParents() {
       <Alert
         status={alert.status}
         state={alert.state}
-        title={alert.message.title}
-        description={
-          Object.entries(formError).some((val) => val[1] !== "")
-            ? Object.entries(formError)
-                .filter((err) => err[1] !== "")
-                .map((t) => t[1])
-            : alert.message.description
-        }
+        message={alert.message}
         close={(value) => toggleAlert(value)}
       />
 
@@ -1197,16 +1211,15 @@ export function ViewParents() {
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
-          {checkAll.find((val) => val.status === true) ? (
+          {checks.find((val) => val.status === true) ? (
             <div className="flex w-full justify-between px-5 py-4">
               <div className="flex items-center gap-x-4">
                 {/* <CheckboxDropdown /> */}
 
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
-
                   {t("delete-records")}
-                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checkAll)}`}</span>
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
                 </button>
               </div>
             </div>
@@ -1245,6 +1258,7 @@ export function ViewParents() {
               <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
                 <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                   <Checkbox
+                    className="rounded-xs"
                     id="0"
                     ref={firstCheckboxRef}
                     onChange={() => handleCheck()}
@@ -1252,7 +1266,7 @@ export function ViewParents() {
                 </Table.HeadCell>
                 <Table.HeadCell>{t("parent-id")}</Table.HeadCell>
                 <Table.HeadCell>
-                  <div className="flex items-center justify-center gap-x-3">
+                  <div className="flex items-center gap-x-3">
                     <span className="inline-block">{t("full-name")}</span>
                     <div
                       className="flex flex-col"
@@ -1386,12 +1400,16 @@ export function ViewParents() {
                       >
                         <Table.Cell className="sticky left-0 z-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
+                            className="rounded-xs"
                             id={parent.id.toString()}
                             name="checkbox"
-                            onChange={(ev) =>
-                              handleCheck(parseInt(ev.currentTarget.id))
+                            checked={
+                              checks.find((check) => check.id == parent.id)
+                                ?.status == true
+                                ? true
+                                : false
                             }
-                            data-id={key}
+                            onChange={() => handleCheck(parent.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
@@ -1405,6 +1423,7 @@ export function ViewParents() {
                         >
                           <Dropdown
                             triggerEvent="hover"
+                            additionalStyle={{ containerStyle: "!w-auto" }}
                             element={
                               <div className="flex items-center gap-x-2">
                                 {parent.childrens.length > 2 ? (
@@ -1488,13 +1507,14 @@ export function ViewParents() {
                             </Dropdown.List>
                             <Dropdown.Button>
                               <p
-                                onClick={() =>
+                                onClick={() => (
+                                  console.log("click"),
                                   setOpenChildModal({
                                     id: parent.id,
                                     school_id: parent.school_id,
                                     open: true,
                                   })
-                                }
+                                )}
                               >
                                 {t("add-new-child")}
                               </p>

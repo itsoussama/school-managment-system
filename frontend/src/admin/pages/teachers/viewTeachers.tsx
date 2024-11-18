@@ -30,7 +30,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { IoFilter } from "react-icons/io5";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   keepPreviousData,
@@ -165,7 +165,9 @@ export function ViewTeachers() {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
+  const isCheckBoxAll = useRef(false);
   const [checks, setChecks] = useState<Array<Check>>([]);
+  const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [img, setImg] = useState<FileList>();
@@ -196,11 +198,27 @@ export function ViewTeachers() {
   const { t: fieldTrans } = useTranslation("form-fields");
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   const minSm = useBreakpoint("min", "sm");
+  const location = useLocation();
   // const userId = useRef<string>(null)
 
   const getAllTeachersQuery = useQuery({
-    queryKey: ["getAllTeachers"],
-    queryFn: () => getTeachers(1, -1, undefined, undefined, 1),
+    queryKey: [
+      "getAllTeachers",
+      filter?.name,
+      filter?.subject,
+      filter?.gradelevel,
+    ],
+    queryFn: () =>
+      getTeachers(
+        1,
+        -1,
+        undefined,
+        undefined,
+        admin.school_id,
+        filter?.name,
+        filter?.subject,
+        filter?.gradelevel,
+      ),
     placeholderData: keepPreviousData,
   });
 
@@ -257,6 +275,10 @@ export function ViewTeachers() {
         queryKey: ["getTeachers"],
       });
 
+      queryClient.invalidateQueries({
+        queryKey: ["getAllTeachers"],
+      });
+
       setData({
         id: data?.id,
         firstName: getUserName(data?.name).firstName,
@@ -269,18 +291,12 @@ export function ViewTeachers() {
 
       toggleAlert({
         status: "success",
-        message: {
-          title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
-        },
-
+        message: "Operation Successful",
         state: true,
       });
 
-      setOpenModal((prev) => ({
-        id: prev?.id as number,
-        open: false,
-      }));
+      setOpenModal(undefined);
+      setPage(1);
 
       setPreviewImg(undefined);
     },
@@ -288,11 +304,7 @@ export function ViewTeachers() {
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -301,8 +313,21 @@ export function ViewTeachers() {
   const deleteUserQuery = useMutation({
     mutationFn: deleteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getTeachers"] });
+      queryClient.invalidateQueries({
+        queryKey: ["getTeacher"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getTeachers"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllTeachers"],
+      });
       // setOpenDeleteModal(undefined);
+      setOpenModal(undefined);
+      setPage(1);
+
       setData({
         id: 0,
         firstName: "",
@@ -315,11 +340,7 @@ export function ViewTeachers() {
 
       toggleAlert({
         status: "success",
-        message: {
-          title: "Operation Successful",
-          description: " Your changes have been saved successfully.",
-        },
-
+        message: "Operation Successful",
         state: true,
       });
     },
@@ -327,11 +348,7 @@ export function ViewTeachers() {
     onError: () => {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -340,9 +357,29 @@ export function ViewTeachers() {
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
       queryClient.invalidateQueries({
-        queryKey: ["getParent"],
+        queryKey: ["getTeacher"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getTeachers"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllTeachers"],
+      });
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
       });
     },
   });
@@ -350,18 +387,44 @@ export function ViewTeachers() {
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["getParents"] });
       queryClient.invalidateQueries({
-        queryKey: ["getParent"],
+        queryKey: ["getTeacher"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getTeachers"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllTeachers"],
+      });
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
       });
     },
   });
   // const [selectedItem, setSelectedItem] = useState()
 
   const onChange = (event: ChangeEvent) => {
+    const inputElem = event.target as HTMLInputElement;
+    const selectElem = event.target as HTMLSelectElement;
+    // if (event?.target.nodeType)
     setData((prev) => ({
       ...(prev as Data),
-      [event.target.id]: (event.target as HTMLInputElement).value,
+      [event.target.id]:
+        event?.target.nodeName == "SELECT"
+          ? selectElem.options[selectElem.selectedIndex].value
+          : inputElem.value,
     }));
     // console.log((event.target as HTMLInputElement).value);
   };
@@ -507,11 +570,6 @@ export function ViewTeachers() {
       }));
       unBlockUserMutation.mutate({ user_id: userId });
     }
-
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
   };
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
@@ -540,11 +598,7 @@ export function ViewTeachers() {
     } else {
       toggleAlert({
         status: "fail",
-        message: {
-          title: "Operation Failed",
-          description: "Something went wrong. Please try again later.",
-        },
-
+        message: "Operation Failed",
         state: true,
       });
     }
@@ -561,10 +615,6 @@ export function ViewTeachers() {
     }
 
     deleteUserQuery.mutate(openModal?.id as number);
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -587,13 +637,19 @@ export function ViewTeachers() {
 
   const onCloseModal = () => {
     teacherMutation.reset();
-    setOpenModal((prev) => ({
-      id: prev?.id as number,
-      open: false,
-    }));
+    setOpenModal(undefined);
 
     setData({
       id: 0,
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirm_password: "",
+    });
+
+    setFormError({
       firstName: "",
       lastName: "",
       email: "",
@@ -629,34 +685,27 @@ export function ViewTeachers() {
     }
   };
 
-  const countCheckedRow = (data: Check[]) => {
-    let totalChecked = 0;
-    data.forEach((value) => {
-      if (value.status) {
-        totalChecked = totalChecked + 1;
-      }
+  useEffect(() => {
+    const alertState = location.state?.alert;
+    toggleAlert({
+      status: alertState?.status,
+      message: alertState?.message,
+      state: alertState?.state,
     });
-    if (totalChecked == data.length) {
-      (firstCheckboxRef.current as HTMLInputElement).checked = true;
-    }
-    return totalChecked;
-  };
+    window.history.replaceState({}, "");
+  }, [location]);
 
   useEffect(() => {
-    checks?.map((item) => {
-      const checkboxElem = document.getElementById(
-        item.id?.toString() as string,
-      ) as HTMLInputElement;
+    const checkedVal = checks.filter((val) => val.status === true)
+      .length as number;
+    setNumChecked(checkedVal);
+  }, [checks]);
 
-      if (checkboxElem) {
-        if (item.status) {
-          checkboxElem.checked = true;
-        } else {
-          checkboxElem.checked = false;
-        }
-      }
-    });
-  }, [page, perPage, checks]);
+  useEffect(() => {
+    if (isCheckBoxAll) {
+      handleChecks(firstCheckboxRef.current as HTMLInputElement);
+    }
+  }, [page, handleChecks]);
 
   useEffect(() => {
     if (getTeachersQuery.isFetched) {
@@ -673,8 +722,7 @@ export function ViewTeachers() {
       <Alert
         status={alert.status}
         state={alert.state}
-        title={alert.message.title}
-        description={alert.message.description}
+        message={alert.message}
         close={(value) => toggleAlert(value)}
       />
       <Breadcrumb
@@ -1167,7 +1215,7 @@ export function ViewTeachers() {
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
                   {t("delete-records")}
-                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${countCheckedRow(checks)}`}</span>
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
                 </button>
               </div>
             </div>
@@ -1206,6 +1254,7 @@ export function ViewTeachers() {
               <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
                 <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                   <Checkbox
+                    className="rounded-xs"
                     id="0"
                     ref={firstCheckboxRef}
                     onChange={() => handleCheck()}
@@ -1213,7 +1262,7 @@ export function ViewTeachers() {
                 </Table.HeadCell>
                 <Table.HeadCell>{t("teacher-id")}</Table.HeadCell>
                 <Table.HeadCell>
-                  <div className="flex items-center justify-center gap-x-3">
+                  <div className="flex items-center gap-x-3">
                     <span className="inline-block">{t("full-name")}</span>
                     <div
                       className="flex flex-col"
@@ -1406,12 +1455,16 @@ export function ViewTeachers() {
                       >
                         <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
+                            className="rounded-xs"
                             id={teacher.id.toString()}
                             name="checkbox"
-                            onChange={(ev) =>
-                              handleCheck(parseInt(ev.currentTarget.id))
+                            checked={
+                              checks.find((check) => check.id == teacher.id)
+                                ?.status == true
+                                ? true
+                                : false
                             }
-                            data-id={key}
+                            onChange={() => handleCheck(teacher.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">

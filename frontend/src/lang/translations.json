@@ -183,7 +183,7 @@
     "form-fields":{
         "btn-export" : "Exporter les données",
         "date": "Date",
-        "upload-photo": "Télécharger une photo",
+        "upload-photo": "Téléverser une photo",
         "first-name": "Prénom",
         "first-name-placeholder": "Jean",
         "last-name": "Nom",

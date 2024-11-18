@@ -40,6 +40,7 @@ function Dropdown({
   const [dropdownPosition, setDropdownPosition] = useState<{
     top: number;
     left: number;
+    width: number;
     maxHeight: number;
   } | null>(null);
 
@@ -50,6 +51,7 @@ function Dropdown({
       setDropdownPosition({
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
+        width: rect.width,
         maxHeight: Math.max(availableSpace - 20, 70),
       });
     }
@@ -147,6 +149,7 @@ function Dropdown({
       setDropdownPosition({
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
+        width: rect.width,
         maxHeight: Math.max(availableSpace - 20, 70),
       });
     }
@@ -162,10 +165,11 @@ function Dropdown({
         ReactDOM.createPortal(
           <div
             ref={dropdownRef}
-            className={`absolute z-10 w-auto min-w-[inherit] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow dark:border-gray-600 dark:bg-gray-700 ${additionalStyle?.containerStyle}`}
+            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow dark:border-gray-600 dark:bg-gray-700 ${additionalStyle?.containerStyle}`}
             style={{
               top: dropdownPosition?.top,
               left: dropdownPosition?.left,
+              width: dropdownPosition?.width,
               maxHeight: dropdownPosition?.maxHeight,
             }}
           >
@@ -180,7 +184,7 @@ function Dropdown({
 // List component for dropdown items
 function List({ children }: ListProps) {
   return (
-    <ul className="max-h-[inherit] overflow-y-auto py-2 text-gray-700 dark:text-gray-200">
+    <ul className="w-full overflow-y-auto py-2 text-gray-700 dark:text-gray-200">
       {children}
     </ul>
   );

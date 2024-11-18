@@ -30,7 +30,9 @@ export default {
       animation: {
         fill: "fill",
         "fade-fwd": "fade-fwd 0.4s ease-in-out alternate forwards",
+        "slide-in": "slide-in 0.6s cubic-bezier(.65,.09,.31,1.17) both",
       },
+
       keyframes: {
         fill: {
           "0%": { width: "0%" },
@@ -45,6 +47,18 @@ export default {
           "100%": {
             "-webkit-transform": "translateZ(0)",
             transform: "translateZ(0)",
+            opacity: 1,
+          },
+        },
+        "slide-in": {
+          "0%": {
+            "-webkit-transform": "translateY(-1000px)",
+            transform: "translateY(-1000px)",
+            opacity: 0,
+          },
+          "100%": {
+            "-webkit-transform": "translateY(0)",
+            transform: "translateY(0)",
             opacity: 1,
           },
         },
