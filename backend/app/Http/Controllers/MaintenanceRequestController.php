@@ -89,7 +89,7 @@ class MaintenanceRequestController extends Controller
      */
     public function show($id)
     {
-        $maintenanceRequest = MaintenanceRequest::with('users')->findOrFail($id);
+        $maintenanceRequest = MaintenanceRequest::with('users', 'schools', 'resources')->findOrFail($id);
         return response()->json($maintenanceRequest, Response::HTTP_OK);
     }
     /**
