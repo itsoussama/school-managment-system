@@ -17,6 +17,8 @@ return new class extends Migration
             $table->text('description');
             $table->enum('status', ['pending', 'in_progress', 'completed'])->default('pending');
             $table->string('imagePath')->nullable();
+            $table->unsignedBigInteger('school_id');
+            $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
             $table->timestamps();
 
         });

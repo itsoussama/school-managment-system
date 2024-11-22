@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MaintenanceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class MaintenanceRequestController extends Controller
 {
@@ -38,9 +39,10 @@ class MaintenanceRequestController extends Controller
             $validation = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'status' => 'required|in:' . implode(',', MaintenanceRequest::getStatuses()),
+                'status' => 'nullable|in:' . implode(',', MaintenanceRequest::getStatuses()),
                 'users' => 'required|array',
                 'users.*' => 'exists:users,id',
+                'school_id' => 'nullable|exists:schools,id',
                 'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
             if ($validation) {
@@ -50,12 +52,12 @@ class MaintenanceRequestController extends Controller
                     // $request->file('image')->move(public_path('images/users'), $filename);
                     $path = $request->file('image')->store('images', 'public');
                 }
-                info('path : ' . $path);
+
                 $maintenanceRequest = MaintenanceRequest::create([
                     'title' => $request->title,
                     'description' => $request->description,
-                    'status' => $request->status,  // This will be validated as part of the request validation
-                    'user_id' => $request->user_id,
+                    'status' => $request->status,
+                    'school_id' => $request->school_id,
                 ]);
                 $maintenanceRequest->imagePath = $path;
                 $maintenanceRequest->users()->sync($request->users);
@@ -77,32 +79,73 @@ class MaintenanceRequestController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(MaintenanceRequest $maintenanceRequest)
+    public function show($id)
     {
-        //
+        $maintenanceRequest = MaintenanceRequest::with('users')->findOrFail($id);
+        return response()->json($maintenanceRequest, Response::HTTP_OK);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(MaintenanceRequest $maintenanceRequest)
-    {
-        //
-    }
-
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, MaintenanceRequest $maintenanceRequest)
+    public function update($id ,Request $request)
     {
-        //
+        try {
+            $maintenanceRequest = MaintenanceRequest::with('users')->findOrFail($id);
+            $validation = $request->validate([
+                'title' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'status' => 'nullable|in:' . implode(',', MaintenanceRequest::getStatuses()),
+                'school_id' => 'nullable|exists:schools,id',
+                'users' => 'nullable|array',
+                'users.*' => 'exists:users,id',
+                'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+            if ($validation) {
+                if ($request->hasFile('image')) {
+                    if ($maintenanceRequest->imagePath) {
+                        if (Storage::disk('public')->exists($maintenanceRequest->imagePath)) {
+                            Storage::disk('public')->delete($maintenanceRequest->imagePath);
+                        }
+                    }
+                    $path = $request->file('image')->store('images', 'public');
+                    $maintenanceRequest->imagePath = $path;
+                }
+                $maintenanceRequest->title = $request->input('title', $maintenanceRequest->title);
+                $maintenanceRequest->school_id = $request->input('school_id', $maintenanceRequest->school_id);
+                $maintenanceRequest->description = $request->input('description', $maintenanceRequest->description);
+                $maintenanceRequest->status = $request->input('status', $maintenanceRequest->status);
+                if ($request->has('users')) {
+                    $maintenanceRequest->users()->sync($request->input('users'));
+                }
+                $maintenanceRequest->save();
+
+            } else {
+                return $request;
+            }
+
+
+            return response()->json($maintenanceRequest, Response::HTTP_CREATED);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 422);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MaintenanceRequest $maintenanceRequest)
+    public function destroy($id)
     {
-        //
+        $maintenanceRequest = MaintenanceRequest::with('users')->findOrFail($id);
+        if (!empty($maintenanceRequest->imagePath)) {
+            if (Storage::disk('public')->exists($maintenanceRequest->imagePath)) {
+                Storage::disk('public')->delete($maintenanceRequest->imagePath);
+            }
+        }
+        $maintenanceRequest->users()->detach();
+
+        $maintenanceRequest->delete();
+
+
+        return response()->json(['message' => 'Maintenance Request deleted successfully'], Response::HTTP_OK);
     }
 }

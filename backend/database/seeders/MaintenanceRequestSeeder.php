@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\MaintenanceRequest;
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -14,10 +15,16 @@ class MaintenanceRequestSeeder extends Seeder
      */
     public function run(): void
     {
-        MaintenanceRequest::factory(6)->create()->each(function($mr) {
-            $userIds = User::pluck('id')->toArray();
-            $mr->users()->attach($userIds[rand(0, count($userIds))]);
-        });
+        $schools = School::all();
+        foreach ($schools as $school) {
+            MaintenanceRequest::factory(6)->create([
+                'school_id' => $school->id,
+            ])->each(function($mr) {
+                $userIds = User::pluck('id')->toArray();
+                $mr->users()->attach($userIds[rand(0, count($userIds))]);
+            });
+        }
+
 
 
         // foreach ($maintenanceRequests as $maintenanceRequest) {
