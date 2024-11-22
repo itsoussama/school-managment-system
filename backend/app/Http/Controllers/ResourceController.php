@@ -32,13 +32,13 @@ class ResourceController extends Controller
 
                 if (!empty(request('maxQty')) && !empty(request('minQty'))) {
                     $query->whereBetween('qty', [request('minQty'), request('maxQty')]);
-                    \Log::info("between");
+
                 } else if (!empty(request('minQty'))) {
                     $query->where('qty', '>=', request('minQty'));
-                    \Log::info("min");
+
                 } else if (!empty(request('maxQty'))) {
                     $query->where('qty', '<=', request('maxQty'));
-                    \Log::info("max");
+
                 }
             })
             ->whereHas(
