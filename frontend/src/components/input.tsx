@@ -463,7 +463,7 @@ function Dropzone({
             <div className="flex flex-row items-center justify-between">
               <div className="relative flex w-full max-w-[90%] items-center justify-start gap-3 overflow-x-auto">
                 {/*  //todo: overflow fade prefer to be in component */}
-                <div className="sticky left-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-r to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div>
+                {/* <div className="sticky left-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-r to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div> */}
                 <FaFileLines className="shrink-0" size={38} />
                 <div className="text-start">
                   {file.name}{" "}
@@ -471,7 +471,7 @@ function Dropzone({
                     {fileSizeConverter(file.size)}
                   </div>
                 </div>
-                <div className="sticky right-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-l to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div>
+                {/* <div className="sticky right-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-l to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div> */}
               </div>
               <FaXmark
                 className="self-start"

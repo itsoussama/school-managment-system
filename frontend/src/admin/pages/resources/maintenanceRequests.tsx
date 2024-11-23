@@ -2,7 +2,11 @@ import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";
 import { Dropzone, Input, RSelect, RTextArea } from "@src/components/input";
-import { SkeletonTable } from "@src/components/skeleton";
+import {
+  SkeletonContent,
+  SkeletonProfile,
+  SkeletonTable,
+} from "@src/components/skeleton";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,8 +20,10 @@ import {
 } from "flowbite-react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { BsTriangleFill } from "react-icons/bs";
 import {
   FaChevronDown,
+  FaExclamationTriangle,
   FaEye,
   FaHome,
   FaPen,
@@ -26,7 +32,12 @@ import {
   FaSortUp,
   FaTrash,
 } from "react-icons/fa";
-import { FaRegCircleXmark } from "react-icons/fa6";
+import {
+  FaDiamond,
+  FaDownload,
+  FaFileLines,
+  FaRegCircleXmark,
+} from "react-icons/fa6";
 import { IoFilter } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 
@@ -147,7 +158,7 @@ export default function MaintenanceRequests() {
         </button>
       </div>
 
-      {/* <Modal
+      <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
         // size={"xl"}
         theme={{
@@ -157,7 +168,7 @@ export default function MaintenanceRequests() {
               "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
           },
           body: {
-            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
+            base: "p-6 max-sm:overflow-y-auto",
             popup: "pt-0",
           },
         }}
@@ -168,46 +179,136 @@ export default function MaintenanceRequests() {
         </Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8 sm:flex-row">
-            <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+            {/* <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
-                imgSource={
-                  getResourceQuery.data?.imagePath
-                    ? SERVER_STORAGE + getResourceQuery.data?.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getResourceQuery.data?.label}`
-                }
+                // imgSource={
+                //   getResourceQuery.data?.imagePath
+                //     ? SERVER_STORAGE + getResourceQuery.data?.imagePath
+                //     : `https://ui-avatars.com/api/?background=random&name=${getResourceQuery.data?.label}`
+                // }
+                imgSource={`https://ui-avatars.com/api/?background=random&name=chair`}
                 className="h-40 w-40"
               />
-            </div>
+            </div> */}
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("item-information")}
-                </h1>
-                <SkeletonContent isLoaded={getResourceQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
-                    <div className="flex flex-col">
+                <SkeletonContent isLoaded={true}>
+                  <div className="grid grid-flow-col grid-rows-4 gap-x-11 gap-y-8">
+                    <div className="flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("label")}:
+                        {fieldTrans("subject")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.label}
+                        chair
                       </span>
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("quantity")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.qty}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("category")}:
+                        {t("item")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.categories.label}
+                        {/* {getResourceQuery.data?.categories.label} */}
                       </span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("assigned-to")}:
+                      </span>
+                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                        {/* {getResourceQuery.data?.categories.label} */}
+                      </span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("issued-date")}:
+                      </span>
+                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                        {/* {getResourceQuery.data?.categories.label} */}
+                        20/01/2024{" "}
+                        <span className="text-gray-500 dark:text-gray-400">
+                          19:00
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("resolved-date")}:
+                      </span>
+                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                        {/* {getResourceQuery.data?.categories.label} */}
+                        20/01/2024{" "}
+                        <span className="text-gray-500 dark:text-gray-400">
+                          19:00
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("priority")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        <Badge
+                          // size={"xs"}
+                          theme={{
+                            icon: { size: { xs: "w-2 h-2" } },
+                          }}
+                          color={"yellow"}
+                          icon={BsTriangleFill}
+                          className="w-max rounded-s px-2 py-0.5"
+                        >
+                          Meduim
+                        </Badge>
+                      </span>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("status")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        <Badge
+                          // size={"xs"}
+                          color={"green"}
+                          className="w-max rounded-s"
+                        >
+                          Completed
+                        </Badge>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                    <div className="col-span-full flex flex-col space-y-1">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("note")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        This a note
+                      </span>
+                    </div>
+                    <div className="col-span-full flex flex-col space-y-1">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {fieldTrans("attachement")}:
+                      </span>
+                      <div className="flex flex-row items-center justify-between rounded-s bg-gray-600 px-4 py-2 text-gray-900 dark:text-white">
+                        <div className="relative flex w-full max-w-[90%] items-center justify-start gap-3 overflow-x-auto">
+                          {/* <div className="sticky left-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-r to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div> */}
+                          <FaFileLines className="shrink-0" size={32} />
+                          <div className="text-start">
+                            File.mp4{" "}
+                            <div className="mt-0 text-gray-500 dark:text-gray-400">
+                              20.15MB
+                            </div>
+                          </div>
+                          {/* <div className="sticky right-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-l to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div> */}
+                        </div>
+                        <FaEye
+                          className="cursor-pointer rounded-full p-1.5 dark:hover:bg-gray-500"
+                          size={28}
+                        />
+                        <FaDownload
+                          className="cursor-pointer rounded-full p-1.5 dark:hover:bg-gray-500"
+                          size={28}
+                        />
+                      </div>
                     </div>
                   </div>
                 </SkeletonContent>
@@ -216,7 +317,7 @@ export default function MaintenanceRequests() {
           </div>
         </Modal.Body>
       </Modal>
-      */}
+
       <Modal
         show={openModal?.type === "add" ? openModal?.open : false}
         size={"2xl"}
@@ -326,7 +427,7 @@ export default function MaintenanceRequests() {
             popup: "pt-0",
           },
         }}
-        // onClose={onCloseModal}
+        onClose={onCloseModal}
       >
         <form onSubmit={() => {}}>
           <Modal.Header>
@@ -336,56 +437,87 @@ export default function MaintenanceRequests() {
             <div className="flex flex-col gap-8 sm:flex-row">
               <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
                 <div className="w-full space-y-3">
-                  <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("item-information")}
-                  </h1>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(350px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
-                      id="label"
-                      name="label"
-                      label={fieldTrans("label")}
-                      placeholder={fieldTrans("label-placeholder")}
+                      id="subject"
+                      name="subject"
+                      label={fieldTrans("subject")}
+                      placeholder={fieldTrans("subject-placeholder")}
+                      custom-style={{
+                        inputStyle: "disabled:opacity-50",
+                        containerStyle: "col-span-full",
+                      }}
+                      //   disabled={getResourceQuery.isFetching && true}
+                      //   value={data?.label}
+                      //   onChange={onChange}
+                    />
+
+                    <RSelect
+                      id="item"
+                      name="item"
+                      label={fieldTrans("item")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      //   disabled={getResourceQuery.isFetching && true}
+                      //   defaultValue={data?.id}
+                      //   onChange={onChange}
+                    >
+                      <option></option>
+                    </RSelect>
+
+                    <RSelect
+                      id="priority"
+                      name="priority"
+                      label={fieldTrans("priority")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      //   disabled={getResourceQuery.isFetching && true}
+                      //   defaultValue={data?.id}
+                      //   onChange={onChange}
+                    >
+                      <option></option>
+                    </RSelect>
+
+                    <RTextArea
+                      id="note"
+                      name="note"
+                      label={fieldTrans("note")}
+                      placeholder={fieldTrans("note-placeholder")}
+                      custom-style={{ containerStyle: "col-span-full" }}
+                    />
+
+                    <Input
+                      type="date"
+                      id="issuedDate"
+                      name="issuedDate"
+                      label={fieldTrans("issued-date")}
+                      placeholder={fieldTrans("issued-date-placeholder")}
+                      custom-style={{
+                        inputStyle: "disabled:opacity-50",
+                      }}
                       //   disabled={getResourceQuery.isFetching && true}
                       //   value={data?.label}
                       //   onChange={onChange}
                     />
 
                     <Input
-                      type="number"
-                      id="qty"
-                      name="qty"
-                      label={fieldTrans("quantity")}
-                      placeholder="20"
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      type="date"
+                      id="resolvedDate"
+                      name="resolvedDate"
+                      label={fieldTrans("resolved-date")}
+                      placeholder={fieldTrans("resolved-date-placeholder")}
+                      custom-style={{
+                        inputStyle: "disabled:opacity-50",
+                      }}
                       //   disabled={getResourceQuery.isFetching && true}
-                      //   value={data?.qty}
+                      //   value={data?.label}
                       //   onChange={onChange}
                     />
 
-                    <RSelect
-                      id="category_id"
-                      name="categories"
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   defaultValue={data?.id}
-                      //   onChange={onChange}
-                    >
-                      {/* {getCategoriesQuery.data?.map(
-                        (category: Category, index: number) => (
-                          <option
-                            key={index}
-                            value={category.id}
-                            selected={
-                              data?.category_id == category.id ? true : false
-                            }
-                          >
-                            {category.label}
-                          </option>
-                        ),
-                      )} */}
-                    </RSelect>
+                    <Dropzone
+                      label={fieldTrans("attachment")}
+                      onChange={(e) => console.log(e.target)}
+                      custom-style={{ containerStyle: "col-span-full h-auto" }}
+                    />
                   </div>
                 </div>
               </div>
@@ -401,7 +533,7 @@ export default function MaintenanceRequests() {
           </Modal.Footer>
         </form>
       </Modal>
-      {/*
+
       <Modal
         show={openModal?.type === "delete" ? openModal?.open : false}
         onClose={onCloseModal}
@@ -418,12 +550,13 @@ export default function MaintenanceRequests() {
           },
         }}
       >
-        <form onSubmit={onSubmitDelete}>
+        <form onSubmit={() => {}}>
           <Modal.Header>{t("delete-modal")}</Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("delete-modal-title")} <b>{getResourceQuery.data?.label}</b>
+                {t("delete-modal-title")}
+                {/* <b>{getResourceQuery.data?.label}</b> */}
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -432,14 +565,15 @@ export default function MaintenanceRequests() {
                 </p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")} <b>{getResourceQuery.data?.label}</b>
+                {t("delete-modal-label")}
+                {/* <b>{getResourceQuery.data?.label}</b> */}
               </p>
               <Input
                 type="text"
                 id="verfication"
                 name="verfication"
                 placeholder="John doe"
-                error={!isVerficationMatch ? t("delete-modal-error") : null}
+                // error={!isVerficationMatch ? t("delete-modal-error") : null}
                 required
               />
             </div>
@@ -453,7 +587,7 @@ export default function MaintenanceRequests() {
             </button>
           </Modal.Footer>
         </form>
-      </Modal> */}
+      </Modal>
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
@@ -777,38 +911,38 @@ export default function MaintenanceRequests() {
                 <Table.Cell>
                   <div className="flex w-fit gap-x-2">
                     <div
-                      //   onClick={() =>
-                      //     setOpenModal({
-                      //       id: 0,
-                      //       type: "view",
-                      //       open: true,
-                      //     })
-                      //   }
+                      onClick={() =>
+                        setOpenModal({
+                          id: 0,
+                          type: "view",
+                          open: true,
+                        })
+                      }
                       className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
                     >
                       <FaEye className="text-blue-600 dark:text-blue-500" />
                     </div>
                     <div
                       className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                      //   onClick={() =>
-                      //     onOpenEditModal({
-                      //       id: 0,
-                      //       type: "edit",
-                      //       open: true,
-                      //     })
-                      //   }
+                      onClick={() =>
+                        setOpenModal({
+                          id: 0,
+                          type: "edit",
+                          open: true,
+                        })
+                      }
                     >
                       <FaPen className="text-green-600 dark:text-green-500" />
                     </div>
                     <div
                       className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                      //   onClick={() =>
-                      //     setOpenModal({
-                      //       id: 0,
-                      //       type: "delete",
-                      //       open: true,
-                      //     })
-                      //   }
+                      onClick={() =>
+                        setOpenModal({
+                          id: 0,
+                          type: "delete",
+                          open: true,
+                        })
+                      }
                     >
                       <FaTrash className="text-red-600 dark:text-red-500" />
                     </div>
