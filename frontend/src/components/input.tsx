@@ -14,8 +14,9 @@ import React, {
   useState,
 } from "react";
 import { FaCheck, FaExclamationCircle } from "react-icons/fa";
-import { FaXmark } from "react-icons/fa6";
+import { FaFileLines, FaXmark } from "react-icons/fa6";
 import ReactDOM from "react-dom";
+import { FileInput, Label } from "flowbite-react";
 
 interface Field {
   htmlFor?: string;
@@ -33,6 +34,8 @@ interface Field {
 }
 
 interface Input extends Field, InputHTMLAttributes<HTMLInputElement> {}
+
+interface TextArea extends Field, InputHTMLAttributes<HTMLTextAreaElement> {}
 interface Checkbox extends Field, InputHTMLAttributes<HTMLInputElement> {
   image?: React.ReactNode;
 }
@@ -63,6 +66,45 @@ function Input({
       <div className="relative">
         {icon}
         <input
+          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          {...attribute}
+        />
+      </div>
+      {error && (
+        <div className="mt-1.5 flex items-start">
+          <FaExclamationCircle className="mr-2 mt-0.5 min-w-4 text-red-500" />
+          <span className="error text-sm text-red-500">{error}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RTextArea({
+  htmlFor,
+  label = "",
+  icon,
+  "custom-style": {
+    inputStyle = "",
+    labelStyle = "",
+    containerStyle = "",
+  } = {},
+  error = null,
+  ...attribute
+}: TextArea) {
+  // const [inputValue, setInputValue] = useState<string>(value ?? "");
+
+  return (
+    <div className={containerStyle}>
+      <label
+        htmlFor={htmlFor}
+        className={`mb-2 block text-sm font-medium text-gray-900 dark:text-white ${labelStyle}`}
+      >
+        {label}
+      </label>
+      <div className="relative">
+        {icon}
+        <textarea
           className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
           {...attribute}
         />
@@ -364,4 +406,116 @@ function MultiSelect({
   );
 }
 
-export { Input, Checkbox, RSelect, MultiSelect };
+interface DropZone {
+  label?: string;
+  onChange: (event: ChangeEvent) => void;
+  "custom-style"?: {
+    inputStyle?: string;
+    labelStyle?: string;
+    containerStyle?: string;
+  };
+}
+
+function Dropzone({
+  label,
+  onChange,
+  "custom-style": {
+    inputStyle = "",
+    labelStyle = "",
+    containerStyle = "",
+  } = {},
+}: DropZone) {
+  const [file, setFile] = useState<File>();
+  const fileDetailsPreview = (event: ChangeEvent) => {
+    const target = event.target as HTMLInputElement;
+    if (target?.files?.length) {
+      const file = target?.files[0];
+      setFile(file);
+    }
+  };
+
+  const fileSizeConverter = (fileSize: number) => {
+    const size = (number: number) => parseFloat(number.toFixed(2));
+    if (fileSize >= Math.pow(1024, 3)) {
+      return size(fileSize / Math.pow(1024, 3)) + " GB";
+    } else if (fileSize >= Math.pow(1024, 2)) {
+      return size(fileSize / Math.pow(1024, 2)) + " MB";
+    } else if (fileSize >= Math.pow(1024, 1)) {
+      return size(fileSize / Math.pow(1024, 1)) + " KB";
+    } else {
+      return size(fileSize) + " Bytes";
+    }
+  };
+
+  return (
+    <div
+      className={`flex h-auto w-full flex-col justify-center ${containerStyle}`}
+    >
+      <span className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+        {label}
+      </span>
+      <Label
+        htmlFor="dropzone-file"
+        className={`group flex h-full w-full cursor-pointer flex-col items-start justify-center overflow-x-auto rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-5 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
+      >
+        <div className="w-full pb-6 pt-5" onClick={(e) => e.stopPropagation()}>
+          {file ? (
+            <div className="flex flex-row items-center justify-between">
+              <div className="relative flex w-full max-w-[90%] items-center justify-start gap-3 overflow-x-auto">
+                {/*  //todo: overflow fade prefer to be in component */}
+                <div className="sticky left-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-r to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div>
+                <FaFileLines className="shrink-0" size={38} />
+                <div className="text-start">
+                  {file.name}{" "}
+                  <div className="mt-1 text-gray-500 dark:text-gray-400">
+                    {fileSizeConverter(file.size)}
+                  </div>
+                </div>
+                <div className="sticky right-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-l to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div>
+              </div>
+              <FaXmark
+                className="self-start"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFile(undefined);
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center">
+              <svg
+                className="mb-4 h-8 w-8 text-gray-500 dark:text-gray-400"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 20 16"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                />
+              </svg>
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-semibold">Click to upload</span> or drag
+                and drop
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                SVG, PNG, JPG or GIF (MAX. 800x400px)
+              </p>
+            </div>
+          )}
+        </div>
+        <FileInput
+          id="dropzone-file"
+          className={`hidden ${inputStyle}`}
+          onChange={(event) => (onChange(event), fileDetailsPreview(event))}
+        />
+      </Label>
+    </div>
+  );
+}
+
+export { Input, RTextArea, Checkbox, RSelect, MultiSelect, Dropzone };

@@ -10,6 +10,7 @@ import Dashboard from "@admin/pages/dashboard";
 import DataManagement from "@admin/pages/configuration/dataManagement";
 import AddResources from "./pages/resources/addResources";
 import { ViewResources } from "./pages/resources/viewResources";
+import MaintenanceRequests from "./pages/resources/maintenanceRequests";
 
 export const AdminRouter = {
   path: "/",
@@ -69,6 +70,10 @@ export const AdminRouter = {
         {
           path: "manage",
           element: <ViewResources />,
+        },
+        {
+          path: "maintenance-requests",
+          element: <MaintenanceRequests />,
         },
       ],
     },

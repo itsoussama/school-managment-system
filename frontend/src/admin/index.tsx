@@ -219,6 +219,15 @@ function Menu() {
               itemName="view-resources"
             />
           </Link>
+          <Link to="Resources/maintenance-requests" state={{ active: true }}>
+            <Items
+              isActive={
+                useMatch("/Resources/maintenance-requests") ? true : false
+              }
+              itemId="subitem-3"
+              itemName="maintenance-requests"
+            />
+          </Link>
         </Items>
       </div>
       <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>

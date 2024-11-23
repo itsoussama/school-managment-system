@@ -9,6 +9,7 @@ interface DropdownProps {
   children: React.ReactNode;
   triggerEvent?: TriggerEvent; // Condition to trigger dropdown via click or hover
   closeOnEvent?: "click" | "hover" | "both";
+  onClose?: (value?: boolean) => boolean;
   additionalStyle?: {
     containerStyle: string;
   };
@@ -32,6 +33,7 @@ function Dropdown({
   children,
   triggerEvent = "click",
   closeOnEvent = "click",
+  onClose,
   additionalStyle,
 }: DropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -45,6 +47,12 @@ function Dropdown({
   } | null>(null);
 
   const toggleDropdown = useCallback(() => {
+    // const target = event.target as HTMLElement;
+
+    // console.log(event.isPropagationStopped());
+
+    // if (target.closest("[data-ignore]")) return;+
+
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       const availableSpace = window.innerHeight - rect?.bottom;
@@ -55,6 +63,7 @@ function Dropdown({
         maxHeight: Math.max(availableSpace - 20, 70),
       });
     }
+
     setIsVisible((prev) => !prev);
   }, []);
 
@@ -155,10 +164,18 @@ function Dropdown({
     }
   }, [isVisible]);
 
+  useEffect(() => {
+    if (onClose && onClose()) {
+      setIsVisible(false);
+    }
+  }, [onClose]);
+
   return (
     <>
       {/* Trigger element */}
-      <div ref={triggerRef}>{element}</div>
+      <div ref={triggerRef} onClick={(e) => e.stopPropagation()}>
+        {element}
+      </div>
 
       {/* Dropdown content */}
       {isVisible &&

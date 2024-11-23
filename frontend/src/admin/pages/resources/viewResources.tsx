@@ -115,16 +115,11 @@ interface Filter {
   category_id: number | undefined;
 }
 
-interface Dropdown {
-  state: boolean;
-  position: EventTarget;
-}
-
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewResources() {
   const queryClient = useQueryClient();
-  // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
+
   const location = useLocation();
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
@@ -134,6 +129,7 @@ export function ViewResources() {
     maxQty: undefined,
     category_id: undefined,
   });
+  const [closeDropDown, setCloseDropDown] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
@@ -443,6 +439,8 @@ export function ViewResources() {
       maxQty:
         target.maxQty.value !== "" ? Number(target.maxQty.value) : undefined,
     }));
+
+    setCloseDropDown(true);
   };
 
   const handlePerPage = (ev: ChangeEvent) => {
@@ -1004,6 +1002,7 @@ export function ViewResources() {
                   <Table.Cell className="p-2">
                     <div>
                       <Dropdown
+                        onClose={() => closeDropDown}
                         additionalStyle={{ containerStyle: "px-2 rounded-s" }}
                         element={
                           <div className="relative">
@@ -1016,13 +1015,15 @@ export function ViewResources() {
                                   {(filter.maxQty !== undefined ||
                                     filter.minQty !== undefined) && (
                                     <FaRegCircleXmark
-                                      onClick={() =>
+                                      onClick={() => (
+                                        setCloseDropDown(true),
                                         setFilter((prev) => ({
                                           ...prev,
                                           maxQty: undefined,
                                           minQty: undefined,
                                         }))
-                                      }
+                                      )}
+                                      // onClick={(e) => e.stopPropagation()}
                                       className="absolute right-0 top-1/2 mr-6 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
                                     />
                                   )}
