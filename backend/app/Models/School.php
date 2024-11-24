@@ -22,4 +22,8 @@ class School extends Model
     {
         return $this->hasMany(Grade::class, 'school_id', 'id');
     }
+    public function maintenanceRequests() : HasMany
+    {
+        return $this->hasMany(MaintenanceRequest::class, 'school_id', 'id');
+    }
 }

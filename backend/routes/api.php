@@ -4,6 +4,7 @@ use App\Enums\TokenAbility;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GradeController;
+use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolController;
@@ -14,14 +15,17 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 Route::post('/login', [AuthController::class, 'login']);
-// Route::get('/auth/refresh-token', [AuthController::class, 'refreshToken'])->middleware('auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value);
 
 Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value])->group(function () {
     Route::post('/auth/refresh-token', [AuthController::class, 'refreshToken']);;
 });
 
 Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value])->group(function () {
+
+    // Users
     Route::apiResource('users', UserController::class);
+
+
     Route::middleware('role:' . config('roles.admin'))->group(function () {
         Route::apiResource('schools', SchoolController::class);
         Route::post('/add-parent', [UserController::class, 'addParent']);
@@ -30,11 +34,15 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
         Route::post('/block', [UserController::class, 'blockUser']);
         Route::post('/unblock', [UserController::class, 'unblockUser']);
     });
+
+    // Roles
     Route::middleware('role:' . config('roles.admin') . ',' . config('roles.teacher'))->group(function () {
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('resources', ResourceController::class);
         Route::apiResource('roles', RoleController::class);
+        Route::apiResource('maintenance', MaintenanceRequestController::class);
     });
+
     Route::apiResource('grades', GradeController::class);
     Route::apiResource('subjects', SubjectController::class);
 

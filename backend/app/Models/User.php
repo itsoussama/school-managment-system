@@ -91,4 +91,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(User::class, 'guardian_id');
     }
+    public function maintenanceRequests()
+    {
+        return $this->belongsToMany(MaintenanceRequest::class);
+    }
 }
