@@ -1,3 +1,5 @@
+import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
+import { customTooltip } from "@src/admin/utils/flowbite";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";
@@ -7,9 +9,20 @@ import {
   SkeletonProfile,
   SkeletonTable,
 } from "@src/components/skeleton";
+import {
+  deleteMaintenanceRequest,
+  getMaintenanceRequest,
+  getMaintenanceRequests,
+  setMaintenanceRequest,
+} from "@src/features/api";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   Badge,
   Breadcrumb,
@@ -17,8 +30,9 @@ import {
   Modal,
   Pagination,
   Table,
+  Tooltip,
 } from "flowbite-react";
-import React, { useState } from "react";
+import React, { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BsTriangleFill } from "react-icons/bs";
 import {
@@ -47,6 +61,48 @@ interface Modal {
   open: boolean;
 }
 
+type Status = "completed" | "in_progress" | "pending";
+
+interface MaintenanceRequests {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  file_path: string;
+  resolved_date: string;
+  created_at: string;
+  school_id: number;
+  resources: {
+    id: string;
+    label: string;
+  };
+}
+
+interface Data {
+  id: number;
+  title: string;
+  description: string;
+  status: Status;
+  priority: string;
+  file_path?: File;
+  resolved_date?: string;
+  school_id: number;
+  resource_id: number;
+}
+export interface FormData {
+  _method: string;
+  id: number;
+  title: string;
+  description: string;
+  status: Status;
+  priority: string;
+  file_path?: File;
+  resolved_date?: string;
+  school_id: number;
+  resource_id: number;
+}
+
 interface Sort {
   column: string;
   direction: "asc" | "desc";
@@ -71,7 +127,7 @@ export default function MaintenanceRequests() {
     category_id: undefined,
   });
   const [page, setPage] = useState<number>(1);
-  //   const [perPage, setPerPage] = useState<number>();
+  const [perPage, setPerPage] = useState<number>();
   //   const firstCheckboxRef = useRef<HTMLInputElement>(null);
   //   const isCheckBoxAll = useRef(false);
   //   const [checks, setChecks] = useState<Array<Check>>([]);
@@ -80,22 +136,195 @@ export default function MaintenanceRequests() {
   //   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   //   const [img, setImg] = useState<FileList>();
   //   const [previewImg, setPreviewImg] = useState<string>();
-  //   const [data, setData] = useState<Data>({
-  //     id: 0,
-  //     label: "",
-  //     qty: 0,
-  //     category_id: 0,
-  //   });
+  const [data, setData] = useState<Data>({
+    id: 0,
+    title: "",
+    description: "",
+    status: "pending",
+    priority: "",
+    resolved_date: "",
+    school_id: 0,
+    resource_id: 0,
+  });
   //   const [formError, setFormError] = useState<DataError>({
   //     label: "",
   //     qty: 0,
   //   });
-  //   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
+  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
-  //   const admin = useAppSelector((state) => state.userSlice.user);
+  const admin = useAppSelector((state) => state.userSlice.user);
+  const statusColors = {
+    completed: "green",
+    in_progress: "blue",
+    pending: "yellow",
+  };
+
   const { t } = useTranslation();
   const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
+
+  // const getAllMaintenanceRequestsQuery = useQuery({
+  //   queryKey: [
+  //     "getAllMaintenanceRequests",
+  //     // filter?.label,
+  //     // filter?.maxQty,
+  //     // filter?.minQty,
+  //     // filter?.category_id,
+  //   ],
+  //   queryFn: () =>
+  //     getMaintenanceRequests(
+  //       1,
+  //       -1,
+  //       undefined,
+  //       undefined,
+  //       admin?.school_id,
+  //       // filter?.label,
+  //       // filter?.maxQty,
+  //       // filter?.minQty,
+  //       // filter?.category_id,
+  //     ),
+  //   placeholderData: keepPreviousData,
+  // });
+
+  const getMaintenanceRequestsQuery = useQuery({
+    queryKey: [
+      "getMaintenanceRequests",
+      page,
+      perPage,
+      sort.column,
+      sort.direction,
+      admin.school_id,
+      // filter?.label,
+      // filter?.maxQty,
+      // filter?.minQty,
+      // filter?.category_id,
+    ],
+    queryFn: () =>
+      getMaintenanceRequests(
+        page,
+        perPage,
+        sort.column,
+        sort.direction,
+        admin.school_id,
+        // filter?.label,
+        // filter?.maxQty,
+        // filter?.minQty,
+        // filter?.category_id,
+      ),
+    placeholderData: keepPreviousData,
+  });
+
+  const getMaintenanceRequestQuery = useQuery({
+    queryKey: ["getMaintenanceRequest", openModal?.id],
+    queryFn: () => getMaintenanceRequest(openModal?.id as number),
+    enabled: !!openModal?.id,
+  });
+
+  const maintenanceRequestMutation = useMutation({
+    mutationFn: setMaintenanceRequest,
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getMaintenanceRequest"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getMaintenanceRequests"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllMaintenanceRequests"],
+      });
+
+      setData({
+        id: data?.id as number,
+        title: data?.title as string,
+        description: data?.description as string,
+        status: data?.status,
+        priority: data?.priority,
+        resource_id: data?.resource_id as number,
+        school_id: data?.school_id as number,
+      });
+
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+
+      setOpenModal(undefined);
+      setPage(1);
+
+      // setPreviewImg(undefined);
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const deleteMaintenanceRequestQuery = useMutation({
+    mutationFn: deleteMaintenanceRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getMaintenanceRequest"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getMaintenanceRequests"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllMaintenanceRequests"],
+      });
+
+      setOpenModal(undefined);
+      setPage(1);
+
+      setData({
+        id: 0,
+        title: "",
+        description: "",
+        status: "pending",
+        priority: "",
+        resolved_date: "",
+        school_id: 0,
+        resource_id: 0,
+      });
+
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const handleDateTime = (
+    options: Intl.DateTimeFormatOptions,
+    date: number | Date,
+  ): string => {
+    console.log(date);
+
+    return new Intl.DateTimeFormat(t("locales"), options).format(date);
+  };
+
+  const handlePerPage = (ev: ChangeEvent) => {
+    const target = ev.target as HTMLSelectElement;
+    setPage(1);
+    setPerPage(parseInt(target.value));
+  };
 
   const onCloseModal = () => {
     // resourceMutation.reset();
@@ -160,7 +389,7 @@ export default function MaintenanceRequests() {
 
       <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
-        // size={"xl"}
+        // size={"2xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -193,13 +422,13 @@ export default function MaintenanceRequests() {
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
                 <SkeletonContent isLoaded={true}>
-                  <div className="grid grid-flow-col grid-rows-4 gap-x-11 gap-y-8">
+                  <div className="grid grid-flow-col grid-rows-3 gap-x-5 gap-y-4">
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                         {fieldTrans("subject")}:
                       </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        chair
+                      <span className="whitespace-break-spaces text-base text-gray-900 dark:text-white">
+                        {getMaintenanceRequestQuery.data?.title}
                       </span>
                     </div>
                     <div className="flex flex-col space-y-1">
@@ -207,7 +436,7 @@ export default function MaintenanceRequests() {
                         {t("item")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {/* {getResourceQuery.data?.categories.label} */}
+                        {getMaintenanceRequestQuery.data?.resources.label}
                       </span>
                     </div>
                     <div className="flex flex-col space-y-1">
@@ -215,64 +444,101 @@ export default function MaintenanceRequests() {
                         {fieldTrans("assigned-to")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {/* {getResourceQuery.data?.categories.label} */}
+                        {getMaintenanceRequestQuery.data?.users[0].label}
                       </span>
                     </div>
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("issued-date")}:
-                      </span>
-                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {/* {getResourceQuery.data?.categories.label} */}
-                        20/01/2024{" "}
-                        <span className="text-gray-500 dark:text-gray-400">
-                          19:00
+                    <div className="dark:bg-gray-750 row-span-full flex flex-col gap-2 rounded-s bg-gray-100 p-4">
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                          {fieldTrans("issued-date")}:
                         </span>
-                      </span>
-                    </div>
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("resolved-date")}:
-                      </span>
-                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {/* {getResourceQuery.data?.categories.label} */}
-                        20/01/2024{" "}
-                        <span className="text-gray-500 dark:text-gray-400">
-                          19:00
+                        <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                          {getMaintenanceRequestQuery.data?.created_at ? (
+                            <>
+                              {handleDateTime(
+                                { dateStyle: "short" },
+                                new Date(
+                                  getMaintenanceRequestQuery.data?.created_at,
+                                ),
+                              )}
+                              <span className="ml-2 text-gray-500 dark:text-gray-400">
+                                {handleDateTime(
+                                  { timeStyle: "short" },
+                                  new Date(
+                                    getMaintenanceRequestQuery.data?.created_at,
+                                  ),
+                                )}
+                              </span>
+                            </>
+                          ) : (
+                            "-"
+                          )}
                         </span>
-                      </span>
-                    </div>
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("priority")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        <Badge
-                          // size={"xs"}
-                          theme={{
-                            icon: { size: { xs: "w-2 h-2" } },
-                          }}
-                          color={"yellow"}
-                          icon={BsTriangleFill}
-                          className="w-max rounded-s px-2 py-0.5"
-                        >
-                          Meduim
-                        </Badge>
-                      </span>
-                    </div>
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("status")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        <Badge
-                          // size={"xs"}
-                          color={"green"}
-                          className="w-max rounded-s"
-                        >
-                          Completed
-                        </Badge>
-                      </span>
+                      </div>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                          {fieldTrans("resolved-date")}:
+                        </span>
+                        <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                          {getMaintenanceRequestQuery.data?.resolved_date ? (
+                            <>
+                              {handleDateTime(
+                                { dateStyle: "short" },
+                                new Date(
+                                  getMaintenanceRequestQuery.data?.resolved_date,
+                                ),
+                              )}
+                              <span className="ml-2 text-gray-500 dark:text-gray-400">
+                                {handleDateTime(
+                                  { timeStyle: "short" },
+                                  new Date(
+                                    getMaintenanceRequestQuery.data?.resolved_date,
+                                  ),
+                                )}
+                              </span>
+                            </>
+                          ) : (
+                            "-"
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                          {fieldTrans("priority")}:
+                        </span>
+                        <span className="text-base text-gray-900 dark:text-white">
+                          <Badge
+                            // size={"xs"}
+                            theme={{
+                              icon: { size: { xs: "w-2 h-2" } },
+                            }}
+                            color={"yellow"}
+                            icon={BsTriangleFill}
+                            className="w-max rounded-s px-2 py-0.5"
+                          >
+                            {getMaintenanceRequestQuery.data?.priority}
+                          </Badge>
+                        </span>
+                      </div>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                          {fieldTrans("status")}:
+                        </span>
+                        <span className="text-base text-gray-900 dark:text-white">
+                          <Badge
+                            // size={"xs"}
+                            color={
+                              statusColors[
+                                getMaintenanceRequestQuery.data
+                                  ?.status as Status
+                              ]
+                            }
+                            className="w-max rounded-s"
+                          >
+                            {getMaintenanceRequestQuery.data?.status}
+                          </Badge>
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
@@ -280,19 +546,19 @@ export default function MaintenanceRequests() {
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                         {fieldTrans("note")}:
                       </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        This a note
+                      <span className="whitespace-break-spaces text-base text-gray-900 dark:text-white">
+                        {getMaintenanceRequestQuery.data?.description}
                       </span>
                     </div>
                     <div className="col-span-full flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                         {fieldTrans("attachement")}:
                       </span>
-                      <div className="flex flex-row items-center justify-between rounded-s bg-gray-600 px-4 py-2 text-gray-900 dark:text-white">
+                      <div className="flex flex-row items-center justify-between rounded-s bg-gray-100 px-4 py-2 text-gray-600 shadow-sharp-dark dark:bg-gray-600 dark:text-white dark:shadow-sharp-light">
                         <div className="relative flex w-full max-w-[90%] items-center justify-start gap-3 overflow-x-auto">
                           {/* <div className="sticky left-0 top-0 h-10 w-5 shrink-0 bg-gradient-to-r to-transparent dark:from-gray-700 dark:group-hover:from-slate-600"></div> */}
                           <FaFileLines className="shrink-0" size={32} />
-                          <div className="text-start">
+                          <div className="text-start text-gray-900 dark:text-white">
                             File.mp4{" "}
                             <div className="mt-0 text-gray-500 dark:text-gray-400">
                               20.15MB
@@ -415,7 +681,7 @@ export default function MaintenanceRequests() {
 
       <Modal
         show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"4xl"}
+        size={"2xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -437,7 +703,7 @@ export default function MaintenanceRequests() {
             <div className="flex flex-col gap-8 sm:flex-row">
               <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
                 <div className="w-full space-y-3">
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(350px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
                       id="subject"
@@ -713,120 +979,7 @@ export default function MaintenanceRequests() {
                       }
                     />
                   </Table.Cell>
-                  <Table.Cell className="p-2">
-                    <div>
-                      <Dropdown
-                        additionalStyle={{ containerStyle: "px-2 rounded-s" }}
-                        element={
-                          <div className="relative">
-                            <Input
-                              type="text"
-                              readOnly
-                              icon={
-                                <>
-                                  <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                                  {(filter.maxQty !== undefined ||
-                                    filter.minQty !== undefined) && (
-                                    <FaRegCircleXmark
-                                      onClick={() =>
-                                        setFilter((prev) => ({
-                                          ...prev,
-                                          maxQty: undefined,
-                                          minQty: undefined,
-                                        }))
-                                      }
-                                      className="absolute right-0 top-1/2 mr-6 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                                    />
-                                  )}
-                                </>
-                              }
-                              custom-style={{
-                                inputStyle: "cursor-default px-8 !py-1",
-                                labelStyle: "mb-0 !inline",
-                              }}
-                              placeholder={fieldTrans("filter-all")}
-                              value={
-                                filter.minQty && filter.maxQty
-                                  ? filter.minQty + " ⇆ " + filter.maxQty
-                                  : filter.minQty
-                                    ? "≥ " + filter.minQty
-                                    : filter.maxQty
-                                      ? "≤ " + filter.maxQty
-                                      : ""
-                              }
-                            />
-                            {/* {filter.minQty && filter.maxQty ? (
-                                  <span>
-                                    {filter.minQty} &#8646; {filter.maxQty}
-                                  </span>
-                                ) : filter.minQty ? (
-                                  <span>&#8925; {filter.minQty}</span>
-                                ) : filter.maxQty ? (
-                                  <span>&#8924; {filter.maxQty}</span>
-                                ) : (
-                                  <span className="text-gray-400">none</span>
-                                )} */}
-
-                            <FaChevronDown className="absolute right-0 top-1/2 mr-2 -translate-y-1/2 text-[11px] text-[#7f868e36] dark:text-gray-400" />
-                          </div>
-                        }
-                      >
-                        <form
-                        // onSubmit={handleFilter}
-                        >
-                          <Dropdown.List>
-                            <div className="flex gap-2">
-                              <Input
-                                id="minQty"
-                                type="number"
-                                custom-style={{
-                                  containerStyle: "w-auto",
-                                  inputStyle: "py-1",
-                                }}
-                                placeholder="min"
-                                name="minQty"
-                              />
-                              <Input
-                                id="maxQty"
-                                type="number"
-                                custom-style={{
-                                  containerStyle: "w-auto",
-                                  inputStyle: "py-1",
-                                }}
-                                placeholder="max"
-                                name="maxQty"
-                              />
-                            </div>
-                          </Dropdown.List>
-                          <button type="submit" className="btn-default h-8">
-                            Save
-                          </button>
-                        </form>
-                      </Dropdown>
-                    </div>
-                    {/* <Dropdown
-                        theme={{
-    
-                        }}
-                          dismissOnClick={false}
-                          label="qty"
-                        >
-                          <Dropdown.Item className="space-x-2">
-                            <Input
-                              id="minQty"
-                              custom-style={{ containerStyle: "max-w-16" }}
-                              placeholder="min"
-                              name="minQty"
-                            />
-                            <Input
-                              id="maxQty"
-                              custom-style={{ containerStyle: "max-w-16" }}
-                              placeholder="max"
-                              name="maxQty"
-                            />
-                          </Dropdown.Item>
-                        </Dropdown> */}
-                  </Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
                   <Table.Cell className="p-2">
                     <RSelect
                       id="category_id"
@@ -876,78 +1029,134 @@ export default function MaintenanceRequests() {
                     </RSelect>
                   </Table.Cell>
                 </Table.Row>
+                {getMaintenanceRequestsQuery.isFetching &&
+                !(getMaintenanceRequestsQuery.isRefetching || perPage) ? (
+                  <SkeletonTable cols={5} />
+                ) : (
+                  getMaintenanceRequestsQuery?.data.data.map(
+                    (maintenanceReq: MaintenanceRequests, key: number) => (
+                      <Table.Row
+                        key={key}
+                        className="w-max bg-white dark:bg-gray-800"
+                      >
+                        <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                          <Checkbox
+                            className="rounded-xs"
+                            id={maintenanceReq.id.toString()}
+                            name="checkbox"
+                          />
+                        </Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {maintenanceReq.id}
+                        </Table.Cell>
+                        <Table.Cell>{maintenanceReq.title}</Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          <div className="flex items-center gap-x-2">
+                            <img
+                              className="w-8 rounded-full"
+                              src={`https://ui-avatars.com/api/?background=random&name=${maintenanceReq.resources.label}}`}
+                              alt="profile"
+                            />
+                            <span>{maintenanceReq.resources.label}</span>
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Badge
+                            color={
+                              statusColors[maintenanceReq.status as Status]
+                            }
+                            className="w-max rounded-s"
+                          >
+                            {maintenanceReq.status}
+                          </Badge>
+                        </Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {maintenanceReq.created_at ? (
+                            <>
+                              {handleDateTime(
+                                { dateStyle: "short" },
+                                new Date(maintenanceReq.created_at),
+                              )}
+                              <span className="ml-2 text-gray-500 dark:text-gray-400">
+                                {handleDateTime(
+                                  { timeStyle: "short" },
+                                  new Date(maintenanceReq.created_at),
+                                )}
+                              </span>
+                            </>
+                          ) : (
+                            "-"
+                          )}
+                        </Table.Cell>
+                        <Table.Cell>
+                          {maintenanceReq.resolved_date ? (
+                            <>
+                              {handleDateTime(
+                                { dateStyle: "short" },
+                                new Date(maintenanceReq.resolved_date),
+                              )}
+                              <span className="ml-2 text-gray-500 dark:text-gray-400">
+                                {handleDateTime(
+                                  { timeStyle: "short" },
+                                  new Date(maintenanceReq.resolved_date),
+                                )}
+                              </span>
+                            </>
+                          ) : (
+                            "-"
+                          )}
+                        </Table.Cell>
 
-                <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                  <Checkbox
-                    className="rounded-xs"
-                    // id={resource.id.toString()}
-                    name="checkbox"
-                  />
-                </Table.Cell>
-                <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                  0001
-                </Table.Cell>
-                <Table.Cell>Broken chair</Table.Cell>
-                <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                  <div className="flex items-center gap-x-2">
-                    <img
-                      className="w-8 rounded-full"
-                      src={`https://ui-avatars.com/api/?background=random&name=chair}`}
-                      alt="profile"
-                    />
-                    <span>chair</span>
-                  </div>
-                </Table.Cell>
-                <Table.Cell>
-                  <Badge color={"red"} className="w-max rounded-s">
-                    Canceled
-                  </Badge>
-                </Table.Cell>
-                <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                  2024/01/01
-                </Table.Cell>
-                <Table.Cell>2024/01/01</Table.Cell>
-
-                <Table.Cell>
-                  <div className="flex w-fit gap-x-2">
-                    <div
-                      onClick={() =>
-                        setOpenModal({
-                          id: 0,
-                          type: "view",
-                          open: true,
-                        })
-                      }
-                      className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                    >
-                      <FaEye className="text-blue-600 dark:text-blue-500" />
-                    </div>
-                    <div
-                      className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                      onClick={() =>
-                        setOpenModal({
-                          id: 0,
-                          type: "edit",
-                          open: true,
-                        })
-                      }
-                    >
-                      <FaPen className="text-green-600 dark:text-green-500" />
-                    </div>
-                    <div
-                      className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                      onClick={() =>
-                        setOpenModal({
-                          id: 0,
-                          type: "delete",
-                          open: true,
-                        })
-                      }
-                    >
-                      <FaTrash className="text-red-600 dark:text-red-500" />
-                    </div>
-                  </div>
-                </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex w-fit gap-x-2">
+                            <Tooltip content="View" theme={customTooltip}>
+                              <div
+                                onClick={() =>
+                                  setOpenModal({
+                                    id: maintenanceReq.id,
+                                    type: "view",
+                                    open: true,
+                                  })
+                                }
+                                className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                              >
+                                <FaEye className="text-blue-600 dark:text-blue-500" />
+                              </div>
+                            </Tooltip>
+                            <Tooltip content="Edit" theme={customTooltip}>
+                              <div
+                                className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                                onClick={() =>
+                                  setOpenModal({
+                                    id: maintenanceReq.id,
+                                    type: "edit",
+                                    open: true,
+                                  })
+                                }
+                              >
+                                <FaPen className="text-green-600 dark:text-green-500" />
+                              </div>
+                            </Tooltip>
+                            <Tooltip content="Delete" theme={customTooltip}>
+                              <div
+                                className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                                onClick={() =>
+                                  setOpenModal({
+                                    id: maintenanceReq.id,
+                                    type: "delete",
+                                    open: true,
+                                  })
+                                }
+                              >
+                                <FaTrash className="text-red-600 dark:text-red-500" />
+                              </div>
+                            </Tooltip>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ),
+                  )
+                )}
               </Table.Body>
             </Table>
           </div>
@@ -956,22 +1165,21 @@ export default function MaintenanceRequests() {
             <span className="text-gray-500 dark:text-gray-400">
               {t("records-number")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {/* {getResourcesQuery.data?.from}-{getResourcesQuery.data?.to} */}
-                1 -5
+                {getMaintenanceRequestsQuery.data?.from}-
+                {getMaintenanceRequestsQuery.data?.to}
               </span>{" "}
               {t("total-records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {/* {getResourcesQuery.data?.total} */}
-                10
+                {getMaintenanceRequestsQuery.data?.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
               <RSelect
                 id="row-num"
                 name="row-num"
-                // onChange={handlePerPage}
+                onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                // defaultValue={getResourcesQuery.data?.per_page}
+                defaultValue={getMaintenanceRequestsQuery.data?.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>

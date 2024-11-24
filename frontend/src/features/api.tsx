@@ -3,10 +3,12 @@ import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTea
 import { FormData as UpdateStudentFromData } from "@admin/pages/students/viewStudents";
 import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParents";
 import { FormData as UpdateResourceFromData } from "@admin/pages/resources/viewResources";
+import { FormData as UpdateMaintenanceRequestFromData } from "@admin/pages/resources/maintenanceRequests";
 import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
 import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStudent";
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
 import { FormData as AddResourceFromData } from "@src/admin/pages/resources/addResources";
+import { FormData as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
 const axiosApi = AxiosProvider();
 
 const getTeachers = async (
@@ -288,6 +290,76 @@ const getCategories = async (
   return response?.data;
 };
 
+const getMaintenanceRequests = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  schoolId: number,
+  // label = "",
+  // maxQty = 0,
+  // minQty = 0,
+  // category_id = 0,
+) => {
+  const response = await axiosApi.get(
+    "/api/maintenance?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&school_id=" +
+      schoolId,
+    // "&label=" +
+    // label +
+    // "&maxQty=" +
+    // maxQty +
+    // "&minQty=" +
+    // minQty +
+    // "&category_id=" +
+    // category_id,
+  );
+  return response.data;
+};
+
+const getMaintenanceRequest = async (id: number) => {
+  const response = await axiosApi.get("/api/maintenance/" + id);
+  return response?.data;
+};
+
+const addMaintenanceRequest = async (
+  formData: AddMaintenanceRequestFromData,
+) => {
+  const response = await axiosApi.post("/api/maintenance", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
+const setMaintenanceRequest = async (
+  formData: UpdateMaintenanceRequestFromData,
+) => {
+  const response = await axiosApi.post(
+    "/api/maintenance/" + formData?.id,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
+const deleteMaintenanceRequest = async (id: number) => {
+  const response = await axiosApi.delete("/api/maintenance/" + id);
+  return response.data;
+};
+
 export {
   getTeachers,
   addTeacher,
@@ -313,4 +385,9 @@ export {
   setResource,
   deleteResource,
   getCategories,
+  getMaintenanceRequests,
+  getMaintenanceRequest,
+  addMaintenanceRequest,
+  setMaintenanceRequest,
+  deleteMaintenanceRequest,
 };
