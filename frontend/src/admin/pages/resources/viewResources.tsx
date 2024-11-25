@@ -7,6 +7,7 @@ import {
   Pagination,
   Spinner,
   Table,
+  Tooltip,
 } from "flowbite-react";
 import React, {
   ChangeEvent,
@@ -54,6 +55,7 @@ import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
 import { FaChevronDown, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown"; // DropdownListButton, // DropdownList,
+import { customTooltip } from "@src/admin/utils/flowbite";
 
 interface Check {
   id?: number;
@@ -1002,7 +1004,8 @@ export function ViewResources() {
                   <Table.Cell className="p-2">
                     <div>
                       <Dropdown
-                        onClose={() => closeDropDown}
+                        onClose={(state) => setCloseDropDown(state as boolean)}
+                        close={closeDropDown}
                         additionalStyle={{ containerStyle: "px-2 rounded-s" }}
                         element={
                           <div className="relative">
@@ -1202,42 +1205,60 @@ export function ViewResources() {
 
                         <Table.Cell>
                           <div className="flex w-fit gap-x-2">
-                            <div
-                              onClick={() =>
-                                setOpenModal({
-                                  id: resource.id,
-                                  type: "view",
-                                  open: true,
-                                })
-                              }
-                              className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                            <Tooltip
+                              content="View"
+                              style="auto"
+                              theme={customTooltip}
                             >
-                              <FaEye className="text-blue-600 dark:text-blue-500" />
-                            </div>
-                            <div
-                              className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                              onClick={() =>
-                                onOpenEditModal({
-                                  id: resource.id,
-                                  type: "edit",
-                                  open: true,
-                                })
-                              }
+                              <div
+                                onClick={() =>
+                                  setOpenModal({
+                                    id: resource.id,
+                                    type: "view",
+                                    open: true,
+                                  })
+                                }
+                                className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                              >
+                                <FaEye className="text-blue-600 dark:text-blue-500" />
+                              </div>
+                            </Tooltip>
+                            <Tooltip
+                              content="Edit"
+                              style="auto"
+                              theme={customTooltip}
                             >
-                              <FaPen className="text-green-600 dark:text-green-500" />
-                            </div>
-                            <div
-                              className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                              onClick={() =>
-                                setOpenModal({
-                                  id: resource.id,
-                                  type: "delete",
-                                  open: true,
-                                })
-                              }
+                              <div
+                                className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                                onClick={() =>
+                                  onOpenEditModal({
+                                    id: resource.id,
+                                    type: "edit",
+                                    open: true,
+                                  })
+                                }
+                              >
+                                <FaPen className="text-green-600 dark:text-green-500" />
+                              </div>
+                            </Tooltip>
+                            <Tooltip
+                              content="Delete"
+                              style="auto"
+                              theme={customTooltip}
                             >
-                              <FaTrash className="text-red-600 dark:text-red-500" />
-                            </div>
+                              <div
+                                className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                                onClick={() =>
+                                  setOpenModal({
+                                    id: resource.id,
+                                    type: "delete",
+                                    open: true,
+                                  })
+                                }
+                              >
+                                <FaTrash className="text-red-600 dark:text-red-500" />
+                              </div>
+                            </Tooltip>
                           </div>
                         </Table.Cell>
                       </Table.Row>

@@ -9,14 +9,19 @@ interface DropdownProps {
   children: React.ReactNode;
   triggerEvent?: TriggerEvent; // Condition to trigger dropdown via click or hover
   closeOnEvent?: "click" | "hover" | "both";
-  onClose?: (value?: boolean) => boolean;
+  onClose?: (value?: boolean) => void;
+  close?: boolean;
   additionalStyle?: {
     containerStyle: string;
   };
+  width?: string;
 }
 
 interface ListProps {
   children: React.ReactNode;
+  additionalStyle?: {
+    containerStyle: string;
+  };
 }
 
 interface ItemProps {
@@ -34,7 +39,9 @@ function Dropdown({
   triggerEvent = "click",
   closeOnEvent = "click",
   onClose,
+  close,
   additionalStyle,
+  width,
 }: DropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -165,10 +172,11 @@ function Dropdown({
   }, [isVisible]);
 
   useEffect(() => {
-    if (onClose && onClose()) {
+    if (close) {
       setIsVisible(false);
+      onClose && onClose(false);
     }
-  }, [onClose]);
+  }, [close, onClose]);
 
   return (
     <>
@@ -186,7 +194,7 @@ function Dropdown({
             style={{
               top: dropdownPosition?.top,
               left: dropdownPosition?.left,
-              width: dropdownPosition?.width,
+              width: width ?? dropdownPosition?.width,
               maxHeight: dropdownPosition?.maxHeight,
             }}
           >
@@ -199,9 +207,11 @@ function Dropdown({
 }
 
 // List component for dropdown items
-function List({ children }: ListProps) {
+function List({ children, additionalStyle }: ListProps) {
   return (
-    <ul className="w-full overflow-y-auto py-2 text-gray-700 dark:text-gray-200">
+    <ul
+      className={`w-full overflow-y-auto py-2 text-gray-700 dark:text-gray-200 ${additionalStyle?.containerStyle}`}
+    >
       {children}
     </ul>
   );

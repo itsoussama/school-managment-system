@@ -17,6 +17,7 @@ import { FaCheck, FaExclamationCircle } from "react-icons/fa";
 import { FaFileLines, FaXmark } from "react-icons/fa6";
 import ReactDOM from "react-dom";
 import { FileInput, Label } from "flowbite-react";
+import { useTranslation } from "react-i18next";
 
 interface Field {
   htmlFor?: string;
@@ -54,7 +55,6 @@ function Input({
   ...attribute
 }: Input) {
   // const [inputValue, setInputValue] = useState<string>(value ?? "");
-
   return (
     <div className={containerStyle}>
       <label
@@ -66,7 +66,7 @@ function Input({
       <div className="relative">
         {icon}
         <input
-          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
           {...attribute}
         />
       </div>
@@ -105,7 +105,7 @@ function RTextArea({
       <div className="relative">
         {icon}
         <textarea
-          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
           {...attribute}
         />
       </div>
@@ -142,7 +142,7 @@ function Checkbox({
           id={htmlFor}
           name={htmlFor}
           type="checkbox"
-          className={`peer h-4 w-4 appearance-none rounded-xs border-gray-300 bg-gray-100 text-blue-600 checked:border-0 checked:bg-blue-800 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 ${inputStyle}`}
+          className={`peer h-4 w-4 appearance-none rounded-xs border-gray-300 bg-gray-100 text-blue-600 checked:border-0 checked:bg-blue-800 focus:ring-2 focus:ring-blue-500 disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 ${inputStyle}`}
           {...attribute}
         />
         <FaCheck
@@ -196,7 +196,7 @@ function RSelect({
       <div className="relative">
         {icon}
         <select
-          className={`block w-full rounded-s border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-700 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          className={`block w-full rounded-s border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-700 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
           {...attribute}
         >
           {children}
@@ -426,6 +426,7 @@ function Dropzone({
   } = {},
 }: DropZone) {
   const [file, setFile] = useState<File>();
+  const { t } = useTranslation();
   const fileDetailsPreview = (event: ChangeEvent) => {
     const target = event.target as HTMLInputElement;
     if (target?.files?.length) {
@@ -503,7 +504,7 @@ function Dropzone({
                 and drop
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                SVG, PNG, JPG or GIF (MAX. 800x400px)
+                {t("maximum-size")}: 1024MB
               </p>
             </div>
           )}

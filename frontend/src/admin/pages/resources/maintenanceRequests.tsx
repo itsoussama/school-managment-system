@@ -1,5 +1,5 @@
 import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
-import { customTooltip } from "@src/admin/utils/flowbite";
+import { customBadge, customTooltip } from "@src/admin/utils/flowbite";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";
@@ -32,9 +32,9 @@ import {
   Table,
   Tooltip,
 } from "flowbite-react";
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BsTriangleFill } from "react-icons/bs";
+import { BsThreeDotsVertical, BsTriangleFill } from "react-icons/bs";
 import {
   FaChevronDown,
   FaExclamationTriangle,
@@ -47,6 +47,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import {
+  FaCircle,
   FaDiamond,
   FaDownload,
   FaFileLines,
@@ -62,6 +63,7 @@ interface Modal {
 }
 
 type Status = "completed" | "in_progress" | "pending";
+type Priority = "low" | "medium" | "high";
 
 interface MaintenanceRequests {
   id: number;
@@ -133,6 +135,7 @@ export default function MaintenanceRequests() {
   //   const [checks, setChecks] = useState<Array<Check>>([]);
   //   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
+  const [closeDropDown, setCloseDropDown] = useState<boolean>(false);
   //   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   //   const [img, setImg] = useState<FileList>();
   //   const [previewImg, setPreviewImg] = useState<string>();
@@ -153,10 +156,16 @@ export default function MaintenanceRequests() {
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
-  const statusColors = {
+  const statusOptions = {
     completed: "green",
     in_progress: "blue",
-    pending: "yellow",
+    pending: "orange",
+  };
+
+  const priorityOptions = {
+    low: { color: "blue", icon: FaCircle },
+    medium: { color: "yellow", icon: BsTriangleFill },
+    high: { color: "red", icon: FaDiamond },
   };
 
   const { t } = useTranslation();
@@ -315,8 +324,6 @@ export default function MaintenanceRequests() {
     options: Intl.DateTimeFormatOptions,
     date: number | Date,
   ): string => {
-    console.log(date);
-
     return new Intl.DateTimeFormat(t("locales"), options).format(date);
   };
 
@@ -324,6 +331,44 @@ export default function MaintenanceRequests() {
     const target = ev.target as HTMLSelectElement;
     setPage(1);
     setPerPage(parseInt(target.value));
+  };
+
+  const handleStatusChange = (status: Status) => {
+    // todo: Make an api call to handle status change
+    console.log(status);
+    setCloseDropDown(true);
+  };
+
+  const onChange = (event: ChangeEvent) => {
+    const inputElem = event.target as HTMLInputElement;
+    const selectElem = event.target as HTMLSelectElement;
+    // if (event?.target.nodeType)
+    setData((prev) => ({
+      ...(prev as Data),
+      [event.target.id]:
+        event?.target.nodeName == "SELECT"
+          ? selectElem.options[selectElem.selectedIndex].value
+          : inputElem.value,
+    }));
+    // console.log((event.target as HTMLInputElement).value);
+  };
+
+  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
+    setOpenModal({ id: id, type: type, open: isOpen });
+    const MaintenanceReqData = await queryClient.ensureQueryData({
+      queryKey: ["getMaintenanceRequest", id],
+      queryFn: () => getMaintenanceRequest(id as number),
+    });
+
+    setData({
+      id: MaintenanceReqData?.id as number,
+      title: MaintenanceReqData?.title as string,
+      description: MaintenanceReqData?.description as string,
+      status: MaintenanceReqData?.status,
+      priority: MaintenanceReqData?.priority,
+      school_id: MaintenanceReqData?.school_id,
+      resource_id: MaintenanceReqData?.resource_id as number,
+    });
   };
 
   const onCloseModal = () => {
@@ -368,14 +413,14 @@ export default function MaintenanceRequests() {
           {minSm ? (
             <Breadcrumb.Item>
               <span className="text-gray-600 dark:text-gray-300">
-                {t("resources")}
+                {t("resource")}
               </span>
             </Breadcrumb.Item>
           ) : (
             <Breadcrumb.Item>...</Breadcrumb.Item>
           )}
           <Breadcrumb.Item className="whitespace-nowrap">
-            {t("view-resources")}
+            {t("maintenance-requests")}
           </Breadcrumb.Item>
         </Breadcrumb>
 
@@ -447,7 +492,7 @@ export default function MaintenanceRequests() {
                         {getMaintenanceRequestQuery.data?.users[0].label}
                       </span>
                     </div>
-                    <div className="dark:bg-gray-750 row-span-full flex flex-col gap-2 rounded-s bg-gray-100 p-4">
+                    <div className="row-span-full flex flex-col gap-2 rounded-s bg-gray-50 p-4 dark:bg-gray-750">
                       <div className="flex flex-col space-y-1">
                         <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                           {fieldTrans("issued-date")}:
@@ -509,14 +554,22 @@ export default function MaintenanceRequests() {
                         <span className="text-base text-gray-900 dark:text-white">
                           <Badge
                             // size={"xs"}
-                            theme={{
-                              icon: { size: { xs: "w-2 h-2" } },
-                            }}
-                            color={"yellow"}
-                            icon={BsTriangleFill}
+                            theme={customBadge}
+                            color={
+                              priorityOptions[
+                                getMaintenanceRequestQuery.data
+                                  ?.priority as Priority
+                              ]?.color
+                            }
+                            icon={
+                              priorityOptions[
+                                getMaintenanceRequestQuery.data
+                                  ?.priority as Priority
+                              ]?.icon
+                            }
                             className="w-max rounded-s px-2 py-0.5"
                           >
-                            {getMaintenanceRequestQuery.data?.priority}
+                            {t(getMaintenanceRequestQuery.data?.priority)}
                           </Badge>
                         </span>
                       </div>
@@ -527,15 +580,16 @@ export default function MaintenanceRequests() {
                         <span className="text-base text-gray-900 dark:text-white">
                           <Badge
                             // size={"xs"}
+                            theme={customBadge}
                             color={
-                              statusColors[
+                              statusOptions[
                                 getMaintenanceRequestQuery.data
                                   ?.status as Status
                               ]
                             }
                             className="w-max rounded-s"
                           >
-                            {getMaintenanceRequestQuery.data?.status}
+                            {t(getMaintenanceRequestQuery.data?.status)}
                           </Badge>
                         </span>
                       </div>
@@ -552,7 +606,7 @@ export default function MaintenanceRequests() {
                     </div>
                     <div className="col-span-full flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("attachement")}:
+                        {fieldTrans("attachment")}:
                       </span>
                       <div className="flex flex-row items-center justify-between rounded-s bg-gray-100 px-4 py-2 text-gray-600 shadow-sharp-dark dark:bg-gray-600 dark:text-white dark:shadow-sharp-light">
                         <div className="relative flex w-full max-w-[90%] items-center justify-start gap-3 overflow-x-auto">
@@ -621,9 +675,9 @@ export default function MaintenanceRequests() {
                         inputStyle: "disabled:opacity-50",
                         containerStyle: "col-span-full",
                       }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   value={data?.label}
-                      //   onChange={onChange}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      value={data?.title}
+                      onChange={onChange}
                     />
 
                     <RSelect
@@ -631,11 +685,23 @@ export default function MaintenanceRequests() {
                       name="item"
                       label={fieldTrans("item")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   defaultValue={data?.id}
-                      //   onChange={onChange}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue={data?.resource_id}
+                      onChange={onChange}
                     >
-                      <option></option>
+                      {/* {getCategoriesQuery.data?.map(
+                        (category: Category, index: number) => (
+                          <option
+                            key={index}
+                            value={category.id}
+                            selected={
+                              data?.category_id == category.id ? true : false
+                            }
+                          >
+                            {category.label}
+                          </option>
+                        ),
+                      )} */}
                     </RSelect>
 
                     <RSelect
@@ -643,11 +709,15 @@ export default function MaintenanceRequests() {
                       name="priority"
                       label={fieldTrans("priority")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   defaultValue={data?.id}
-                      //   onChange={onChange}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue={data?.priority}
+                      onChange={onChange}
                     >
-                      <option></option>
+                      {Object.entries(priorityOptions).map((priority, key) => (
+                        <option key={key} value={priority[0]}>
+                          {priority[0]}
+                        </option>
+                      ))}
                     </RSelect>
 
                     <RTextArea
@@ -656,6 +726,9 @@ export default function MaintenanceRequests() {
                       label={fieldTrans("note")}
                       placeholder={fieldTrans("note-placeholder")}
                       custom-style={{ containerStyle: "col-span-full" }}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue={data?.description}
+                      onChange={onChange}
                     />
 
                     <Dropzone
@@ -714,21 +787,37 @@ export default function MaintenanceRequests() {
                         inputStyle: "disabled:opacity-50",
                         containerStyle: "col-span-full",
                       }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   value={data?.label}
-                      //   onChange={onChange}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue={data?.title}
+                      onChange={onChange}
                     />
 
-                    <RSelect
+                    {/* <RSelect
                       id="item"
                       name="item"
                       label={fieldTrans("item")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   defaultValue={data?.id}
-                      //   onChange={onChange}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue={data?.resource_id}
+                      onChange={onChange}
                     >
                       <option></option>
+                    </RSelect> */}
+
+                    <RSelect
+                      id="status"
+                      name="status"
+                      label={fieldTrans("status")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue={data?.status}
+                      onChange={onChange}
+                    >
+                      {Object.entries(statusOptions).map((status, key) => (
+                        <option key={key} value={status[0]}>
+                          {status[0]}
+                        </option>
+                      ))}
                     </RSelect>
 
                     <RSelect
@@ -736,11 +825,15 @@ export default function MaintenanceRequests() {
                       name="priority"
                       label={fieldTrans("priority")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   defaultValue={data?.id}
-                      //   onChange={onChange}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue={data?.priority}
+                      onChange={onChange}
                     >
-                      <option></option>
+                      {Object.entries(priorityOptions).map((priority, key) => (
+                        <option key={key} value={priority[0]}>
+                          {priority[0]}
+                        </option>
+                      ))}
                     </RSelect>
 
                     <RTextArea
@@ -749,6 +842,9 @@ export default function MaintenanceRequests() {
                       label={fieldTrans("note")}
                       placeholder={fieldTrans("note-placeholder")}
                       custom-style={{ containerStyle: "col-span-full" }}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue={data?.description}
+                      onChange={onChange}
                     />
 
                     <Input
@@ -760,9 +856,9 @@ export default function MaintenanceRequests() {
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                       }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   value={data?.label}
-                      //   onChange={onChange}
+                      // disabled={getMaintenanceRequestQuery.isFetching && true}
+                      // defaultValue={data?.description}
+                      // onChange={onChange}
                     />
 
                     <Input
@@ -918,7 +1014,7 @@ export default function MaintenanceRequests() {
                 <Table.HeadCell>{fieldTrans("Item")}</Table.HeadCell>
                 <Table.HeadCell>{fieldTrans("status")}</Table.HeadCell>
                 <Table.HeadCell>{fieldTrans("issued-date")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("Resolved-date")}</Table.HeadCell>
+                <Table.HeadCell>{fieldTrans("resolved-date")}</Table.HeadCell>
                 <Table.HeadCell className="w-0">
                   <span className="w-full">Actions</span>
                 </Table.HeadCell>
@@ -1031,7 +1127,7 @@ export default function MaintenanceRequests() {
                 </Table.Row>
                 {getMaintenanceRequestsQuery.isFetching &&
                 !(getMaintenanceRequestsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={5} />
+                  <SkeletonTable cols={7} />
                 ) : (
                   getMaintenanceRequestsQuery?.data.data.map(
                     (maintenanceReq: MaintenanceRequests, key: number) => (
@@ -1060,15 +1156,53 @@ export default function MaintenanceRequests() {
                             <span>{maintenanceReq.resources.label}</span>
                           </div>
                         </Table.Cell>
-                        <Table.Cell>
+                        <Table.Cell className="flex items-center gap-x-2">
                           <Badge
+                            theme={customBadge}
                             color={
-                              statusColors[maintenanceReq.status as Status]
+                              statusOptions[maintenanceReq.status as Status]
                             }
                             className="w-max rounded-s"
                           >
-                            {maintenanceReq.status}
+                            {t(maintenanceReq.status)}
                           </Badge>
+                          <Dropdown
+                            element={
+                              <BsThreeDotsVertical className="cursor-pointer" />
+                            }
+                            width="max-content"
+                            additionalStyle={{
+                              containerStyle: "rounded-s px-1 py-0",
+                            }}
+                            onClose={(state) =>
+                              setCloseDropDown(state as boolean)
+                            }
+                            close={closeDropDown}
+                          >
+                            <Dropdown.List
+                              additionalStyle={{ containerStyle: " py-1" }}
+                            >
+                              {Object.entries(statusOptions).map(
+                                (status, key) => (
+                                  <div
+                                    className="cursor-pointer rounded-s py-1.5 pl-1 pr-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                    onClick={() =>
+                                      handleStatusChange(status[0] as Status)
+                                    }
+                                  >
+                                    <Badge
+                                      theme={customBadge}
+                                      className="w-max rounded-xs"
+                                      color={status[1]}
+                                      key={key}
+                                    >
+                                      {t(status[0])}
+                                    </Badge>
+                                  </div>
+                                ),
+                              )}
+                            </Dropdown.List>
+                          </Dropdown>
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                           {maintenanceReq.created_at ? (
@@ -1109,7 +1243,11 @@ export default function MaintenanceRequests() {
 
                         <Table.Cell>
                           <div className="flex w-fit gap-x-2">
-                            <Tooltip content="View" theme={customTooltip}>
+                            <Tooltip
+                              content="View"
+                              style="auto"
+                              theme={customTooltip}
+                            >
                               <div
                                 onClick={() =>
                                   setOpenModal({
@@ -1123,11 +1261,15 @@ export default function MaintenanceRequests() {
                                 <FaEye className="text-blue-600 dark:text-blue-500" />
                               </div>
                             </Tooltip>
-                            <Tooltip content="Edit" theme={customTooltip}>
+                            <Tooltip
+                              content="Edit"
+                              style="auto"
+                              theme={customTooltip}
+                            >
                               <div
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
-                                  setOpenModal({
+                                  onOpenEditModal({
                                     id: maintenanceReq.id,
                                     type: "edit",
                                     open: true,
@@ -1137,7 +1279,11 @@ export default function MaintenanceRequests() {
                                 <FaPen className="text-green-600 dark:text-green-500" />
                               </div>
                             </Tooltip>
-                            <Tooltip content="Delete" theme={customTooltip}>
+                            <Tooltip
+                              content="Delete"
+                              style="auto"
+                              theme={customTooltip}
+                            >
                               <div
                                 className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                                 onClick={() =>
