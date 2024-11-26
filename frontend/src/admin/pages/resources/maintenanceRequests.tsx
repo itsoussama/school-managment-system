@@ -10,9 +10,11 @@ import {
   SkeletonTable,
 } from "@src/components/skeleton";
 import {
+  addMaintenanceRequest,
   deleteMaintenanceRequest,
   getMaintenanceRequest,
   getMaintenanceRequests,
+  getResources,
   setMaintenanceRequest,
 } from "@src/features/api";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -29,10 +31,11 @@ import {
   Checkbox,
   Modal,
   Pagination,
+  Spinner,
   Table,
   Tooltip,
 } from "flowbite-react";
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BsThreeDotsVertical, BsTriangleFill } from "react-icons/bs";
 import {
@@ -52,9 +55,12 @@ import {
   FaDownload,
   FaFileLines,
   FaRegCircleXmark,
+  FaXmark,
 } from "react-icons/fa6";
 import { IoFilter } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
+import { Resource } from "./viewResources";
+import UserListModal from "@src/components/userListModal";
 
 interface Modal {
   id?: number;
@@ -82,27 +88,31 @@ interface MaintenanceRequests {
 }
 
 interface Data {
-  id: number;
+  id?: number;
   title: string;
   description: string;
   status: Status;
   priority: string;
   file_path?: File;
   resolved_date?: string;
+  created_at: string;
   school_id: number;
+  users: number[];
+  userData?: Array<Record<string, string>>;
   resource_id: number;
 }
 export interface FormData {
-  _method: string;
-  id: number;
+  _method?: string;
+  id?: number;
   title: string;
   description: string;
   status: Status;
   priority: string;
   file_path?: File;
   resolved_date?: string;
-  school_id: number;
-  resource_id: number;
+  users: Array<number>;
+  school_id?: number;
+  resource_id?: number;
 }
 
 interface Sort {
@@ -136,7 +146,8 @@ export default function MaintenanceRequests() {
   //   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
   const [closeDropDown, setCloseDropDown] = useState<boolean>(false);
-  //   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
+  const [openUserListModal, setOpenUserListModal] = useState<boolean>(false);
+  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   //   const [img, setImg] = useState<FileList>();
   //   const [previewImg, setPreviewImg] = useState<string>();
   const [data, setData] = useState<Data>({
@@ -146,6 +157,8 @@ export default function MaintenanceRequests() {
     status: "pending",
     priority: "",
     resolved_date: "",
+    created_at: "",
+    users: [],
     school_id: 0,
     resource_id: 0,
   });
@@ -229,6 +242,25 @@ export default function MaintenanceRequests() {
     enabled: !!openModal?.id,
   });
 
+  const addMaintenanceRequestQuery = useMutation({
+    mutationFn: addMaintenanceRequest,
+    onSuccess: () => {
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
   const maintenanceRequestMutation = useMutation({
     mutationFn: setMaintenanceRequest,
     onSuccess: ({ data }) => {
@@ -250,6 +282,8 @@ export default function MaintenanceRequests() {
         description: data?.description as string,
         status: data?.status,
         priority: data?.priority,
+        users: data?.users,
+        created_at: data?.created_at,
         resource_id: data?.resource_id as number,
         school_id: data?.school_id as number,
       });
@@ -279,10 +313,6 @@ export default function MaintenanceRequests() {
     mutationFn: deleteMaintenanceRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getMaintenanceRequest"],
-      });
-
-      queryClient.invalidateQueries({
         queryKey: ["getMaintenanceRequests"],
       });
 
@@ -300,6 +330,8 @@ export default function MaintenanceRequests() {
         status: "pending",
         priority: "",
         resolved_date: "",
+        created_at: "",
+        users: [],
         school_id: 0,
         resource_id: 0,
       });
@@ -318,6 +350,12 @@ export default function MaintenanceRequests() {
         state: true,
       });
     },
+  });
+
+  const getAllResourcesQuery = useQuery({
+    queryKey: ["getAllResources"],
+    queryFn: () => getResources(1, -1, undefined, undefined, admin?.school_id),
+    placeholderData: keepPreviousData,
   });
 
   const handleDateTime = (
@@ -348,9 +386,86 @@ export default function MaintenanceRequests() {
       [event.target.id]:
         event?.target.nodeName == "SELECT"
           ? selectElem.options[selectElem.selectedIndex].value
-          : inputElem.value,
+          : inputElem.type == "file"
+            ? (inputElem.files as FileList)[0]
+            : inputElem.value,
     }));
     // console.log((event.target as HTMLInputElement).value);
+  };
+
+  const onSelectUser = (
+    key: string,
+    value: number[],
+    name?: Array<Record<string, string>>,
+  ) => {
+    setData((prev) => ({
+      ...(prev as Data),
+      [key]: value,
+      userData: name,
+    }));
+  };
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      addMaintenanceRequestQuery.mutate({
+        id: data?.id as number,
+        title: data?.title as string,
+        description: data?.description as string,
+        status: data?.status,
+        priority: data?.priority,
+        users: data?.users,
+        resource_id: data?.resource_id as number,
+        school_id: admin?.school_id as number,
+      });
+    } catch (e) {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    }
+  };
+
+  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // const input = event.target as HTMLFormElement;
+
+    // if (!handleClientError(input)) {
+    const form: FormData = {
+      _method: "PUT",
+      title: data?.title as string,
+      description: data?.description as string,
+      status: data?.status,
+      priority: data?.priority,
+      users: data?.users,
+    };
+
+    maintenanceRequestMutation.mutate(form);
+    // } else {
+    //   toggleAlert({
+    //     status: "fail",
+    //     message: {
+    //       message: "Operation Failed",
+    //       description: "Something went wrong. Please try again later.",
+    //     },
+
+    //     state: true,
+    //   });
+    // }
+  };
+
+  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsVerficationMatch(true);
+    const input = event.target as HTMLFormElement;
+
+    if (input.verfication.value !== getMaintenanceRequestQuery.data?.title) {
+      setIsVerficationMatch(false);
+      return;
+    }
+
+    deleteMaintenanceRequestQuery.mutate(openModal?.id as number);
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -365,22 +480,31 @@ export default function MaintenanceRequests() {
       title: MaintenanceReqData?.title as string,
       description: MaintenanceReqData?.description as string,
       status: MaintenanceReqData?.status,
+      created_at: MaintenanceReqData?.created_at as string,
       priority: MaintenanceReqData?.priority,
+      users: MaintenanceReqData?.users,
       school_id: MaintenanceReqData?.school_id,
       resource_id: MaintenanceReqData?.resource_id as number,
     });
   };
 
   const onCloseModal = () => {
-    // resourceMutation.reset();
     setOpenModal(undefined);
 
-    // setData({
-    //   id: 0,
-    //   label: "",
-    //   qty: 0,
-    //   category_id: 0,
-    // });
+    setData({
+      id: 0,
+      title: "",
+      description: "",
+      status: "pending",
+      priority: "",
+      resolved_date: "",
+      created_at: "",
+      users: [],
+      school_id: 0,
+      resource_id: 0,
+    });
+
+    // maintenanceRequestMutation.reset();
 
     // setFormError({
     //   label: "",
@@ -413,7 +537,7 @@ export default function MaintenanceRequests() {
           {minSm ? (
             <Breadcrumb.Item>
               <span className="text-gray-600 dark:text-gray-300">
-                {t("resource")}
+                {t("resources")}
               </span>
             </Breadcrumb.Item>
           ) : (
@@ -654,11 +778,7 @@ export default function MaintenanceRequests() {
         }}
         onClose={onCloseModal}
       >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-          }}
-        >
+        <form onSubmit={onSubmit}>
           <Modal.Header>{t("new-request")}</Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
@@ -667,8 +787,8 @@ export default function MaintenanceRequests() {
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
-                      id="subject"
-                      name="subject"
+                      id="title"
+                      name="title"
                       label={fieldTrans("subject")}
                       placeholder={fieldTrans("subject-placeholder")}
                       custom-style={{
@@ -681,27 +801,22 @@ export default function MaintenanceRequests() {
                     />
 
                     <RSelect
-                      id="item"
+                      id="resource_id"
                       name="item"
                       label={fieldTrans("item")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue={data?.resource_id}
+                      defaultValue="default"
                       onChange={onChange}
                     >
-                      {/* {getCategoriesQuery.data?.map(
-                        (category: Category, index: number) => (
-                          <option
-                            key={index}
-                            value={category.id}
-                            selected={
-                              data?.category_id == category.id ? true : false
-                            }
-                          >
-                            {category.label}
+                      <option value="default">Choose Item</option>
+                      {getAllResourcesQuery.data?.map(
+                        (resource: Resource, index: number) => (
+                          <option key={index} value={resource.id}>
+                            {resource.label}
                           </option>
                         ),
-                      )} */}
+                      )}
                     </RSelect>
 
                     <RSelect
@@ -710,9 +825,10 @@ export default function MaintenanceRequests() {
                       label={fieldTrans("priority")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue={data?.priority}
+                      defaultValue="default"
                       onChange={onChange}
                     >
+                      <option value="default">Choose Priority</option>
                       {Object.entries(priorityOptions).map((priority, key) => (
                         <option key={key} value={priority[0]}>
                           {priority[0]}
@@ -720,9 +836,43 @@ export default function MaintenanceRequests() {
                       ))}
                     </RSelect>
 
+                    {/* <RSelect
+                      id="users"
+                      name="userAssigned"
+                      label={fieldTrans("assigned-to")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      defaultValue="default"
+                      onChange={onChange}
+                    >
+                      <option value="default">Choose Priority</option>
+                      {Object.entries(priorityOptions).map((priority, key) => (
+                        <option key={key} value={priority[0]}>
+                          {priority[0]}
+                        </option>
+                      ))}
+                    </RSelect> */}
+
+                    <Input
+                      type="text"
+                      readOnly
+                      label={fieldTrans("assigned-to")}
+                      icon={
+                        <FaChevronDown className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 text-[12px] text-[#7f868e36] dark:text-gray-500" />
+                      }
+                      custom-style={{
+                        inputStyle: "cursor-default",
+                      }}
+                      placeholder="Assign To"
+                      onClick={() => setOpenUserListModal(true)}
+                      value={
+                        data.userData?.length ? data.userData[0].label : ""
+                      }
+                    />
+
                     <RTextArea
-                      id="note"
-                      name="note"
+                      id="description"
+                      name="description"
                       label={fieldTrans("note")}
                       placeholder={fieldTrans("note-placeholder")}
                       custom-style={{ containerStyle: "col-span-full" }}
@@ -732,8 +882,9 @@ export default function MaintenanceRequests() {
                     />
 
                     <Dropzone
+                      id="attachment"
                       label={fieldTrans("attachment")}
-                      onChange={(e) => console.log(e.target)}
+                      onChange={onChange}
                       custom-style={{ containerStyle: "col-span-full h-auto" }}
                     />
                   </div>
@@ -768,7 +919,7 @@ export default function MaintenanceRequests() {
         }}
         onClose={onCloseModal}
       >
-        <form onSubmit={() => {}}>
+        <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
             {t("resource-id")}:<b> {openModal?.id}</b>
           </Modal.Header>
@@ -849,33 +1000,42 @@ export default function MaintenanceRequests() {
 
                     <Input
                       type="date"
-                      id="issuedDate"
+                      id="created_at"
                       name="issuedDate"
                       label={fieldTrans("issued-date")}
                       placeholder={fieldTrans("issued-date-placeholder")}
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                       }}
-                      // disabled={getMaintenanceRequestQuery.isFetching && true}
-                      // defaultValue={data?.description}
-                      // onChange={onChange}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      value={
+                        data?.created_at &&
+                        new Date(data?.created_at)?.toISOString()?.split("T")[0]
+                      }
+                      onChange={onChange}
                     />
 
                     <Input
                       type="date"
-                      id="resolvedDate"
+                      id="resolved_date"
                       name="resolvedDate"
                       label={fieldTrans("resolved-date")}
                       placeholder={fieldTrans("resolved-date-placeholder")}
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                       }}
-                      //   disabled={getResourceQuery.isFetching && true}
-                      //   value={data?.label}
-                      //   onChange={onChange}
+                      disabled={getMaintenanceRequestQuery.isFetching && true}
+                      value={
+                        data?.resolved_date &&
+                        new Date(data?.resolved_date)
+                          ?.toISOString()
+                          ?.split("T")[0]
+                      }
+                      onChange={onChange}
                     />
 
                     <Dropzone
+                      id="attachment"
                       label={fieldTrans("attachment")}
                       onChange={(e) => console.log(e.target)}
                       custom-style={{ containerStyle: "col-span-full h-auto" }}
@@ -912,7 +1072,7 @@ export default function MaintenanceRequests() {
           },
         }}
       >
-        <form onSubmit={() => {}}>
+        <form onSubmit={onSubmitDelete}>
           <Modal.Header>{t("delete-modal")}</Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
@@ -927,15 +1087,15 @@ export default function MaintenanceRequests() {
                 </p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")}
-                {/* <b>{getResourceQuery.data?.label}</b> */}
+                {t("delete-modal-label")}{" "}
+                <b>{getMaintenanceRequestQuery.data?.title}</b>
               </p>
               <Input
                 type="text"
                 id="verfication"
                 name="verfication"
                 placeholder="John doe"
-                // error={!isVerficationMatch ? t("delete-modal-error") : null}
+                error={!isVerficationMatch ? t("delete-modal-error") : null}
                 required
               />
             </div>
@@ -950,6 +1110,16 @@ export default function MaintenanceRequests() {
           </Modal.Footer>
         </form>
       </Modal>
+
+      <UserListModal
+        modalHeader="users"
+        modalSize="md"
+        name="users"
+        open={openUserListModal}
+        onChange={(key, value, name) => onSelectUser(key, value, name)}
+        onClose={(status) => setOpenUserListModal(status)}
+        userList={getAllResourcesQuery.data}
+      />
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
@@ -1023,18 +1193,18 @@ export default function MaintenanceRequests() {
                 ref={tableRef}
                 className="divide-y divide-gray-300 dark:divide-gray-600"
               >
-                {/* {getResourcesQuery.isFetching &&
-                  (getResourcesQuery.isRefetching || perPage) && (
+                {getMaintenanceRequestsQuery.isFetching &&
+                  (getMaintenanceRequestsQuery.isRefetching || perPage) && (
                     <Table.Row>
                       <Table.Cell className="p-0">
                         <div
-                          className={`table-loader absolute left-0 top-0 z-[1] grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                          className={`table-loader absolute left-0 top-0 z-[1] grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-60`}
                         >
                           <Spinner />
                         </div>
                       </Table.Cell>
                     </Table.Row>
-                  )} */}
+                  )}
                 <Table.Row>
                   <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
                   <Table.Cell className="p-2"></Table.Cell>
@@ -1124,6 +1294,9 @@ export default function MaintenanceRequests() {
                       )} */}
                     </RSelect>
                   </Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
                 </Table.Row>
                 {getMaintenanceRequestsQuery.isFetching &&
                 !(getMaintenanceRequestsQuery.isRefetching || perPage) ? (
@@ -1156,53 +1329,56 @@ export default function MaintenanceRequests() {
                             <span>{maintenanceReq.resources.label}</span>
                           </div>
                         </Table.Cell>
-                        <Table.Cell className="flex items-center gap-x-2">
-                          <Badge
-                            theme={customBadge}
-                            color={
-                              statusOptions[maintenanceReq.status as Status]
-                            }
-                            className="w-max rounded-s"
-                          >
-                            {t(maintenanceReq.status)}
-                          </Badge>
-                          <Dropdown
-                            element={
-                              <BsThreeDotsVertical className="cursor-pointer" />
-                            }
-                            width="max-content"
-                            additionalStyle={{
-                              containerStyle: "rounded-s px-1 py-0",
-                            }}
-                            onClose={(state) =>
-                              setCloseDropDown(state as boolean)
-                            }
-                            close={closeDropDown}
-                          >
-                            <Dropdown.List
-                              additionalStyle={{ containerStyle: " py-1" }}
+                        <Table.Cell>
+                          <div className="flex items-center gap-x-2">
+                            <Badge
+                              theme={customBadge}
+                              color={
+                                statusOptions[maintenanceReq.status as Status]
+                              }
+                              className="w-max rounded-s"
                             >
-                              {Object.entries(statusOptions).map(
-                                (status, key) => (
-                                  <div
-                                    className="cursor-pointer rounded-s py-1.5 pl-1 pr-2 hover:bg-gray-100 dark:hover:bg-gray-600"
-                                    onClick={() =>
-                                      handleStatusChange(status[0] as Status)
-                                    }
-                                  >
-                                    <Badge
-                                      theme={customBadge}
-                                      className="w-max rounded-xs"
-                                      color={status[1]}
+                              {t(maintenanceReq.status)}
+                            </Badge>
+                            <Dropdown
+                              element={
+                                <BsThreeDotsVertical className="cursor-pointer" />
+                              }
+                              width="max-content"
+                              additionalStyle={{
+                                containerStyle: "rounded-s px-1 py-0",
+                              }}
+                              onClose={(state) =>
+                                setCloseDropDown(state as boolean)
+                              }
+                              close={closeDropDown}
+                            >
+                              <Dropdown.List
+                                additionalStyle={{ containerStyle: " py-1" }}
+                              >
+                                {Object.entries(statusOptions).map(
+                                  (status, key) => (
+                                    <div
                                       key={key}
+                                      className="cursor-pointer rounded-s py-1.5 pl-1 pr-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                      onClick={() =>
+                                        handleStatusChange(status[0] as Status)
+                                      }
                                     >
-                                      {t(status[0])}
-                                    </Badge>
-                                  </div>
-                                ),
-                              )}
-                            </Dropdown.List>
-                          </Dropdown>
+                                      <Badge
+                                        theme={customBadge}
+                                        className="w-max rounded-xs"
+                                        color={status[1]}
+                                        key={key}
+                                      >
+                                        {t(status[0])}
+                                      </Badge>
+                                    </div>
+                                  ),
+                                )}
+                              </Dropdown.List>
+                            </Dropdown>
+                          </div>
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                           {maintenanceReq.created_at ? (

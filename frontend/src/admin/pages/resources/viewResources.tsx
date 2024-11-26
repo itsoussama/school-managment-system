@@ -68,7 +68,7 @@ interface Modal {
   open: boolean;
 }
 
-interface Resource {
+export interface Resource {
   id: number;
   label: string;
   qty: string;
@@ -268,10 +268,6 @@ export function ViewResources() {
   const deleteResourceQuery = useMutation({
     mutationFn: deleteResource,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["getResource"],
-      });
-
       queryClient.invalidateQueries({
         queryKey: ["getResources"],
       });
@@ -1047,17 +1043,6 @@ export function ViewResources() {
                                       : ""
                               }
                             />
-                            {/* {filter.minQty && filter.maxQty ? (
-                              <span>
-                                {filter.minQty} &#8646; {filter.maxQty}
-                              </span>
-                            ) : filter.minQty ? (
-                              <span>&#8925; {filter.minQty}</span>
-                            ) : filter.maxQty ? (
-                              <span>&#8924; {filter.maxQty}</span>
-                            ) : (
-                              <span className="text-gray-400">none</span>
-                            )} */}
 
                             <FaChevronDown className="absolute right-0 top-1/2 mr-2 -translate-y-1/2 text-[11px] text-[#7f868e36] dark:text-gray-400" />
                           </div>
@@ -1094,28 +1079,6 @@ export function ViewResources() {
                         </form>
                       </Dropdown>
                     </div>
-                    {/* <Dropdown
-                    theme={{
-
-                    }}
-                      dismissOnClick={false}
-                      label="qty"
-                    >
-                      <Dropdown.Item className="space-x-2">
-                        <Input
-                          id="minQty"
-                          custom-style={{ containerStyle: "max-w-16" }}
-                          placeholder="min"
-                          name="minQty"
-                        />
-                        <Input
-                          id="maxQty"
-                          custom-style={{ containerStyle: "max-w-16" }}
-                          placeholder="max"
-                          name="maxQty"
-                        />
-                      </Dropdown.Item>
-                    </Dropdown> */}
                   </Table.Cell>
                   <Table.Cell className="p-2">
                     <RSelect

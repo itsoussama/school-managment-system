@@ -302,10 +302,6 @@ export function ViewParents() {
     mutationFn: deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getParent"],
-      });
-
-      queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
 

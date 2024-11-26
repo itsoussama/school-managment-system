@@ -408,6 +408,8 @@ function MultiSelect({
 
 interface DropZone {
   label?: string;
+  id: string;
+  value?: File;
   onChange: (event: ChangeEvent) => void;
   "custom-style"?: {
     inputStyle?: string;
@@ -418,6 +420,8 @@ interface DropZone {
 
 function Dropzone({
   label,
+  id,
+  value,
   onChange,
   "custom-style": {
     inputStyle = "",
@@ -448,6 +452,12 @@ function Dropzone({
     }
   };
 
+  useEffect(() => {
+    if (value) {
+      setFile(value);
+    }
+  }, [value]);
+
   return (
     <div
       className={`flex h-auto w-full flex-col justify-center ${containerStyle}`}
@@ -456,7 +466,7 @@ function Dropzone({
         {label}
       </span>
       <Label
-        htmlFor="dropzone-file"
+        htmlFor={id}
         className={`group flex h-full w-full cursor-pointer flex-col items-start justify-center overflow-x-auto rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-5 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
       >
         <div className="w-full pb-6 pt-5" onClick={(e) => e.stopPropagation()}>
@@ -510,7 +520,8 @@ function Dropzone({
           )}
         </div>
         <FileInput
-          id="dropzone-file"
+          id={id}
+          name={id}
           className={`hidden ${inputStyle}`}
           onChange={(event) => (onChange(event), fileDetailsPreview(event))}
         />

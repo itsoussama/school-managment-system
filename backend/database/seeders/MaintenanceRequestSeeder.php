@@ -22,11 +22,17 @@ class MaintenanceRequestSeeder extends Seeder
                 'school_id' => $school->id,
             ])->each(function ($mr) {
                 $userIds = User::pluck('id')->toArray();
-
                 $resource_ids = resource::pluck('id')->toArray();
-                $mr->resource_id = $resource_ids[rand(0, count($resource_ids))] ? $resource_ids[rand(0, count($resource_ids))] : null;
+                \Log::info($userIds);
+                $mr->resource_id = count($resource_ids) > 0
+                    ? $resource_ids[rand(0, count($resource_ids) - 1)]
+                    : null;
+
                 $mr->save();
-                $mr->users()->attach($userIds[rand(0, count($userIds))]);
+
+                if (count($userIds) > 0) {
+                    $mr->users()->attach($userIds[rand(0, count($userIds) - 1)]);
+                }
             });
         }
 

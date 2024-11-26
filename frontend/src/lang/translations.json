@@ -141,6 +141,7 @@
             "add-new-parent": "Ajouter un parent",
             "view-parents": "Gestion des Parents",
             "configuration": "Configuration",
+            "maintenance-requests": "Les demandes d'entretien",
             "data-management": "Gestion des données",
             "import-export": "Exporter et importer",
             "parent-information": "Informations parentales",

@@ -322,10 +322,6 @@ export function ViewStudents() {
     mutationFn: deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getStudent"],
-      });
-
-      queryClient.invalidateQueries({
         queryKey: ["getStudents"],
       });
 
