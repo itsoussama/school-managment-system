@@ -3,7 +3,10 @@ import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTea
 import { FormData as UpdateStudentFromData } from "@admin/pages/students/viewStudents";
 import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParents";
 import { FormData as UpdateResourceFromData } from "@admin/pages/resources/viewResources";
-import { FormData as UpdateMaintenanceRequestFromData } from "@admin/pages/resources/maintenanceRequests";
+import {
+  Status,
+  FormData as UpdateMaintenanceRequestFromData,
+} from "@admin/pages/resources/maintenanceRequests";
 import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
 import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStudent";
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
@@ -360,6 +363,23 @@ const deleteMaintenanceRequest = async (id: number) => {
   return response.data;
 };
 
+const setMaintenanceRequestStatus = async (formData: {
+  _method: string;
+  id: number;
+  status: Status;
+}) => {
+  const response = await axiosApi.post(
+    "/api/maintenance/status/" + formData?.id,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
 export {
   getTeachers,
   addTeacher,
@@ -390,4 +410,5 @@ export {
   addMaintenanceRequest,
   setMaintenanceRequest,
   deleteMaintenanceRequest,
+  setMaintenanceRequestStatus,
 };

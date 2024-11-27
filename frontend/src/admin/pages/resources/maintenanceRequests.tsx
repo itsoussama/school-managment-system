@@ -16,6 +16,7 @@ import {
   getMaintenanceRequests,
   getResources,
   setMaintenanceRequest,
+  setMaintenanceRequestStatus,
 } from "@src/features/api";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
@@ -68,7 +69,7 @@ interface Modal {
   open: boolean;
 }
 
-type Status = "completed" | "in_progress" | "pending";
+export type Status = "completed" | "in_progress" | "pending";
 type Priority = "low" | "medium" | "high";
 
 interface MaintenanceRequests {
@@ -125,6 +126,8 @@ interface Filter {
   maxQty: number | undefined;
   category_id: number | undefined;
 }
+
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export default function MaintenanceRequests() {
   const queryClient = useQueryClient();
@@ -358,6 +361,51 @@ export default function MaintenanceRequests() {
     placeholderData: keepPreviousData,
   });
 
+  const maintenanceRequestStatusMutation = useMutation({
+    mutationFn: setMaintenanceRequestStatus,
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getMaintenanceRequest"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getMaintenanceRequests"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllMaintenanceRequests"],
+      });
+
+      setData({
+        id: data?.id as number,
+        title: data?.title as string,
+        description: data?.description as string,
+        status: data?.status,
+        priority: data?.priority,
+        users: data?.users,
+        created_at: data?.created_at,
+        resource_id: data?.resource_id as number,
+        school_id: data?.school_id as number,
+      });
+
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+
+      // setPreviewImg(undefined);
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
   const handleDateTime = (
     options: Intl.DateTimeFormatOptions,
     date: number | Date,
@@ -371,9 +419,14 @@ export default function MaintenanceRequests() {
     setPerPage(parseInt(target.value));
   };
 
-  const handleStatusChange = (status: Status) => {
+  const handleStatusChange = (id: number, status: Status) => {
     // todo: Make an api call to handle status change
-    console.log(status);
+    maintenanceRequestStatusMutation.mutate({
+      _method: "patch",
+      id: id,
+      status: status,
+    });
+
     setCloseDropDown(true);
   };
 
@@ -512,6 +565,14 @@ export default function MaintenanceRequests() {
     // });
   };
 
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
+  };
+
   return (
     <div className="flex w-full flex-col">
       {/* <Alert
@@ -613,7 +674,23 @@ export default function MaintenanceRequests() {
                         {fieldTrans("assigned-to")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getMaintenanceRequestQuery.data?.users[0].label}
+                        <div className="flex items-center gap-x-2">
+                          <img
+                            className="w-8 rounded-full"
+                            src={
+                              getMaintenanceRequestQuery.data?.users[0]
+                                .imagePath
+                                ? SERVER_STORAGE +
+                                  getMaintenanceRequestQuery.data?.users[0]
+                                    .imagePath
+                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(getMaintenanceRequestQuery.data?.users[0].name).firstName}+${getUserName(getMaintenanceRequestQuery.data?.users[0].name).lastName}`
+                            }
+                            alt="profile"
+                          />
+                          <span>
+                            {getMaintenanceRequestQuery.data?.users[0]?.name}
+                          </span>
+                        </div>
                       </span>
                     </div>
                     <div className="row-span-full flex flex-col gap-2 rounded-s bg-gray-50 p-4 dark:bg-gray-750">
@@ -1360,13 +1437,17 @@ export default function MaintenanceRequests() {
                                   (status, key) => (
                                     <div
                                       key={key}
-                                      className="cursor-pointer rounded-s py-1.5 pl-1 pr-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                      className="cursor-pointer rounded-s py-1 pl-1 pr-2 hover:bg-gray-100 dark:hover:bg-gray-600"
                                       onClick={() =>
-                                        handleStatusChange(status[0] as Status)
+                                        handleStatusChange(
+                                          maintenanceReq.id,
+                                          status[0] as Status,
+                                        )
                                       }
                                     >
                                       <Badge
                                         theme={customBadge}
+                                        data-status={status[0]}
                                         className="w-max rounded-xs"
                                         color={status[1]}
                                         key={key}
@@ -1512,8 +1593,11 @@ export default function MaintenanceRequests() {
                 layout={minSm ? "pagination" : "navigation"}
                 showIcons
                 currentPage={page}
-                onPageChange={(page) => setPage(page)}
-                totalPages={3}
+                onPageChange={(page) =>
+                  !getMaintenanceRequestsQuery.isPlaceholderData &&
+                  setPage(page)
+                }
+                totalPages={getMaintenanceRequestsQuery.data?.last_page ?? 1}
                 nextLabel={minSm ? t("next") : ""}
                 previousLabel={minSm ? t("previous") : ""}
                 theme={{

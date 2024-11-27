@@ -41,6 +41,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
         Route::apiResource('resources', ResourceController::class);
         Route::apiResource('roles', RoleController::class);
         Route::apiResource('maintenance', MaintenanceRequestController::class);
+        Route::patch('maintenance/status/{id}', [MaintenanceRequestController::class, 'changeStatus']);
     });
 
     Route::apiResource('grades', GradeController::class);

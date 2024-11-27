@@ -95,7 +95,7 @@ class MaintenanceRequestController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update($id ,Request $request)
+    public function update($id, Request $request)
     {
         try {
             $maintenanceRequest = MaintenanceRequest::with('users')->findOrFail($id);
@@ -132,7 +132,6 @@ class MaintenanceRequestController extends Controller
                     $maintenanceRequest->users()->sync($request->input('users'));
                 }
                 $maintenanceRequest->save();
-
             } else {
                 return $request;
             }
@@ -161,5 +160,26 @@ class MaintenanceRequestController extends Controller
 
 
         return response()->json(['message' => 'Maintenance Request deleted successfully'], Response::HTTP_OK);
+    }
+
+    public function changeStatus($id, Request $request)
+    {
+        try {
+            $maintenanceRequest = MaintenanceRequest::with('users')->findOrFail($id);
+            $validation = $request->validate([
+                'status' => 'nullable|in:' . implode(',', MaintenanceRequest::getStatuses()),
+            ]);
+            if ($validation) {
+                $maintenanceRequest->status = $request->input('status', $maintenanceRequest->status);
+                $maintenanceRequest->save();
+            } else {
+                return $request;
+            }
+
+
+            return response()->json($maintenanceRequest, Response::HTTP_CREATED);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 422);
+        }
     }
 }
