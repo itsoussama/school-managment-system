@@ -1,5 +1,9 @@
 import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
-import { customBadge, customTooltip } from "@src/admin/utils/flowbite";
+import {
+  customBadge,
+  customTable,
+  customTooltip,
+} from "@src/admin/utils/flowbite";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";
@@ -36,12 +40,20 @@ import {
   Table,
   Tooltip,
 } from "flowbite-react";
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { BsThreeDotsVertical, BsTriangleFill } from "react-icons/bs";
 import {
   FaChevronDown,
   FaExclamationTriangle,
+  FaExternalLinkAlt,
   FaEye,
   FaHome,
   FaPen,
@@ -59,10 +71,14 @@ import {
   FaXmark,
 } from "react-icons/fa6";
 import { IoFilter } from "react-icons/io5";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Resource } from "./viewResources";
 import UserListModal from "@src/components/userListModal";
 
+interface Check {
+  id?: number;
+  status?: boolean;
+}
 interface Modal {
   id?: number;
   type?: "view" | "add" | "edit" | "delete";
@@ -111,7 +127,7 @@ export interface FormData {
   priority: string;
   file_path?: File;
   resolved_date?: string;
-  users: Array<number>;
+  users?: Array<number>;
   school_id?: number;
   resource_id?: number;
 }
@@ -121,9 +137,8 @@ interface Sort {
   direction: "asc" | "desc";
 }
 interface Filter {
-  label: string;
-  minQty: number | undefined;
-  maxQty: number | undefined;
+  title: string;
+  status: string | undefined;
   category_id: number | undefined;
 }
 
@@ -133,20 +148,20 @@ export default function MaintenanceRequests() {
   const queryClient = useQueryClient();
 
   const location = useLocation();
+  const redirect = useNavigate();
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
-    label: "",
-    minQty: undefined,
-    maxQty: undefined,
+    title: "",
+    status: "",
     category_id: undefined,
   });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
-  //   const firstCheckboxRef = useRef<HTMLInputElement>(null);
-  //   const isCheckBoxAll = useRef(false);
-  //   const [checks, setChecks] = useState<Array<Check>>([]);
-  //   const [numChecked, setNumChecked] = useState<number>(0);
+  const firstCheckboxRef = useRef<HTMLInputElement>(null);
+  const isCheckBoxAll = useRef(false);
+  const [checks, setChecks] = useState<Array<Check>>([]);
+  const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
   const [closeDropDown, setCloseDropDown] = useState<boolean>(false);
   const [openUserListModal, setOpenUserListModal] = useState<boolean>(false);
@@ -188,28 +203,20 @@ export default function MaintenanceRequests() {
   const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
 
-  // const getAllMaintenanceRequestsQuery = useQuery({
-  //   queryKey: [
-  //     "getAllMaintenanceRequests",
-  //     // filter?.label,
-  //     // filter?.maxQty,
-  //     // filter?.minQty,
-  //     // filter?.category_id,
-  //   ],
-  //   queryFn: () =>
-  //     getMaintenanceRequests(
-  //       1,
-  //       -1,
-  //       undefined,
-  //       undefined,
-  //       admin?.school_id,
-  //       // filter?.label,
-  //       // filter?.maxQty,
-  //       // filter?.minQty,
-  //       // filter?.category_id,
-  //     ),
-  //   placeholderData: keepPreviousData,
-  // });
+  const getAllMaintenanceRequestsQuery = useQuery({
+    queryKey: ["getAllMaintenanceRequests", filter?.title, filter?.status],
+    queryFn: () =>
+      getMaintenanceRequests(
+        1,
+        -1,
+        undefined,
+        undefined,
+        admin?.school_id,
+        filter?.title,
+        filter?.status,
+      ),
+    placeholderData: keepPreviousData,
+  });
 
   const getMaintenanceRequestsQuery = useQuery({
     queryKey: [
@@ -219,8 +226,8 @@ export default function MaintenanceRequests() {
       sort.column,
       sort.direction,
       admin.school_id,
-      // filter?.label,
-      // filter?.maxQty,
+      filter?.title,
+      filter?.status,
       // filter?.minQty,
       // filter?.category_id,
     ],
@@ -231,8 +238,8 @@ export default function MaintenanceRequests() {
         sort.column,
         sort.direction,
         admin.school_id,
-        // filter?.label,
-        // filter?.maxQty,
+        filter?.title,
+        filter?.status,
         // filter?.minQty,
         // filter?.category_id,
       ),
@@ -430,6 +437,54 @@ export default function MaintenanceRequests() {
     setCloseDropDown(true);
   };
 
+  const handleCheck = async (id?: number) => {
+    const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
+
+    if (!id) {
+      setChecks([]);
+      await handleChecks(firstCheckbox);
+    } else {
+      const getValue = checks.find((elem) => elem.id === id);
+      const filteredArr = checks.filter((elem) => elem.id !== id);
+      setChecks([
+        ...(filteredArr as []),
+        { id: id, status: !getValue?.status },
+      ]);
+      firstCheckbox.checked = false;
+    }
+  };
+
+  const handleChecks = useCallback(
+    async (firstCheckbox: HTMLInputElement) => {
+      if (getAllMaintenanceRequestsQuery.isFetched) {
+        await getAllMaintenanceRequestsQuery.data?.forEach(
+          (maintenanceReq: MaintenanceRequests) => {
+            setChecks((prev) => {
+              const checkedData = prev.some(
+                (item) => item.id === maintenanceReq.id,
+              );
+
+              if (firstCheckbox.checked && !checkedData) {
+                return [
+                  ...prev,
+                  { id: maintenanceReq.id as number, status: true },
+                ];
+              }
+              return [
+                ...prev,
+                { id: maintenanceReq.id as number, status: false },
+              ];
+            });
+          },
+        );
+      }
+    },
+    [
+      getAllMaintenanceRequestsQuery.data,
+      getAllMaintenanceRequestsQuery.isFetched,
+    ],
+  );
+
   const onChange = (event: ChangeEvent) => {
     const inputElem = event.target as HTMLInputElement;
     const selectElem = event.target as HTMLSelectElement;
@@ -487,11 +542,12 @@ export default function MaintenanceRequests() {
     // if (!handleClientError(input)) {
     const form: FormData = {
       _method: "PUT",
+      id: data.id as number,
       title: data?.title as string,
       description: data?.description as string,
       status: data?.status,
       priority: data?.priority,
-      users: data?.users,
+      // users: data?.users,
     };
 
     maintenanceRequestMutation.mutate(form);
@@ -573,14 +629,26 @@ export default function MaintenanceRequests() {
     return { firstName, lastName };
   };
 
+  useEffect(() => {
+    const checkedVal = checks.filter((val) => val.status === true)
+      .length as number;
+    setNumChecked(checkedVal);
+  }, [checks]);
+
+  useEffect(() => {
+    if (isCheckBoxAll) {
+      handleChecks(firstCheckboxRef.current as HTMLInputElement);
+    }
+  }, [page, handleChecks]);
+
   return (
     <div className="flex w-full flex-col">
-      {/* <Alert
-            status={alert.status}
-            state={alert.state}
-            message={alert.message}
-            close={(value) => toggleAlert(value)}
-          /> */}
+      <Alert
+        status={alert.status}
+        state={alert.state}
+        message={alert.message}
+        close={(value) => toggleAlert(value)}
+      />
       <div className="flex items-center justify-between">
         <Breadcrumb
           theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
@@ -665,8 +733,26 @@ export default function MaintenanceRequests() {
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                         {t("item")}:
                       </span>
-                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getMaintenanceRequestQuery.data?.resources.label}
+                      <span className="w-max flex-1 break-words text-base text-gray-900 dark:text-white">
+                        <p
+                          className="group flex cursor-pointer flex-row items-center gap-x-2 hover:underline"
+                          onClick={() =>
+                            redirect("/resources/manage", {
+                              state: {
+                                resource: {
+                                  id: getMaintenanceRequestQuery.data
+                                    ?.resource_id,
+                                },
+                              },
+                            })
+                          }
+                        >
+                          {getMaintenanceRequestQuery.data?.resources.label}
+                          <FaExternalLinkAlt
+                            size={12}
+                            className="hidden text-gray-400 group-hover:block"
+                          />
+                        </p>
                       </span>
                     </div>
                     <div className="flex flex-col space-y-1">
@@ -674,9 +760,9 @@ export default function MaintenanceRequests() {
                         {fieldTrans("assigned-to")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        <div className="flex items-center gap-x-2">
+                        <div className="flex w-max cursor-pointer items-center gap-x-2 rounded-s py-2 pl-2 pr-4 hover:bg-gray-100 dark:hover:bg-gray-600">
                           <img
-                            className="w-8 rounded-full"
+                            className="w-6 rounded-full"
                             src={
                               getMaintenanceRequestQuery.data?.users[0]
                                 .imagePath
@@ -973,7 +1059,11 @@ export default function MaintenanceRequests() {
             <button type="submit" className="btn-default !w-auto">
               {fieldTrans("accept")}
             </button>
-            <button className="btn-danger !w-auto" onClick={() => {}}>
+            <button
+              type="reset"
+              className="btn-danger !w-auto"
+              onClick={onCloseModal}
+            >
               {fieldTrans("decline")}
             </button>
           </Modal.Footer>
@@ -1126,7 +1216,11 @@ export default function MaintenanceRequests() {
             <button type="submit" className="btn-default !w-auto">
               {fieldTrans("accept")}
             </button>
-            <button className="btn-danger !w-auto" onClick={() => {}}>
+            <button
+              type="reset"
+              className="btn-danger !w-auto"
+              onClick={onCloseModal}
+            >
               {fieldTrans("decline")}
             </button>
           </Modal.Footer>
@@ -1181,7 +1275,11 @@ export default function MaintenanceRequests() {
             <button type="submit" className="btn-danger !w-auto">
               {t("delete-modal-delete-btn")}
             </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+            <button
+              type="reset"
+              className="btn-outline !w-auto"
+              onClick={onCloseModal}
+            >
               {t("delete-modal-cancel-btn")}
             </button>
           </Modal.Footer>
@@ -1199,42 +1297,31 @@ export default function MaintenanceRequests() {
       />
 
       <TransitionAnimation>
-        <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
+        <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
+          {checks.find((val) => val.status === true) ? (
+            <div className="flex w-full justify-between px-5 py-4">
+              <div className="flex items-center gap-x-4">
+                {/* <CheckboxDropdown /> */}
+
+                <button className="btn-danger !m-0 flex w-max items-center">
+                  <FaTrash className="mr-2 text-white" />
+                  {t("delete-records")}
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            ""
+          )}
           <div className="w-full overflow-x-auto rounded-lg">
-            <Table
-              theme={{
-                root: {
-                  base: "w-full relative whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
-                  shadow:
-                    "absolute left-0 top-0 -z-10 h-full w-full rounded-s drop-shadow-md",
-                  wrapper: "",
-                },
-                body: {
-                  cell: {
-                    base: "px-6 py-4",
-                  },
-                },
-                head: {
-                  cell: {
-                    base: "bg-gray-50 px-6 py-3 dark:bg-gray-700",
-                  },
-                },
-                row: {
-                  base: "group/row group",
-                  hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
-                  striped:
-                    "odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700",
-                },
-              }}
-              striped
-            >
+            <Table theme={customTable} striped>
               <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
                 <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                   <Checkbox
                     className="rounded-xs"
                     id="0"
-                    // ref={firstCheckboxRef}
-                    // onChange={() => handleCheck()}
+                    ref={firstCheckboxRef}
+                    onChange={() => handleCheck()}
                   />
                 </Table.HeadCell>
                 <Table.HeadCell>{t("item-id")}</Table.HeadCell>
@@ -1268,14 +1355,14 @@ export default function MaintenanceRequests() {
               </Table.Head>
               <Table.Body
                 ref={tableRef}
-                className="divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative divide-y divide-gray-300 dark:divide-gray-600"
               >
                 {getMaintenanceRequestsQuery.isFetching &&
                   (getMaintenanceRequestsQuery.isRefetching || perPage) && (
                     <Table.Row>
                       <Table.Cell className="p-0">
                         <div
-                          className={`table-loader absolute left-0 top-0 z-[1] grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-60`}
+                          className={`table-loader fixed left-0 top-0 z-[1] grid h-full w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 backdrop-blur-sm dark:bg-gray-900 dark:bg-opacity-60`}
                         >
                           <Spinner />
                         </div>
@@ -1293,12 +1380,12 @@ export default function MaintenanceRequests() {
                       icon={
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.label !== "" && (
+                          {filter.title !== "" && (
                             <FaRegCircleXmark
                               onClick={() =>
                                 setFilter((prev) => ({
                                   ...prev,
-                                  label: "",
+                                  title: "",
                                 }))
                               }
                               className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
@@ -1308,16 +1395,16 @@ export default function MaintenanceRequests() {
                       }
                       label=""
                       placeholder={fieldTrans("filter-all")}
-                      value={filter?.label}
+                      value={filter?.title}
                       name="search"
                       custom-style={{
-                        inputStyle: "px-8 !py-1",
+                        inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
                       onChange={(e) =>
                         setFilter((prev) => ({
                           ...prev,
-                          label: e.target.value,
+                          title: e.target.value,
                         }))
                       }
                     />
@@ -1325,17 +1412,17 @@ export default function MaintenanceRequests() {
                   <Table.Cell className="p-2"></Table.Cell>
                   <Table.Cell className="p-2">
                     <RSelect
-                      id="category_id"
-                      name="categories"
+                      id="status"
+                      name="status"
                       icon={
                         <>
                           <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.category_id !== undefined && (
+                          {filter.status !== "" && (
                             <FaRegCircleXmark
                               onClick={() =>
                                 setFilter((prev) => ({
                                   ...prev,
-                                  category_id: undefined,
+                                  status: "",
                                 }))
                               }
                               className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
@@ -1344,10 +1431,10 @@ export default function MaintenanceRequests() {
                         </>
                       }
                       custom-style={{
-                        inputStyle: "px-9 !py-1",
+                        inputStyle: "px-9 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
-                      value={filter.category_id ?? "default"}
+                      value={filter.status ?? "default"}
                       onChange={(e) =>
                         setFilter((prev) => ({
                           ...prev,
@@ -1356,19 +1443,14 @@ export default function MaintenanceRequests() {
                         }))
                       }
                     >
-                      <option
-                        value="default"
-                        disabled={filter.category_id !== undefined}
-                      >
+                      <option value="default" disabled={filter.status !== ""}>
                         {fieldTrans("filter-all")}
                       </option>
-                      {/* {getCategoriesQuery.data?.map(
-                        (category: Category, index: number) => (
-                          <option key={index} value={category.id}>
-                            {category.label}
-                          </option>
-                        ),
-                      )} */}
+                      {Object.entries(statusOptions).map((status, key) => (
+                        <option key={key} value={status[0]}>
+                          {t(status[0])}
+                        </option>
+                      ))}
                     </RSelect>
                   </Table.Cell>
                   <Table.Cell className="p-2"></Table.Cell>
@@ -1390,6 +1472,14 @@ export default function MaintenanceRequests() {
                             className="rounded-xs"
                             id={maintenanceReq.id.toString()}
                             name="checkbox"
+                            checked={
+                              checks.find(
+                                (check) => check.id == maintenanceReq.id,
+                              )?.status == true
+                                ? true
+                                : false
+                            }
+                            onChange={() => handleCheck(maintenanceReq.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
@@ -1397,7 +1487,18 @@ export default function MaintenanceRequests() {
                         </Table.Cell>
                         <Table.Cell>{maintenanceReq.title}</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          <div className="flex items-center gap-x-2">
+                          <div
+                            className="flex cursor-pointer items-center gap-x-2"
+                            onClick={() =>
+                              redirect("/resources/manage", {
+                                state: {
+                                  resource: {
+                                    id: maintenanceReq.resources.id,
+                                  },
+                                },
+                              })
+                            }
+                          >
                             <img
                               className="w-8 rounded-full"
                               src={`https://ui-avatars.com/api/?background=random&name=${maintenanceReq.resources.label}}`}

@@ -205,24 +205,24 @@ function Menu() {
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Link to="Resources/new" state={{ active: true }}>
+          <Link to="resources/new" state={{ active: true }}>
             <Items
               isActive={useMatch("/Resources/new") ? true : false}
               itemId="subitem-1"
               itemName="new-resource"
             />
           </Link>
-          <Link to="Resources/manage" state={{ active: true }}>
+          <Link to="resources/manage" state={{ active: true }}>
             <Items
-              isActive={useMatch("/Resources/manage") ? true : false}
+              isActive={useMatch("/resources/manage") ? true : false}
               itemId="subitem-2"
               itemName="view-resources"
             />
           </Link>
-          <Link to="Resources/maintenance-requests" state={{ active: true }}>
+          <Link to="resources/maintenance-requests" state={{ active: true }}>
             <Items
               isActive={
-                useMatch("/Resources/maintenance-requests") ? true : false
+                useMatch("/resources/maintenance-requests") ? true : false
               }
               itemId="subitem-3"
               itemName="maintenance-requests"

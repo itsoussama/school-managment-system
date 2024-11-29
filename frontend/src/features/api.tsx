@@ -299,8 +299,8 @@ const getMaintenanceRequests = async (
   sortColumn = "id",
   sortDirection = "asc",
   schoolId: number,
-  // label = "",
-  // maxQty = 0,
+  title = "",
+  status = "",
   // minQty = 0,
   // category_id = 0,
 ) => {
@@ -314,9 +314,11 @@ const getMaintenanceRequests = async (
       "&sort_direction=" +
       sortDirection +
       "&school_id=" +
-      schoolId,
-    // "&label=" +
-    // label +
+      schoolId +
+      "&title=" +
+      title +
+      "&status=" +
+      status,
     // "&maxQty=" +
     // maxQty +
     // "&minQty=" +

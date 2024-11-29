@@ -1,11 +1,12 @@
 import { Breadcrumb } from "flowbite-react";
 import { useTranslation } from "react-i18next";
-import { FaHome } from "react-icons/fa";
+import { FaFileExport, FaHome } from "react-icons/fa";
 import Chart from "react-apexcharts";
 import { TransitionAnimation } from "@src/components/animation";
 import { chartOptions } from "@admin/utils/chart";
 import { useEffect } from "react";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { Link } from "react-router-dom";
 
 const chartLabel = ["Jan", "Feb", "Mar", "Apr", "Jun", "Jul"];
 const chartSeries = [
@@ -23,6 +24,7 @@ const chartSeries = [
 
 function Dashboard() {
   const { t } = useTranslation();
+  const { t: tfield } = useTranslation("form-fields");
 
   const themeChange = useAppSelector(
     (state) => state.themeModeSlice.themeMode as "light" | "dark",
@@ -36,15 +38,23 @@ function Dashboard() {
 
   return (
     <div className="flex w-full flex-col">
-      <Breadcrumb
-        theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
-        className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
-        aria-label="Breadcrumb"
-      >
-        <Breadcrumb.Item icon={FaHome} />
+      <div className="flex items-center justify-between">
+        <Breadcrumb
+          theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
+          className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
+          aria-label="Breadcrumb"
+        >
+          <Breadcrumb.Item icon={FaHome} />
 
-        <Breadcrumb.Item>{t("overview")}</Breadcrumb.Item>
-      </Breadcrumb>
+          <Breadcrumb.Item>{t("overview")}</Breadcrumb.Item>
+        </Breadcrumb>
+        <Link to={"/configuration/data-management"}>
+          <button className="btn-default m-0 mt-auto flex items-center gap-x-2">
+            <FaFileExport />
+            {tfield("btn-export")}
+          </button>
+        </Link>
+      </div>
       <TransitionAnimation>
         <div>
           <div className="flex w-full flex-col rounded-s bg-light-primary p-5 dark:bg-dark-primary">

@@ -61,7 +61,7 @@ import Alert from "@src/components/alert";
 import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import { customTooltip } from "@src/admin/utils/flowbite";
+import { customTable, customTooltip } from "@src/admin/utils/flowbite";
 
 interface Check {
   id?: number;
@@ -1254,7 +1254,7 @@ export function ViewStudents() {
         school_id={openParentModal?.school_id}
       />
       <TransitionAnimation>
-        <div className="flex w-full flex-col rounded-m bg-light-primary dark:bg-dark-primary">
+        <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
           {checks.find((val) => val.status === true) ? (
             <div className="flex w-full justify-between px-5 py-4">
               <div className="flex items-center gap-x-4">
@@ -1272,33 +1272,7 @@ export function ViewStudents() {
           )}
 
           <div className="w-full overflow-x-auto rounded-lg">
-            <Table
-              theme={{
-                root: {
-                  base: "w-full relative whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
-                  shadow:
-                    "absolute left-0 top-0 -z-10 h-full w-full rounded-s drop-shadow-md",
-                  wrapper: "",
-                },
-                body: {
-                  cell: {
-                    base: "px-6 py-4",
-                  },
-                },
-                head: {
-                  cell: {
-                    base: "bg-gray-50 px-6 py-3 dark:bg-gray-700",
-                  },
-                },
-                row: {
-                  base: "group/row group",
-                  hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
-                  striped:
-                    "odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700",
-                },
-              }}
-              striped
-            >
+            <Table theme={customTable} striped>
               <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
                 <Table.HeadCell className="sticky left-0 w-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                   <Checkbox
@@ -1342,14 +1316,14 @@ export function ViewStudents() {
               </Table.Head>
               <Table.Body
                 ref={tableRef}
-                className="divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative divide-y divide-gray-300 dark:divide-gray-600"
               >
                 {getStudentsQuery.isFetching &&
                   (getStudentsQuery.isRefetching || perPage) && (
                     <Table.Row>
                       <Table.Cell className="p-0">
                         <div
-                          className={`table-loader absolute left-0 top-0 z-[1] grid h-full min-h-72 w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-50`}
+                          className={`table-loader fixed left-0 top-0 z-[1] grid h-full w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 backdrop-blur-sm dark:bg-gray-900 dark:bg-opacity-60`}
                         >
                           <Spinner />
                         </div>
@@ -1382,7 +1356,7 @@ export function ViewStudents() {
                       value={filter?.name}
                       name="search"
                       custom-style={{
-                        inputStyle: "px-8 !py-1",
+                        inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
                       onChange={(e) =>
@@ -1415,7 +1389,7 @@ export function ViewStudents() {
                         </>
                       }
                       custom-style={{
-                        inputStyle: "px-9 !py-1",
+                        inputStyle: "px-9 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
                       defaultValue={""}
@@ -1458,7 +1432,7 @@ export function ViewStudents() {
                       placeholder={fieldTrans("filter-all")}
                       name="search"
                       custom-style={{
-                        inputStyle: "px-8 !py-1",
+                        inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
                     />

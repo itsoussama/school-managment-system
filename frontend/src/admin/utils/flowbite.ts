@@ -57,4 +57,31 @@ const customTooltip = {
     }
   }
 
-  export {customTooltip, customBadge}
+  const customTable = 
+  {
+    root: {
+      base: "w-full relative whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
+      shadow:
+        "absolute left-0 top-0 -z-10 h-full w-full rounded-s drop-shadow-lg",
+      wrapper: "",
+    },
+    body: {
+      cell: {
+        base: "px-6 py-4",
+      },
+      
+    },
+    head: {
+      cell: {
+        base: "bg-gray-50 px-6 py-3 dark:bg-gray-700 ",
+      },
+    },
+    row: {
+      base: "group/row group",
+      hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
+      striped:
+        "odd:bg-white even:bg-gray-100 odd:dark:bg-gray-800 even:dark:bg-gray-700",
+    },
+  }
+
+  export {customTooltip, customBadge, customTable}

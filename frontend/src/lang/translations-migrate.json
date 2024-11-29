@@ -1,0 +1,190 @@
+{
+    "en": {
+        "general": {
+            "home": "Home",
+            "profile": "Profile",
+            "settings": "Settings",
+            "delete": "Delete",
+            "block": "Block",
+            "accept": "Accept",
+            "decline": "Decline",
+            "add": "Add",
+            "new": "New",
+            "view": "View",
+            "manage": "Manage",
+            "edit": "Edit",
+            "next": "Next",
+            "previous": "Previous",
+            "completed": "Completed",
+            "in_progress": "In Progress",
+            "pending": "Pending"
+        },
+        "entities": {
+            "teachers": "Teachers",
+            "students": "Students",
+            "parents": "Parents",
+            "resources": "Resources",
+            "requests": "Maintenance Requests",
+            "items": "Items"
+        },
+        "actions": {
+            "add_entity": "Add {{entity}}",
+            "new_entity": "New {{entity}}",
+            "view_entity": "Manage {{entity}}",
+            "edit_entity": "Edit {{entity}}",
+            "delete_entity": "Delete {{entity}}"
+        },
+        "modals": {
+            "delete": {
+                "title": "Are you sure you want to delete {{item}}?",
+                "message": "This action is irreversible and will completely delete the {{item}}.",
+                "label": "Please retype '{{item}}' to confirm",
+                "error": "Values do not match",
+                "delete_button": "Delete",
+                "cancel_button": "Cancel"
+            },
+            "block": {
+                "title": "Are you sure you want to block {{item}}?",
+                "block_button": "Block",
+                "unblock_button": "Unblock",
+                "cancel_button": "Cancel"
+            }
+        },
+        "form": {
+            "fields": {
+                "first_name": "First Name",
+                "last_name": "Last Name",
+                "email": "Email",
+                "phone_number": "Phone Number",
+                "address": "Address",
+                "date_of_birth": "Date of Birth",
+                "start_date": "Start Date",
+                "label": "Label",
+                "quantity": "Quantity",
+                "category": "Category",
+                "priority": "Priority",
+                "status": "Status",
+                "note": "Note",
+                "attachment": "Attachment"
+            },
+            "placeholders": {
+                "first_name": "Enter first name",
+                "last_name": "Enter last name",
+                "email": "Enter email",
+                "address": "Enter address",
+                "note": "Add additional notes..."
+            },
+            "buttons": {
+                "create": "Create",
+                "update": "Update",
+                "delete": "Delete",
+                "export": "Export",
+                "upload": "Upload"
+            }
+        },
+        "pagination": {
+            "records_shown": "Showing {{current}} of {{total}}",
+            "next": "Next",
+            "previous": "Previous"
+        },
+        "status": {
+            "active": "Active",
+            "inactive": "Inactive",
+            "active_deactivate": "Activate / Deactivate"
+        }
+    },
+    "fr": {
+        "general": {
+            "home": "Accueil",
+            "profile": "Profil",
+            "settings": "Paramètres",
+            "delete": "Supprimer",
+            "block": "Bloquer",
+            "accept": "Accepter",
+            "decline": "Annuler",
+            "add": "Ajouter",
+            "new": "Nouveau",
+            "view": "Voir",
+            "manage": "Gérer",
+            "edit": "Modifier",
+            "next": "Suivant",
+            "previous": "Précédent",
+            "completed": "Terminé",
+            "in_progress": "En cours",
+            "pending": "En attente"
+        },
+        "entities": {
+            "teachers": "Enseignants",
+            "students": "Étudiants",
+            "parents": "Parents",
+            "resources": "Ressources",
+            "requests": "Demandes de maintenance",
+            "items": "Articles"
+        },
+        "actions": {
+            "add_entity": "Ajouter {{entity}}",
+            "new_entity": "Nouveau {{entity}}",
+            "view_entity": "Gérer {{entity}}",
+            "edit_entity": "Modifier {{entity}}",
+            "delete_entity": "Supprimer {{entity}}"
+        },
+        "modals": {
+            "delete": {
+                "title": "Êtes-vous sûr de vouloir supprimer {{item}} ?",
+                "message": "Cette action est irréversible et supprimera complètement {{item}}.",
+                "label": "Veuillez retaper '{{item}}' pour confirmer",
+                "error": "Les valeurs ne correspondent pas",
+                "delete_button": "Supprimer",
+                "cancel_button": "Annuler"
+            },
+            "block": {
+                "title": "Êtes-vous sûr de vouloir bloquer {{item}} ?",
+                "block_button": "Bloquer",
+                "unblock_button": "Débloquer",
+                "cancel_button": "Annuler"
+            }
+        },
+        "form": {
+            "fields": {
+                "first_name": "Prénom",
+                "last_name": "Nom",
+                "email": "E-mail",
+                "phone_number": "Numéro de téléphone",
+                "address": "Adresse",
+                "date_of_birth": "Date de naissance",
+                "start_date": "Date de début",
+                "label": "Étiquette",
+                "quantity": "Quantité",
+                "category": "Catégorie",
+                "priority": "Priorité",
+                "status": "Statut",
+                "note": "Remarque",
+                "attachment": "Pièce jointe"
+            },
+            "placeholders": {
+                "first_name": "Saisissez le prénom",
+                "last_name": "Saisissez le nom",
+                "email": "Saisissez l'email",
+                "address": "Saisissez l'adresse",
+                "note": "Ajoutez des notes supplémentaires..."
+            },
+            "buttons": {
+                "create": "Créer",
+                "update": "Mettre à jour",
+                "delete": "Supprimer",
+                "export": "Exporter",
+                "upload": "Téléverser"
+            }
+        },
+        "pagination": {
+            "records_shown": "Affichage de {{current}} sur {{total}}",
+            "next": "Suivant",
+            "previous": "Précédent"
+        },
+        "status": {
+            "active": "Actif",
+            "inactive": "Inactif",
+            "active_deactivate": "Activer / Désactiver"
+        }
+    }
+}

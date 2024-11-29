@@ -17,9 +17,25 @@ class MaintenanceRequestController extends Controller
         $perPage = $request->input('per_page', 5);
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $data = MaintenanceRequest::with('users', 'schools', 'resources')->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+        $data = MaintenanceRequest::with('users', 'schools', 'resources')
+            ->when(request('title'), function ($query, $title) {
+                if (!empty($title)) {
+                    $query->where('title', 'LIKE', '%' . $title . '%');
+                }
+            })
+            ->where(function ($query) {
+                if (!empty(request('status'))) {
+                    $query->where("status", request('status'));
+                }
+            })
+            ->orderBy($sortColumn, $sortDirection);
 
-        return response()->json($data, Response::HTTP_OK);
+        if ($perPage == -1) {
+            return response()->json($data->get(), Response::HTTP_OK);
+        }
+
+        return response()->json($data->paginate($perPage), Response::HTTP_OK);
+
 
         //! Note: if file not accessible like return 404, use this cammand (php artisan storage:link)
     }
