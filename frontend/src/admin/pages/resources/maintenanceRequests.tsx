@@ -413,6 +413,25 @@ export default function MaintenanceRequests() {
     },
   });
 
+  const handleSort = (column: string) => {
+    setSortPosition((prev) => prev + 1);
+    switch (sortPosition) {
+      case 0:
+        setSort({ column: column, direction: "asc" });
+        console.log("ascending");
+        return;
+      case 1:
+        setSort({ column: column, direction: "desc" });
+        console.log("descending");
+        return;
+      default:
+        setSort({ column: "id", direction: "asc" });
+        console.log("normal");
+        setSortPosition(0);
+        return;
+    }
+  };
+
   const handleDateTime = (
     options: Intl.DateTimeFormatOptions,
     date: number | Date,
@@ -1332,7 +1351,7 @@ export default function MaintenanceRequests() {
                     </span>
                     <div
                       className="flex flex-col"
-                      //   onClick={() => handleSort("label")}
+                      onClick={() => handleSort("title")}
                     >
                       <FaSortUp
                         className={`h-2.5 ${sortPosition === 2 ? "text-gray-600" : "text-gray-400"}`}
