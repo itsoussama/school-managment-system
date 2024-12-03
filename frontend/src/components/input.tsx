@@ -8,6 +8,7 @@ import React, {
   ReactElement,
   ReactNode,
   SelectHTMLAttributes,
+  TextareaHTMLAttributes,
   useEffect,
   useId,
   useRef,
@@ -36,7 +37,9 @@ interface Field {
 
 interface Input extends Field, InputHTMLAttributes<HTMLInputElement> {}
 
-interface TextArea extends Field, InputHTMLAttributes<HTMLTextAreaElement> {}
+interface InputDropdown extends Field {}
+
+interface TextArea extends Field, TextareaHTMLAttributes<HTMLTextAreaElement> {}
 interface Checkbox extends Field, InputHTMLAttributes<HTMLInputElement> {
   image?: React.ReactNode;
 }
@@ -79,6 +82,141 @@ function Input({
     </div>
   );
 }
+
+function InputDropdown({
+  children,
+  "custom-style": { containerStyle = "" } = {},
+  error = null,
+}: InputDropdown) {
+  return (
+    <div className={containerStyle}>
+      <div className="flex">{children}</div>
+      {error && (
+        <div className="mt-1.5 flex items-start">
+          <FaExclamationCircle className="mr-2 mt-0.5 min-w-4 text-red-500" />
+          <span className="error text-sm text-red-500">{error}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+InputDropdown.Select = function Select({
+  options,
+  onSelectedValue,
+  error = null,
+  ...selectProps
+}: {
+  options: string[];
+  onSelectedValue: (value: string) => void;
+  selectedValue?: string;
+  error?: string | null;
+} & SelectHTMLAttributes<HTMLSelectElement>) {
+  const handleSelectValue = (event: ChangeEvent<HTMLSelectElement>) => {
+    console.log(event.target.value);
+    onSelectedValue(event.target.value);
+  };
+
+  return (
+    <select
+      onChange={handleSelectValue}
+      className={`max-w-min rounded-s-s border border-gray-300 bg-gray-100 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm ${
+        error && "border-red-600 dark:border-red-500"
+      } block w-full p-2.5 dark:border-gray-600 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500`}
+      {...selectProps}
+    >
+      <option value="">Select an option</option>
+      {options.map((option, index) => (
+        <option key={index} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+InputDropdown.Input = function Input({
+  inputStyle = "",
+  ...inputProps
+}: {
+  icon?: React.ReactNode;
+  inputStyle?: string;
+} & InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="relative flex-1">
+      <input
+        className={`block h-full w-full rounded-e-s border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+        {...inputProps} // Spread additional input-specific props
+      />
+    </div>
+  );
+};
+
+// function InputDropdown({
+//   // htmlFor,
+//   // label = "",
+//   onSelect,
+//   selectedValue,
+//   icon,
+//   "custom-style": {
+//     inputStyle = "",
+//     // labelStyle = "",
+//     containerStyle = "",
+//   } = {},
+//   error = null,
+//   ...attribute
+// }: InputDropdown) {
+//   const socialMedia = ["facebook", "instagram", "twitter", "linkedin"];
+
+//   const handleSelectValue = (event: ChangeEvent) => {
+//     const target = event.target as HTMLSelectElement;
+//     onSelect(target.options[target.selectedIndex].value);
+
+//     // setInputName(target.options[target.selectedIndex].value);
+//   };
+
+//   return (
+//     <div className={containerStyle}>
+//       {/* <label
+//         htmlFor={htmlFor}
+//         className={`mb-2 block text-sm font-medium text-gray-900 dark:text-white ${labelStyle}`}
+//       >
+//         {label}
+//       </label> */}
+//       <div className="flex">
+//         {/* <div>{selectedValue}</div> */}
+//         <select
+//           name="socials"
+//           id="socials"
+//           onChange={handleSelectValue}
+//           value={selectedValue || ""}
+//           className={`w-max rounded-s-s border border-gray-300 bg-gray-100 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500`}
+//         >
+//           {socialMedia.map((social, key) => (
+//             <option key={key} value={social}>
+//               {social}
+//             </option>
+//           ))}
+//         </select>
+//         <div className="relative flex-1">
+//           {icon}
+//           <input
+//             // id={inputName}
+//             // name={inputName}
+//             className={`rounded-e-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+//             {...attribute}
+//           />
+//         </div>
+//       </div>
+//       {error && (
+//         <div className="mt-1.5 flex items-start">
+//           <FaExclamationCircle className="mr-2 mt-0.5 min-w-4 text-red-500" />
+//           <span className="error text-sm text-red-500">{error}</span>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 
 function RTextArea({
   htmlFor,
@@ -530,4 +668,12 @@ function Dropzone({
   );
 }
 
-export { Input, RTextArea, Checkbox, RSelect, MultiSelect, Dropzone };
+export {
+  Input,
+  InputDropdown,
+  RTextArea,
+  Checkbox,
+  RSelect,
+  MultiSelect,
+  Dropzone,
+};

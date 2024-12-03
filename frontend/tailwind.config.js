@@ -16,6 +16,7 @@ export default {
     extend: {
       colors: {
         gray: {
+          650: "#414b5a",
           750: "#2b3544",
         },
         "light-primary": "#FFFFFF",
@@ -34,6 +35,7 @@ export default {
         fill: "fill",
         "fade-fwd": "fade-fwd 0.4s ease-in-out alternate forwards",
         "slide-in": "slide-in 0.6s cubic-bezier(.65,.09,.31,1.17) both",
+        "scale-up": "scale-up 1s cubic-bezier(.65,.09,.31,1.17) both",
       },
 
       keyframes: {
@@ -63,6 +65,22 @@ export default {
             "-webkit-transform": "translateY(0)",
             transform: "translateY(0)",
             opacity: 1,
+          },
+        },
+        "scale-up": {
+          "0%": {
+            // "-webkit-transform": "scaleY(0)",
+            // transform: "scaleY(0)",
+            // "-webkit-transform-origin": "100% 0%",
+            // "transform-origin": "100% 0%",
+            "max-height": 0,
+          },
+          "100%": {
+            // "-webkit-transform": "scaleY(1)",
+            // transform: "scaleY(1)",
+            // "-webkit-transform-origin": "100% 0%",
+            // "transform-origin": "100% 0%",
+            "max-height": "999px",
           },
         },
       },

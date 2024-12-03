@@ -250,6 +250,29 @@ function Menu() {
             itemName="data-management"
           />
         </Link>
+        <Link to="/configuration/settings/general" state={{ active: true }}>
+          <Items
+            isActive={
+              useMatch("/configuration/settings/general") ? true : false
+            }
+            itemId="subitem-2"
+            itemName="general-settings"
+          />
+        </Link>
+        <Link
+          to="/configuration/settings/grades-and-sections"
+          state={{ active: true }}
+        >
+          <Items
+            isActive={
+              useMatch("/configuration/settings/grades-and-sections")
+                ? true
+                : false
+            }
+            itemId="subitem-2"
+            itemName="grades-sections"
+          />
+        </Link>
       </Items>
     </div>
   );

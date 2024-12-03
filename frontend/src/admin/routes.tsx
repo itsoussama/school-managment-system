@@ -11,6 +11,8 @@ import DataManagement from "@admin/pages/configuration/dataManagement";
 import AddResources from "./pages/resources/addResources";
 import { ViewResources } from "./pages/resources/viewResources";
 import MaintenanceRequests from "./pages/resources/maintenanceRequests";
+import GeneralSettings from "./pages/configuration/school/generalSettings";
+import GradesSections from "./pages/configuration/school/gradesSections";
 
 export const AdminRouter = {
   path: "/",
@@ -83,6 +85,19 @@ export const AdminRouter = {
         {
           path: "data-management",
           element: <DataManagement />,
+        },
+        {
+          path: "settings",
+          children: [
+            {
+              path: "general",
+              element: <GeneralSettings />,
+            },
+            {
+              path: "grades-and-sections",
+              element: <GradesSections />,
+            },
+          ],
         },
       ],
     },
