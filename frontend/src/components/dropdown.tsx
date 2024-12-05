@@ -25,8 +25,8 @@ interface ListProps {
 }
 
 interface ItemProps {
-  img: string;
-  name: string;
+  img?: string;
+  children: React.ReactNode;
 }
 
 interface ButtonProps {
@@ -97,6 +97,20 @@ function Dropdown({
     setIsVisible(true);
   }, []);
 
+  const updateDropdownPosition = () => {
+    if (triggerRef.current && dropdownRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const availableSpace = window.innerHeight - rect?.bottom;
+
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        maxHeight: Math.max(availableSpace - 20, 70),
+      });
+    }
+  };
+
   // Add event listeners for hover and click triggers
   useEffect(() => {
     if (triggerEvent === "click") {
@@ -115,6 +129,9 @@ function Dropdown({
     }
 
     if (isVisible) {
+      window.addEventListener("scroll", updateDropdownPosition, true); // `true` for capturing phase
+      window.addEventListener("resize", updateDropdownPosition);
+
       if (closeOnEvent === "click" || closeOnEvent === "both") {
         document.addEventListener("mousedown", handleOutsideClick);
       }
@@ -144,6 +161,8 @@ function Dropdown({
 
       document.removeEventListener("mousedown", handleOutsideClick);
       dropdownRef.current?.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("scroll", updateDropdownPosition, true);
+      window.removeEventListener("resize", updateDropdownPosition);
     };
   }, [
     isVisible,
@@ -218,12 +237,12 @@ function List({ children, additionalStyle }: ListProps) {
 }
 
 // Item component to display each item within the List
-function Item({ img, name }: ItemProps) {
+function Item({ img, children }: ItemProps) {
   return (
     <li>
       <div className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-        <img className="mr-2 h-6 w-6 rounded-full" src={img} alt={name} />
-        {name}
+        {img && <img className="mr-2 h-6 w-6 rounded-full" src={img} />}
+        {children}
       </div>
     </li>
   );

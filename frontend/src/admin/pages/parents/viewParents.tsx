@@ -1473,8 +1473,9 @@ export function ViewParents() {
                                       ? SERVER_STORAGE + child.imagePath
                                       : `https://ui-avatars.com/api/?background=random&name=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
                                   }
-                                  name={child.name}
-                                />
+                                >
+                                  {child.name}
+                                </Dropdown.Item>
                               ))}
                             </Dropdown.List>
                             <Dropdown.Button>

@@ -1,3 +1,32 @@
+export type Colors = {"black" : string
+"white" : string
+"slate" : Record<string, string>
+"gray" : Record<string, string>
+"zinc" : Record<string, string>
+"neutral": Record<string, string>
+"stone": Record<string, string>
+"red": Record<string, string>
+"orange": Record<string, string>
+"amber": Record<string, string>
+"yellow": Record<string, string>
+"lime": Record<string, string>
+"green": Record<string, string>
+"emerald": Record<string, string>
+"teal": Record<string, string>
+"cyan": Record<string, string>
+"sky": Record<string, string>
+"blue": Record<string, string>
+"indigo": Record<string, string>
+"violet": Record<string, string>
+"purple": Record<string, string>
+"fuchsia": Record<string, string>
+"pink": Record<string, string>
+"rose" : Record<string, string>
+}
+export type ColorPalette<Type> = {
+  [Property in keyof Type]: string | Record<string, string>
+}
+
 const colorPalette = {
     black: "#000",
     white: "#fff",
