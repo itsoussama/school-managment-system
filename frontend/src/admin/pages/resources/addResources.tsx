@@ -34,7 +34,6 @@ interface File {
 
 export default function AddResources() {
   const { t } = useTranslation();
-  const { t: fieldsTrans } = useTranslation("form-fields");
   const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -136,26 +135,28 @@ export default function AddResources() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {minSm ? t("home") : ""}
+            {minSm ? t("general.home") : ""}
           </Link>
         </Breadcrumb.Item>
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("resources")}
+              {t("entities.resources")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("new-resource")}</Breadcrumb.Item>
+        <Breadcrumb.Item>
+          {t("actions.new_entity", { entity: t("entities.resource") })}
+        </Breadcrumb.Item>
       </Breadcrumb>
       <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("profile")}
+                {t("general.profile")}
               </h1>
             </div>
             <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
@@ -179,18 +180,18 @@ export default function AddResources() {
                   className="absolute left-0 top-0 cursor-pointer opacity-0"
                   onChange={handleImageUpload}
                 />
-                {fieldsTrans("upload-photo")}
+                {t("form.buttons.upload", { label: t("general.photo") })}
               </button>
 
               <div className="flex flex-col">
                 <span className="text-sm text-gray-700 dark:text-gray-500">
-                  {t("accepted-format")}:{" "}
+                  {t("form.general.accepted_format")}:{" "}
                   <span className="text-gray-500 dark:text-gray-400">
                     jpg, jpeg, png
                   </span>
                 </span>
                 <span className="text-sm text-gray-700 dark:text-gray-500">
-                  {t("maximum-size")}:{" "}
+                  {t("form.general.maximum_size")}:{" "}
                   <span className="text-gray-500 dark:text-gray-400">
                     1024 mb
                   </span>
@@ -202,7 +203,7 @@ export default function AddResources() {
           <div className="flex flex-[3] flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("resource-information")}
+                {t("information.resource_information")}
               </h1>
             </div>
             <form
@@ -214,8 +215,8 @@ export default function AddResources() {
                 type="text"
                 id="label"
                 name="label"
-                label={fieldsTrans("label")}
-                placeholder={fieldsTrans("label-placeholder")}
+                label={t("form.fields.label")}
+                placeholder={t("form.placeholders.label")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
@@ -223,13 +224,13 @@ export default function AddResources() {
                 type="number"
                 id="qty"
                 name="qty"
-                label={fieldsTrans("quantity")}
+                label={t("form.fields.quantity")}
                 placeholder="20"
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
               <MultiSelect
-                label={fieldsTrans("category")}
+                label={t("form.fields.category")}
                 name="category_id"
                 onSelectItem={(items) =>
                   handleChange("category_id", items[0].id)
@@ -250,7 +251,12 @@ export default function AddResources() {
               </MultiSelect>
 
               <button className="btn-default m-0 mt-auto" type="submit">
-                {fieldsTrans("add-item-btn")}
+                {t("actions.add_entity", {
+                  entity:
+                    t("determiners.definite.feminine") +
+                    " " +
+                    t("entities.item"),
+                })}
               </button>
             </form>
           </div>

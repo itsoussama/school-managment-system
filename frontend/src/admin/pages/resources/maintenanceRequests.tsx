@@ -679,20 +679,20 @@ export default function MaintenanceRequests() {
               className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
               to="/"
             >
-              {minSm ? t("home") : ""}
+              {minSm ? t("general.home") : ""}
             </Link>
           </Breadcrumb.Item>
           {minSm ? (
             <Breadcrumb.Item>
               <span className="text-gray-600 dark:text-gray-300">
-                {t("resources")}
+                {t("entities.resources")}
               </span>
             </Breadcrumb.Item>
           ) : (
             <Breadcrumb.Item>...</Breadcrumb.Item>
           )}
           <Breadcrumb.Item className="whitespace-nowrap">
-            {t("maintenance-requests")}
+            {t("actions.view_entity", { entity: t("entities.resource") })}
           </Breadcrumb.Item>
         </Breadcrumb>
 
@@ -700,7 +700,10 @@ export default function MaintenanceRequests() {
           className="btn-default m-0 w-auto"
           onClick={() => setOpenModal({ open: true, type: "add" })}
         >
-          Create Request
+          {t("actions.create_entity", {
+            entity:
+              t("determiners.indefinite.masculine") + " " + t("general.ticket"),
+          })}
         </button>
       </div>
 
@@ -721,7 +724,8 @@ export default function MaintenanceRequests() {
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {t("resource-id")}:<b> {openModal?.id}</b>
+          {t("form.fields.id", { entity: t("entities.resource") })}:
+          <b> {openModal?.id}</b>
         </Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8 sm:flex-row">
@@ -742,7 +746,7 @@ export default function MaintenanceRequests() {
                   <div className="grid grid-flow-col grid-rows-3 gap-x-5 gap-y-4">
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("subject")}:
+                        {t("general.title")}:
                       </span>
                       <span className="whitespace-break-spaces text-base text-gray-900 dark:text-white">
                         {getMaintenanceRequestQuery.data?.title}
@@ -750,7 +754,7 @@ export default function MaintenanceRequests() {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("item")}:
+                        {t("entities.item")}:
                       </span>
                       <span className="w-max flex-1 break-words text-base text-gray-900 dark:text-white">
                         <p
@@ -776,7 +780,7 @@ export default function MaintenanceRequests() {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("assigned-to")}:
+                        {t("general.assign_to")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
                         <div className="flex w-max cursor-pointer items-center gap-x-2 rounded-s py-2 pl-2 pr-4 hover:bg-gray-100 dark:hover:bg-gray-600">
@@ -801,7 +805,7 @@ export default function MaintenanceRequests() {
                     <div className="row-span-full flex flex-col gap-2 rounded-s bg-gray-50 p-4 dark:bg-gray-750">
                       <div className="flex flex-col space-y-1">
                         <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("issued-date")}:
+                          {t("form.fields.issued_date")}:
                         </span>
                         <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
                           {getMaintenanceRequestQuery.data?.created_at ? (
@@ -828,7 +832,7 @@ export default function MaintenanceRequests() {
                       </div>
                       <div className="flex flex-col space-y-1">
                         <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("resolved-date")}:
+                          {t("form.fields.resolved_date")}:
                         </span>
                         <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
                           {getMaintenanceRequestQuery.data?.resolved_date ? (
@@ -855,7 +859,7 @@ export default function MaintenanceRequests() {
                       </div>
                       <div className="flex flex-col space-y-1">
                         <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("priority")}:
+                          {t("form.fields.priority")}:
                         </span>
                         <span className="text-base text-gray-900 dark:text-white">
                           <Badge
@@ -875,13 +879,15 @@ export default function MaintenanceRequests() {
                             }
                             className="w-max rounded-s px-2 py-0.5"
                           >
-                            {t(getMaintenanceRequestQuery.data?.priority)}
+                            {t(
+                              `priority.${getMaintenanceRequestQuery.data?.priority}`,
+                            )}
                           </Badge>
                         </span>
                       </div>
                       <div className="flex flex-col space-y-1">
                         <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                          {fieldTrans("status")}:
+                          {t("form.fields.status")}:
                         </span>
                         <span className="text-base text-gray-900 dark:text-white">
                           <Badge
@@ -895,7 +901,9 @@ export default function MaintenanceRequests() {
                             }
                             className="w-max rounded-s"
                           >
-                            {t(getMaintenanceRequestQuery.data?.status)}
+                            {t(
+                              `status.${getMaintenanceRequestQuery.data?.status}`,
+                            )}
                           </Badge>
                         </span>
                       </div>
@@ -904,7 +912,7 @@ export default function MaintenanceRequests() {
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <div className="col-span-full flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("note")}:
+                        {t("form.fields.note")}:
                       </span>
                       <span className="whitespace-break-spaces text-base text-gray-900 dark:text-white">
                         {getMaintenanceRequestQuery.data?.description}
@@ -912,7 +920,7 @@ export default function MaintenanceRequests() {
                     </div>
                     <div className="col-span-full flex flex-col space-y-1">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("attachment")}:
+                        {t("form.fields.attachment")}:
                       </span>
                       <div className="flex flex-row items-center justify-between rounded-s bg-gray-100 px-4 py-2 text-gray-600 shadow-sharp-dark dark:bg-gray-600 dark:text-white dark:shadow-sharp-light">
                         <div className="relative flex w-full max-w-[90%] items-center justify-start gap-3 overflow-x-auto">
@@ -961,7 +969,9 @@ export default function MaintenanceRequests() {
         onClose={onCloseModal}
       >
         <form onSubmit={onSubmit}>
-          <Modal.Header>{t("new-request")}</Modal.Header>
+          <Modal.Header>
+            {t("actions.new_entity", { entity: t("entities.resource") })}
+          </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
               <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
@@ -971,8 +981,8 @@ export default function MaintenanceRequests() {
                       type="text"
                       id="title"
                       name="title"
-                      label={fieldTrans("subject")}
-                      placeholder={fieldTrans("subject-placeholder")}
+                      label={t("general.title")}
+                      placeholder={t("form.placeholders.subject")}
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                         containerStyle: "col-span-full",
@@ -985,7 +995,7 @@ export default function MaintenanceRequests() {
                     <RSelect
                       id="resource_id"
                       name="item"
-                      label={fieldTrans("item")}
+                      label={t("entities.item")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       defaultValue="default"
@@ -1004,7 +1014,7 @@ export default function MaintenanceRequests() {
                     <RSelect
                       id="priority"
                       name="priority"
-                      label={fieldTrans("priority")}
+                      label={t("form.fields.priority")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       defaultValue="default"
@@ -1013,7 +1023,7 @@ export default function MaintenanceRequests() {
                       <option value="default">Choose Priority</option>
                       {Object.entries(priorityOptions).map((priority, key) => (
                         <option key={key} value={priority[0]}>
-                          {priority[0]}
+                          {t(`priority.${priority[0]}`)}
                         </option>
                       ))}
                     </RSelect>
@@ -1038,7 +1048,7 @@ export default function MaintenanceRequests() {
                     <Input
                       type="text"
                       readOnly
-                      label={fieldTrans("assigned-to")}
+                      label={t("form.fields.assign_to")}
                       icon={
                         <FaChevronDown className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 text-[12px] text-[#7f868e36] dark:text-gray-500" />
                       }
@@ -1055,8 +1065,8 @@ export default function MaintenanceRequests() {
                     <RTextArea
                       id="description"
                       name="description"
-                      label={fieldTrans("note")}
-                      placeholder={fieldTrans("note-placeholder")}
+                      label={t("form.fields.note")}
+                      placeholder={t("form.placeholders.note")}
                       custom-style={{ containerStyle: "col-span-full" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       defaultValue={data?.description}
@@ -1065,7 +1075,7 @@ export default function MaintenanceRequests() {
 
                     <Dropzone
                       id="attachment"
-                      label={fieldTrans("attachment")}
+                      label={t("form.fields.attachment")}
                       onChange={onChange}
                       custom-style={{ containerStyle: "col-span-full h-auto" }}
                     />
@@ -1076,14 +1086,14 @@ export default function MaintenanceRequests() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-default !w-auto">
-              {fieldTrans("accept")}
+              {t("general.accept")}
             </button>
             <button
               type="reset"
               className="btn-danger !w-auto"
               onClick={onCloseModal}
             >
-              {fieldTrans("decline")}
+              {t("general.decline")}
             </button>
           </Modal.Footer>
         </form>
@@ -1107,7 +1117,8 @@ export default function MaintenanceRequests() {
       >
         <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
-            {t("resource-id")}:<b> {openModal?.id}</b>
+            {t("form.fields.id", { entity: t("entities.resource") })}:
+            <b> {openModal?.id}</b>
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
@@ -1118,8 +1129,8 @@ export default function MaintenanceRequests() {
                       type="text"
                       id="subject"
                       name="subject"
-                      label={fieldTrans("subject")}
-                      placeholder={fieldTrans("subject-placeholder")}
+                      label={t("general.title")}
+                      placeholder={t("form.placeholders.subject")}
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                         containerStyle: "col-span-full",
@@ -1144,7 +1155,7 @@ export default function MaintenanceRequests() {
                     <RSelect
                       id="status"
                       name="status"
-                      label={fieldTrans("status")}
+                      label={t("form.fields.status")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       defaultValue={data?.status}
@@ -1152,7 +1163,7 @@ export default function MaintenanceRequests() {
                     >
                       {Object.entries(statusOptions).map((status, key) => (
                         <option key={key} value={status[0]}>
-                          {status[0]}
+                          {t(`status.${status[0]}`)}
                         </option>
                       ))}
                     </RSelect>
@@ -1160,7 +1171,7 @@ export default function MaintenanceRequests() {
                     <RSelect
                       id="priority"
                       name="priority"
-                      label={fieldTrans("priority")}
+                      label={t("form.fields.priority")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       defaultValue={data?.priority}
@@ -1168,7 +1179,7 @@ export default function MaintenanceRequests() {
                     >
                       {Object.entries(priorityOptions).map((priority, key) => (
                         <option key={key} value={priority[0]}>
-                          {priority[0]}
+                          {t(`priority.${priority[0]}`)}
                         </option>
                       ))}
                     </RSelect>
@@ -1176,8 +1187,8 @@ export default function MaintenanceRequests() {
                     <RTextArea
                       id="note"
                       name="note"
-                      label={fieldTrans("note")}
-                      placeholder={fieldTrans("note-placeholder")}
+                      label={t("form.fields.note")}
+                      placeholder={t("form.placeholders.note")}
                       custom-style={{ containerStyle: "col-span-full" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       defaultValue={data?.description}
@@ -1188,8 +1199,8 @@ export default function MaintenanceRequests() {
                       type="date"
                       id="created_at"
                       name="issuedDate"
-                      label={fieldTrans("issued-date")}
-                      placeholder={fieldTrans("issued-date-placeholder")}
+                      label={t("form.fields.issued_date")}
+                      placeholder={t("form.fields.issued_date")}
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                       }}
@@ -1205,8 +1216,8 @@ export default function MaintenanceRequests() {
                       type="date"
                       id="resolved_date"
                       name="resolvedDate"
-                      label={fieldTrans("resolved-date")}
-                      placeholder={fieldTrans("resolved-date-placeholder")}
+                      label={t("form.fields.resolved_date")}
+                      placeholder={t("form.placeholders.resolved_date")}
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                       }}
@@ -1222,7 +1233,7 @@ export default function MaintenanceRequests() {
 
                     <Dropzone
                       id="attachment"
-                      label={fieldTrans("attachment")}
+                      label={t("form.fields.attachment")}
                       onChange={(e) => console.log(e.target)}
                       custom-style={{ containerStyle: "col-span-full h-auto" }}
                     />
@@ -1233,14 +1244,14 @@ export default function MaintenanceRequests() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-default !w-auto">
-              {fieldTrans("accept")}
+              {t("general.accept")}
             </button>
             <button
               type="reset"
               className="btn-danger !w-auto"
               onClick={onCloseModal}
             >
-              {fieldTrans("decline")}
+              {t("general.decline")}
             </button>
           </Modal.Footer>
         </form>
@@ -1263,21 +1274,21 @@ export default function MaintenanceRequests() {
         }}
       >
         <form onSubmit={onSubmitDelete}>
-          <Modal.Header>{t("delete-modal")}</Modal.Header>
+          <Modal.Header>
+            {t("actions.delete_entity", { entity: t("entities.resource") })}
+          </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("delete-modal-title")}
+                {t("modals.delete.title")}
                 {/* <b>{getResourceQuery.data?.label}</b> */}
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">
-                  {t("delete-resource-modal-message")}
-                </p>
+                <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")}{" "}
+                {t("modals.delete.label")}{" "}
                 <b>{getMaintenanceRequestQuery.data?.title}</b>
               </p>
               <Input
@@ -1285,21 +1296,21 @@ export default function MaintenanceRequests() {
                 id="verfication"
                 name="verfication"
                 placeholder="John doe"
-                error={!isVerficationMatch ? t("delete-modal-error") : null}
+                error={!isVerficationMatch ? t("modals.delete.error") : null}
                 required
               />
             </div>
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
-              {t("delete-modal-delete-btn")}
+              {t("modals.delete.delete_button")}
             </button>
             <button
               type="reset"
               className="btn-outline !w-auto"
               onClick={onCloseModal}
             >
-              {t("delete-modal-cancel-btn")}
+              {t("modals.delete.cancel_button")}
             </button>
           </Modal.Footer>
         </form>
@@ -1324,7 +1335,7 @@ export default function MaintenanceRequests() {
 
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
-                  {t("delete-records")}
+                  {t("actions.delete_entity")}
                   <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
                 </button>
               </div>
@@ -1343,7 +1354,9 @@ export default function MaintenanceRequests() {
                     onChange={() => handleCheck()}
                   />
                 </Table.HeadCell>
-                <Table.HeadCell>{t("item-id")}</Table.HeadCell>
+                <Table.HeadCell>
+                  {t("form.fields.id", { entity: t("entities.item") })}
+                </Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center gap-x-3">
                     <span className="inline-block">
@@ -1364,12 +1377,14 @@ export default function MaintenanceRequests() {
                     </div>
                   </div>
                 </Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("Item")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("status")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("issued-date")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("resolved-date")}</Table.HeadCell>
+                <Table.HeadCell>{t("entities.item")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.status")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.issued_date")}</Table.HeadCell>
+                <Table.HeadCell>
+                  {t("form.fields.resolved_date")}
+                </Table.HeadCell>
                 <Table.HeadCell className="w-0">
-                  <span className="w-full">Actions</span>
+                  <span className="w-full">{t("general.actions")}</span>
                 </Table.HeadCell>
               </Table.Head>
               <Table.Body
@@ -1413,7 +1428,7 @@ export default function MaintenanceRequests() {
                         </>
                       }
                       label=""
-                      placeholder={fieldTrans("filter-all")}
+                      placeholder={t("general.all")}
                       value={filter?.title}
                       name="search"
                       custom-style={{
@@ -1463,11 +1478,11 @@ export default function MaintenanceRequests() {
                       }
                     >
                       <option value="default" disabled={filter.status !== ""}>
-                        {fieldTrans("filter-all")}
+                        {t("general.all")}
                       </option>
                       {Object.entries(statusOptions).map((status, key) => (
                         <option key={key} value={status[0]}>
-                          {t(status[0])}
+                          {t(`status.${status[0]}`)}
                         </option>
                       ))}
                     </RSelect>
@@ -1535,7 +1550,7 @@ export default function MaintenanceRequests() {
                               }
                               className="w-max rounded-s"
                             >
-                              {t(maintenanceReq.status)}
+                              {t(`status.${maintenanceReq.status}`)}
                             </Badge>
                             <Dropdown
                               element={
@@ -1572,7 +1587,7 @@ export default function MaintenanceRequests() {
                                         color={status[1]}
                                         key={key}
                                       >
-                                        {t(status[0])}
+                                        {t(`status.${status[0]}`)}
                                       </Badge>
                                     </div>
                                   ),
@@ -1686,12 +1701,12 @@ export default function MaintenanceRequests() {
 
           <div className="flex w-full items-center justify-between px-5 py-4">
             <span className="text-gray-500 dark:text-gray-400">
-              {t("records-number")}{" "}
+              {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
                 {getMaintenanceRequestsQuery.data?.from}-
                 {getMaintenanceRequestsQuery.data?.to}
               </span>{" "}
-              {t("total-records")}{" "}
+              {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
                 {getMaintenanceRequestsQuery.data?.total}
               </span>
@@ -1718,8 +1733,8 @@ export default function MaintenanceRequests() {
                   setPage(page)
                 }
                 totalPages={getMaintenanceRequestsQuery.data?.last_page ?? 1}
-                nextLabel={minSm ? t("next") : ""}
-                previousLabel={minSm ? t("previous") : ""}
+                nextLabel={minSm ? t("pagination.next") : ""}
+                previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{
                   pages: {
                     next: {

@@ -15,7 +15,6 @@ interface FormData {
 export default function DataManagement() {
   const [data, setData] = useState<FormData>();
   const { t } = useTranslation();
-  const { t: tfield } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
 
   const handleChange = (property: string, value: string | number[]) => {
@@ -57,26 +56,26 @@ export default function DataManagement() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {minSm ? t("home") : ""}
+            {minSm ? t("general.home") : ""}
           </Link>
         </Breadcrumb.Item>
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("configuration")}
+              {t("entities.configurations")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("data-management")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("entities.data_management")}</Breadcrumb.Item>
       </Breadcrumb>
       <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("import-export")}
+                {t("general.import_export")}
               </h1>
             </div>
             <div>
@@ -88,7 +87,7 @@ export default function DataManagement() {
                 <RSelect
                   id="date"
                   name="test"
-                  label={tfield("date")}
+                  label={t("general.date")}
                   custom-style={{ inputStyle: "disabled:disable" }}
                   // disabled
                   onChange={(e) => handleChange(e.target.id, e.target.value)}
@@ -99,7 +98,7 @@ export default function DataManagement() {
                 </RSelect>
 
                 <button className="btn-default m-0 mt-auto" type="submit">
-                  {tfield("btn-export")}
+                  {t("form.buttons.export")}
                 </button>
               </form>
             </div>

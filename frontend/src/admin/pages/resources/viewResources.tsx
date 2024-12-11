@@ -610,20 +610,20 @@ export function ViewResources() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {minSm ? t("home") : ""}
+            {minSm ? t("general.home") : ""}
           </Link>
         </Breadcrumb.Item>
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("resources")}
+              {t("entities.resources")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
         <Breadcrumb.Item className="whitespace-nowrap">
-          {t("view-resources")}
+          {t("actions.view_entity", { entity: t("entities.resource") })}
         </Breadcrumb.Item>
       </Breadcrumb>
 
@@ -644,7 +644,8 @@ export function ViewResources() {
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {t("resource-id")}:<b> {openModal?.id}</b>
+          {t("form.fields.id", { entity: t("entities.resource") })}:
+          <b> {openModal?.id}</b>
         </Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8 sm:flex-row">
@@ -661,13 +662,13 @@ export function ViewResources() {
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("item-information")}
+                  {t("information.resource_information")}
                 </h1>
                 <SkeletonContent isLoaded={getResourceQuery.isFetched}>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("label")}:
+                        {t("form.fields.label")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {getResourceQuery.data?.label}
@@ -675,7 +676,7 @@ export function ViewResources() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("quantity")}:
+                        {t("form.fields.quantity")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {getResourceQuery.data?.qty}
@@ -683,7 +684,7 @@ export function ViewResources() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("category")}:
+                        {t("form.fields.category")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
                         {getResourceQuery.data?.categories.label}
@@ -715,11 +716,12 @@ export function ViewResources() {
       >
         <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
-            {t("resource-id")}:<b> {openModal?.id}</b>
+            {t("form.fields.id", { entity: t("entities.resource") })}:
+            <b> {openModal?.id}</b>
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+              <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
                   imgSource={
                     getResourceQuery.data?.imagePath
@@ -735,17 +737,17 @@ export function ViewResources() {
                     className="absolute left-0 top-0 cursor-pointer opacity-0"
                     onChange={handleImageUpload}
                   />
-                  {fieldTrans("upload-photo")}
+                  {t("form.buttons.upload", { label: t("general.photo") })}
                 </button>
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("accepted-format")}:{" "}
+                    {t("form.general.accepted_format")}:{" "}
                     <span className="text-gray-500 dark:text-gray-400">
                       jpg, jpeg, png
                     </span>
                   </span>
                   <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("maximum-size")}:{" "}
+                    {t("form.general.maximum_size")}:{" "}
                     <span className="text-gray-500 dark:text-gray-400">
                       1024 mb
                     </span>
@@ -755,15 +757,15 @@ export function ViewResources() {
               <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("item-information")}
+                    {t("information.resource_information")}
                   </h1>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
                       id="label"
                       name="label"
-                      label={fieldTrans("label")}
-                      placeholder={fieldTrans("label-placeholder")}
+                      label={t("form.fields.label")}
+                      placeholder={t("form.placeholders.label")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getResourceQuery.isFetching && true}
                       value={data?.label}
@@ -774,7 +776,7 @@ export function ViewResources() {
                       type="number"
                       id="qty"
                       name="qty"
-                      label={fieldTrans("quantity")}
+                      label={t("form.fields.quantity")}
                       placeholder="20"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getResourceQuery.isFetching && true}
@@ -785,6 +787,7 @@ export function ViewResources() {
                     <RSelect
                       id="category_id"
                       name="categories"
+                      label={t("form.fields.category")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getResourceQuery.isFetching && true}
                       defaultValue={data?.id}
@@ -811,10 +814,10 @@ export function ViewResources() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-default !w-auto">
-              {fieldTrans("accept")}
+              {t("general.accept")}
             </button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {fieldTrans("decline")}
+              {t("general.decline")}
             </button>
           </Modal.Footer>
         </form>
@@ -837,37 +840,39 @@ export function ViewResources() {
         }}
       >
         <form onSubmit={onSubmitDelete}>
-          <Modal.Header>{t("delete-modal")}</Modal.Header>
+          <Modal.Header>
+            {t("actions.delete_entity", { entity: t("entities.parent") })}
+          </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("delete-modal-title")} <b>{getResourceQuery.data?.label}</b>
+                {t("modals.delete.title")} <b>{getResourceQuery.data?.label}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">
-                  {t("delete-resource-modal-message")}
-                </p>
+                <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")} <b>{getResourceQuery.data?.label}</b>
+                {t("modals.delete.label", {
+                  item: getResourceQuery.data?.label,
+                })}
               </p>
               <Input
                 type="text"
                 id="verfication"
                 name="verfication"
                 placeholder="John doe"
-                error={!isVerficationMatch ? t("delete-modal-error") : null}
+                error={!isVerficationMatch ? t("modals.delete.error") : null}
                 required
               />
             </div>
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
-              {t("delete-modal-delete-btn")}
+              {t("modals.delete.delete_button")}
             </button>
             <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("delete-modal-cancel-btn")}
+              {t("modals.delete.cancel_button")}
             </button>
           </Modal.Footer>
         </form>
@@ -902,10 +907,14 @@ export function ViewResources() {
                     onChange={() => handleCheck()}
                   />
                 </Table.HeadCell>
-                <Table.HeadCell>{t("item-id")}</Table.HeadCell>
+                <Table.HeadCell>
+                  {t("form.fields.id", { entity: t("entities.resource") })}
+                </Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center gap-x-3">
-                    <span className="inline-block">{fieldTrans("label")}</span>
+                    <span className="inline-block">
+                      {t("form.fields.label")}
+                    </span>
                     <div
                       className="flex flex-col"
                       onClick={() => handleSort("label")}
@@ -921,8 +930,8 @@ export function ViewResources() {
                     </div>
                   </div>
                 </Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("quantity")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("category")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.quantity")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.category")}</Table.HeadCell>
                 <Table.HeadCell className="w-0">
                   <span className="w-full">Actions</span>
                 </Table.HeadCell>
@@ -968,7 +977,7 @@ export function ViewResources() {
                         </>
                       }
                       label=""
-                      placeholder={fieldTrans("filter-all")}
+                      placeholder={t("general.all")}
                       value={filter?.label}
                       name="search"
                       custom-style={{
@@ -1019,7 +1028,7 @@ export function ViewResources() {
                                   "cursor-default min-w-36 px-8 !py-1",
                                 labelStyle: "mb-0 !inline",
                               }}
-                              placeholder={fieldTrans("filter-all")}
+                              placeholder={t("general.all")}
                               value={
                                 filter.minQty && filter.maxQty
                                   ? filter.minQty + " ⇆ " + filter.maxQty
@@ -1104,7 +1113,7 @@ export function ViewResources() {
                         value="default"
                         disabled={filter.category_id !== undefined}
                       >
-                        {fieldTrans("filter-all")}
+                        {t("general.all")}
                       </option>
                       {getCategoriesQuery.data?.map(
                         (category: Category, index: number) => (
@@ -1221,11 +1230,11 @@ export function ViewResources() {
 
           <div className="flex w-full items-center justify-between px-5 py-4">
             <span className="text-gray-500 dark:text-gray-400">
-              {t("records-number")}{" "}
+              {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
                 {getResourcesQuery.data?.from}-{getResourcesQuery.data?.to}
               </span>{" "}
-              {t("total-records")}{" "}
+              {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
                 {getResourcesQuery.data?.total}
               </span>
@@ -1251,8 +1260,8 @@ export function ViewResources() {
                   !getResourcesQuery.isPlaceholderData && setPage(page)
                 }
                 totalPages={getResourcesQuery.data?.last_page ?? 1}
-                nextLabel={minSm ? t("next") : ""}
-                previousLabel={minSm ? t("previous") : ""}
+                nextLabel={minSm ? t("pagination.next") : ""}
+                previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{
                   pages: {
                     next: {

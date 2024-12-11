@@ -34,7 +34,6 @@ export default function Items({
   onToggleSubMenu = (param) => param,
   containerClass,
 }: Item) {
-  const { t } = useTranslation();
   const min2xl = useBreakpoint("min", "2xl");
   const max2xl = useBreakpoint("max", "2xl");
   const minSm = useBreakpoint("min", "sm");
@@ -54,9 +53,9 @@ export default function Items({
       >
         {icon}
         <span
-          className={`text-s text-nowrap ${!isOnHover ? "sm:hidden 2xl:block" : ""} ${isActive ? "text-white" : "text-gray-900 dark:text-gray-100"}`}
+          className={`text-s max-w-44 overflow-hidden whitespace-nowrap ${!isOnHover ? "sm:hidden 2xl:block" : ""} ${isActive ? "max-w-max text-white" : "fade-text w-44 text-gray-900 dark:text-gray-100"}`}
         >
-          {t(itemName)}
+          {itemName}
         </span>
         {children &&
           (subMenuVisible.state && subMenuVisible.ref === itemId ? (

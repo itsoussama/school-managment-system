@@ -75,7 +75,6 @@ function AddChildModal({
   const queryClient = useQueryClient();
 
   const { t } = useTranslation();
-  const { t: fieldTrans } = useTranslation("form-fields");
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [openModal, setOpenModal] = useState<boolean>(open);
@@ -294,7 +293,7 @@ function AddChildModal({
         }}
         onClose={onCloseModal}
       >
-        <Modal.Header>{t("add-new-child")}</Modal.Header>
+        <Modal.Header>{t("general.add_new_child")}</Modal.Header>
         {option === "new" ? (
           <form onSubmit={onSubmitNewChild}>
             <Modal.Body>
@@ -319,17 +318,17 @@ function AddChildModal({
                       className="absolute left-0 top-0 cursor-pointer opacity-0"
                       onChange={handleImageUpload}
                     />
-                    {fieldTrans("upload-photo")}
+                    {t("form.buttons.upload", { label: t("general.photo") })}
                   </button>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-700 dark:text-gray-500">
-                      {fieldTrans("accepted-format")}:{" "}
+                      {t("form.general.accepted_format")}:{" "}
                       <span className="text-gray-500 dark:text-gray-400">
                         jpg, jpeg, png
                       </span>
                     </span>
                     <span className="text-xs text-gray-700 dark:text-gray-500">
-                      {fieldTrans("maximum-size")}:{" "}
+                      {t("form.general.maximum_size")}:{" "}
                       <span className="text-gray-500 dark:text-gray-400">
                         1024 mb
                       </span>
@@ -339,15 +338,15 @@ function AddChildModal({
                 <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
                   <div className="w-full space-y-3">
                     <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                      {t("personal-information")}
+                      {t("information.personal_information")}
                     </h1>
                     <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                       <Input
                         type="text"
                         id="firstName"
                         name="firstName"
-                        label={fieldTrans("first-name")}
-                        placeholder={fieldTrans("first-name-placeholder")}
+                        label={t("form.fields.first_name")}
+                        placeholder={t("form.placeholders.first_name")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
@@ -358,8 +357,8 @@ function AddChildModal({
                         type="text"
                         id="lastName"
                         name="lastName"
-                        label={fieldTrans("last-name")}
-                        placeholder={fieldTrans("last-name-placeholder")}
+                        label={t("form.fields.last_name")}
+                        placeholder={t("form.placeholders.last_name")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
@@ -370,8 +369,8 @@ function AddChildModal({
                         type="text"
                         id="address"
                         name="address"
-                        label={fieldTrans("address")}
-                        placeholder={fieldTrans("address-placeholder")}
+                        label={t("form.fields.address")}
+                        placeholder={t("form.fields.address")}
                         onChange={(e) => console.log(e.target.value)}
                         custom-style={{ containerStyle: "col-span-full" }}
                       />
@@ -380,7 +379,7 @@ function AddChildModal({
                         type="tel"
                         id="phone"
                         name="phone"
-                        label={fieldTrans("phone-number")}
+                        label={t("form.fields.phone_number")}
                         placeholder="06 00 00 00"
                         pattern="(06|05)[0-9]{6}"
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
@@ -393,8 +392,8 @@ function AddChildModal({
                         type="email"
                         id="email"
                         name="email"
-                        label={fieldTrans("email")}
-                        placeholder={fieldTrans("email-placeholder")}
+                        label={t("form.fields.email")}
+                        placeholder={t("form.placeholders.email")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
@@ -402,7 +401,7 @@ function AddChildModal({
                       />
 
                       <MultiSelect
-                        label={fieldTrans("grade-levels")}
+                        label={t("form.fields.grade_levels")}
                         name="grades"
                         onSelectItem={(items) =>
                           handleChange(
@@ -431,7 +430,7 @@ function AddChildModal({
                         type="password"
                         id="password"
                         name="password"
-                        label={fieldTrans("password")}
+                        label={t("form.fields.password")}
                         placeholder="●●●●●●●"
                         custom-style={{
                           inputStyle: "px-10",
@@ -448,7 +447,7 @@ function AddChildModal({
                         type="password"
                         id="password_confirmation"
                         name="password_confirmation"
-                        label={fieldTrans("confirm-password")}
+                        label={t("form.fields.confirm_password")}
                         placeholder="●●●●●●●"
                         custom-style={{
                           inputStyle: "px-10",
@@ -467,10 +466,10 @@ function AddChildModal({
             </Modal.Body>
             <Modal.Footer>
               <button type="submit" className="btn-default !w-auto">
-                {fieldTrans("accept")}
+                {t("general.accept")}
               </button>
               <button className="btn-danger !w-auto" onClick={onCloseModal}>
-                {fieldTrans("decline")}
+                {t("general.decline")}
               </button>
             </Modal.Footer>
           </form>
@@ -486,7 +485,7 @@ function AddChildModal({
                   }
                   label=""
                   onKeyUp={(e) => handleSearch(e.target)}
-                  placeholder={fieldTrans("filter-all")}
+                  placeholder={t("general.all")}
                   name="search"
                   custom-style={{
                     inputStyle: "px-8 !py-1",
@@ -526,10 +525,10 @@ function AddChildModal({
             </div>
             <Modal.Footer>
               <button type="submit" className="btn-default !w-auto">
-                {fieldTrans("accept")}
+                {t("general.accept")}
               </button>
               <button className="btn-danger !w-auto" onClick={onCloseModal}>
-                {fieldTrans("decline")}
+                {t("general.decline")}
               </button>
             </Modal.Footer>
           </form>
@@ -547,7 +546,7 @@ function AddChildModal({
               className="font-normal text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
             >
               <FaUserPlus size={48} />
-              <p>{t("new-child")}</p>
+              <p>{t("actions.new_entity", { entity: t("general.child") })}</p>
             </Card>
             <Card
               onClick={() => setOption("exist")}
@@ -561,7 +560,9 @@ function AddChildModal({
               className="font-normal text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
             >
               <FaUserTag size={48} />
-              <p>{t("existing-child")}</p>
+              <p>
+                {t("actions.existing_entity", { entity: t("general.child") })}
+              </p>
             </Card>
           </div>
         )}

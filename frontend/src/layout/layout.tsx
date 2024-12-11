@@ -186,7 +186,7 @@ export function Layout({ children, menu }: Layout) {
         {menu}
       </div>
       <div
-        className={`w-[75%] flex-1 transition-all sm:mx-8 sm:my-6 2xl:ms-8 ${isOnHover ? "sm:ms-0" : "sm:ms-24"}`}
+        className={`flex w-[75%] flex-1 flex-col transition-all sm:mx-8 sm:my-6 2xl:ms-8 ${isOnHover ? "sm:ms-0" : "sm:ms-24"}`}
       >
         {/* //? screen size above 640px*/}
         <div className="hidden h-12 w-full justify-between border-white sm:flex">
@@ -340,7 +340,11 @@ export function Layout({ children, menu }: Layout) {
             document.body,
           )}
         </div>
-        <div className="mx-6 my-4 pb-20 pt-16 sm:m-0 sm:p-0">{children}</div>
+        <div className="mx-6 my-4 h-full pb-20 pt-16 sm:m-0 sm:p-0">
+          {" "}
+          {/* h-full */}
+          {children}
+        </div>
         <TabBar>
           <TabBar.Item
             icon={<FaChartPie size={20} />}
