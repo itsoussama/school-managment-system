@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class SchoolController extends Controller
 {
@@ -30,13 +31,35 @@ class SchoolController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-        ]);
+        try{
+            $validation = $request->validate([
+                'name' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'contact' => 'required|string|max:255',
+                'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
 
-        $school = School::create($request->all());
-        return response()->json($school, Response::HTTP_CREATED);
+            if ($validation) {
+
+                $path = '';
+                if ($request->hasFile('image')) {
+                    // $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
+                    // $request->file('image')->move(public_path('images/users'), $filename);
+                    $path = $request->file('image')->store('images', 'public');
+                }
+
+                $school = School::create([
+                    'name' => $request->name,
+                    'address' => $request->address,
+                    'contact' => $request->contact,
+                    'image_path' => $path,
+                ]);
+                return response()->json($school, Response::HTTP_CREATED);
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 422);
+        }
     }
 
     /**
@@ -59,13 +82,37 @@ class SchoolController extends Controller
      */
     public function update(Request $request, School $school)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-        ]);
+        try {
 
-        $school->update($request->all());
-        return response()->json($school);
+            $validation = $request->validate([
+                'name' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'contact' => 'required|string|max:255',
+                'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            if ($validation) {
+                $path = '';
+                if ($request->hasFile('image')) {
+                    if (Storage::disk('public')->exists($request->image)) {
+                        Storage::disk('public')->delete($request->image);
+                    }
+                    $path = $request->file('image')->store('images', 'public');
+                }
+
+                $school->update([
+                    'name' => $request->name,
+                    'address' => $request->address,
+                    'contact' => $request->contact,
+                    'image_path' => $path,
+                ]);
+
+
+                return response()->json($school);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 422);
+        }
     }
 
     /**

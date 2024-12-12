@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class School extends Model
 {
+    protected $fillable = [
+        'name',
+        'contact',
+        'address',
+        'image_path',
+    ];
     use HasFactory;
 
     public function users() : HasMany
