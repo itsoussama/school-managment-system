@@ -36,8 +36,9 @@
       "@components/*": ["src/components/*"],
       "@hooks/*": ["src/hooks/*"],
       "@lang/*": ["src/lang/*"],
-    }
+    },
+    "types": ["i18next"]
 
   },
-  "include": ["src"]
+  "include": ["src", "i18n.d.ts"]
 }

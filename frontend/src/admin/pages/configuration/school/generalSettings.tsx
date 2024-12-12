@@ -5,11 +5,9 @@ import { TransitionAnimation } from "@src/components/animation";
 import { Input, InputDropdown, RTextArea } from "@src/components/input";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb } from "flowbite-react";
-import { platform } from "os";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage } from "react-icons/fa";
-import { FaXmark } from "react-icons/fa6";
 import { IoIosClose } from "react-icons/io";
 import { Link } from "react-router-dom";
 
@@ -21,7 +19,6 @@ interface Socials {
 
 export default function GeneralSettings() {
   const { t } = useTranslation();
-  const { t: fieldsTrans } = useTranslation("form-fields");
   const socialPlatforms = ["facebook", "instagram", "twitter", "linkedin"];
   const socialLinksPlaceholders: Record<string, string> = {
     facebook: "https://facebook.com/yourprofile",
@@ -98,26 +95,26 @@ export default function GeneralSettings() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {minSm ? t("home") : ""}
+            {minSm ? t("general.home") : ""}
           </Link>
         </Breadcrumb.Item>
         {minSm ? (
           <>
             <Breadcrumb.Item>
               <span className="text-gray-600 dark:text-gray-300">
-                {t("configuration")}
+                {t("entities.configurations")}
               </span>
             </Breadcrumb.Item>
             <Breadcrumb.Item>
               <span className="text-gray-600 dark:text-gray-300">
-                {t("school")}
+                {t("entities.school")}
               </span>
             </Breadcrumb.Item>
           </>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("general")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("general.general")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <TransitionAnimation>
@@ -125,7 +122,7 @@ export default function GeneralSettings() {
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("profile")}
+                {t("general.profile")}
               </h1>
             </div>
             <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
@@ -148,17 +145,19 @@ export default function GeneralSettings() {
                   className="absolute left-0 top-0 cursor-pointer opacity-0"
                   onChange={handleImageUpload}
                 />
-                {fieldsTrans("upload-photo")}
+                {t("form.buttons.upload", {
+                  label: t("general.photo"),
+                })}
               </button>
               <div className="flex flex-col">
                 <span className="text-sm text-gray-700 dark:text-gray-500">
-                  {t("accepted-format")}:{" "}
+                  {t("form.general.accepted_format")}:{" "}
                   <span className="text-gray-500 dark:text-gray-400">
                     jpg, jpeg, png
                   </span>
                 </span>
                 <span className="text-sm text-gray-700 dark:text-gray-500">
-                  {t("maximum-size")}:{" "}
+                  {t("form.general.maximum_size")}:{" "}
                   <span className="text-gray-500 dark:text-gray-400">
                     1024 mb
                   </span>
@@ -170,7 +169,7 @@ export default function GeneralSettings() {
           <div className="flex flex-[3] flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("school-information")}
+                {t("information.shcool_information")}
               </h1>
             </div>
             <form
@@ -183,8 +182,8 @@ export default function GeneralSettings() {
                 id="schoolName"
                 name="schoolName"
                 custom-style={{ containerStyle: "col-span-full" }}
-                label={fieldsTrans("school-name")}
-                placeholder={fieldsTrans("school-name-placeholder")}
+                label={t("form.fields.school_name")}
+                placeholder={t("form.placeholders.school_name")}
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
@@ -193,8 +192,8 @@ export default function GeneralSettings() {
                 id="address"
                 name="address"
                 custom-style={{ containerStyle: "col-span-full" }}
-                label={fieldsTrans("address")}
-                placeholder={fieldsTrans("address-placeholder")}
+                label={t("form.fields.address")}
+                placeholder={t("form.placeholders.address")}
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
@@ -202,22 +201,22 @@ export default function GeneralSettings() {
                 id="description"
                 name="description"
                 custom-style={{ containerStyle: "col-span-full" }}
-                label={fieldsTrans("description")}
+                label={t("form.fields.description")}
                 rows={5}
-                placeholder={fieldsTrans("description-placeholder")}
+                placeholder={t("form.placeholders.description")}
               />
 
               <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 
               <h1 className="col-span-full text-xl font-semibold text-gray-900 dark:text-white">
-                {t("contact-information")}
+                {t("information.contact_information")}
               </h1>
 
               <Input
                 type="tel"
                 id="phone"
                 name="phone"
-                label={fieldsTrans("phone-number")}
+                label={t("form.fields.phone_number")}
                 placeholder="06 00 00 00"
                 pattern="(06|05)[0-9]{2}[0-9]{4}"
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
@@ -227,7 +226,7 @@ export default function GeneralSettings() {
                 type="email"
                 id="email"
                 name="email"
-                label={fieldsTrans("email")}
+                label={t("form.fields.email")}
                 placeholder="Johndoe@example.com"
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
@@ -236,14 +235,14 @@ export default function GeneralSettings() {
                 type="text"
                 id="website"
                 name="website"
-                label={fieldsTrans("website")}
+                label={t("form.fields.website")}
                 placeholder="www.example.com"
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
               <div className="flex flex-col gap-y-2">
                 <span className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
-                  {fieldsTrans("social-media")}
+                  {t("form.fields.social_media")}
                 </span>
                 {socials?.map((social, key) => (
                   <div key={key} className="flex gap-x-1">
@@ -277,12 +276,17 @@ export default function GeneralSettings() {
                   type="button"
                   onClick={() => addSocial()}
                 >
-                  Add socials
+                  {t("actions.add_entity", {
+                    entity:
+                      t("determiners.indefinite.feminine") +
+                      " " +
+                      t("general.social"),
+                  })}
                 </button>
               </div>
 
               <button className="btn-default m-0 mt-auto" type="submit">
-                {fieldsTrans("create-account-btn")}
+                {t("form.buttons.create", { label: t("general.account") })}
               </button>
             </form>
           </div>

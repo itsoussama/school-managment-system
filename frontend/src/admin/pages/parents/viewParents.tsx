@@ -725,24 +725,26 @@ export function ViewParents() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {minSm ? t("home") : ""}
+            {minSm ? t("general.home") : ""}
           </Link>
         </Breadcrumb.Item>
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("parents")}
+              {t("entities.parents")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("view-parents")}</Breadcrumb.Item>
+        <Breadcrumb.Item>
+          {t("actions.view_entity", { entity: t("entities.parent") })}
+        </Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
-        // size={"md"}
+        size={"3xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -757,7 +759,8 @@ export function ViewParents() {
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {t("parent-id")}:<b> {openModal?.id}</b>
+          {t("form.fields.id", { entity: t("entities.parent") })}:
+          <b> {openModal?.id}</b>
         </Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8 sm:flex-row">
@@ -772,7 +775,7 @@ export function ViewParents() {
               />
               <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                  {t("active-deactivate")}
+                  {t("status.active_deactivate")}
                 </span>
                 <ToggleSwitch
                   theme={{
@@ -794,13 +797,13 @@ export function ViewParents() {
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("personal-information")}
+                  {t("information.personal_information")}
                 </h1>
                 <SkeletonContent isLoaded={getParentQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("first-name")}:
+                        {t("form.fields.first_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {getUserName(getParentQuery.data?.data.name).firstName}
@@ -808,7 +811,7 @@ export function ViewParents() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("last-name")}:
+                        {t("form.fields.last_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {getUserName(getParentQuery.data?.data.name).lastName}
@@ -816,7 +819,7 @@ export function ViewParents() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("email")}:
+                        {t("form.fields.email")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
                         {getParentQuery.data?.data.email}
@@ -824,7 +827,7 @@ export function ViewParents() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("phone-number")}:
+                        {t("form.fields.phone_number")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {getParentQuery.data?.data.phone}
@@ -832,7 +835,7 @@ export function ViewParents() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {fieldTrans("address")}:
+                        {t("form.fields.address")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         123 Rue Principale
@@ -844,11 +847,11 @@ export function ViewParents() {
 
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("academic-information")}
+                  {t("information.academic_information")}
                 </h1>
                 <div className="flex flex-col">
                   <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                    {t("Childs")}:
+                    {t("form.fields.childrens")}:
                   </span>
                   <div className="flex w-max max-w-52 flex-wrap">
                     {getParentQuery.data?.data.childrens.length > 0 ? (
@@ -885,7 +888,7 @@ export function ViewParents() {
                         }
                       >
                         <FaUser className="me-2" />
-                        {t("add-new-child")}
+                        {t("general.add_new_child")}
                       </div>
                     )}
                   </div>
@@ -914,11 +917,12 @@ export function ViewParents() {
       >
         <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
-            {t("parent-id")}:<b> {openModal?.id}</b>
+            {t("form.fields.id", { entity: t("entities.parent") })}:
+            <b> {openModal?.id}</b>
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+              <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
                   imgSource={
                     previewImg
@@ -935,17 +939,17 @@ export function ViewParents() {
                     className="absolute left-0 top-0 cursor-pointer opacity-0"
                     onChange={handleImageUpload}
                   />
-                  {fieldTrans("upload-photo")}
+                  {t("form.buttons.upload", { label: t("general.photo") })}
                 </button>
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {fieldTrans("accepted-format")}:{" "}
+                    {t("form.general.accepted_format")}:{" "}
                     <span className="text-gray-500 dark:text-gray-400">
                       jpg, jpeg, png
                     </span>
                   </span>
                   <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {fieldTrans("maximum-size")}:{" "}
+                    {t("form.general.maximum_size")}:{" "}
                     <span className="text-gray-500 dark:text-gray-400">
                       1024 mb
                     </span>
@@ -955,15 +959,15 @@ export function ViewParents() {
               <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("personal-information")}
+                    {t("information.personal_information")}
                   </h1>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
                       id="firstName"
                       name="firstName"
-                      label={fieldTrans("first-name")}
-                      placeholder={fieldTrans("first-name-placeholder")}
+                      label={t("form.fields.first_name")}
+                      placeholder={t("form.placeholders.first_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getParentQuery.isFetching && true}
                       value={data?.firstName}
@@ -974,8 +978,8 @@ export function ViewParents() {
                       type="text"
                       id="lastName"
                       name="lastName"
-                      label={fieldTrans("last-name")}
-                      placeholder={fieldTrans("last-name-placeholder")}
+                      label={t("form.fields.last_name")}
+                      placeholder={t("form.placeholders.last_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getParentQuery.isFetching && true}
                       value={data?.lastName}
@@ -986,8 +990,8 @@ export function ViewParents() {
                       type="text"
                       id="address"
                       name="address"
-                      label={fieldTrans("address")}
-                      placeholder={fieldTrans("address-placeholder")}
+                      label={t("form.fields.address")}
+                      placeholder={t("form.placeholders.address")}
                       value="123 Rue Principale"
                       onChange={(e) => console.log(e.target.value)}
                       custom-style={{ containerStyle: "col-span-full" }}
@@ -997,7 +1001,7 @@ export function ViewParents() {
                       type="tel"
                       id="phone"
                       name="phone"
-                      label={fieldTrans("phone-number")}
+                      label={t("form.fields.phone_number")}
                       placeholder="06 00 00 00"
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
@@ -1010,8 +1014,8 @@ export function ViewParents() {
                       type="email"
                       id="email"
                       name="email"
-                      label={fieldTrans("email")}
-                      placeholder={fieldTrans("email-placeholder")}
+                      label={t("form.fields.email")}
+                      placeholder={t("form.placeholders.email")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getParentQuery.isFetching && true}
                       value={data?.email}
@@ -1026,7 +1030,7 @@ export function ViewParents() {
                           type="password"
                           id="password"
                           name="password"
-                          label={fieldTrans("password")}
+                          label={t("form.fields.password")}
                           placeholder="●●●●●●●"
                           error={formError.password}
                           value={data?.password}
@@ -1043,7 +1047,7 @@ export function ViewParents() {
                           type="password"
                           id="confirm_password"
                           name="confirm_password"
-                          label={fieldTrans("confirm-password")}
+                          label={t("form.fields.confirm_password")}
                           placeholder="●●●●●●●"
                           error={formError.confirm_password}
                           value={data?.confirm_password}
@@ -1062,7 +1066,12 @@ export function ViewParents() {
                           onClick={() => toggleChangePassword(true)}
                           className="btn-default !w-auto"
                         >
-                          {t("change-password-btn")}
+                          {t("form.buttons.change", {
+                            label:
+                              t("determiners.definite.masculine") +
+                              " " +
+                              t("form.fields.password"),
+                          })}
                         </button>
                       </>
                     )}
@@ -1073,10 +1082,10 @@ export function ViewParents() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-default !w-auto">
-              {fieldTrans("accept")}
+              {t("general.accept")}
             </button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {fieldTrans("decline")}
+              {t("general.decline")}
             </button>
           </Modal.Footer>
         </form>
@@ -1099,39 +1108,40 @@ export function ViewParents() {
         }}
       >
         <form onSubmit={onSubmitDelete}>
-          <Modal.Header>{t("delete-modal")}</Modal.Header>
+          <Modal.Header>
+            {t("actions.delete_entity", { entity: t("entities.parent") })}
+          </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("delete-modal-title")}
+                {t("modals.delete.title")}
                 <b>{getParentQuery.data?.data.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("delete-modal-message")}</p>
+                <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")}{" "}
-                <b>{getParentQuery.data?.data.name}</b>
+                {t("modals.delete.label", {
+                  item: getParentQuery.data?.data.name,
+                })}
               </p>
               <Input
                 type="text"
                 id="verfication"
                 name="verfication"
                 placeholder="John doe"
-                error={
-                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
-                }
+                error={!isVerficationMatch ? t("modals.delete.error") : null}
                 required
               />
             </div>
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
-              {t("delete-modal-delete-btn")}
+              {t("modals.delete.delete_button")}
             </button>
             <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("delete-modal-cancel-btn")}
+              {t("modals.delete.cancel_button")}
             </button>
           </Modal.Footer>
         </form>
@@ -1155,18 +1165,21 @@ export function ViewParents() {
         }}
       >
         <form onSubmit={onSubmitBlock}>
-          <Modal.Header>{t("block-modal")}</Modal.Header>
+          <Modal.Header>
+            {t("actions.block_entity", { entity: t("general.user") })}
+          </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("block-modal-title")} <b>{getParentQuery.data?.data.name}</b>
+                {t("modals.block.title")}{" "}
+                <b>{getParentQuery.data?.data.name}</b>
               </p>
               {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("delete-modal-message")}</p>
+                <p className="text-white">{t("modals.block.message")}</p>
               </div> */}
               {/* <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")}{" "}
+                {t("modals.block.label")}{" "}
                 <b>{getParentQuery.data?.data.name}</b>
               </p> */}
               {/* <Input
@@ -1185,10 +1198,10 @@ export function ViewParents() {
             <button type="submit" className="btn-danger !w-auto">
               {getParentQuery.data?.data.blocked == 0
                 ? t("block-modal-block-btn")
-                : t("block-modal-unblock-btn")}
+                : t("modals.block.unblock_button")}
             </button>
             <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("block-modal-cancel-btn")}
+              {t("modals.block.cancel_button")}
             </button>
           </Modal.Footer>
         </form>
@@ -1216,7 +1229,7 @@ export function ViewParents() {
 
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
-                  {t("delete-records")}
+                  {t("actions.delete_entity")}
                   <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
                 </button>
               </div>
@@ -1236,10 +1249,14 @@ export function ViewParents() {
                     onChange={() => handleCheck()}
                   />
                 </Table.HeadCell>
-                <Table.HeadCell>{t("parent-id")}</Table.HeadCell>
+                <Table.HeadCell>
+                  {t("form.fields.id", { entity: t("entities.parent") })}
+                </Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center gap-x-3">
-                    <span className="inline-block">{t("full-name")}</span>
+                    <span className="inline-block">
+                      {t("form.fields.full_name")}
+                    </span>
                     <div
                       className="flex flex-col"
                       onClick={() => handleSort("name")}
@@ -1255,13 +1272,13 @@ export function ViewParents() {
                     </div>
                   </div>
                 </Table.HeadCell>
-                <Table.HeadCell>{t("Childs")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("email")}</Table.HeadCell>
-                <Table.HeadCell>{fieldTrans("phone-number")}</Table.HeadCell>
-                <Table.HeadCell>{t("active-time")}</Table.HeadCell>
-                <Table.HeadCell>{t("active-deactivate")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.childrens")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.email")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.phone_number")}</Table.HeadCell>
+                <Table.HeadCell>{t("general.active_time")}</Table.HeadCell>
+                <Table.HeadCell>{t("status.active_deactivate")}</Table.HeadCell>
                 <Table.HeadCell className="w-0">
-                  <span className="w-full">Actions</span>
+                  <span className="w-full">{t("general.actions")}</span>
                 </Table.HeadCell>
               </Table.Head>
               <Table.Body
@@ -1302,7 +1319,7 @@ export function ViewParents() {
                         </>
                       }
                       label=""
-                      placeholder={fieldTrans("filter-all")}
+                      placeholder={t("general.all")}
                       value={filter.name}
                       name="search"
                       custom-style={{
@@ -1338,7 +1355,7 @@ export function ViewParents() {
                         </>
                       }
                       label=""
-                      placeholder={fieldTrans("filter-all")}
+                      placeholder={t("general.all")}
                       value={filter.childName}
                       name="search"
                       custom-style={{
@@ -1489,7 +1506,7 @@ export function ViewParents() {
                                   })
                                 )}
                               >
-                                {t("add-new-child")}
+                                {t("general.add_new_child")}
                               </p>
                             </Dropdown.Button>
                           </Dropdown>
@@ -1505,7 +1522,7 @@ export function ViewParents() {
                               }
                             >
                               <FaUser className="me-2" />
-                              {t("add-new-child")}
+                              {t("general.add_new_child")}
                             </div>
                           )}
                         </Table.Cell>
@@ -1617,12 +1634,12 @@ export function ViewParents() {
 
           <div className="flex w-full items-center justify-between px-5 py-4">
             <span className="text-gray-500 dark:text-gray-400">
-              {t("records-number")}{" "}
+              {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
                 {getParentsQuery.data?.data.from}-
                 {getParentsQuery.data?.data.to}
               </span>{" "}
-              {t("total-records")}{" "}
+              {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
                 {getParentsQuery.data?.data.total}
               </span>
@@ -1648,8 +1665,8 @@ export function ViewParents() {
                   !getParentsQuery.isPlaceholderData && setPage(page)
                 }
                 totalPages={getParentsQuery.data?.data.last_page ?? 1}
-                nextLabel={minSm ? t("next") : ""}
-                previousLabel={minSm ? t("previous") : ""}
+                nextLabel={minSm ? t("pagination.next") : ""}
+                previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{
                   pages: {
                     next: {

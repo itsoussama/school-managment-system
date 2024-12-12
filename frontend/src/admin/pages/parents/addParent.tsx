@@ -49,7 +49,6 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export default function AddParent() {
   const { t } = useTranslation();
-  const { t: fieldsTrans } = useTranslation("form-fields");
   const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -228,19 +227,21 @@ export default function AddParent() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {minSm ? t("home") : ""}
+            {minSm ? t("general.home") : ""}
           </Link>
         </Breadcrumb.Item>
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("parents")}
+              {t("entities.parents")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("new-parent")}</Breadcrumb.Item>
+        <Breadcrumb.Item>
+          {t("actions.add_entity", { entity: t("entities.parent") })}
+        </Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
@@ -259,7 +260,9 @@ export default function AddParent() {
         }}
         onClose={onCloseModal}
       >
-        <Modal.Header>{t("add-new-child")}</Modal.Header>
+        <Modal.Header>
+          {t("actions.new_entity", { entity: t("general.child") })}
+        </Modal.Header>
         <div className="flex max-h-[70vh] flex-col p-2">
           <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
             <Input
@@ -270,7 +273,7 @@ export default function AddParent() {
               }
               label=""
               onKeyUp={(e) => handleSearch(e.target)}
-              placeholder={fieldsTrans("filter-all")}
+              placeholder={t("general.all")}
               name="search"
               custom-style={{
                 inputStyle: "px-8 !py-1",
@@ -319,7 +322,7 @@ export default function AddParent() {
             className="btn-default !w-auto"
             onClick={onCloseModal}
           >
-            {fieldsTrans("accept")}
+            {t("general.accept")}
           </button>
           {/* <button className="btn-danger !w-auto" onClick={onCloseModal}>
             {fieldsTrans("decline")}
@@ -331,7 +334,7 @@ export default function AddParent() {
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("profile")}
+                {t("general.profile")}
               </h1>
             </div>
             <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
@@ -354,17 +357,19 @@ export default function AddParent() {
                   className="absolute left-0 top-0 cursor-pointer opacity-0"
                   onChange={handleImageUpload}
                 />
-                {fieldsTrans("upload-photo")}
+                {t("form.buttons.upload", {
+                  label: t("general.photo"),
+                })}
               </button>
               <div className="flex flex-col">
                 <span className="text-sm text-gray-700 dark:text-gray-500">
-                  {t("accepted-format")}:{" "}
+                  {t("form.general.accepted_format")}:{" "}
                   <span className="text-gray-500 dark:text-gray-400">
                     jpg, jpeg, png
                   </span>
                 </span>
                 <span className="text-sm text-gray-700 dark:text-gray-500">
-                  {t("maximum-size")}:{" "}
+                  {t("form.general.maximum_size")}:{" "}
                   <span className="text-gray-500 dark:text-gray-400">
                     1024 mb
                   </span>
@@ -376,7 +381,7 @@ export default function AddParent() {
           <div className="flex flex-[3] flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("parent-information")}
+                {t("information.parent_information")}
               </h1>
             </div>
             <form
@@ -388,8 +393,8 @@ export default function AddParent() {
                 type="text"
                 id="firstName"
                 name="firstName"
-                label={fieldsTrans("first-name")}
-                placeholder={fieldsTrans("first-name-placeholder")}
+                label={t("form.fields.first_name")}
+                placeholder={t("form.placeholders.first_name")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
@@ -397,8 +402,8 @@ export default function AddParent() {
                 type="text"
                 id="lastName"
                 name="lastName"
-                label={fieldsTrans("last-name")}
-                placeholder={fieldsTrans("last-name-placeholder")}
+                label={t("form.fields.last_name")}
+                placeholder={t("form.placeholders.last_name")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
@@ -406,8 +411,8 @@ export default function AddParent() {
                 type="text"
                 id="address"
                 name="address"
-                label={fieldsTrans("address")}
-                placeholder={fieldsTrans("address-placeholder")}
+                label={t("form.fields.address")}
+                placeholder={t("form.placeholders.address")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
                 custom-style={{ containerStyle: "col-span-full" }}
               />
@@ -416,7 +421,7 @@ export default function AddParent() {
                 type="tel"
                 id="phone"
                 name="phone"
-                label={fieldsTrans("phone-number")}
+                label={t("form.fields.phone_number")}
                 placeholder="06 00 00 00"
                 pattern="(06|05)[0-9]{2}[0-9]{4}"
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
@@ -426,13 +431,13 @@ export default function AddParent() {
                 type="email"
                 id="email"
                 name="email"
-                label={fieldsTrans("email")}
+                label={t("form.fields.email")}
                 placeholder="Johndoe@example.com"
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
               <MultiSelect
-                label={fieldsTrans("childrens")}
+                label={t("form.fields.childrens")}
                 name="childrens"
                 externalSelectedItems={dataChild}
                 onSelectItem={(items) => handleSelectedChild(items)}
@@ -458,14 +463,18 @@ export default function AddParent() {
                     className="btn-default flex h-8 items-center justify-center"
                   >
                     <FaPlus size={12} className="me-2" />
-                    {t("add-new-child")}
+                    {t("actions.new_entity", {
+                      entity: t("form.fields.childrens"),
+                    })}
                   </Link>
                   <button
                     className="btn-default flex h-8 items-center justify-center"
                     onClick={() => setOpenModal(true)}
                   >
                     <FaPlus size={12} className="me-2" />
-                    {t("existing-child")}
+                    {t("actions.existing_entity", {
+                      entity: t("form.fields.childrens"),
+                    })}
                   </button>
                 </div>
               </MultiSelect>
@@ -476,7 +485,7 @@ export default function AddParent() {
                 type="password"
                 id="password"
                 name="password"
-                label={fieldsTrans("password")}
+                label={t("form.fields.password")}
                 placeholder="●●●●●●●"
                 custom-style={{
                   inputStyle: "px-10",
@@ -491,7 +500,7 @@ export default function AddParent() {
                 type="password"
                 id="password_confirmation"
                 name="password_confirmation"
-                label={fieldsTrans("confirm-password")}
+                label={t("form.fields.confirm_password")}
                 placeholder="●●●●●●●"
                 custom-style={{
                   inputStyle: "px-10",
@@ -503,7 +512,7 @@ export default function AddParent() {
               />
 
               <button className="btn-default m-0 mt-auto" type="submit">
-                {fieldsTrans("create-account-btn")}
+                {t("form.buttons.create", { label: t("general.account") })}
               </button>
             </form>
           </div>

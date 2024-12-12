@@ -24,7 +24,6 @@ const chartSeries = [
 
 function Dashboard() {
   const { t } = useTranslation();
-  const { t: tfield } = useTranslation("form-fields");
 
   const themeChange = useAppSelector(
     (state) => state.themeModeSlice.themeMode as "light" | "dark",
@@ -46,12 +45,17 @@ function Dashboard() {
         >
           <Breadcrumb.Item icon={FaHome} />
 
-          <Breadcrumb.Item>{t("overview")}</Breadcrumb.Item>
+          <Breadcrumb.Item>{t("general.overview")}</Breadcrumb.Item>
         </Breadcrumb>
         <Link to={"/configuration/data-management"}>
           <button className="btn-default m-0 mt-auto flex items-center gap-x-2">
             <FaFileExport />
-            {tfield("btn-export")}
+            {t("form.buttons.export", {
+              label:
+                t("determiners.definite.plural") +
+                " " +
+                t("general.data_other"),
+            })}
           </button>
         </Link>
       </div>

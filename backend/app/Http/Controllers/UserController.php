@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
@@ -17,7 +18,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin')) || auth()->user()->hasRole(config('roles.teacher'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin')) || auth()->user()->hasRole(config('roles.teacher'))) {
             $perPage = $request->input('per_page', 5);
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
@@ -31,7 +32,7 @@ class UserController extends Controller
     }
     public function teachers(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
             $perPage = $request->input('per_page', 5);
             // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
@@ -83,7 +84,7 @@ class UserController extends Controller
     }
     public function students(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
             $perPage = $request->input('per_page', 5);
             // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
@@ -122,10 +123,42 @@ class UserController extends Controller
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
     }
+    public function admins(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+            $perPage = $request->input('per_page', 5);
+            // Get sort parameters from request
+            $sortColumn = $request->input('sort_column', 'id');
+            $sortDirection = $request->input('sort_direction', 'asc');
+            $school_id = $request->input('school_id');
+            $users = User::with('school', 'role', 'subjects', 'grades', 'guardian')
+                ->where('school_id', $school_id)
+                ->whereHas(
+                    'role',
+                    function ($query) {
+                        $query->where('name', config('roles.admin'));
+                    }
+
+                )
+                ->when(request('name'), function ($query, $name) {
+                    if (!empty($name)) {
+                        $query->where('name', 'LIKE', '%' . $name . '%');
+                    }
+                })
+                ->orderBy($sortColumn, $sortDirection);
+
+            if ($perPage == -1) {
+                return response()->json($users->get(), Response::HTTP_OK);
+            }
+            return response()->json($users->paginate($perPage), Response::HTTP_OK);
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
 
     public function parents(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
             $perPage = $request->input('per_page', 5);
             // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
@@ -166,7 +199,7 @@ class UserController extends Controller
 
     public function addParent(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
             try {
                 $validation = $request->validate([
                     'childrens' => 'required|array|exists:users,id',
@@ -210,7 +243,7 @@ class UserController extends Controller
     // this function recive an array of existing children and associate to relative parent
     public function assignChilds(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
 
             $validation = $request->validate([
                 'parent_id' => 'required|exists:users,id',
@@ -234,7 +267,7 @@ class UserController extends Controller
 
     public function assignParent(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
 
             $validation = $request->validate([
                 'child_id' => 'required|exists:users,id',
@@ -254,11 +287,48 @@ class UserController extends Controller
         }
     }
 
+    public function addAdmin(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+            try {
+                $validation = $request->validate([
+                    'childrens' => 'required|array|exists:users,id',
+                    'name' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255|unique:users',
+                    'phone' => 'required|string|max:255',
+                    'password' => 'required|string|min:8|confirmed',
+                    'school_id' => 'required|exists:schools,id',
+                    'roles' => 'required|array',
+                    'roles.*' => 'exists:roles,id',
+                ]);
+                if ($validation) {
+                    $user = User::create([
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'phone' => $request->phone,
+                        'password' => bcrypt($request->password),
+                    ]);
+                    $user->school()->associate($request->school_id);
+                    $user->role()->sync($request->roles);
+                    $user->save();
+                } else {
+                    return $request;
+                }
+
+
+                // return response()->json($user, Response::HTTP_CREATED);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json($e->errors(), 422);
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
     // Show the form for creating a new resource (not typically used in APIs)
     public function store(Request $request)
     {
 
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
             try {
                 $validation = $request->validate([
                     'name' => 'required|string|max:255',
@@ -316,7 +386,7 @@ class UserController extends Controller
     // Display the specified resource
     public function show(User $user)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
             $user->load('school', 'role', 'subjects', 'grades');
             $role = request('role');
             switch ($role) {
@@ -338,7 +408,90 @@ class UserController extends Controller
     // Update the specified resource in storage
     public function update(Request $request, User $user)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+
+            try {
+
+                //! if your data not changeing
+                // To send request using put method, you have to :
+                /**
+                 * change the Put method to POST
+                 * add new data _method: PUT
+                 */
+
+                $validation = $request->validate([
+                    'name' => 'nullable|string|max:255',
+                    'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
+                    'phone' => 'string|max:255',
+                    'password' => 'nullable|string|min:8|confirmed',
+                    'school_id' => 'nullable|exists:schools,id',
+                    'roles' => 'nullable|array',
+                    'roles.*' => 'exists:roles,id',
+                    'subjects' => 'nullable|array',
+                    'subjects.*' => 'exists:subjects,id',
+                    'grades' => 'nullable|array',
+                    'grades.*' => 'exists:grades,id',
+                    'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                ]);
+
+                if ($validation) {
+                    $user->name = $request->input('name', $user->name);
+                    $user->email = $request->input('email', $user->email);
+                    $user->phone = $request->input('phone', $user->phone);
+
+                    if ($request->filled('password')) {
+                        $user->password = bcrypt($request->input('password'));
+                    }
+
+                    // Update the school_id if provided
+                    if ($request->filled('school_id')) {
+                        $user->school_id = $request->input('school_id');
+                    }
+
+                    if ($request->hasFile('image')) {
+                        if ($user->imagePath) {
+                            if (Storage::disk('public')->exists($user->imagePath)) {
+                                Storage::disk('public')->delete($user->imagePath);
+                            }
+                        }
+                        $path = $request->file('image')->store('images', 'public');
+                        $user->imagePath = $path;
+                    }
+
+                    if ($user->role()->hasRole(config('roles.admin'))) {
+                        return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
+                    }
+                    $user->save();
+
+                    // Sync roles if provided
+                    if ($request->has('roles')) {
+                        $user->role()->sync($request->input('roles'));
+                    }
+                    if ($request->has('subjects')) {
+                        $user->subjects()->sync($request->input('subjects'));
+                        $user->grades()->sync($request->grades);
+                    }
+                    if ($request->has('grades')) {
+                        $user->grades()->sync($request->input('grades'));
+                    }
+
+                    // Load relationships and return response
+                    $user->load('school', 'role', 'subjects', 'grades');
+
+                    return response()->json($user, Response::HTTP_OK);
+                } else {
+                    return response()->json(['error' => 'Validation Error'], 422);
+                }
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json($e->errors(), 422);
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+    public function update_admin(Request $request, User $user)
+    {
+        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
             try {
 
                 //! if your data not changeing
@@ -418,7 +571,29 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+
+            if (!empty($user->imagePath)) {
+                if (Storage::disk('public')->exists($user->imagePath)) {
+                    Storage::disk('public')->delete($user->imagePath);
+                }
+            }
+            if ($user->role()->hasRole(config('roles.admin'))) {
+                return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
+            }
+
+            $user->role()->detach();
+            $user->delete();
+
+
+            return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+    public function destroy_admin(User $user)
+    {
+        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
 
             if (!empty($user->imagePath)) {
                 if (Storage::disk('public')->exists($user->imagePath)) {
@@ -460,10 +635,27 @@ class UserController extends Controller
     }
     public function unblockUser(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
             try {
-                $userStatus = User::whereId($request->user_id)->update(['blocked' => false]);
-                return response()->json(['success' => 'Users unblocked Successfully', 'userStatus' => $userStatus]);
+                if (auth()->user()->hasRole(config('roles.admin'))) {
+                    $userStatus = User::whereId($request->user_id)
+                    ->whereDoesntHave('role', function ($query) {
+                        $query->whereIn('name', [
+                            config('roles.admin'),
+                            config('roles.admin_staff'),
+                        ]);
+                    })
+                    ->update(['blocked' => false]);
+                    if (!$userStatus) {
+                        return response()->json(['error' => 'Error while blocking user, please check if he is not an admin', 'userStatus' => $userStatus], Response::HTTP_FORBIDDEN);
+
+                    }else {
+                        return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
+                    }
+                } else if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+                    $userStatus = User::whereId($request->user_id)->update(['blocked' => false]);
+                    return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
+                }
             } catch (ValidationException $e) {
                 return response()->json([
                     'message' => 'Validation failed for some rows.',
@@ -476,7 +668,59 @@ class UserController extends Controller
     }
     public function blockUser(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+            try {
+                if (auth()->user()->hasRole(config('roles.admin'))) {
+                    $userStatus = User::whereId($request->user_id)
+                    ->whereDoesntHave('role', function ($query) {
+                        $query->whereIn('name', [
+                            config('roles.admin'),
+                            config('roles.admin_staff'),
+                        ]);
+                    })
+                    ->update(['blocked' => true]);
+                    if (!$userStatus) {
+                        return response()->json(['error' => 'Error while blocking user, please check if he is not an admin', 'userStatus' => $userStatus], Response::HTTP_FORBIDDEN);
+
+                    }else {
+                        return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
+                    }
+                } else if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+                    $userStatus = User::whereId($request->user_id)->update(['blocked' => true]);
+                    return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
+                }
+
+            } catch (ValidationException $e) {
+                return response()->json([
+                    'message' => 'Validation failed for some rows.',
+                    'error' => $e->errors()
+                ], 422);
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+    public function unblockAdmin(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+            try {
+
+                $userStatus = User::whereId($request->user_id)->update(['blocked' => false]);
+
+                return response()->json(['success' => 'Users unblocked Successfully', 'userStatus' => $userStatus]);
+            } catch (ValidationException $e) {
+                return response()->json([
+                    'message' => 'Validation failed for some rows.',
+                    'error' => $e->errors()
+                ], 422);
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+    public function blockAdmin(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
             try {
                 $userStatus = User::whereId($request->user_id)->update(['blocked' => true]);
                 return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);

@@ -24,11 +24,12 @@ interface Section {
   label: string;
 }
 
-interface Grade extends Section {}
+interface Grade extends Section {
+  section_id: number;
+}
 
 export default function GradesSections() {
   const { t } = useTranslation();
-  const { t: fieldsTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [openModal, setOpenModal] = useState<Modal>();
@@ -38,8 +39,8 @@ export default function GradesSections() {
   ]);
 
   const [gradeLevels, setGradeLevels] = useState<Array<Grade>>([
-    { id: 1, label: "Grade" },
-    { id: 2, label: "Grade" },
+    { id: 1, label: "Grade", section_id: 1 },
+    { id: 2, label: "Grade", section_id: 1 },
   ]);
 
   const changeGradeLevels = (e: ChangeEvent) => {
@@ -82,7 +83,11 @@ export default function GradesSections() {
 
     setGradeLevels((prev) => [
       ...prev,
-      { id: gradeLevels.length + 1, label: target.gradeLevel.value },
+      {
+        id: gradeLevels.length + 1,
+        label: target.gradeLevel.value,
+        section_id: 1,
+      },
     ]);
 
     onCloseModal();
@@ -131,26 +136,26 @@ export default function GradesSections() {
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             to="/"
           >
-            {minSm ? t("home") : ""}
+            {minSm ? t("general.home") : ""}
           </Link>
         </Breadcrumb.Item>
         {minSm ? (
           <>
             <Breadcrumb.Item>
               <span className="text-gray-600 dark:text-gray-300">
-                {t("configuration")}
+                {t("entities.configurations")}
               </span>
             </Breadcrumb.Item>
             <Breadcrumb.Item>
               <span className="text-gray-600 dark:text-gray-300">
-                {t("school")}
+                {t("entities.school")}
               </span>
             </Breadcrumb.Item>
           </>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("grades-sections")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("entities.grades_sections")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
@@ -170,15 +175,22 @@ export default function GradesSections() {
         }}
       >
         <form onSubmit={onSubmitGradeLevel}>
-          <Modal.Header>{t("modal")}</Modal.Header>
+          <Modal.Header>
+            {t("actions.add_entity", {
+              entity:
+                t("determiners.indefinite.masculine") +
+                " " +
+                t("form.fields.grade_level"),
+            })}
+          </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <Input
                 type="text"
                 id="gradeLevel"
                 name="gradeLevel"
-                label={fieldsTrans("grade-levels")}
-                placeholder={fieldsTrans("grade-levels-placeholder")}
+                label={t("form.fields.grade_level")}
+                placeholder={t("form.fields.grade_level")}
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
             </div>
@@ -192,8 +204,8 @@ export default function GradesSections() {
                   striped
                 >
                   <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
-                    <Table.HeadCell>{t("teachers")}</Table.HeadCell>
-                    <Table.HeadCell>{fieldsTrans("students")}</Table.HeadCell>
+                    <Table.HeadCell>{t("entities.teachers")}</Table.HeadCell>
+                    <Table.HeadCell>{t("entities.students")}</Table.HeadCell>
 
                     {/* <Table.HeadCell className="w-0">
                   <span className="w-full">Actions</span>
@@ -232,7 +244,9 @@ export default function GradesSections() {
                             alt="profile"
                           />
 
-                          <span className="pointer-events-none">name</span>
+                          <span className="pointer-events-none">
+                            {t("form.fields.full_name")}
+                          </span>
                         </div>
                       </Table.Cell>
                       <Table.Cell>
@@ -316,10 +330,10 @@ export default function GradesSections() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-default !w-auto">
-              {fieldsTrans("accept")}
+              {t("general.accept")}
             </button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {fieldsTrans("decline")}
+              {t("general.decline")}
             </button>
           </Modal.Footer>
         </form>
@@ -338,14 +352,17 @@ export default function GradesSections() {
             >
               <Accordion.section>
                 <div className="flex min-h-36 flex-row gap-x-2 overflow-x-auto p-2">
-                  {gradeLevels.map((gradeLevel, key) => (
-                    <InfoCard
-                      title={gradeLevel.label}
-                      key={key}
-                      onDelete={() => deleteGrade(gradeLevel.id)}
-                      index={gradeLevel.id}
-                    />
-                  ))}
+                  {gradeLevels.map(
+                    (gradeLevel, key) =>
+                      gradeLevel.section_id === section.id && (
+                        <InfoCard
+                          title={gradeLevel.label}
+                          key={key}
+                          onDelete={() => deleteGrade(gradeLevel.id)}
+                          index={gradeLevel.id}
+                        />
+                      ),
+                  )}
                   <div
                     className="flex w-80 min-w-60 cursor-pointer flex-col items-center justify-center gap-y-1 rounded-xs border border-dashed border-gray-400 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:border-gray-500 dark:bg-gray-750 dark:text-gray-500 dark:hover:bg-gray-700"
                     onClick={() =>
@@ -357,7 +374,14 @@ export default function GradesSections() {
                     }
                   >
                     <FaPlus className="pointer-events-none" />
-                    <span className="pointer-events-none">Add Grade Level</span>
+                    <span className="pointer-events-none">
+                      {t("actions.add_entity", {
+                        entity:
+                          t("determiners.indefinite.masculine") +
+                          " " +
+                          t("form.fields.grade_level"),
+                      })}
+                    </span>
                   </div>
                 </div>
               </Accordion.section>
@@ -373,7 +397,14 @@ export default function GradesSections() {
             }
           >
             <FaPlus className="pointer-events-none" />
-            <span className="pointer-events-none">Add Section</span>
+            <span className="pointer-events-none">
+              {t("actions.add_entity", {
+                entity:
+                  t("determiners.indefinite.feminine") +
+                  " " +
+                  t("form.fields.section"),
+              })}
+            </span>
           </div>
         </div>
       </TransitionAnimation>

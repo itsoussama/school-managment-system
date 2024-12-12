@@ -80,7 +80,7 @@ const customTooltip = {
       base: "group/row group",
       hovered: "hover:bg-gray-50 dark:hover:bg-gray-600",
       striped:
-        "odd:bg-white even:bg-gray-100 odd:dark:bg-gray-800 even:dark:bg-gray-700",
+        "odd:bg-white even:bg-gray-50 odd:dark:bg-gray-800 even:dark:bg-gray-700",
     },
   }
 

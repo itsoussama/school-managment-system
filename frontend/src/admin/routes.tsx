@@ -13,6 +13,8 @@ import { ViewResources } from "./pages/resources/viewResources";
 import MaintenanceRequests from "./pages/resources/maintenanceRequests";
 import GeneralSettings from "./pages/configuration/school/generalSettings";
 import GradesSections from "./pages/configuration/school/gradesSections";
+import Timetable from "./pages/configuration/school/timetable";
+import Subjects from "./pages/configuration/school/subjects";
 
 export const AdminRouter = {
   path: "/",
@@ -96,6 +98,14 @@ export const AdminRouter = {
             {
               path: "grades-and-sections",
               element: <GradesSections />,
+            },
+            {
+              path: "subjects",
+              element: <Subjects />,
+            },
+            {
+              path: "timetable",
+              element: <Timetable />,
             },
           ],
         },

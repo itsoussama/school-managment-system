@@ -16,7 +16,7 @@ class UserRoleSeeder extends Seeder
     public function run()
     {
         // Create roles
-        $roles = ['Administrator', 'Teacher', 'Student', 'Parent'];
+        $roles = ['Administrator Staff', 'Administrator','Teacher', 'Student', 'Parent'];
         $schools = [];
 
         // Create schools
@@ -56,6 +56,18 @@ class UserRoleSeeder extends Seeder
         ]);
 
         $admin->role()->attach(Role::where('name', 'Administrator')->first()->id);
+
+        $admin_staff = User::create([
+            'name' => 'admin_staff',
+            'email' => 'admin_staff@example.com',
+            'phone' => fake()->phoneNumber(),
+            // 'email_verified_at' => now(),
+            'password' => Hash::make('password'),
+            'remember_token' => Str::random(10),
+            'school_id' => 1,
+        ]);
+
+        $admin_staff->role()->attach(Role::where('name', 'Administrator Staff')->first()->id);
 
         User::each(function ($user) {
 

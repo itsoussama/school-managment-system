@@ -45,7 +45,6 @@ interface File {
 
 export default function AddTeacher() {
   const { t } = useTranslation();
-  const { t: fieldsTrans } = useTranslation("form-fields");
 
   const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
@@ -158,26 +157,28 @@ export default function AddTeacher() {
           to="/"
         >
           <Breadcrumb.Item icon={FaHome}>
-            {minSm ? t("home") : ""}
+            {minSm ? t("general.home") : ""}
           </Breadcrumb.Item>
         </Link>
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("teachers")}
+              {t("entities.teachers")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("new-teacher")}</Breadcrumb.Item>
+        <Breadcrumb.Item>
+          {t("actions.new_entity", { entity: t("entities.teacher") })}
+        </Breadcrumb.Item>
       </Breadcrumb>
       <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("profile")}
+                {t("general.profile")}
               </h1>
             </div>
             <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
@@ -200,17 +201,17 @@ export default function AddTeacher() {
                   className="absolute left-0 top-0 cursor-pointer opacity-0"
                   onChange={handleImageUpload}
                 />
-                {fieldsTrans("upload-photo")}
+                {t("form.buttons.upload", { label: t("general.photo") })}
               </button>
               <div className="flex flex-col">
                 <span className="text-sm text-gray-700 dark:text-gray-500">
-                  {t("accepted-format")}:{" "}
+                  {t("form.general.accepted_format")}:{" "}
                   <span className="text-gray-500 dark:text-gray-400">
                     jpg, jpeg, png
                   </span>
                 </span>
                 <span className="text-sm text-gray-700 dark:text-gray-500">
-                  {t("maximum-size")}:{" "}
+                  {t("form.general.maximum_size")}:{" "}
                   <span className="text-gray-500 dark:text-gray-400">
                     1024 mb
                   </span>
@@ -222,7 +223,7 @@ export default function AddTeacher() {
           <div className="flex flex-[3] flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("teacher-information")}
+                {t("information.personal_information")}
               </h1>
             </div>
             <form
@@ -234,8 +235,8 @@ export default function AddTeacher() {
                 type="text"
                 id="firstName"
                 name="firstName"
-                label={fieldsTrans("first-name")}
-                placeholder={fieldsTrans("first-name-placeholder")}
+                label={t("form.fields.first_name")}
+                placeholder={t("form.placeholders.first_name")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
@@ -243,8 +244,8 @@ export default function AddTeacher() {
                 type="text"
                 id="lastName"
                 name="lastName"
-                label={fieldsTrans("last-name")}
-                placeholder={fieldsTrans("last-name-placeholder")}
+                label={t("form.fields.last_name")}
+                placeholder={t("form.placeholders.last_name")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
@@ -252,8 +253,8 @@ export default function AddTeacher() {
                 type="text"
                 id="address"
                 name="address"
-                label={fieldsTrans("address")}
-                placeholder={fieldsTrans("address-placeholder")}
+                label={t("form.fields.address")}
+                placeholder={t("form.placeholders.address")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
                 custom-style={{ containerStyle: "col-span-full" }}
               />
@@ -262,7 +263,7 @@ export default function AddTeacher() {
                 type="tel"
                 id="phone"
                 name="phone"
-                label={fieldsTrans("phone-number")}
+                label={t("form.fields.phone_number")}
                 placeholder="06 00 00 00"
                 pattern="(06|05)[0-9]{2}[0-9]{4}"
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
@@ -272,13 +273,13 @@ export default function AddTeacher() {
                 type="email"
                 id="email"
                 name="email"
-                label={fieldsTrans("email")}
-                placeholder={fieldsTrans("email-placeholder")}
+                label={t("form.fields.email")}
+                placeholder={t("form.fields.email")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
               <MultiSelect
-                label={fieldsTrans("subjects")}
+                label={t("form.fields.subjects")}
                 name="subjects"
                 onSelectItem={(items) =>
                   handleChange(
@@ -301,7 +302,7 @@ export default function AddTeacher() {
               </MultiSelect>
 
               <MultiSelect
-                label={fieldsTrans("grade-levels")}
+                label={t("form.fields.grade_levels")}
                 name="grades"
                 onSelectItem={(items) =>
                   handleChange(
@@ -329,7 +330,7 @@ export default function AddTeacher() {
                 type="password"
                 id="password"
                 name="password"
-                label={fieldsTrans("password")}
+                label={t("form.fields.password")}
                 placeholder="●●●●●●●"
                 custom-style={{
                   inputStyle: "px-10",
@@ -344,7 +345,7 @@ export default function AddTeacher() {
                 type="password"
                 id="password_confirmation"
                 name="password_confirmation"
-                label={fieldsTrans("confirm-password")}
+                label={t("form.fields.confirm_password")}
                 placeholder="●●●●●●●"
                 custom-style={{
                   inputStyle: "px-10",
@@ -356,7 +357,7 @@ export default function AddTeacher() {
               />
 
               <button className="btn-default m-0 mt-auto" type="submit">
-                {fieldsTrans("create-account-btn")}
+                {t("form.buttons.create", { label: t("general.account") })}
               </button>
             </form>
           </div>

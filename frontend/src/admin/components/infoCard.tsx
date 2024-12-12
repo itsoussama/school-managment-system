@@ -2,6 +2,7 @@ import { FaPen } from "react-icons/fa";
 import { colorPalette } from "../utils/chart";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Dropdown from "@src/components/dropdown";
+import { colors } from "../utils/colors";
 
 interface InfoCardType {
   index: number;
@@ -9,53 +10,6 @@ interface InfoCardType {
   onEdit?: () => void;
   onDelete?: () => void;
 }
-
-type CardColor =
-  | "gray"
-  | "zinc"
-  | "neutral"
-  | "stone"
-  | "red"
-  | "orange"
-  | "amber"
-  | "yellow"
-  | "lime"
-  | "green"
-  | "emerald"
-  | "teal"
-  | "cyan"
-  | "sky"
-  | "blue"
-  | "indigo"
-  | "violet"
-  | "purple"
-  | "fuchsia"
-  | "pink"
-  | "rose";
-
-const colors: Array<CardColor> = [
-  "red",
-  "orange",
-  "amber",
-  "yellow",
-  "lime",
-  "green",
-  "emerald",
-  "teal",
-  "cyan",
-  "sky",
-  "blue",
-  "indigo",
-  "violet",
-  "purple",
-  "fuchsia",
-  "pink",
-  "rose",
-  "gray",
-  "zinc",
-  "neutral",
-  "stone",
-];
 
 export default function InfoCard({
   index,

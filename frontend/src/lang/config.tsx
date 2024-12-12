@@ -9,10 +9,16 @@ i18n
   .init({
     resources,
     lng: "fr",
+    fallbackLng: "en",
     interpolation: {
-      escapeValue: false,
+      escapeValue: true,
+    },
+    missingInterpolationHandler() {
+      return "";
     },
   });
+
+console.log(i18n);
 
 export default i18n;
 

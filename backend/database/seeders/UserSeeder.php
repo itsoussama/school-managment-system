@@ -37,7 +37,7 @@ class UserSeeder extends Seeder
         // });
 
         User::factory()
-            ->has(Role::factory()->sequence(['name' => 'Teacher'], ['name' => 'Student'], ['name' => 'Administrator'], ['name' => 'Parent']))
+            ->has(Role::factory()->sequence(['name' => 'Teacher'], ['name' => 'Student'], ['name' => 'Administrator'], ['name' => 'Administrator Staff'], ['name' => 'Parent']))
             ->for(School::factory())
             ->count(2)
             ->create()
@@ -55,5 +55,6 @@ class UserSeeder extends Seeder
                 }
             });
         User::factory(['name' => 'admin', 'email' => 'admin@example.com', 'school_id' => 1])->has(Role::factory(['name' => 'Administrator']))->createOne();
+        User::factory(['name' => 'admin_staff', 'email' => 'admin_staff@example.com', 'school_id' => 1])->has(Role::factory(['name' => 'Administrator Staff']))->createOne();
     }
 }
