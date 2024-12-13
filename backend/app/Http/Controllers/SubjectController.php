@@ -18,8 +18,13 @@ class SubjectController extends Controller
         $perPage = $request->input('per_page', 5);
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $subjects = Subject::orderBy($sortColumn, $sortDirection)->paginate($perPage);
-        return response()->json($subjects);
+        $subjects = Subject::orderBy($sortColumn, $sortDirection);
+
+        if ($perPage == -1) {
+            return response()->json($subjects->get(), Response::HTTP_OK);
+        }
+
+        return response()->json($subjects->paginate($perPage));
     }
 
     /**

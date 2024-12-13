@@ -1,7 +1,7 @@
 import { colorPalette } from "./colors";
 
 
-  const chartOptions = (mode: 'dark' | 'light') =>{ return {
+  const chartOptions = (mode: 'dark' | 'light' | 'auto') =>{ return {
     chart: {
       toolbar: {
         show: false,
@@ -44,7 +44,7 @@ import { colorPalette } from "./colors";
     },
     grid: {
       show: true,
-      borderColor: mode === "dark" ? colorPalette.gray[700] : colorPalette.gray[200],
+      borderColor: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[700] : colorPalette.gray[200] : mode === "dark" ? colorPalette.gray[700] : colorPalette.gray[200],
       strokeDashArray: 0,
       xaxis: {
         lines: {
@@ -61,7 +61,7 @@ import { colorPalette } from "./colors";
     legend: {
       show: true,
       labels: {
-        colors: mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[600],
+        colors: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[500] : colorPalette.gray[600] : mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[600],
         useSeriesColors: false,
       },
       markers: {
@@ -99,13 +99,13 @@ import { colorPalette } from "./colors";
       labels: {
         // ? Change Label style xaxis
         style: {
-          colors: mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[500],
+          colors: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[500] : colorPalette.gray[500] : mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[500],
         },
       },
       // ? Change border style xaxis
       axisBorder: {
         show: true,
-        color: mode === "dark" ? colorPalette.gray[600] : colorPalette.gray[300],
+        color: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[600] : colorPalette.gray[300] : mode === "dark" ? colorPalette.gray[600] : colorPalette.gray[300],
         height: 1,
         width: "100%",
         offsetX: 0,
@@ -119,7 +119,7 @@ import { colorPalette } from "./colors";
       crosshairs: {
         show: true,
         stroke: {
-          color: mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[400],
+          color: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[500] : colorPalette.gray[400] :  mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[400],
           width: 0,
           dashArray: 0,
         },

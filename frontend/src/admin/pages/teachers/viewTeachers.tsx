@@ -255,9 +255,14 @@ export function ViewTeachers() {
     enabled: !!openModal?.id,
   });
 
-  const getSubjectsQuery = useQuery({
-    queryKey: ["getSubjects"],
-    queryFn: getSubjects,
+  const getAllSubjectsQuery = useQuery({
+    queryKey: [
+      "getAllSubjects",
+      // filter?.name,
+      // filter?.subject,
+      // filter?.gradelevel,
+    ],
+    queryFn: () => getSubjects(1, -1, undefined, undefined, admin.school_id),
   });
 
   const getGradesQuery = useQuery({
@@ -1371,7 +1376,7 @@ export function ViewTeachers() {
                       >
                         {t("general.all")}
                       </option>
-                      {getSubjectsQuery.data?.data.data.map(
+                      {getAllSubjectsQuery.data?.map(
                         (subject: Subject, index: number) => (
                           <option key={index} value={subject.id}>
                             {subject.name}

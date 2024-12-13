@@ -165,9 +165,26 @@ const deleteUser = async (id: number) => {
   return response;
 };
 
-const getSubjects = async () => {
-  const response = await axiosApi.get("/api/subjects/");
-  return response;
+const getSubjects = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  schoolId: number,
+) => {
+  const response = await axiosApi.get(
+    "/api/subjects?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&school_id=" +
+      schoolId,
+  );
+  return response.data;
 };
 
 const getGrades = async () => {

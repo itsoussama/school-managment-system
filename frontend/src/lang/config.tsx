@@ -12,13 +12,19 @@ i18n
     fallbackLng: "en",
     interpolation: {
       escapeValue: true,
+      alwaysFormat: true,
+      skipOnVariables: true,
+      format: (value, _, lng) => {
+        if (lng === "fr") {
+          return value?.toLowerCase();
+        }
+        return value;
+      },
     },
     missingInterpolationHandler() {
       return "";
     },
   });
-
-console.log(i18n);
 
 export default i18n;
 

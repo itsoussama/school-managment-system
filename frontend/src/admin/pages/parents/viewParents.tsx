@@ -205,7 +205,6 @@ export function ViewParents() {
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
-  const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
 
   const getAllParentsQuery = useQuery({
@@ -1197,7 +1196,7 @@ export function ViewParents() {
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
               {getParentQuery.data?.data.blocked == 0
-                ? t("block-modal-block-btn")
+                ? t("modals.block.block_button")
                 : t("modals.block.unblock_button")}
             </button>
             <button className="btn-outline !w-auto" onClick={onCloseModal}>
