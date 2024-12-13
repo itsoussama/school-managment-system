@@ -40,7 +40,33 @@
                 "date": "Date",
                 "social": "Social",
                 "event": "Event",
-                "events": "Events"
+                "events": "Events",
+                "filter": "Filter",
+                "sign_out": "Sign out",
+                "changes": "Changes",
+                "change": "Change"
+            },
+            "determiners": {
+                "definite": {
+                    "masculine": "",
+                    "feminine": "",
+                    "default": "",
+                    "plural": ""
+                },
+                "indefinite": {
+                    "masculine": "",
+                    "feminine": "",
+                    "plural": {
+                        "masculine": "",
+                        "feminine": "",
+                        "default": ""
+                    }
+                },
+                "partitive": {
+                    "masculine": "",
+                    "feminine": "",
+                    "default": ""
+                }
             },
             "information": {
                 "parent_information": "Parent Information",
@@ -69,7 +95,7 @@
                 "timetable": "Timetable",
                 "items": "Items",
                 "item": "Item",
-                "filter": "Filter"
+                "preference": "Preference"
             },
             "actions": {
                 "add_entity": "Add {{entity}}",
@@ -79,7 +105,8 @@
                 "edit_entity": "Edit {{entity}}",
                 "delete_entity": "Delete {{entity}}",
                 "block_entity": "Block {{entity}}",
-                "existing_entity": "Existing {{entity}}"
+                "existing_entity": "Existing {{entity}}",
+                "save_entity": "Save {{entity}}"
             },
             "modals": {
                 "delete": {
@@ -100,7 +127,12 @@
             "form": {
                 "general": {
                     "accepted_format": "Accepted Format",
-                    "maximum_size": "Maximum Size"
+                    "maximum_size": "Maximum Size",
+                    "french": "French",
+                    "english": "English",
+                    "system_preferred": "System Preferred",
+                    "light": "Light",
+                    "dark": "Dark"
                 },
                 "fields": {
                     "id": "{{entity}} ID",
@@ -138,7 +170,12 @@
                     "social_media": "Social Media",
                     "group": "Group",
                     "sections": "Sections",
-                    "section": "Section"
+                    "section": "Section",
+                    "reduce_motion": "Reduce Animations",
+                    "language": "Language",
+                    "date_time_format": "Date and Time Format",
+                    "theme": "Theme",
+                    "font_size": "Font Size"
                 },
                 "placeholders": {
                     "first_name": "Enter first name",
@@ -222,7 +259,10 @@
                 "social": "Réseau social",
                 "event": "Événement",
                 "events": "Événements",
-                "filter": "Filtre"
+                "filter": "Filtre",
+                "sign_out": "Se déconnecter",
+                "changes": "Modifications",
+                "change": "Modification"
             },
             "determiners": {
                 "definite": {
@@ -252,7 +292,7 @@
                 "personal_information": "Informations personnelles",
                 "academic_information": "Informations académiques",
                 "contact_information": "Informations de contact",
-                "shcool_information": "Informations sur l'école"
+                "school_information": "Informations sur l'école"
             },
             "entities": {
                 "teachers": "Enseignants",
@@ -272,7 +312,8 @@
                 "requests": "Demandes de maintenance",
                 "request": "Demande de maintenance",
                 "items": "Articles",
-                "item": "Article"
+                "item": "Article",
+                "preference": "Préférence"
             },
             "actions": {
                 "add_entity": "Ajouter {{entity}}",
@@ -282,7 +323,8 @@
                 "edit_entity": "Modifier {{entity}}",
                 "delete_entity": "Supprimer {{entity}}",
                 "block_entity": "Bloquer {{entity}}",
-                "existing_entity": "{{entity}} existant"
+                "existing_entity": "{{entity}} existant",
+                "save_entity": "Enregistrer {{entity}}"
             },
             "modals": {
                 "delete": {
@@ -303,7 +345,12 @@
             "form": {
                 "general": {
                     "accepted_format": "Formats acceptés",
-                    "maximum_size": "Taille maximale"
+                    "maximum_size": "Taille maximale",
+                    "french": "French",
+                    "english": "English",
+                    "system_preferred": "System Preferred",
+                    "light": "Light",
+                    "dark": "Dark"
                 },
                 "fields": {
                     "id": "ID {{entity}}",
@@ -341,7 +388,12 @@
                     "social_media": "Réseau social",
                     "group": "Groupe",
                     "sections": "Sections",
-                    "section": "Section"
+                    "section": "Section",
+                    "reduce_motion": "Réduire les motions",
+                    "language": "Langue",
+                    "date_time_format": "Format de date et d'heure",
+                    "theme": "Thème",
+                    "font_size": "Taille de police"
                 },
                 "placeholders": {
                     "first_name": "Saisissez le prénom",

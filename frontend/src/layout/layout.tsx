@@ -21,11 +21,10 @@ import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@src/hooks/useReduxEvent";
 import { Dropdown } from "flowbite-react";
 import { logout } from "@src/features/redux/userAsyncActions";
-import { useLocation, useMatch, useNavigate } from "react-router-dom";
+import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import ReactDOM from "react-dom";
 import { TabBar } from "@src/components/tabBar";
-import { toggleThemeMode } from "@src/features/redux/themeModeSlice";
 // import { MegaMenu } from "flowbite-react";
 
 interface Layout {
@@ -50,6 +49,7 @@ export function Layout({ children, menu }: Layout) {
   const [dateTime, setDateTime] = useState<DateTime>({ date: "", time: "" });
   const minXxl = useBreakpoint("min", "2xl");
   const authUser = useAppSelector((state) => state.userSlice.user);
+  const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
   const dispatch = useAppDispatch();
   const route = useNavigate();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -79,7 +79,9 @@ export function Layout({ children, menu }: Layout) {
 
   const handleDateTime = useCallback(
     (options: Intl.DateTimeFormatOptions, date: number): string => {
-      return new Intl.DateTimeFormat(t("locales"), options).format(date);
+      return new Intl.DateTimeFormat(t("general.locales"), options).format(
+        date,
+      );
     },
     [t],
   );
@@ -149,17 +151,11 @@ export function Layout({ children, menu }: Layout) {
   }, []);
 
   useEffect(() => {
-    document.body.className = theme === "dark" ? "dark" : "";
-  }, [theme]);
-
-  useEffect(() => {
     toggleOpenMobileMenu(false);
   }, [location]);
 
   return (
-    <div
-      className={`relative flex h-full w-full flex-1 ${theme === "dark" ? "dark" : ""}`}
-    >
+    <div id="layout" className={`relative flex h-full w-full flex-1`}>
       <div
         className={`z-[10] hidden h-full overflow-hidden bg-light-primary sm:absolute sm:block sm:p-3 md:min-w-fit 2xl:relative ${isOnHover ? "sm:w-max" : "sm:w-16"} transition-all dark:bg-dark-primary`}
         onMouseEnter={onMouseEnter}
@@ -172,9 +168,15 @@ export function Layout({ children, menu }: Layout) {
             className={`mx-auto mt-3 transition-all ${!minXxl && !isOnHover ? "w-7" : ""}`}
             src={
               minXxl || isOnHover
-                ? theme === "dark"
+                ? themeState === "dark"
                   ? logo_dark
-                  : logo_light
+                  : themeState === "light"
+                    ? logo_light
+                    : themeState === "auto" &&
+                        window.matchMedia("(prefers-color-scheme: dark)")
+                          .matches
+                      ? logo_dark
+                      : logo_light
                 : logo_minimize
             }
             // width={"150px"}
@@ -227,7 +229,7 @@ export function Layout({ children, menu }: Layout) {
                   base: "z-10 w-fit divide-y divide-gray-100 rounded-xs shadow-sharp-dark dark:shadow-sharp-light focus:outline-none",
                 },
               }}
-              dismissOnClick={false}
+              dismissOnClick={true}
               renderTrigger={() => (
                 <div className="profile flex cursor-pointer items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
                   <div className="flex items-center gap-4">
@@ -251,13 +253,17 @@ export function Layout({ children, menu }: Layout) {
                 </div>
               )}
             >
-              <Dropdown.Item>Profile</Dropdown.Item>
-              <Dropdown.Item>Settings</Dropdown.Item>
+              <Link to={"/profile"}>
+                <Dropdown.Item>{t("general.profile")}</Dropdown.Item>
+              </Link>
+              <Link to={"/preference"}>
+                <Dropdown.Item>{t("entities.preference")}</Dropdown.Item>
+              </Link>
               <Dropdown.Item
                 onClick={handleLogout}
                 className="items-center justify-between font-medium text-red-600 hover:!bg-red-600 hover:text-white"
               >
-                Sign out
+                {t("general.sign_out")}
                 <FaArrowRightFromBracket size={12} />
               </Dropdown.Item>
             </Dropdown>
@@ -274,19 +280,25 @@ export function Layout({ children, menu }: Layout) {
                   onClick={onToggleFullScreen}
                 />
               )}
-              {theme === "dark" ? (
+              {themeState === "dark" ? (
                 <MdLightMode
                   className="cursor-pointer text-xl text-gray-500"
-                  onClick={() => (
-                    setTheme("light"), dispatch(toggleThemeMode("light"))
-                  )}
+                  onClick={() => setTheme("light")}
                 />
-              ) : (
+              ) : themeState === "light" ? (
                 <MdDarkMode
                   className="cursor-pointer text-xl text-gray-500"
-                  onClick={() => (
-                    setTheme("dark"), dispatch(toggleThemeMode("dark"))
-                  )}
+                  onClick={() => setTheme("dark")}
+                />
+              ) : window.matchMedia("(prefers-color-scheme: dark)").matches ? (
+                <MdLightMode
+                  className="cursor-pointer text-xl text-gray-500"
+                  onClick={() => setTheme("light")}
+                />
+              ) : (
+                <MdLightMode
+                  className="cursor-pointer text-xl text-gray-500"
+                  onClick={() => setTheme("dark")}
                 />
               )}
             </div>

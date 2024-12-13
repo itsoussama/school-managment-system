@@ -15,6 +15,9 @@ import GeneralSettings from "./pages/configuration/school/generalSettings";
 import GradesSections from "./pages/configuration/school/gradesSections";
 import Timetable from "./pages/configuration/school/timetable";
 import Subjects from "./pages/configuration/school/subjects";
+import Profile from "./pages/profile/profile";
+import Settings from "./pages/profile/preference";
+import Preference from "./pages/profile/preference";
 
 export const AdminRouter = {
   path: "/",
@@ -24,6 +27,14 @@ export const AdminRouter = {
     {
       index: true,
       element: <Dashboard />,
+    },
+    {
+      path: "profile",
+      element: <Profile />,
+    },
+    {
+      path: "preference",
+      element: <Preference />,
     },
     {
       path: "teachers",

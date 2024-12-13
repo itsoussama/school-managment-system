@@ -43,6 +43,11 @@ interface TextArea extends Field, TextareaHTMLAttributes<HTMLTextAreaElement> {}
 interface Checkbox extends Field, InputHTMLAttributes<HTMLInputElement> {
   image?: React.ReactNode;
 }
+interface CheckboxGroup extends Field, InputHTMLAttributes<HTMLInputElement> {}
+interface CheckboxGroupButton
+  extends Field,
+    InputHTMLAttributes<HTMLInputElement> {}
+
 interface Select extends Field, SelectHTMLAttributes<HTMLSelectElement> {}
 
 function Input({
@@ -309,6 +314,54 @@ function Checkbox({
     </div>
   );
 }
+
+function CheckboxGroup({
+  label = "",
+  "custom-style": {
+    containerStyle = "",
+    labelStyle = "",
+    wrapperInputStyle = "",
+  } = {},
+  children,
+}: CheckboxGroup) {
+  return (
+    <div className={`flex flex-col ${containerStyle}`}>
+      <span
+        className={`mb-2 w-full text-sm font-medium text-gray-900 dark:text-white ${labelStyle}`}
+      >
+        {label}
+      </span>
+      <div className={wrapperInputStyle}>{children}</div>
+    </div>
+  );
+}
+
+CheckboxGroup.Button = function Button({
+  id,
+  label,
+  name,
+  "custom-style": { labelStyle = "" } = {},
+  ...attribute
+}: CheckboxGroupButton) {
+  return (
+    <>
+      <label
+        htmlFor={id}
+        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
+      >
+        <input
+          type="radio"
+          className={`hidden`}
+          name={name}
+          id={id}
+          onChange={(e) => console.log(e)}
+          {...attribute}
+        />
+        {label}
+      </label>
+    </>
+  );
+};
 
 function RSelect({
   htmlFor,
@@ -652,7 +705,7 @@ function Dropzone({
                 and drop
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t("maximum-size")}: 1024MB
+                {t("form.general.maximum_size")}: 1024MB
               </p>
             </div>
           )}
@@ -673,6 +726,7 @@ export {
   InputDropdown,
   RTextArea,
   Checkbox,
+  CheckboxGroup,
   RSelect,
   MultiSelect,
   Dropzone,

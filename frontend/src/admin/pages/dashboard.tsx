@@ -26,14 +26,8 @@ function Dashboard() {
   const { t } = useTranslation();
 
   const themeChange = useAppSelector(
-    (state) => state.themeModeSlice.themeMode as "light" | "dark",
+    (state) => state.preferenceSlice.themeMode as "light" | "dark" | "auto",
   );
-
-  useEffect(() => {
-    console.log(themeChange);
-
-    // return () => mediaQueryList.removeEventListener("change", themeChange);
-  }, [themeChange]);
 
   return (
     <div className="flex w-full flex-col">

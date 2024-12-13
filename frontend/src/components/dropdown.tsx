@@ -12,7 +12,8 @@ interface DropdownProps {
   onClose?: (value?: boolean) => void;
   close?: boolean;
   additionalStyle?: {
-    containerStyle: string;
+    containerStyle?: string;
+    dropdownStyle?: string;
   };
   width?: string;
 }
@@ -40,7 +41,7 @@ function Dropdown({
   closeOnEvent = "click",
   onClose,
   close,
-  additionalStyle,
+  additionalStyle: { containerStyle = "", dropdownStyle = "" } = {},
   width,
 }: DropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -200,7 +201,11 @@ function Dropdown({
   return (
     <>
       {/* Trigger element */}
-      <div ref={triggerRef} onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={triggerRef}
+        className={containerStyle}
+        onClick={(e) => e.stopPropagation()}
+      >
         {element}
       </div>
 
@@ -209,7 +214,7 @@ function Dropdown({
         ReactDOM.createPortal(
           <div
             ref={dropdownRef}
-            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow dark:border-gray-600 dark:bg-gray-700 ${additionalStyle?.containerStyle}`}
+            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow dark:border-gray-600 dark:bg-gray-700 ${dropdownStyle}`}
             style={{
               top: dropdownPosition?.top,
               left: dropdownPosition?.left,
