@@ -1,6 +1,6 @@
-import { alertIntialState } from "@src/admin/utils/alert";
+import { alertIntialState } from "@src/utils/alert";
 // import { TransitionAnimation } from "@src/components/animation";
-import { Alert as AlertType } from "@admin/utils/alert";
+import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb, Modal } from "flowbite-react";
 import { FormEvent, useState } from "react";

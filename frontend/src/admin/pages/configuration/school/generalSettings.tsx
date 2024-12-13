@@ -1,6 +1,6 @@
-import { alertIntialState } from "@src/admin/utils/alert";
+import { alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { Alert as AlertType } from "@admin/utils/alert";
+import { Alert as AlertType } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import { Input, InputDropdown, RTextArea } from "@src/components/input";
 import useBreakpoint from "@src/hooks/useBreakpoint";

@@ -1,9 +1,5 @@
-import { colors } from "@src/admin/utils/colors";
-import {
-  customBadge,
-  customTable,
-  customTooltip,
-} from "@src/admin/utils/flowbite";
+import { colors } from "@src/utils/colors";
+import { customBadge, customTable, customTooltip } from "@src/utils/flowbite";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";
 import { Checkbox, Input, MultiSelect, RSelect } from "@src/components/input";
@@ -291,94 +287,7 @@ export default function Subjects() {
                       </Table.Cell>
                     </Table.Row>
                   )}
-                <Table.Row>
-                  <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2">
-                    {/* <div className="h-2 w-12 bg-red-600"></div> */}
-                    {/* <Input
-                      id="search"
-                      type="text"
-                      icon={
-                        <>
-                          <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.title !== "" && (
-                            <FaRegCircleXmark
-                              onClick={() =>
-                                setFilter((prev) => ({
-                                  ...prev,
-                                  title: "",
-                                }))
-                              }
-                              className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                            />
-                          )}
-                        </>
-                      }
-                      label=""
-                      placeholder={fieldTrans("filter-all")}
-                      value={filter?.title}
-                      name="search"
-                      custom-style={{
-                        inputStyle: "px-8 !py-1 min-w-36",
-                        labelStyle: "mb-0 !inline",
-                      }}
-                      onChange={(e) =>
-                        setFilter((prev) => ({
-                          ...prev,
-                          title: e.target.value,
-                        }))
-                      }
-                    />
-                  </Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2">
-                    <RSelect
-                      id="status"
-                      name="status"
-                      icon={
-                        <>
-                          <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.status !== "" && (
-                            <FaRegCircleXmark
-                              onClick={() =>
-                                setFilter((prev) => ({
-                                  ...prev,
-                                  status: "",
-                                }))
-                              }
-                              className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                            />
-                          )}
-                        </>
-                      }
-                      custom-style={{
-                        inputStyle: "px-9 !py-1 min-w-36",
-                        labelStyle: "mb-0 !inline",
-                      }}
-                      value={filter.status ?? "default"}
-                      onChange={(e) =>
-                        setFilter((prev) => ({
-                          ...prev,
-                          [e.target.id]:
-                            e.target.options[e.target.selectedIndex].value,
-                        }))
-                      }
-                    >
-                      <option value="default" disabled={filter.status !== ""}>
-                        {fieldTrans("filter-all")}
-                      </option>
-                      {Object.entries(statusOptions).map((status, key) => (
-                        <option key={key} value={status[0]}>
-                          {t(status[0])}
-                        </option>
-                      ))}
-                    </RSelect> */}
-                  </Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                </Table.Row>
+
                 {getSubjectsQuery.isFetching &&
                 !(getSubjectsQuery.isRefetching || perPage) ? (
                   <SkeletonTable cols={5} />

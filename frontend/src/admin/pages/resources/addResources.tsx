@@ -9,7 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import Alert from "@src/components/alert";
-import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
 
 export interface FormData {

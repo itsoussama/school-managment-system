@@ -1,4 +1,4 @@
-import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import { Input, RTextArea } from "@src/components/input";

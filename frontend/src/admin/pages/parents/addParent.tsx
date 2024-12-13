@@ -8,9 +8,10 @@ import { FaHome, FaImage, FaLock, FaPlus, FaSearch } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
+import roles from "@admin/roles.json";
 
 export interface FormData {
   name?: string;
@@ -121,7 +122,7 @@ export default function AddParent() {
           password_confirmation: data?.password_confirmation as string,
           phone: data?.phone as string,
           childrens: data?.childrens as number[],
-          roles: [4],
+          roles: [roles.parent],
           image: img[0],
         });
       } else {

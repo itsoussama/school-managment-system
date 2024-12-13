@@ -1,6 +1,6 @@
-import { Checkbox, Input, MultiSelect } from "@components/input";
-import { addStudent, getGrades } from "@api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Input } from "@components/input";
+import { addAdministrator } from "@api";
+import { useMutation } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,13 +8,12 @@ import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import roles from "@admin/roles.json";
 
 export interface FormData {
-  guardian_id: number | null;
   name?: string;
   firstName?: string;
   lastName?: string;
@@ -24,14 +23,7 @@ export interface FormData {
   password_confirmation: string;
   school_id: number;
   roles: number[];
-  subjects: number[];
-  grades: number[];
   image: File;
-}
-
-interface Grades {
-  id: string;
-  label: string;
 }
 
 interface File {
@@ -41,25 +33,23 @@ interface File {
   type: string;
 }
 
-export default function AddStudent() {
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
+
+export default function AddAdministrators() {
   const { t } = useTranslation();
   const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
-  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
+  // const [formData, setFormData] = useState<FormData>();
   const admin = useAppSelector((state) => state.userSlice.user);
   const minSm = useBreakpoint("min", "sm");
+  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const redirect = useNavigate();
 
-  const getGradesQuery = useQuery({
-    queryKey: ["getGrades"],
-    queryFn: getGrades,
-  });
-
-  const addStudentQuery = useMutation({
-    mutationFn: addStudent,
+  const addAdministratorQuery = useMutation({
+    mutationFn: addAdministrator,
     onSuccess: () => {
-      redirect("/students/manage", {
+      redirect("/administrators/manage", {
         state: {
           alert: {
             status: "success",
@@ -69,7 +59,6 @@ export default function AddStudent() {
         },
       });
     },
-
     onError: () => {
       toggleAlert({
         status: "fail",
@@ -85,19 +74,18 @@ export default function AddStudent() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.log(data);
+
     try {
       if (img) {
-        addStudentQuery.mutate({
-          guardian_id: null,
+        addAdministratorQuery.mutate({
           name: data?.firstName + " " + data?.lastName,
           email: data?.email as string,
           school_id: admin?.school_id,
           password: data?.password as string,
           password_confirmation: data?.password_confirmation as string,
           phone: data?.phone as string,
-          roles: [roles.student],
-          subjects: [1],
-          grades: data?.grades as number[],
+          roles: [roles.administration_staff],
           image: img[0],
         });
       } else {
@@ -156,16 +144,17 @@ export default function AddStudent() {
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("entities.students")}
+              {t("entities.administrators")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
         <Breadcrumb.Item>
-          {t("actions.new_entity", { entity: t("entities.student") })}
+          {t("actions.add_entity", { entity: t("entities.administrator") })}
         </Breadcrumb.Item>
       </Breadcrumb>
+
       <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
@@ -188,16 +177,16 @@ export default function AddStudent() {
                   <FaImage className="h-10 w-10 text-gray-200 dark:text-gray-600" />
                 </div>
               )}
-
               <button className="btn-gray relative overflow-hidden">
                 <input
                   type="file"
                   className="absolute left-0 top-0 cursor-pointer opacity-0"
                   onChange={handleImageUpload}
                 />
-                {t("form.buttons.upload", { label: t("general.photo") })}
+                {t("form.buttons.upload", {
+                  label: t("general.photo"),
+                })}
               </button>
-
               <div className="flex flex-col">
                 <span className="text-sm text-gray-700 dark:text-gray-500">
                   {t("form.general.accepted_format")}:{" "}
@@ -218,7 +207,7 @@ export default function AddStudent() {
           <div className="flex flex-[3] flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("information.personal_information")}
+                {t("information.administrator_information")}
               </h1>
             </div>
             <form
@@ -272,29 +261,6 @@ export default function AddStudent() {
                 placeholder="Johndoe@example.com"
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
-
-              <MultiSelect
-                label={t("form.fields.grade_levels")}
-                name="grades"
-                onSelectItem={(items) =>
-                  handleChange(
-                    "grades",
-                    items.map((item) => parseInt(item.id)),
-                  )
-                }
-              >
-                {getGradesQuery.data?.data.data.map(
-                  (grade: Grades, key: number) => (
-                    <Checkbox
-                      key={key}
-                      label={grade.label}
-                      id={grade.id}
-                      name="grades"
-                      value={grade.label}
-                    />
-                  ),
-                )}
-              </MultiSelect>
 
               <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 

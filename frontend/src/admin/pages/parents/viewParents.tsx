@@ -55,11 +55,11 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import Dropdown from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddChildModal from "@src/admin/components/addChildModal";
-import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import { customTable, customTooltip } from "@src/admin/utils/flowbite";
+import { customTable, customTooltip } from "@src/utils/flowbite";
 
 interface Check {
   id?: number;

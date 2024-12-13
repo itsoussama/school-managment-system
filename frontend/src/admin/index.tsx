@@ -3,6 +3,7 @@ import { Layout } from "@src/layout/layout";
 import { useContext, useState } from "react";
 import { hoverContext } from "@context/hoverContext";
 import {
+  FaChalkboardTeacher,
   FaChartPie,
   FaCog,
   FaLayerGroup,
@@ -99,9 +100,43 @@ function Menu() {
 
         <Items
           itemId="item-1"
-          itemName={t("entities.teachers")}
+          itemName={t("entities.administrators")}
           icon={
             <FaUserTie
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
+            />
+          }
+          subMenuVisible={subMenuVisible}
+          onToggleSubMenu={onToggleSubMenu}
+        >
+          <Link to="administrators/new" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/administrators/new") ? true : false}
+              itemId="subitem-1"
+              itemName={t("actions.new_entity", {
+                entity: t("entities.administrators"),
+              })}
+            />
+          </Link>
+          <Link to="administrators/manage" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/administrators/manage") ? true : false}
+              itemId="subitem-1"
+              itemName={t("actions.view_entity", {
+                entity:
+                  t("determiners.definite.plural") +
+                  " " +
+                  t("entities.administrators"),
+              })}
+            />
+          </Link>
+        </Items>
+
+        <Items
+          itemId="item-2"
+          itemName={t("entities.teachers")}
+          icon={
+            <FaChalkboardTeacher
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
             />
           }
@@ -132,7 +167,7 @@ function Menu() {
         </Items>
 
         <Items
-          itemId="item-2"
+          itemId="item-3"
           itemName={t("entities.students")}
           icon={
             <FaUserGraduate
@@ -166,7 +201,7 @@ function Menu() {
         </Items>
 
         <Items
-          itemId="item-3"
+          itemId="item-4"
           itemName={t("entities.parents")}
           icon={
             <FaUserFriends
@@ -200,7 +235,7 @@ function Menu() {
         </Items>
 
         <Items
-          itemId="item-4"
+          itemId="item-5"
           itemName={t("entities.finance")}
           icon={
             <FaScaleBalanced
@@ -217,7 +252,7 @@ function Menu() {
         </Items>
 
         <Items
-          itemId="item-5"
+          itemId="item-6"
           itemName={t("entities.resources")}
           icon={
             <FaLayerGroup
@@ -263,7 +298,7 @@ function Menu() {
       <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>
       {/* configuration */}
       <Items
-        itemId="item-6"
+        itemId="item-7"
         itemName={t("entities.configurations")}
         icon={
           <FaCog

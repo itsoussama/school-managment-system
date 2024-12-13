@@ -16,7 +16,7 @@ import {
   FaUserPlus,
   FaUserTag,
 } from "react-icons/fa";
-import { alertIntialState, Alert as AlertType } from "@admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 

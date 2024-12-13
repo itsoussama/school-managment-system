@@ -1,6 +1,6 @@
-import { alertIntialState } from "@src/admin/utils/alert";
+import { alertIntialState } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
-import { Alert as AlertType } from "@admin/utils/alert";
+import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb, Modal, Table } from "flowbite-react";
 import { ChangeEvent, FormEvent, useState } from "react";
@@ -11,7 +11,7 @@ import Alert from "@src/components/alert";
 import Accordion from "@src/components/accordion";
 import InfoCard from "@src/admin/components/infoCard";
 import { Input } from "@src/components/input";
-import { customTable } from "@src/admin/utils/flowbite";
+import { customTable } from "@src/utils/flowbite";
 
 interface Modal {
   id: number;

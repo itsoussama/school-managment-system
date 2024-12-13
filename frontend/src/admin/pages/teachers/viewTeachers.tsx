@@ -56,11 +56,11 @@ import {
 } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import { customTable, customTooltip } from "@src/admin/utils/flowbite";
+import { customTable, customTooltip } from "@src/utils/flowbite";
 
 interface Check {
   id?: number;

@@ -4,7 +4,7 @@ import {
   AlertColor,
   alertIntialState,
   Alert as AlertUtil,
-} from "@src/admin/utils/alert";
+} from "@src/utils/alert";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import React, { useCallback, useEffect } from "react";
 

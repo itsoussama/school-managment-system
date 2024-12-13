@@ -8,9 +8,10 @@ import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
+import roles from "@admin/roles.json";
 
 export interface FormData {
   name?: string;
@@ -108,7 +109,7 @@ export default function AddTeacher() {
           password: data?.password as string,
           password_confirmation: data?.password_confirmation as string,
           phone: data?.phone as string,
-          roles: [2],
+          roles: [roles.teacher],
           subjects: data?.subjects as number[],
           grades: data?.grades as number[],
           image: img[0],

@@ -1,6 +1,6 @@
-import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
-import { colorPalette, colors } from "@src/admin/utils/colors";
-import { customToggleSwitch } from "@src/admin/utils/flowbite";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
+import { colorPalette, colors } from "@src/utils/colors";
+import { customToggleSwitch } from "@src/utils/flowbite";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";

@@ -7,6 +7,7 @@ import {
   Pagination,
   Spinner,
   Table,
+  ToggleSwitch,
   Tooltip,
 } from "flowbite-react";
 import React, {
@@ -19,15 +20,14 @@ import React, {
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
-  FaEye,
   FaHome,
+  FaLock,
   FaPen,
   FaSearch,
   FaSortDown,
   FaSortUp,
   FaTrash,
 } from "react-icons/fa";
-import { IoFilter } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 
 import {
@@ -37,11 +37,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  getResources,
-  getResource,
-  getCategories,
-  setResource,
-  deleteResource,
+  deleteUser,
+  getUser,
+  getAdministrators,
+  setAdministrator,
+  unblockUser,
+  blockUser,
 } from "@api";
 import {
   SkeletonContent,
@@ -50,11 +51,11 @@ import {
 } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import AddChildModal from "@src/admin/components/addChildModal";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
-import { FaChevronDown, FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import Dropdown from "@src/components/dropdown"; // DropdownListButton, // DropdownList,
 import { customTable, customTooltip } from "@src/utils/flowbite";
 
 interface Check {
@@ -64,184 +65,204 @@ interface Check {
 
 interface Modal {
   id: number;
-  type?: "view" | "edit" | "delete";
+  type?: "view" | "edit" | "delete" | "block";
   open: boolean;
 }
 
-export interface Resource {
+interface ChildModal {
   id: number;
-  label: string;
-  qty: string;
   school_id: number;
-  categories: {
-    id: string;
-    label: string;
-  };
+  open: boolean;
+}
+
+interface Administrator {
+  id: number;
+  imagePath: string;
+  name: string;
+  email: string;
+  phone: string;
+  school_id: number;
+  blocked?: boolean;
+  role: [
+    {
+      id: string;
+      name: string;
+    },
+  ];
 }
 
 export interface FormData {
   _method: string;
   id: number;
-  label: string;
-  qty: number;
-  category_id: number;
+  name: string;
+  email: string;
+  phone: string;
   image?: File;
+  password?: string;
+  password_confirmation?: string;
 }
 
 interface Data {
   id: number;
-  label: string;
-  qty: number;
-  category_id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+  phone: string;
   image?: File;
 }
 
-interface Category {
-  id: number;
-  label: string;
+interface DataError {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirm_password: string;
 }
 
-interface DataError {
-  label: string;
-  qty: number;
+interface BlockSwitch {
+  [key: string]: boolean;
+}
+
+interface File {
+  lastModified: number;
+  name: string;
+  size: number;
+  type: string;
 }
 
 interface Sort {
   column: string;
   direction: "asc" | "desc";
 }
+
 interface Filter {
-  label: string;
-  minQty: number | undefined;
-  maxQty: number | undefined;
-  category_id: number | undefined;
+  name: string;
+  childName: string;
 }
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
-export function ViewResources() {
+export function ViewAdministrators() {
   const queryClient = useQueryClient();
-
+  // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
+
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
-    label: "",
-    minQty: undefined,
-    maxQty: undefined,
-    category_id: undefined,
+    name: "",
+    childName: "",
   });
-  const [closeDropDown, setCloseDropDown] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
   const isCheckBoxAll = useRef(false);
-  const [checks, setChecks] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
+  const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
+  const [openChildModal, setOpenChildModal] = useState<ChildModal>({
+    id: 0,
+    school_id: 0,
+    open: false,
+  });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
+  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [data, setData] = useState<Data>({
     id: 0,
-    label: "",
-    qty: 0,
-    category_id: 0,
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirm_password: "",
   });
   const [formError, setFormError] = useState<DataError>({
-    label: "",
-    qty: 0,
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+    phone: "",
   });
+  const [changePassword, toggleChangePassword] = useState<boolean>(false);
+  // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
+  const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
-  const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
 
-  // const userId = useRef<string>(null)
-  const getAllResourcesQuery = useQuery({
-    queryKey: [
-      "getAllResources",
-      filter?.label,
-      filter?.maxQty,
-      filter?.minQty,
-      filter?.category_id,
-    ],
+  const getAllAdministratorsQuery = useQuery({
+    queryKey: ["getAllAdministrators", filter?.name, filter?.childName],
     queryFn: () =>
-      getResources(
+      getAdministrators(
         1,
         -1,
         undefined,
         undefined,
-        admin?.school_id,
-        filter?.label,
-        filter?.maxQty,
-        filter?.minQty,
-        filter?.category_id,
+        admin.school_id,
+        filter?.name,
       ),
     placeholderData: keepPreviousData,
   });
 
-  const getResourcesQuery = useQuery({
+  const getAdministratorsQuery = useQuery({
     queryKey: [
-      "getResources",
+      "getAdministrators",
       page,
       perPage,
       sort.column,
       sort.direction,
       admin.school_id,
-      filter?.label,
-      filter?.maxQty,
-      filter?.minQty,
-      filter?.category_id,
+      filter?.name,
+      filter?.childName,
     ],
     queryFn: () =>
-      getResources(
+      getAdministrators(
         page,
         perPage,
         sort.column,
         sort.direction,
         admin.school_id,
-        filter?.label,
-        filter?.maxQty,
-        filter?.minQty,
-        filter?.category_id,
+        filter?.name,
       ),
     placeholderData: keepPreviousData,
   });
 
-  const getResourceQuery = useQuery({
-    queryKey: ["getResource", openModal?.id],
-    queryFn: () => getResource(openModal?.id as number),
+  const getAdministratorQuery = useQuery({
+    queryKey: ["getAdministrator", openModal?.id, "administrator"],
+    queryFn: () => getUser(openModal?.id as number, "administrator"),
     enabled: !!openModal?.id,
   });
 
-  const getCategoriesQuery = useQuery({
-    queryKey: ["getCategories"],
-    queryFn: () => getCategories(1, -1, undefined, undefined, admin?.id),
-  });
-
-  const resourceMutation = useMutation({
-    mutationFn: setResource,
+  const administratorMutation = useMutation({
+    mutationFn: setAdministrator,
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({
-        queryKey: ["getResource"],
+        queryKey: ["getAdministrator"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getResources"],
+        queryKey: ["getAdministrators"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getAllResources"],
+        queryKey: ["getAllAdministrators"],
       });
 
       setData({
-        id: data?.id as number,
-        label: data?.label as string,
-        qty: data?.qty as number,
-        category_id: data?.category_id as number,
+        id: data?.id,
+        firstName: getUserName(data?.name).firstName,
+        lastName: getUserName(data?.name).lastName,
+        email: data?.email,
+        phone: data?.phone,
+        password: "",
+        confirm_password: "",
       });
 
       toggleAlert({
@@ -255,6 +276,45 @@ export function ViewResources() {
 
       setPreviewImg(undefined);
     },
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const deleteUserQuery = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getAdministrators"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllAdministrators"],
+      });
+
+      setOpenModal(undefined);
+      setPage(1);
+
+      setData({
+        id: 0,
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        password: "",
+        confirm_password: "",
+      });
+
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
 
     onError: () => {
       toggleAlert({
@@ -265,25 +325,50 @@ export function ViewResources() {
     },
   });
 
-  const deleteResourceQuery = useMutation({
-    mutationFn: deleteResource,
+  const blockUserMutation = useMutation({
+    mutationFn: blockUser,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getResources"],
+        queryKey: ["getAdministrator"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getAllResources"],
+        queryKey: ["getAdministrators"],
       });
 
-      setOpenModal(undefined);
-      setPage(1);
+      queryClient.invalidateQueries({
+        queryKey: ["getAllAdministrators"],
+      });
 
-      setData({
-        id: 0,
-        label: "",
-        qty: 0,
-        category_id: 0,
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const unBlockUserMutation = useMutation({
+    mutationFn: unblockUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getAdministrator"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAdministrators"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getAllAdministrators"],
       });
 
       toggleAlert({
@@ -315,65 +400,11 @@ export function ViewResources() {
           ? selectElem.options[selectElem.selectedIndex].value
           : inputElem.value,
     }));
-    // console.log((event.target as HTMLInputElement).value);
   };
-
-  // const handleClientError = (field: HTMLFormElement) => {
-  //   // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
-  //   const passwordValidation = /[0-9]{8}/;
-
-  //   // Error messages for empty or invalid fields
-  //   const messages = {
-  //     password:
-  //       "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
-  //     confirm_password: "Passwords do not match. Please try again.",
-  //   };
-
-  //   const isEmpty = (value: string) => value.trim() === "";
-  //   let error = false;
-
-  //   // Function to set error messages and update the error flag
-  //   const setError = (fieldName: string, message: string) => {
-  //     setFormError((prev) => ({
-  //       ...prev,
-  //       [fieldName]: message,
-  //     }));
-  //     error = true;
-  //   };
-
-  //   // Clear error messages if validation is successful
-  //   const clearError = (fieldName: string) => {
-  //     setFormError((prev) => ({
-  //       ...prev,
-  //       [fieldName]: "",
-  //     }));
-  //   };
-
-  //   // Validate password field
-  //   if (changePassword) {
-  //     if (isEmpty(field.password.value)) {
-  //       setError("password", "Password field is required.");
-  //     } else if (!passwordValidation.test(field.password.value)) {
-  //       setError("password", messages.password);
-  //     } else {
-  //       clearError("password");
-  //     }
-
-  //     // Validate confirm password field
-  //     if (isEmpty(field.confirm_password.value)) {
-  //       setError("confirm_password", "Please confirm your password.");
-  //     } else if (field.password.value !== field.confirm_password.value) {
-  //       setError("confirm_password", messages.confirm_password);
-  //     } else {
-  //       clearError("confirm_password");
-  //     }
-  //   }
-
-  //   return error;
-  // };
 
   const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
+    // console.log(id);
 
     if (!id) {
       setChecks([]);
@@ -391,21 +422,84 @@ export function ViewResources() {
 
   const handleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
-      if (getAllResourcesQuery.isFetched) {
-        await getAllResourcesQuery.data?.forEach((resource: Resource) => {
-          setChecks((prev) => {
-            const checkedData = prev.some((item) => item.id === resource.id);
-
-            if (firstCheckbox.checked && !checkedData) {
-              return [...prev, { id: resource.id as number, status: true }];
-            }
-            return [...prev, { id: resource.id as number, status: false }];
-          });
-        });
+      if (getAllAdministratorsQuery.isFetched) {
+        await getAllAdministratorsQuery.data?.data.forEach(
+          (administrator: Administrator) => {
+            setChecks((prev) => {
+              const checkedData = prev.some(
+                (item) => item.id === administrator.id,
+              );
+              if (firstCheckbox.checked && !checkedData) {
+                return [
+                  ...prev,
+                  { id: administrator.id as number, status: true },
+                ];
+              }
+              return [
+                ...prev,
+                { id: administrator.id as number, status: false },
+              ];
+            });
+          },
+        );
       }
     },
-    [getAllResourcesQuery.data, getAllResourcesQuery.isFetched],
+    [getAllAdministratorsQuery.data?.data, getAllAdministratorsQuery.isFetched],
   );
+
+  const handleClientError = (field: HTMLFormElement) => {
+    // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
+    const passwordValidation = /[0-9]{8}/;
+
+    // Error messages for empty or invalid fields
+    const messages = {
+      password:
+        "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      confirm_password: "Passwords do not match. Please try again.",
+    };
+
+    const isEmpty = (value: string) => value.trim() === "";
+    let error = false;
+
+    // Function to set error messages and update the error flag
+    const setError = (fieldName: string, message: string) => {
+      setFormError((prev) => ({
+        ...prev,
+        [fieldName]: message,
+      }));
+      error = true;
+    };
+
+    // Clear error messages if validation is successful
+    const clearError = (fieldName: string) => {
+      setFormError((prev) => ({
+        ...prev,
+        [fieldName]: "",
+      }));
+    };
+
+    // Validate password field
+    if (changePassword) {
+      if (isEmpty(field.password.value)) {
+        setError("password", "Password field is required.");
+      } else if (!passwordValidation.test(field.password.value)) {
+        setError("password", messages.password);
+      } else {
+        clearError("password");
+      }
+
+      // Validate confirm password field
+      if (isEmpty(field.confirm_password.value)) {
+        setError("confirm_password", "Please confirm your password.");
+      } else if (field.password.value !== field.confirm_password.value) {
+        setError("confirm_password", messages.confirm_password);
+      } else {
+        clearError("confirm_password");
+      }
+    }
+
+    return error;
+  };
 
   const handleSort = (column: string) => {
     setSortPosition((prev) => prev + 1);
@@ -426,21 +520,6 @@ export function ViewResources() {
     }
   };
 
-  const handleFilter = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const target = event.target as HTMLFormElement;
-    target.minQty;
-    setFilter((prev) => ({
-      ...prev,
-      minQty:
-        target.minQty.value !== "" ? Number(target.minQty.value) : undefined,
-      maxQty:
-        target.maxQty.value !== "" ? Number(target.maxQty.value) : undefined,
-    }));
-
-    setCloseDropDown(true);
-  };
-
   const handlePerPage = (ev: ChangeEvent) => {
     const target = ev.target as HTMLSelectElement;
     setPage(1);
@@ -458,33 +537,34 @@ export function ViewResources() {
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // const input = event.target as HTMLFormElement;
+    const input = event.target as HTMLFormElement;
 
-    // if (!handleClientError(input)) {
-    const form: FormData = {
-      _method: "PUT",
-      id: data?.id,
-      label: data?.label,
-      qty: data?.qty,
-      category_id: data?.category_id,
-    };
+    if (!handleClientError(input)) {
+      const form: FormData = {
+        _method: "PUT",
+        id: data?.id,
+        name: data?.firstName + " " + data?.lastName,
+        email: data?.email,
+        phone: data?.phone,
+      };
 
-    if (img) {
-      form["image"] = img[0];
+      if (img) {
+        form["image"] = img[0];
+      }
+
+      if (data?.password) {
+        form["password"] = data?.password;
+        form["password_confirmation"] = data?.confirm_password;
+      }
+
+      administratorMutation.mutate(form);
+    } else {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
     }
-
-    resourceMutation.mutate(form);
-    // } else {
-    //   toggleAlert({
-    //     status: "fail",
-    //     message: {
-    //       message: "Operation Failed",
-    //       description: "Something went wrong. Please try again later.",
-    //     },
-
-    //     state: true,
-    //   });
-    // }
   };
 
   const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
@@ -492,43 +572,76 @@ export function ViewResources() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getResourceQuery.data?.label) {
+    if (input.verfication.value !== getAdministratorQuery.data?.data.name) {
       setIsVerficationMatch(false);
       return;
     }
 
-    deleteResourceQuery.mutate(openModal?.id as number);
+    deleteUserQuery.mutate(openModal?.id as number);
+  };
+
+  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const userId: number = openModal?.id as number;
+
+    if (!blockSwitch[userId]) {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [userId]: true,
+      }));
+      blockUserMutation.mutate({ user_id: userId });
+    } else {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [userId]: false,
+      }));
+      unBlockUserMutation.mutate({ user_id: userId });
+    }
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const ResourceData = await queryClient.ensureQueryData({
-      queryKey: ["getResource", id],
-      queryFn: () => getResource(id),
+    const { data: administratorData } = await queryClient.ensureQueryData({
+      queryKey: ["getAdministrator", id],
+      queryFn: () => getUser(id),
     });
 
     setData({
-      id: ResourceData?.id,
-      label: ResourceData?.label,
-      qty: ResourceData?.qty,
-      category_id: ResourceData?.category_id,
+      id: administratorData?.id,
+      firstName: getUserName(administratorData?.name).firstName,
+      lastName: getUserName(administratorData?.name).lastName,
+      email: administratorData?.email,
+      phone: administratorData?.phone,
+      password: "",
+      confirm_password: "",
     });
   };
 
   const onCloseModal = () => {
-    resourceMutation.reset();
+    administratorMutation.reset();
     setOpenModal(undefined);
+
+    toggleChangePassword(false);
 
     setData({
       id: 0,
-      label: "",
-      qty: 0,
-      category_id: 0,
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirm_password: "",
     });
 
     setFormError({
-      label: "",
-      qty: 0,
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirm_password: "",
+      phone: "",
     });
   };
 
@@ -540,13 +653,13 @@ export function ViewResources() {
   //   return { hour: convertToHour, minute: convertToMinute };
   // };
 
-  // const getUserName = (fullName: string) => {
-  //   const nameParts = fullName?.trim().split(/\s+/);
-  //   const firstName = nameParts?.slice(0, -1).join(" ");
-  //   const lastName = nameParts?.slice(-1).join(" ");
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
 
-  //   return { firstName, lastName };
-  // };
+    return { firstName, lastName };
+  };
 
   const readAndPreview = (file: FileList) => {
     if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
@@ -569,18 +682,6 @@ export function ViewResources() {
   }, [location]);
 
   useEffect(() => {
-    const resourceState = location.state?.resource?.id;
-    if (resourceState) {
-      setOpenModal({
-        id: resourceState,
-        type: "view",
-        open: true,
-      });
-      window.history.replaceState({}, "");
-    }
-  }, [location]);
-
-  useEffect(() => {
     const checkedVal = checks.filter((val) => val.status === true)
       .length as number;
     setNumChecked(checkedVal);
@@ -592,6 +693,18 @@ export function ViewResources() {
     }
   }, [page, handleChecks]);
 
+  useEffect(() => {
+    if (getAdministratorsQuery.isFetched) {
+      let data = {};
+      getAdministratorsQuery.data?.data.data.map(
+        (administrator: Administrator) => {
+          data = { ...data, [administrator.id]: !!administrator.blocked };
+        },
+      );
+      setBlockSwitch(data);
+    }
+  }, [getAdministratorsQuery.data, getAdministratorsQuery.isFetched]);
+
   return (
     <div className="flex w-full flex-col">
       <Alert
@@ -600,6 +713,7 @@ export function ViewResources() {
         message={alert.message}
         close={(value) => toggleAlert(value)}
       />
+
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
         className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
@@ -616,20 +730,20 @@ export function ViewResources() {
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("entities.resources")}
+              {t("entities.administrators")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item className="whitespace-nowrap">
-          {t("actions.view_entity", { entity: t("entities.resource") })}
+        <Breadcrumb.Item>
+          {t("actions.view_entity", { entity: t("entities.administrators") })}
         </Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
-        size={"xl"}
+        size={"3xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -644,7 +758,7 @@ export function ViewResources() {
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {t("form.fields.id", { entity: t("entities.resource") })}:
+          {t("form.fields.id", { entity: t("entities.administrators") })}:
           <b> {openModal?.id}</b>
         </Modal.Header>
         <Modal.Body>
@@ -652,42 +766,87 @@ export function ViewResources() {
             <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource={
-                  getResourceQuery.data?.imagePath
-                    ? SERVER_STORAGE + getResourceQuery.data?.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getResourceQuery.data?.label}`
+                  getAdministratorQuery.data?.data.imagePath
+                    ? SERVER_STORAGE +
+                      getAdministratorQuery.data?.data.imagePath
+                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.data.name).firstName}+${getUserName(getAdministratorQuery.data?.data.name).lastName}`
                 }
                 className="h-40 w-40"
               />
+              <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                  {t("status.active_deactivate")}
+                </span>
+                <ToggleSwitch
+                  theme={{
+                    toggle: {
+                      base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
+                    },
+                  }}
+                  checked={
+                    blockSwitch[getAdministratorQuery.data?.data.id] || false
+                  }
+                  onChange={() =>
+                    setOpenModal({
+                      id: getAdministratorQuery.data?.data.id,
+                      type: "block",
+                      open: true,
+                    })
+                  }
+                />
+              </div>
             </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.resource_information")}
+                  {t("information.personal_information")}
                 </h1>
-                <SkeletonContent isLoaded={getResourceQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
+                <SkeletonContent isLoaded={getAdministratorQuery.isFetched}>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.label")}:
+                        {t("form.fields.first_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.label}
+                        {
+                          getUserName(getAdministratorQuery.data?.data.name)
+                            .firstName
+                        }
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.quantity")}:
+                        {t("form.fields.last_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.qty}
+                        {
+                          getUserName(getAdministratorQuery.data?.data.name)
+                            .lastName
+                        }
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.category")}:
+                        {t("form.fields.email")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.categories.label}
+                        {getAdministratorQuery.data?.data.email}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {t("form.fields.phone_number")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        {getAdministratorQuery.data?.data.phone}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {t("form.fields.address")}:
+                      </span>
+                      <span className="text-base text-gray-900 dark:text-white">
+                        123 Rue Principale
                       </span>
                     </div>
                   </div>
@@ -700,7 +859,7 @@ export function ViewResources() {
 
       <Modal
         show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"2xl"}
+        size={"4xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -716,7 +875,7 @@ export function ViewResources() {
       >
         <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
-            {t("form.fields.id", { entity: t("entities.resource") })}:
+            {t("form.fields.id", { entity: t("entities.administrators") })}:
             <b> {openModal?.id}</b>
           </Modal.Header>
           <Modal.Body>
@@ -724,13 +883,15 @@ export function ViewResources() {
               <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
                   imgSource={
-                    getResourceQuery.data?.imagePath
-                      ? SERVER_STORAGE + getResourceQuery.data?.imagePath
-                      : `https://ui-avatars.com/api/?background=random&name=${getResourceQuery.data?.label}`
+                    previewImg
+                      ? previewImg
+                      : getAdministratorQuery.data?.data.imagePath
+                        ? SERVER_STORAGE +
+                          getAdministratorQuery.data?.data.imagePath
+                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.data.name).firstName}+${getUserName(getAdministratorQuery.data?.data.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
-
                 <button className="btn-gray relative overflow-hidden">
                   <input
                     type="file"
@@ -754,59 +915,125 @@ export function ViewResources() {
                   </span>
                 </div>
               </div>
-              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
+              <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("information.resource_information")}
+                    {t("information.personal_information")}
                   </h1>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
-                      id="label"
-                      name="label"
-                      label={t("form.fields.label")}
-                      placeholder={t("form.placeholders.label")}
+                      id="firstName"
+                      name="firstName"
+                      label={t("form.fields.first_name")}
+                      placeholder={t("form.placeholders.first_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getResourceQuery.isFetching && true}
-                      value={data?.label}
+                      disabled={getAdministratorQuery.isFetching && true}
+                      value={data?.firstName}
                       onChange={onChange}
                     />
 
                     <Input
-                      type="number"
-                      id="qty"
-                      name="qty"
-                      label={t("form.fields.quantity")}
-                      placeholder="20"
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      label={t("form.fields.last_name")}
+                      placeholder={t("form.placeholders.last_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getResourceQuery.isFetching && true}
-                      value={data?.qty}
+                      disabled={getAdministratorQuery.isFetching && true}
+                      value={data?.lastName}
                       onChange={onChange}
                     />
 
-                    <RSelect
-                      id="category_id"
-                      name="categories"
-                      label={t("form.fields.category")}
+                    <Input
+                      type="text"
+                      id="address"
+                      name="address"
+                      label={t("form.fields.address")}
+                      placeholder={t("form.placeholders.address")}
+                      value="123 Rue Principale"
+                      onChange={(e) => console.log(e.target.value)}
+                      custom-style={{ containerStyle: "col-span-full" }}
+                    />
+
+                    <Input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      label={t("form.fields.phone_number")}
+                      placeholder="06 00 00 00"
+                      pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getResourceQuery.isFetching && true}
-                      defaultValue={data?.id}
+                      disabled={getAdministratorQuery.isFetching && true}
+                      value={data?.phone}
                       onChange={onChange}
-                    >
-                      {getCategoriesQuery.data?.map(
-                        (category: Category, index: number) => (
-                          <option
-                            key={index}
-                            value={category.id}
-                            selected={
-                              data?.category_id == category.id ? true : false
-                            }
-                          >
-                            {category.label}
-                          </option>
-                        ),
-                      )}
-                    </RSelect>
+                    />
+
+                    <Input
+                      type="email"
+                      id="email"
+                      name="email"
+                      label={t("form.fields.email")}
+                      placeholder={t("form.placeholders.email")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getAdministratorQuery.isFetching && true}
+                      value={data?.email}
+                      onChange={onChange}
+                    />
+
+                    <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
+
+                    {changePassword ? (
+                      <>
+                        <Input
+                          type="password"
+                          id="password"
+                          name="password"
+                          label={t("form.fields.password")}
+                          placeholder="●●●●●●●"
+                          error={formError.password}
+                          value={data?.password}
+                          custom-style={{
+                            inputStyle: "px-10",
+                          }}
+                          icon={
+                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          }
+                          onChange={onChange}
+                        />
+
+                        <Input
+                          type="password"
+                          id="confirm_password"
+                          name="confirm_password"
+                          label={t("form.fields.confirm_password")}
+                          placeholder="●●●●●●●"
+                          error={formError.confirm_password}
+                          value={data?.confirm_password}
+                          custom-style={{
+                            inputStyle: "px-10",
+                          }}
+                          icon={
+                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          }
+                          onChange={onChange}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => toggleChangePassword(true)}
+                          className="btn-default !w-auto"
+                        >
+                          {t("form.buttons.change", {
+                            label:
+                              t("determiners.definite.masculine") +
+                              " " +
+                              t("form.fields.password"),
+                          })}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -841,12 +1068,15 @@ export function ViewResources() {
       >
         <form onSubmit={onSubmitDelete}>
           <Modal.Header>
-            {t("actions.delete_entity", { entity: t("entities.parent") })}
+            {t("actions.delete_entity", {
+              entity: t("entities.administrators"),
+            })}
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.delete.title")} <b>{getResourceQuery.data?.label}</b>
+                {t("modals.delete.title")}
+                <b>{getAdministratorQuery.data?.data.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -854,7 +1084,7 @@ export function ViewResources() {
               </div>
               <p className="text-gray-900 dark:text-white">
                 {t("modals.delete.label", {
-                  item: getResourceQuery.data?.label,
+                  item: getAdministratorQuery.data?.data.name,
                 })}
               </p>
               <Input
@@ -878,6 +1108,79 @@ export function ViewResources() {
         </form>
       </Modal>
 
+      {/* block / unblock user */}
+      <Modal
+        show={openModal?.type === "block" ? openModal?.open : false}
+        onClose={onCloseModal}
+        size={"md"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6",
+            popup: "pt-0",
+          },
+        }}
+      >
+        <form onSubmit={onSubmitBlock}>
+          <Modal.Header>
+            {t("actions.block_entity", { entity: t("general.user") })}
+          </Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-x-8">
+              <p className="mb-3 text-gray-600 dark:text-gray-300">
+                {t("modals.block.title")}{" "}
+                <b>{getAdministratorQuery.data?.data.name}</b>
+              </p>
+              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
+                <FaExclamationTriangle className="text-white" size={53} />
+                <p className="text-white">{t("modals.block.message")}</p>
+              </div> */}
+              {/* <p className="text-gray-900 dark:text-white">
+                {t("modals.block.label")}{" "}
+                <b>{getAdministratorQuery.data?.data.name}</b>
+              </p> */}
+              {/* <Input
+                type="text"
+                id="verfication"
+                name="verfication"
+                placeholder="John doe"
+                error={
+                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
+                }
+                required
+              /> */}
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <button type="submit" className="btn-danger !w-auto">
+              {getAdministratorQuery.data?.data.blocked == 0
+                ? t("modals.block.block_button")
+                : t("modals.block.unblock_button")}
+            </button>
+            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+              {t("modals.block.cancel_button")}
+            </button>
+          </Modal.Footer>
+        </form>
+      </Modal>
+
+      <AddChildModal
+        open={openChildModal?.open as boolean}
+        toggleOpen={(isOpen: boolean) =>
+          setOpenChildModal((prev: ChildModal) => ({
+            id: openChildModal?.id as number,
+            school_id: prev?.school_id,
+            open: isOpen,
+          }))
+        }
+        guardian_id={openChildModal.id}
+        school_id={openChildModal?.school_id}
+      />
+
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
           {checks.find((val) => val.status === true) ? (
@@ -887,7 +1190,7 @@ export function ViewResources() {
 
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
-                  {t("delete-records")}
+                  {t("actions.delete_entity")}
                   <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
                 </button>
               </div>
@@ -908,16 +1211,18 @@ export function ViewResources() {
                   />
                 </Table.HeadCell>
                 <Table.HeadCell>
-                  {t("form.fields.id", { entity: t("entities.resource") })}
+                  {t("form.fields.id", {
+                    entity: t("entities.administrators"),
+                  })}
                 </Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center gap-x-3">
                     <span className="inline-block">
-                      {t("form.fields.label")}
+                      {t("form.fields.full_name")}
                     </span>
                     <div
                       className="flex flex-col"
-                      onClick={() => handleSort("label")}
+                      onClick={() => handleSort("name")}
                     >
                       <FaSortUp
                         className={`h-2.5 ${sortPosition === 2 ? "text-gray-600" : "text-gray-400"}`}
@@ -930,18 +1235,20 @@ export function ViewResources() {
                     </div>
                   </div>
                 </Table.HeadCell>
-                <Table.HeadCell>{t("form.fields.quantity")}</Table.HeadCell>
-                <Table.HeadCell>{t("form.fields.category")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.email")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.phone_number")}</Table.HeadCell>
+                <Table.HeadCell>{t("general.active_time")}</Table.HeadCell>
+                <Table.HeadCell>{t("status.active_deactivate")}</Table.HeadCell>
                 <Table.HeadCell className="w-0">
-                  <span className="w-full">Actions</span>
+                  <span className="w-full">{t("general.actions")}</span>
                 </Table.HeadCell>
               </Table.Head>
               <Table.Body
                 ref={tableRef}
                 className="relative divide-y divide-gray-300 dark:divide-gray-600"
               >
-                {getResourcesQuery.isFetching &&
-                  (getResourcesQuery.isRefetching || perPage) && (
+                {getAdministratorsQuery.isFetching &&
+                  (getAdministratorsQuery.isRefetching || perPage) && (
                     <Table.Row>
                       <Table.Cell className="p-0">
                         <div
@@ -963,13 +1270,10 @@ export function ViewResources() {
                       icon={
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.label !== "" && (
+                          {filter.name !== "" && (
                             <FaRegCircleXmark
                               onClick={() =>
-                                setFilter((prev) => ({
-                                  ...prev,
-                                  label: "",
-                                }))
+                                setFilter((prev) => ({ ...prev, name: "" }))
                               }
                               className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
                             />
@@ -978,7 +1282,7 @@ export function ViewResources() {
                       }
                       label=""
                       placeholder={t("general.all")}
-                      value={filter?.label}
+                      value={filter.name}
                       name="search"
                       custom-style={{
                         inputStyle: "px-8 !py-1 min-w-36",
@@ -987,182 +1291,90 @@ export function ViewResources() {
                       onChange={(e) =>
                         setFilter((prev) => ({
                           ...prev,
-                          label: e.target.value,
+                          name: e.target.value,
                         }))
                       }
                     />
                   </Table.Cell>
-                  <Table.Cell className="p-2">
-                    <div>
-                      <Dropdown
-                        onClose={(state) => setCloseDropDown(state as boolean)}
-                        close={closeDropDown}
-                        additionalStyle={{ containerStyle: "px-2 rounded-s" }}
-                        element={
-                          <div className="relative">
-                            <Input
-                              type="text"
-                              readOnly
-                              icon={
-                                <>
-                                  <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                                  {(filter.maxQty !== undefined ||
-                                    filter.minQty !== undefined) && (
-                                    <FaRegCircleXmark
-                                      onClick={() => (
-                                        setCloseDropDown(true),
-                                        setFilter((prev) => ({
-                                          ...prev,
-                                          maxQty: undefined,
-                                          minQty: undefined,
-                                        }))
-                                      )}
-                                      // onClick={(e) => e.stopPropagation()}
-                                      className="absolute right-0 top-1/2 mr-6 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                                    />
-                                  )}
-                                </>
-                              }
-                              custom-style={{
-                                inputStyle:
-                                  "cursor-default min-w-36 px-8 !py-1",
-                                labelStyle: "mb-0 !inline",
-                              }}
-                              placeholder={t("general.all")}
-                              value={
-                                filter.minQty && filter.maxQty
-                                  ? filter.minQty + " ⇆ " + filter.maxQty
-                                  : filter.minQty
-                                    ? "≥ " + filter.minQty
-                                    : filter.maxQty
-                                      ? "≤ " + filter.maxQty
-                                      : ""
-                              }
-                            />
 
-                            <FaChevronDown className="absolute right-0 top-1/2 mr-2 -translate-y-1/2 text-[11px] text-[#7f868e36] dark:text-gray-400" />
-                          </div>
-                        }
-                      >
-                        <form onSubmit={handleFilter}>
-                          <Dropdown.List>
-                            <div className="flex gap-2">
-                              <Input
-                                id="minQty"
-                                type="number"
-                                custom-style={{
-                                  containerStyle: "w-auto",
-                                  inputStyle: "py-1",
-                                }}
-                                placeholder="min"
-                                name="minQty"
-                              />
-                              <Input
-                                id="maxQty"
-                                type="number"
-                                custom-style={{
-                                  containerStyle: "w-auto",
-                                  inputStyle: "py-1",
-                                }}
-                                placeholder="max"
-                                name="maxQty"
-                              />
-                            </div>
-                          </Dropdown.List>
-                          <button type="submit" className="btn-default h-8">
-                            Save
-                          </button>
-                        </form>
-                      </Dropdown>
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell className="p-2">
-                    <RSelect
-                      id="category_id"
-                      name="categories"
-                      icon={
-                        <>
-                          <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.category_id !== undefined && (
-                            <FaRegCircleXmark
-                              onClick={() =>
-                                setFilter((prev) => ({
-                                  ...prev,
-                                  category_id: undefined,
-                                }))
-                              }
-                              className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                            />
-                          )}
-                        </>
-                      }
-                      custom-style={{
-                        inputStyle: "px-9 !py-1 min-w-36",
-                        labelStyle: "mb-0 !inline",
-                      }}
-                      value={filter.category_id ?? "default"}
-                      onChange={(e) =>
-                        setFilter((prev) => ({
-                          ...prev,
-                          [e.target.id]:
-                            e.target.options[e.target.selectedIndex].value,
-                        }))
-                      }
-                    >
-                      <option
-                        value="default"
-                        disabled={filter.category_id !== undefined}
-                      >
-                        {t("general.all")}
-                      </option>
-                      {getCategoriesQuery.data?.map(
-                        (category: Category, index: number) => (
-                          <option key={index} value={category.id}>
-                            {category.label}
-                          </option>
-                        ),
-                      )}
-                    </RSelect>
-                  </Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
+                  <Table.Cell className="p-2"></Table.Cell>
                 </Table.Row>
-                {getResourcesQuery.isFetching &&
-                !(getResourcesQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={5} />
+
+                {getAdministratorsQuery.isFetching &&
+                !(getAdministratorsQuery.isRefetching || perPage) ? (
+                  <SkeletonTable cols={7} />
                 ) : (
-                  getResourcesQuery?.data.data.map(
-                    (resource: Resource, key: number) => (
+                  getAdministratorsQuery.data?.data.data.map(
+                    (administrator: Administrator, key: number) => (
                       <Table.Row
                         key={key}
                         className="w-max bg-white dark:bg-gray-800"
                       >
-                        <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                        <Table.Cell className="sticky left-0 z-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
                             className="rounded-xs"
-                            id={resource.id.toString()}
+                            id={administrator.id.toString()}
                             name="checkbox"
                             checked={
-                              checks.find((check) => check.id == resource.id)
-                                ?.status == true
+                              checks.find(
+                                (check) => check.id == administrator.id,
+                              )?.status == true
                                 ? true
                                 : false
                             }
-                            onChange={() => handleCheck(resource.id)}
+                            onChange={() => handleCheck(administrator.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {resource.id}
+                          {administrator.id}
                         </Table.Cell>
-                        <Table.Cell>{resource.label}</Table.Cell>
-                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {resource.qty}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex w-max max-w-36 flex-wrap">
-                            {resource.categories.label}
-                          </div>
-                        </Table.Cell>
+                        <Table.Cell>{administrator.name}</Table.Cell>
 
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {administrator.email}
+                        </Table.Cell>
+                        <Table.Cell>{administrator.phone}</Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {/* <span>
+                      {formatDuration(administrator.time_spent).hour}
+                      <span className="text-gray-500 dark:text-gray-400">
+                        {" "}
+                        h{" "}
+                      </span>
+                      {formatDuration(administrator.time_spent).minute > 0
+                        ? formatDuration(administrator.time_spent).minute
+                        : ""}
+                      <span
+                        className="text-gray-500 dark:text-gray-400"
+                        hidden={formatDuration(administrator.time_spent).minute <= 0}
+                      >
+                        {" "}
+                        min
+                      </span>
+                    </span> */}
+                        </Table.Cell>
                         <Table.Cell>
+                          <ToggleSwitch
+                            theme={{
+                              toggle: {
+                                base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
+                              },
+                            }}
+                            checked={blockSwitch[administrator.id] || false}
+                            onChange={() =>
+                              setOpenModal({
+                                id: administrator.id,
+                                type: "block",
+                                open: true,
+                              })
+                            }
+                          />
+                        </Table.Cell>
+                        <Table.Cell className="flex w-fit gap-x-2">
                           <div className="flex w-fit gap-x-2">
                             <Tooltip
                               content="View"
@@ -1172,7 +1384,7 @@ export function ViewResources() {
                               <div
                                 onClick={() =>
                                   setOpenModal({
-                                    id: resource.id,
+                                    id: administrator.id,
                                     type: "view",
                                     open: true,
                                   })
@@ -1191,7 +1403,7 @@ export function ViewResources() {
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
                                   onOpenEditModal({
-                                    id: resource.id,
+                                    id: administrator.id,
                                     type: "edit",
                                     open: true,
                                   })
@@ -1209,7 +1421,7 @@ export function ViewResources() {
                                 className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                                 onClick={() =>
                                   setOpenModal({
-                                    id: resource.id,
+                                    id: administrator.id,
                                     type: "delete",
                                     open: true,
                                   })
@@ -1232,11 +1444,12 @@ export function ViewResources() {
             <span className="text-gray-500 dark:text-gray-400">
               {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getResourcesQuery.data?.from}-{getResourcesQuery.data?.to}
+                {getAdministratorsQuery.data?.data.from}-
+                {getAdministratorsQuery.data?.data.to}
               </span>{" "}
               {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getResourcesQuery.data?.total}
+                {getAdministratorsQuery.data?.data.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
@@ -1245,7 +1458,7 @@ export function ViewResources() {
                 name="row-num"
                 onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getResourcesQuery.data?.per_page}
+                defaultValue={getAdministratorsQuery.data?.data.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -1257,9 +1470,9 @@ export function ViewResources() {
                 showIcons
                 currentPage={page}
                 onPageChange={(page) =>
-                  !getResourcesQuery.isPlaceholderData && setPage(page)
+                  !getAdministratorsQuery.isPlaceholderData && setPage(page)
                 }
-                totalPages={getResourcesQuery.data?.last_page ?? 1}
+                totalPages={getAdministratorsQuery.data?.data.last_page ?? 1}
                 nextLabel={minSm ? t("pagination.next") : ""}
                 previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{

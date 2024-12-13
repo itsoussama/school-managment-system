@@ -1,9 +1,5 @@
-import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
-import {
-  customBadge,
-  customTable,
-  customTooltip,
-} from "@src/admin/utils/flowbite";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
+import { customBadge, customTable, customTooltip } from "@src/utils/flowbite";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";

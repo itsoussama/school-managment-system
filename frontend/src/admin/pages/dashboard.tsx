@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { FaFileExport, FaHome } from "react-icons/fa";
 import Chart from "react-apexcharts";
 import { TransitionAnimation } from "@src/components/animation";
-import { chartOptions } from "@admin/utils/chart";
+import { chartOptions } from "@src/utils/chart";
 import { useEffect } from "react";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { Link } from "react-router-dom";
