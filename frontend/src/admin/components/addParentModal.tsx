@@ -1,4 +1,4 @@
-import { Checkbox, Input } from "@components/input";
+import { Button, Checkbox, Input } from "@components/input";
 import { addParent, assignParent, getParents } from "@api";
 import {
   keepPreviousData,
@@ -400,9 +400,9 @@ export default function AddParentModal({
               </div>
             </Modal.Body>
             <Modal.Footer>
-              <button type="submit" className="btn-default !w-auto">
+              <Button type="submit" className="btn-default !w-auto">
                 {t("general.accept")}
-              </button>
+              </Button>
               <button
                 type="button"
                 className="btn-danger !w-auto"
@@ -471,9 +471,9 @@ export default function AddParentModal({
               </div>
             </div>
             <Modal.Footer>
-              <button type="submit" className="btn-default !w-auto">
+              <Button type="submit" className="btn-default !w-auto">
                 {t("general.accept")}
-              </button>
+              </Button>
               <button className="btn-danger !w-auto" onClick={onCloseModal}>
                 {t("general.decline")}
               </button>

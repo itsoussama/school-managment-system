@@ -1,7 +1,7 @@
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
-import { Input, RTextArea } from "@src/components/input";
+import { Button, Input, RTextArea } from "@src/components/input";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, useState } from "react";
@@ -204,9 +204,9 @@ export default function Profile() {
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
-              <button className="btn-default m-0 mt-auto" type="submit">
+              <Button className="btn-default m-0 mt-auto" type="submit">
                 {t("form.buttons.create", { label: t("general.account") })}
-              </button>
+              </Button>
             </form>
           </div>
         </div>

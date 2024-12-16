@@ -2,8 +2,10 @@
 // import { FontAwesomeIcon } from '@htmlFortawesome/react-fontawesome'
 // import { faCheck, faCircleExclamation } from '@htmlFortawesome/free-solid-svg-icons'
 import React, {
+  ButtonHTMLAttributes,
   ChangeEvent,
   cloneElement,
+  CSSProperties,
   InputHTMLAttributes,
   ReactElement,
   ReactNode,
@@ -19,6 +21,8 @@ import { FaFileLines, FaXmark } from "react-icons/fa6";
 import ReactDOM from "react-dom";
 import { FileInput, Label } from "flowbite-react";
 import { useTranslation } from "react-i18next";
+import { BrandColor, colorPalette } from "@src/utils/colors";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
 
 interface Field {
   htmlFor?: string;
@@ -50,6 +54,11 @@ interface CheckboxGroupButton
 
 interface Select extends Field, SelectHTMLAttributes<HTMLSelectElement> {}
 
+interface ButtonType extends ButtonHTMLAttributes<HTMLButtonElement> {
+  inputStyle?: string;
+  children: React.ReactNode;
+}
+
 function Input({
   htmlFor,
   label = "",
@@ -63,6 +72,7 @@ function Input({
   ...attribute
 }: Input) {
   // const [inputValue, setInputValue] = useState<string>(value ?? "");
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   return (
     <div className={containerStyle}>
       <label
@@ -74,7 +84,13 @@ function Input({
       <div className="relative">
         {icon}
         <input
-          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${inputStyle}`}
+          style={
+            {
+              "--brand-color-500": colorPalette[brandState as BrandColor][500],
+              "--brand-color-600": colorPalette[brandState as BrandColor][600],
+            } as CSSProperties
+          }
           {...attribute}
         />
       </div>
@@ -117,6 +133,7 @@ InputDropdown.Select = function Select({
   selectedValue?: string;
   error?: string | null;
 } & SelectHTMLAttributes<HTMLSelectElement>) {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const handleSelectValue = (event: ChangeEvent<HTMLSelectElement>) => {
     console.log(event.target.value);
     onSelectedValue(event.target.value);
@@ -125,9 +142,15 @@ InputDropdown.Select = function Select({
   return (
     <select
       onChange={handleSelectValue}
-      className={`max-w-min rounded-s-s border border-gray-300 bg-gray-100 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm ${
+      className={`max-w-min rounded-s-s border border-gray-300 bg-gray-100 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${
         error && "border-red-600 dark:border-red-500"
-      } block w-full p-2.5 dark:border-gray-600 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500`}
+      } block w-full p-2.5 dark:border-gray-600 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)]`}
+      style={
+        {
+          "--brand-color-500": colorPalette[brandState as BrandColor][500],
+          "--brand-color-600": colorPalette[brandState as BrandColor][600],
+        } as CSSProperties
+      }
       {...selectProps}
     >
       <option value="">Select an option</option>
@@ -147,10 +170,17 @@ InputDropdown.Input = function Input({
   icon?: React.ReactNode;
   inputStyle?: string;
 } & InputHTMLAttributes<HTMLInputElement>) {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   return (
     <div className="relative flex-1">
       <input
-        className={`block h-full w-full rounded-e-s border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+        className={`block h-full w-full rounded-e-s border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${inputStyle}`}
+        style={
+          {
+            "--brand-color-500": colorPalette[brandState as BrandColor][500],
+            "--brand-color-600": colorPalette[brandState as BrandColor][600],
+          } as CSSProperties
+        }
         {...inputProps} // Spread additional input-specific props
       />
     </div>
@@ -236,7 +266,7 @@ function RTextArea({
   ...attribute
 }: TextArea) {
   // const [inputValue, setInputValue] = useState<string>(value ?? "");
-
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   return (
     <div className={containerStyle}>
       <label
@@ -248,7 +278,13 @@ function RTextArea({
       <div className="relative">
         {icon}
         <textarea
-          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-blue-600 focus:ring-blue-600 disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${inputStyle}`}
+          style={
+            {
+              "--brand-color-500": colorPalette[brandState as BrandColor][500],
+              "--brand-color-600": colorPalette[brandState as BrandColor][600],
+            } as CSSProperties
+          }
           {...attribute}
         />
       </div>
@@ -276,6 +312,7 @@ function Checkbox({
   image,
   ...attribute
 }: Checkbox) {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   return (
     <div
       className={`flex items-center rounded-xs px-2 ${image ? "py-2" : "py-1"} hover:bg-gray-200 hover:dark:bg-gray-600 ${containerStyle}`}
@@ -285,7 +322,13 @@ function Checkbox({
           id={htmlFor}
           name={htmlFor}
           type="checkbox"
-          className={`peer h-4 w-4 appearance-none rounded-xs border-gray-300 bg-gray-100 text-blue-600 checked:border-0 checked:bg-blue-800 focus:ring-2 focus:ring-blue-500 disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 ${inputStyle}`}
+          className={`peer h-4 w-4 appearance-none rounded-xs border-gray-300 bg-gray-100 text-[var(--brand-color-600)] checked:border-0 checked:bg-[var(--brand-color-600)] focus:ring-2 focus:ring-[var(--brand-color-500)] disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-[var(--brand-color-600)] ${inputStyle}`}
+          style={
+            {
+              "--brand-color-500": colorPalette[brandState as BrandColor][500],
+              "--brand-color-600": colorPalette[brandState as BrandColor][600],
+            } as CSSProperties
+          }
           {...attribute}
         />
         <FaCheck
@@ -343,11 +386,17 @@ CheckboxGroup.Button = function Button({
   "custom-style": { labelStyle = "" } = {},
   ...attribute
 }: CheckboxGroupButton) {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   return (
     <>
       <label
         htmlFor={id}
-        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
+        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-[var(--brand-color-500)] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
+        style={
+          {
+            "--brand-color-500": colorPalette[brandState as BrandColor][500],
+          } as CSSProperties
+        }
       >
         <input
           type="radio"
@@ -376,6 +425,7 @@ function RSelect({
   children,
   ...attribute
 }: Select) {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   return (
     <div className={containerStyle}>
       <label
@@ -387,7 +437,13 @@ function RSelect({
       <div className="relative">
         {icon}
         <select
-          className={`block w-full rounded-s border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-700 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500 ${inputStyle}`}
+          className={`block w-full rounded-s border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-700 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${inputStyle}`}
+          style={
+            {
+              "--brand-color-500": colorPalette[brandState as BrandColor][500],
+              "--brand-color-600": colorPalette[brandState as BrandColor][600],
+            } as CSSProperties
+          }
           {...attribute}
         >
           {children}
@@ -422,6 +478,7 @@ function MultiSelect({
   children,
   externalSelectedItems = null,
 }: MultiSelectProps & { externalSelectedItems?: SelectedData[] | null }) {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>(
     externalSelectedItems ?? [],
   );
@@ -546,7 +603,13 @@ function MultiSelect({
       <div className="relative" ref={dropdownRef}>
         <div
           id={name}
-          className="dropdown relative flex h-10 w-full items-center overflow-y-scroll rounded-s border border-gray-300 bg-gray-50 px-2 text-gray-900 focus:border-2 focus:border-blue-600 focus:outline-none focus:ring-blue-600 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+          className="dropdown relative flex h-10 w-full items-center overflow-y-scroll rounded-s border border-gray-300 bg-gray-50 px-2 text-gray-900 focus:border-2 focus:border-[var(--brand-color-600)] focus:outline-none focus:ring-[var(--brand-color-600)] sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)]"
+          style={
+            {
+              "--brand-color-500": colorPalette[brandState as BrandColor][500],
+              "--brand-color-600": colorPalette[brandState as BrandColor][600],
+            } as CSSProperties
+          }
           tabIndex={0}
           onClick={() => openDropDown()}
         >
@@ -721,7 +784,29 @@ function Dropzone({
   );
 }
 
+function Button({ inputStyle = "", children, ...attribute }: ButtonType) {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+  return (
+    <button
+      className={`m-0 mt-auto ${inputStyle}`}
+      style={
+        {
+          "--brand-color-300": colorPalette[brandState as BrandColor][300],
+          "--brand-color-500": colorPalette[brandState as BrandColor][500],
+          "--brand-color-600": colorPalette[brandState as BrandColor][600],
+          "--brand-color-700": colorPalette[brandState as BrandColor][700],
+          "--brand-color-800": colorPalette[brandState as BrandColor][800],
+        } as CSSProperties
+      }
+      {...attribute}
+    >
+      {children}
+    </button>
+  );
+}
+
 export {
+  Button,
   Input,
   InputDropdown,
   RTextArea,

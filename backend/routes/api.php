@@ -29,6 +29,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::middleware('role:' . config('roles.admin') . ',' . config('roles.admin_staff'))->group(function () {
         Route::apiResource('schools', SchoolController::class);
         Route::post('/add-parent', [UserController::class, 'addParent']);
+        Route::post('/add-adminStaff', [UserController::class, 'addAdmin']);
         Route::post('/assign-childs', [UserController::class, 'assignChilds']);
         Route::post('/assign-parent', [UserController::class, 'assignParent']);
         Route::post('/block', [UserController::class, 'blockUser']);
@@ -47,6 +48,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::apiResource('grades', GradeController::class);
     Route::apiResource('subjects', SubjectController::class);
 
+    Route::get('/administrator', [UserController::class, 'admins']);
     Route::get('/teacher', [UserController::class, 'teachers']);
     Route::get('/student', [UserController::class, 'students']);
     Route::get('/parent', [UserController::class, 'parents']);

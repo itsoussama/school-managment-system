@@ -1,10 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit"
 
-console.log(JSON.parse(localStorage.getItem("animation") as string));
-
-
 const initialState = {
-    animation: JSON.parse(localStorage.getItem("animation") as string) ?? false
+    animation: false
 }
 
 const animationSlice = createSlice({

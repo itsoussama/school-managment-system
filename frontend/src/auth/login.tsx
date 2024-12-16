@@ -1,7 +1,13 @@
-import { Checkbox, Input } from "@components/input";
+import { Button, Checkbox, Input } from "@components/input";
 import { useAppDispatch, useAppSelector } from "@hooks/useReduxEvent";
 import { UseTheme } from "@hooks/useTheme";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  CSSProperties,
+  FormEvent,
+  useEffect,
+  useState,
+} from "react";
 import { FaCircleXmark } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
 import logo_dark from "@assets/logo_dark.png";
@@ -9,6 +15,7 @@ import logo_light from "@assets/logo_light.png";
 import learningLightImg from "@assets/learning_light.png";
 import learningDarkImg from "@assets/learning_dark.png";
 import { login } from "@redux/userAsyncActions";
+import { BrandColor, colorPalette } from "@src/utils/colors";
 
 interface Data {
   email: string;
@@ -22,6 +29,8 @@ interface DataError {
 }
 
 export default function Login() {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+
   const [data, setData] = useState<Data>({
     email: "",
     password: "",
@@ -36,6 +45,7 @@ export default function Login() {
 
   // selector
   const auth = useAppSelector((state) => state.userSlice);
+  const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
 
   // dispatcher
   const dispatch = useAppDispatch();
@@ -134,11 +144,11 @@ export default function Login() {
   };
 
   return (
-    <div className={`${theme === "dark" ? "dark" : ""} flex flex-col`}>
+    <div className={`${themeState === "dark" ? "dark" : ""} flex flex-col`}>
       <div className="w-full p-6">
         <img
           className=""
-          src={theme === "dark" ? logo_dark : logo_light}
+          src={themeState == "dark" ? logo_dark : logo_light}
           // width={"150px"}
           alt="logo"
         />
@@ -148,7 +158,7 @@ export default function Login() {
         <div className="hidden md:flex md:flex-1 md:items-center md:justify-center">
           <img
             className="w-9/12"
-            src={theme === "dark" ? learningDarkImg : learningLightImg}
+            src={themeState == "dark" ? learningDarkImg : learningLightImg}
             alt="learning"
           />
         </div>
@@ -185,6 +195,7 @@ export default function Login() {
               <div className="flex items-center justify-between">
                 <Checkbox
                   name="remember"
+                  required={false}
                   id="remember"
                   label="Remember me"
                   htmlFor="remember"
@@ -192,14 +203,22 @@ export default function Login() {
                 />
                 <Link
                   to={"/auth/forget-password/request-link"}
-                  className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                  className="text-sm font-medium text-[var(--brand-color-600)] hover:underline dark:text-[var(--brand-color-500)]"
+                  style={
+                    {
+                      "--brand-color-500":
+                        colorPalette[brandState as BrandColor][500],
+                      "--brand-color-600":
+                        colorPalette[brandState as BrandColor][600],
+                    } as CSSProperties
+                  }
                 >
                   Forgot password?
                 </Link>
               </div>
-              <button
+              <Button
                 type="submit"
-                className="btn-default disabled:bg-blue-500"
+                className="btn-default disabled:bg-[var(--brand-color-500)]"
                 disabled={auth.loading}
               >
                 {!auth.loading ? (
@@ -226,12 +245,20 @@ export default function Login() {
                     Loading...
                   </>
                 )}
-              </button>
+              </Button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don’t have an account yet?{" "}
                 <Link
                   to={"/auth/sign-up"}
-                  className="font-medium text-blue-600 hover:underline dark:text-blue-500"
+                  className="font-medium text-[var(--brand-color-600)] hover:underline dark:text-[var(--brand-color-500)]"
+                  style={
+                    {
+                      "--brand-color-500":
+                        colorPalette[brandState as BrandColor][500],
+                      "--brand-color-600":
+                        colorPalette[brandState as BrandColor][600],
+                    } as CSSProperties
+                  }
                 >
                   Sign up
                 </Link>

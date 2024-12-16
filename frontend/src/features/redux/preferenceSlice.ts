@@ -2,8 +2,9 @@ import { createSlice } from "@reduxjs/toolkit"
 
 
 const initialState = {
-    language: localStorage.getItem("language") ?? Intl.DateTimeFormat().resolvedOptions().locale.slice(0, 2),
-    themeMode: localStorage.getItem("color-preferd") ?? "auto",
+    language: Intl.DateTimeFormat().resolvedOptions().locale.slice(0, 2),
+    themeMode: "auto",
+    brand: "blue"
 }
 
 const preferenceSlice = createSlice({
@@ -15,11 +16,14 @@ const preferenceSlice = createSlice({
         },
         toggleLanguage: (state, {payload}) => {
             state.language = payload
+        },
+        changeBrandColor: (state, {payload}) => {
+            state.brand = payload
         }
     }
 
 })
 
-export const {toggleThemeMode, toggleLanguage} = preferenceSlice.actions
+export const {toggleThemeMode, toggleLanguage, changeBrandColor} = preferenceSlice.actions
 
 export default preferenceSlice.reducer

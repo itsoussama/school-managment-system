@@ -3,8 +3,14 @@ import { login, logout } from "@redux/userAsyncActions";
 
 
 const initialState = {
-    user: JSON.parse(window.localStorage.getItem('user') as string) ?? {},
-    token: window.localStorage.getItem('accessToken') as string ?? "",
+    user: {
+        name: "",
+        email: "",
+        school_id:"",
+        phone:"",
+        imagePath: ""
+    },
+    token: "",
     loading: false
 }
 

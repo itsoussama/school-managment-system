@@ -25,7 +25,7 @@ const getAdministrators = async (
   name: string = "",
 ) => {
   const response = await axiosApi.get(
-    "/api/teacher?page=" +
+    "/api/administrator?page=" +
       page +
       "&per_page=" +
       perPage +
@@ -139,7 +139,7 @@ const getRoles = async (id: number) => {
 };
 
 const addAdministrator = async (formData: AddAdministratorFromData) => {
-  const response = await axiosApi.post("/api/users/", formData, {
+  const response = await axiosApi.post("/api/add-adminStaff/", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -235,6 +235,11 @@ const getSubjects = async (
       schoolId,
   );
   return response.data;
+};
+
+const getSubject = async (id: number) => {
+  const response = await axiosApi.get("/api/users/" + id);
+  return response;
 };
 
 const getGrades = async () => {
@@ -471,6 +476,7 @@ export {
   unblockUser,
   exportUser,
   getSubjects,
+  getSubject,
   getGrades,
   getResources,
   getResource,

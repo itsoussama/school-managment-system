@@ -1,24 +1,28 @@
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
-import { colorPalette, colors } from "@src/utils/colors";
+import { BrandColor, colorPalette, colors } from "@src/utils/colors";
 import { customToggleSwitch } from "@src/utils/flowbite";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";
 import {
+  Button,
   CheckboxGroup,
   Input,
   RSelect,
   RTextArea,
 } from "@src/components/input";
 import { toggleAnimation } from "@src/features/redux/animationSlice";
-import { toggleLanguage } from "@src/features/redux/preferenceSlice";
+import {
+  changeBrandColor,
+  toggleLanguage,
+} from "@src/features/redux/preferenceSlice";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { useAppDispatch, useAppSelector } from "@src/hooks/useReduxEvent";
 import { Theme, UseTheme } from "@src/hooks/useTheme";
 import { Breadcrumb, ToggleSwitch } from "flowbite-react";
 import i18next from "i18next";
 import { changeLanguage } from "i18next";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, CSSProperties, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage } from "react-icons/fa";
 import { json, Link } from "react-router-dom";
@@ -38,31 +42,34 @@ export default function Preference() {
   const animtionState = useAppSelector(
     (state) => state.animationSlice.animation,
   );
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
 
   const dispatch = useAppDispatch();
   // const redirect = useNavigate();
 
   const handleLanguageChange = (event: ChangeEvent) => {
     const target = event.target as HTMLInputElement;
+    if (target.value === "auto") {
+      const systemLang = Intl.DateTimeFormat()
+        .resolvedOptions()
+        .locale.slice(0, 2);
+      dispatch(toggleLanguage(systemLang));
+      changeLanguage(systemLang);
+
+      return;
+    }
     dispatch(toggleLanguage(target.value));
     changeLanguage(target.value);
-    localStorage.setItem("language", target.value);
   };
 
   const handleReduceMotionChange = (checked: boolean) => {
     document.body.style.animation = "none !important";
     dispatch(toggleAnimation(checked));
-    localStorage.setItem("animation", JSON.stringify(checked));
   };
 
-  useEffect(() => {
-    if (!localStorage.getItem("language")) {
-      localStorage.setItem(
-        "language",
-        Intl.DateTimeFormat().resolvedOptions().locale,
-      );
-    }
-  }, []);
+  const handleBrandColorChange = (color: string) => {
+    dispatch(changeBrandColor(color));
+  };
 
   useEffect(() => {
     changeLanguage(langState);
@@ -146,7 +153,7 @@ export default function Preference() {
           <div className="flex flex-[3] flex-col gap-4">
             <form
               action=""
-              //   onSubmit={onSubmit}
+              onSubmit={(e) => e.preventDefault()}
               className="-c relative grid grid-cols-[repeat(auto-fit,_minmax(250px,400px))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark sm:grid-cols-[repeat(auto-fit,_minmax(250px,400px))] dark:bg-dark-primary dark:shadow-sharp-light"
             >
               <RSelect
@@ -157,7 +164,7 @@ export default function Preference() {
                 onChange={handleLanguageChange}
                 defaultValue={langState}
               >
-                <option value={Intl.DateTimeFormat().resolvedOptions().locale}>
+                <option value={"auto"}>
                   {t("form.general.system_preferred")}
                 </option>
                 <option value="fr">{t("form.general.french")}</option>
@@ -197,34 +204,6 @@ export default function Preference() {
                 </div>
               </CheckboxGroup> */}
 
-              <Dropdown
-                width="10%"
-                additionalStyle={{
-                  containerStyle: "col-start-1 col-end-2",
-                  dropdownStyle: "rounded-s mt-1",
-                }}
-                element={
-                  <div className="flex flex-col space-y-2">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      Branding
-                    </p>
-                    <div className="h-8 w-14 cursor-pointer rounded-s border border-gray-300 bg-gray-50 p-1.5 dark:border-gray-600 dark:bg-gray-700">
-                      <div className="h-full w-full rounded-xs bg-blue-500"></div>
-                    </div>
-                  </div>
-                }
-              >
-                <div className="flex flex-wrap gap-2.5 p-2">
-                  {colors.map((color, key) => (
-                    <span
-                      key={key}
-                      className={`h-3 w-3 cursor-pointer rounded-[2px]`}
-                      style={{ backgroundColor: colorPalette[color][500] }}
-                    ></span>
-                  ))}
-                </div>
-              </Dropdown>
-
               <RSelect
                 id="theme"
                 name="theme"
@@ -240,7 +219,42 @@ export default function Preference() {
                 <option value="dark">{t("form.general.dark")}</option>
               </RSelect>
 
-              <RSelect
+              <Dropdown
+                width="10%"
+                additionalStyle={{
+                  containerStyle: "col-start-1 col-end-2",
+                  dropdownStyle: "rounded-s mt-1",
+                }}
+                element={
+                  <div className="flex flex-col space-y-2">
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      Branding
+                    </p>
+                    <div className="h-8 w-14 cursor-pointer rounded-s border border-gray-300 bg-gray-50 p-1.5 dark:border-gray-600 dark:bg-gray-700">
+                      <div
+                        className="h-full w-full rounded-xs"
+                        style={{
+                          backgroundColor:
+                            colorPalette[brandState as BrandColor][500],
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                }
+              >
+                <div className="flex flex-wrap gap-2.5 p-2">
+                  {colors.map((color, key) => (
+                    <span
+                      key={key}
+                      className={`h-3 w-3 cursor-pointer rounded-[2px]`}
+                      style={{ backgroundColor: colorPalette[color][500] }}
+                      onClick={() => handleBrandColorChange(color)}
+                    ></span>
+                  ))}
+                </div>
+              </Dropdown>
+
+              {/* <RSelect
                 id="fontsize"
                 name="fontsize"
                 custom-style={{ containerStyle: "col-start-1 col-end-2" }}
@@ -250,18 +264,19 @@ export default function Preference() {
                 <option value="small">{t("form.general.small")}</option>
                 <option value="meduim">{t("form.general.base")}</option>
                 <option value="large">{t("form.general.base")}</option>
-              </RSelect>
+              </RSelect> */}
 
               <ToggleSwitch
                 className="col-start-1 col-end-2"
                 theme={customToggleSwitch}
+                color={brandState}
                 label={t("form.fields.reduce_motion")}
                 checked={animtionState}
                 onChange={(checked) => handleReduceMotionChange(checked)}
               />
 
-              <button
-                className="btn-default col-start-1 col-end-2 m-0 mt-auto"
+              <Button
+                className={`btn-default col-start-1 col-end-2 m-0 mt-auto`}
                 type="submit"
               >
                 {t("actions.save_entity", {
@@ -270,7 +285,7 @@ export default function Preference() {
                     " " +
                     t("general.changes"),
                 })}
-              </button>
+              </Button>
             </form>
           </div>
         </div>

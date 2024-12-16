@@ -1,9 +1,11 @@
 import { hoverContext } from "@src/features/context/hoverContext";
 import useBreakpoint from "@hooks/useBreakpoint";
-import React, { useContext, useEffect } from "react";
+import React, { CSSProperties, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
+import { BrandColor, colorPalette } from "@src/utils/colors";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
 
 interface SubMenuVisible {
   ref: string;
@@ -37,6 +39,7 @@ export default function Items({
   const min2xl = useBreakpoint("min", "2xl");
   const max2xl = useBreakpoint("max", "2xl");
   const minSm = useBreakpoint("min", "sm");
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
 
   const { isOnHover } = useContext(hoverContext);
   const location = useLocation();
@@ -48,7 +51,12 @@ export default function Items({
       {/* {location.state} */}
       <div
         id={itemId}
-        className={`relative flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === itemId && `${isOnHover || max2xl || min2xl || !minSm ? "bg-gray-100 dark:bg-gray-700" : location.state?.active && "after:max-2xl:absolute after:max-2xl:right-0 after:max-2xl:top-0 after:max-2xl:h-full after:max-2xl:w-1 after:max-2xl:translate-x-3 after:max-2xl:rounded-xs after:max-2xl:bg-blue-600"}`} ${isActive ? (isOnHover || min2xl || !minSm ? "bg-blue-600" : "after:sm:absolute after:sm:right-0 after:sm:top-0 after:sm:h-full after:sm:w-1 after:sm:translate-x-3 after:sm:rounded-xs after:sm:bg-blue-600") : ""} ${containerClass}`}
+        className={`relative flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === itemId && `${isOnHover || max2xl || min2xl || !minSm ? "bg-gray-100 dark:bg-gray-700" : location.state?.active && "after:max-2xl:absolute after:max-2xl:right-0 after:max-2xl:top-0 after:max-2xl:h-full after:max-2xl:w-1 after:max-2xl:translate-x-3 after:max-2xl:rounded-xs after:max-2xl:bg-[var(--brand-color-600)]"}`} ${isActive ? (isOnHover || min2xl || !minSm ? "bg-[var(--brand-color-600)]" : "after:sm:absolute after:sm:right-0 after:sm:top-0 after:sm:h-full after:sm:w-1 after:sm:translate-x-3 after:sm:rounded-xs after:sm:bg-[var(--brand-color-600)]") : ""} ${containerClass}`}
+        style={
+          {
+            "--brand-color-600": colorPalette[brandState as BrandColor][600],
+          } as CSSProperties
+        }
         onClick={() => onToggleSubMenu(itemId)}
       >
         {icon}

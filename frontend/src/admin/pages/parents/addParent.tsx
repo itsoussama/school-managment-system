@@ -1,8 +1,14 @@
-import { Input, MultiSelect, Checkbox } from "@components/input";
+import { Input, MultiSelect, Checkbox, Button } from "@components/input";
 import { addParent, getStudents } from "@api";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb, Modal } from "flowbite-react";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  CSSProperties,
+  FormEvent,
+  useEffect,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock, FaPlus, FaSearch } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,6 +18,7 @@ import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import roles from "@admin/roles.json";
+import { BrandColor, colorPalette } from "@src/utils/colors";
 
 export interface FormData {
   name?: string;
@@ -50,6 +57,7 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export default function AddParent() {
   const { t } = useTranslation();
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -318,13 +326,13 @@ export default function AddParent() {
           </div>
         </div>
         <Modal.Footer>
-          <button
+          <Button
             type="submit"
             className="btn-default !w-auto"
             onClick={onCloseModal}
           >
             {t("general.accept")}
-          </button>
+          </Button>
           {/* <button className="btn-danger !w-auto" onClick={onCloseModal}>
             {fieldsTrans("decline")}
           </button> */}
@@ -462,13 +470,25 @@ export default function AddParent() {
                   <Link
                     to={"/students/new"}
                     className="btn-default flex h-8 items-center justify-center"
+                    style={
+                      {
+                        "--brand-color-300":
+                          colorPalette[brandState as BrandColor][300],
+                        "--brand-color-600":
+                          colorPalette[brandState as BrandColor][600],
+                        "--brand-color-700":
+                          colorPalette[brandState as BrandColor][700],
+                        "--brand-color-800":
+                          colorPalette[brandState as BrandColor][800],
+                      } as CSSProperties
+                    }
                   >
                     <FaPlus size={12} className="me-2" />
                     {t("actions.new_entity", {
                       entity: t("form.fields.childrens"),
                     })}
                   </Link>
-                  <button
+                  <Button
                     className="btn-default flex h-8 items-center justify-center"
                     onClick={() => setOpenModal(true)}
                   >
@@ -476,7 +496,7 @@ export default function AddParent() {
                     {t("actions.existing_entity", {
                       entity: t("form.fields.childrens"),
                     })}
-                  </button>
+                  </Button>
                 </div>
               </MultiSelect>
 
@@ -512,9 +532,9 @@ export default function AddParent() {
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
-              <button className="btn-default m-0 mt-auto" type="submit">
+              <Button className="btn-default m-0 mt-auto" type="submit">
                 {t("form.buttons.create", { label: t("general.account") })}
-              </button>
+              </Button>
             </form>
           </div>
         </div>

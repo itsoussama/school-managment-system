@@ -1,6 +1,6 @@
 import { Modal } from "flowbite-react";
 import { ChangeEvent, useEffect, useState } from "react";
-import { Checkbox, Input } from "./input";
+import { Button, Checkbox, Input } from "./input";
 import { FaSearch } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
@@ -144,7 +144,7 @@ export default function UserListModal({
               }
               label=""
               onKeyUp={(e) => handleSearch(e.target)}
-              placeholder={fieldsTrans("filter-all")}
+              placeholder={t("general.all")}
               name="search"
               custom-style={{
                 inputStyle: "px-8 !py-1",
@@ -196,13 +196,13 @@ export default function UserListModal({
         </div>
       </div>
       <Modal.Footer>
-        <button
+        <Button
           type="submit"
           className="btn-default !w-auto"
           onClick={onCloseModal}
         >
-          {fieldsTrans("accept")}
-        </button>
+          {t("general.accept")}
+        </Button>
         {/* <button className="btn-danger !w-auto" onClick={onCloseModal}>
             {fieldsTrans("decline")}
           </button> */}

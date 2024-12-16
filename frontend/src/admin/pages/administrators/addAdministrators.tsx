@@ -1,4 +1,4 @@
-import { Input } from "@components/input";
+import { Button, Input } from "@components/input";
 import { addAdministrator } from "@api";
 import { useMutation } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
@@ -294,9 +294,9 @@ export default function AddAdministrators() {
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
-              <button className="btn-default m-0 mt-auto" type="submit">
+              <Button className="btn-default" type="submit">
                 {t("form.buttons.create", { label: t("general.account") })}
-              </button>
+              </Button>
             </form>
           </div>
         </div>

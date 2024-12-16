@@ -1,6 +1,6 @@
 import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
-import logo_minimize from "@assets/icon.png";
+import logo_minimize from "@assets/icon.svg";
 import { UseTheme } from "@hooks/useTheme";
 import {
   FaBell,
@@ -12,7 +12,14 @@ import {
   FaGripLines,
   FaUser,
 } from "react-icons/fa";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  CSSProperties,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FaArrowRightFromBracket, FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -25,6 +32,8 @@ import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import ReactDOM from "react-dom";
 import { TabBar } from "@src/components/tabBar";
+import { BrandColor, colorPalette } from "@src/utils/colors";
+import { changeLanguage } from "i18next";
 // import { MegaMenu } from "flowbite-react";
 
 interface Layout {
@@ -42,6 +51,8 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function Layout({ children, menu }: Layout) {
   const { t } = useTranslation();
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+  const langState = useAppSelector((state) => state.preferenceSlice.language);
   const { isOnHover, setIsOnHover } = useContext(hoverContext);
   const [theme, setTheme] = UseTheme();
   const [openMobileMenu, toggleOpenMobileMenu] = useState<boolean>(false);
@@ -154,10 +165,13 @@ export function Layout({ children, menu }: Layout) {
     toggleOpenMobileMenu(false);
   }, [location]);
 
+  useEffect(() => {
+    changeLanguage(langState);
+  }, [langState]);
   return (
-    <div id="layout" className={`relative flex h-full w-full flex-1`}>
+    <div id="layout" className={`relative flex w-full flex-1`}>
       <div
-        className={`z-[10] hidden h-full overflow-hidden bg-light-primary sm:absolute sm:block sm:p-3 md:min-w-fit 2xl:relative ${isOnHover ? "sm:w-max" : "sm:w-16"} transition-all dark:bg-dark-primary`}
+        className={`z-[10] hidden h-full overflow-y-auto bg-light-primary sm:absolute sm:block sm:p-3 md:min-w-fit 2xl:relative ${isOnHover ? "sm:w-max" : "sm:w-16"} transition-all dark:bg-dark-primary`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
@@ -184,7 +198,6 @@ export function Layout({ children, menu }: Layout) {
           />
         </div>
         {/* <div className="my-4 w-full border-t border-gray-300 dark:border-gray-700"></div> */}
-
         {menu}
       </div>
       <div
@@ -196,7 +209,17 @@ export function Layout({ children, menu }: Layout) {
             <div className="text-gray-900 dark:text-gray-100">
               {dateTime?.date}
             </div>
-            <div className="text-lg text-blue-600">{dateTime?.time}</div>
+            <div
+              className="text-lg text-[var(--brand-color-500)]"
+              style={
+                {
+                  "--brand-color-500":
+                    colorPalette[brandState as BrandColor][500],
+                } as CSSProperties
+              }
+            >
+              {dateTime?.time}
+            </div>
           </div>
           <div className="top-bar flex gap-4">
             <div className="channels flex items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">

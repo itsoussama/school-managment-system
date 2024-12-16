@@ -1,4 +1,4 @@
-import { Input, RSelect } from "@src/components/input";
+import { Button, Input, RSelect } from "@src/components/input";
 
 import {
   Badge,
@@ -11,13 +11,7 @@ import {
   ToggleSwitch,
   Tooltip,
 } from "flowbite-react";
-import React, {
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
@@ -60,7 +54,12 @@ import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import { customTable, customTooltip } from "@src/utils/flowbite";
+import {
+  customTable,
+  customToggleSwitch,
+  customTooltip,
+} from "@src/utils/flowbite";
+import React from "react";
 
 interface Check {
   id?: number;
@@ -154,6 +153,7 @@ interface Filter {
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewTeachers() {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const queryClient = useQueryClient();
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
 
@@ -790,12 +790,9 @@ export function ViewTeachers() {
                   {t("status.active_deactivate")}
                 </span>
                 <ToggleSwitch
-                  theme={{
-                    toggle: {
-                      base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                    },
-                  }}
+                  theme={customToggleSwitch}
                   checked={blockSwitch[getTeacherQuery.data?.data.id] || false}
+                  color={brandState}
                   onChange={() =>
                     setOpenModal({
                       id: getTeacherQuery.data?.data.id,
@@ -1077,7 +1074,7 @@ export function ViewTeachers() {
                       </>
                     ) : (
                       <>
-                        <button
+                        <Button
                           onClick={() => toggleChangePassword(true)}
                           className="btn-default !w-auto"
                         >
@@ -1087,7 +1084,7 @@ export function ViewTeachers() {
                               " " +
                               t("form.fields.password"),
                           })}
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
@@ -1096,9 +1093,9 @@ export function ViewTeachers() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
             </button>
@@ -1289,7 +1286,7 @@ export function ViewTeachers() {
 
               <Table.Body
                 ref={tableRef}
-                className="relative divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
                 {getTeachersQuery.isFetching &&
                   (getTeachersQuery.isRefetching || perPage) && (
@@ -1521,11 +1518,8 @@ export function ViewTeachers() {
                         </Table.Cell>
                         <Table.Cell>
                           <ToggleSwitch
-                            theme={{
-                              toggle: {
-                                base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                              },
-                            }}
+                            theme={customToggleSwitch}
+                            color={brandState}
                             checked={blockSwitch[teacher.id] || false}
                             onChange={() =>
                               setOpenModal({

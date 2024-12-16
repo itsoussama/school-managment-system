@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import Alert from "@src/components/alert";
 import Accordion from "@src/components/accordion";
 import InfoCard from "@src/admin/components/infoCard";
-import { Input } from "@src/components/input";
+import { Button, Input } from "@src/components/input";
 import { customTable } from "@src/utils/flowbite";
 
 interface Modal {
@@ -329,9 +329,9 @@ export default function GradesSections() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
             </button>

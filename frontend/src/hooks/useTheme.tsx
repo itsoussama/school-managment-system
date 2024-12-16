@@ -6,11 +6,10 @@ export type Theme = "dark" | "light" | "auto";
 
 export function UseTheme(fallbackValue?: Theme) {
   //  todo: use localstorage to initiate mode
-  const localstorage = window.localStorage;
-  const [state, setState] = useState<Theme>(
-    (localstorage.getItem("color-preferd") as Theme) ?? "",
-  );
+
   const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
+  const [state, setState] = useState<Theme>((themeState as Theme) ?? "");
+
   const dispatch = useAppDispatch();
 
   // todo: check if there is no initial value in the localstorage then add the default mode based on the device mode
@@ -37,44 +36,43 @@ export function UseTheme(fallbackValue?: Theme) {
 
   useEffect(() => {
     if (themeState) {
-      localstorage.setItem("color-preferd", state);
-
       const mediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
 
       switch (themeState) {
         case "dark":
           document.body.className = "dark";
           document.getElementById("layout")?.classList.add("dark");
-          localstorage.setItem("color-preferd", "dark");
+          dispatch(toggleThemeMode("dark"));
           break;
         case "light":
           document.body.className = "";
           document.getElementById("layout")?.classList.remove("dark");
-          localstorage.setItem("color-preferd", "light");
+          dispatch(toggleThemeMode("light"));
           break;
         default:
           if (mediaQueryList.matches) {
             document.body.className = "dark";
             document.getElementById("layout")?.classList.add("dark");
-            localstorage.setItem("color-preferd", "dark");
+            dispatch(toggleThemeMode("dark"));
           } else {
             document.body.className = "";
             document.getElementById("layout")?.classList.remove("dark");
-            localstorage.setItem("color-preferd", "light");
+            dispatch(toggleThemeMode("light"));
           }
           break;
       }
 
-      if (!localstorage.getItem("color-preferd")) {
-        localstorage.setItem(
-          "color-preferd",
-          window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light",
+      if (!themeState) {
+        dispatch(
+          toggleThemeMode(
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light",
+          ),
         );
       }
     }
-  }, [state, localstorage, themeState]);
+  }, [state, themeState, dispatch]);
 
   useEffect(() => {
     if (fallbackValue) {

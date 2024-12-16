@@ -1,4 +1,4 @@
-import { Checkbox, Input, MultiSelect } from "@src/components/input";
+import { Checkbox, Input, MultiSelect, Button } from "@src/components/input";
 import { addStudent, assignChilds, getGrades, getStudents } from "@api";
 import {
   keepPreviousData,
@@ -465,9 +465,9 @@ function AddChildModal({
               </div>
             </Modal.Body>
             <Modal.Footer>
-              <button type="submit" className="btn-default !w-auto">
+              <Button type="submit" className="btn-default !w-auto">
                 {t("general.accept")}
-              </button>
+              </Button>
               <button className="btn-danger !w-auto" onClick={onCloseModal}>
                 {t("general.decline")}
               </button>
@@ -524,9 +524,9 @@ function AddChildModal({
               </div>
             </div>
             <Modal.Footer>
-              <button type="submit" className="btn-default !w-auto">
+              <Button type="submit" className="btn-default !w-auto">
                 {t("general.accept")}
-              </button>
+              </Button>
               <button className="btn-danger !w-auto" onClick={onCloseModal}>
                 {t("general.decline")}
               </button>

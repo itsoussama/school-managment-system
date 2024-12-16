@@ -3,7 +3,7 @@ import { alertIntialState } from "@src/utils/alert";
 import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb, Modal } from "flowbite-react";
-import { FormEvent, useState } from "react";
+import { CSSProperties, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaTrash } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -16,13 +16,15 @@ import interactionPlugin, {
 } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import bootstrap5Plugin from "@fullcalendar/bootstrap5";
-import { Input, RSelect } from "@src/components/input";
+import { Button, Input, RSelect } from "@src/components/input";
 import {
   DateSelectArg,
   EventClickArg,
   EventDropArg,
 } from "@fullcalendar/core/index.js";
 import allLocales from "@fullcalendar/core/locales-all";
+import { BrandColor, colorPalette } from "@src/utils/colors";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
 
 interface Modal {
   id: string;
@@ -54,6 +56,7 @@ type CalendarEventChange = EventClickArg | EventDropArg | EventResizeDoneArg;
 
 export default function Timetable() {
   const { t } = useTranslation();
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [openModal, setOpenModal] = useState<Modal>();
@@ -272,9 +275,9 @@ export default function Timetable() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
             </button>
@@ -329,9 +332,9 @@ export default function Timetable() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
             </button>
@@ -390,9 +393,9 @@ export default function Timetable() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button
               className="btn-outline !ml-0 !w-auto"
               onClick={onCloseModal}
@@ -411,7 +414,16 @@ export default function Timetable() {
       </Modal>
 
       {/* <TransitionAnimation> */}
-      <div className="flex-1">
+      <div
+        className="flex-1"
+        style={
+          {
+            "--brand-color-600": colorPalette[brandState as BrandColor][600],
+            "--brand-color-700": colorPalette[brandState as BrandColor][700],
+            "--brand-color-900": colorPalette[brandState as BrandColor][900],
+          } as CSSProperties
+        }
+      >
         <FullCalendar
           plugins={[timeGridPlugin, bootstrap5Plugin, interactionPlugin]}
           // themeSystem="bootstrap5"

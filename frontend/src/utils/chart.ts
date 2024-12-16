@@ -1,7 +1,21 @@
-import { colorPalette } from "./colors";
+import { BrandColor, colorPalette, Colors, colors } from "./colors";
+
+const borderComplementaryColor = {
+  indigo: "lime",
+  purple: "lime",
+  pink: "green",
+  blue: "orange",
+  cyan: "lime",
+  green: "cyan",
+  lime: "purple",
+  red: "cyan",
+  teal: "orange",
+  yellow: "indigo",
+}
 
 
-  const chartOptions = (mode: 'dark' | 'light' | 'auto') =>{ return {
+  const chartOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) =>{
+     return {
     chart: {
       toolbar: {
         show: false,
@@ -23,7 +37,7 @@ import { colorPalette } from "./colors";
     },
     fill: {
       type: ["gradient", "solid"],
-      colors: colorPalette.blue[600],
+      colors: [colorPalette[brandColor as BrandColor][600]],
       gradient: {
         shade: "dark",
         type: "vertical",
@@ -35,6 +49,7 @@ import { colorPalette } from "./colors";
     },
     stroke: {
       width: [0, 4],
+      colors: [undefined, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500]],
       curve: "smooth",
     },
     // ? Enable data on chart
@@ -66,8 +81,9 @@ import { colorPalette } from "./colors";
       },
       markers: {
         size: [8, 6],
-        shape: ["line", "circle"],
-        strokeWidth: [2, 0],
+        fillColors: [colorPalette[brandColor as BrandColor][600], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500]],
+        shape: ["square", "line"],
+        strokeWidth: [0, 2],
         offsetX: -5,
       },
       itemMargin: {

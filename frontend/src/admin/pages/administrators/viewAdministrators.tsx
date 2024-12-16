@@ -1,4 +1,4 @@
-import { Input, RSelect } from "@src/components/input";
+import { Button, Input, RSelect } from "@src/components/input";
 
 import {
   Breadcrumb,
@@ -51,12 +51,15 @@ import {
 } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import AddChildModal from "@src/admin/components/addChildModal";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import { customTable, customTooltip } from "@src/utils/flowbite";
+import {
+  customTable,
+  customToggleSwitch,
+  customTooltip,
+} from "@src/utils/flowbite";
 
 interface Check {
   id?: number;
@@ -66,12 +69,6 @@ interface Check {
 interface Modal {
   id: number;
   type?: "view" | "edit" | "delete" | "block";
-  open: boolean;
-}
-
-interface ChildModal {
-  id: number;
-  school_id: number;
   open: boolean;
 }
 
@@ -147,6 +144,7 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewAdministrators() {
   const queryClient = useQueryClient();
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
 
@@ -163,11 +161,6 @@ export function ViewAdministrators() {
   const [numChecked, setNumChecked] = useState<number>(0);
   const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [openChildModal, setOpenChildModal] = useState<ChildModal>({
-    id: 0,
-    school_id: 0,
-    open: false,
-  });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
@@ -778,14 +771,11 @@ export function ViewAdministrators() {
                   {t("status.active_deactivate")}
                 </span>
                 <ToggleSwitch
-                  theme={{
-                    toggle: {
-                      base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                    },
-                  }}
+                  theme={customToggleSwitch}
                   checked={
                     blockSwitch[getAdministratorQuery.data?.data.id] || false
                   }
+                  color={brandState}
                   onChange={() =>
                     setOpenModal({
                       id: getAdministratorQuery.data?.data.id,
@@ -1021,7 +1011,7 @@ export function ViewAdministrators() {
                       </>
                     ) : (
                       <>
-                        <button
+                        <Button
                           onClick={() => toggleChangePassword(true)}
                           className="btn-default !w-auto"
                         >
@@ -1031,7 +1021,7 @@ export function ViewAdministrators() {
                               " " +
                               t("form.fields.password"),
                           })}
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
@@ -1040,9 +1030,9 @@ export function ViewAdministrators() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
             </button>
@@ -1168,19 +1158,6 @@ export function ViewAdministrators() {
         </form>
       </Modal>
 
-      <AddChildModal
-        open={openChildModal?.open as boolean}
-        toggleOpen={(isOpen: boolean) =>
-          setOpenChildModal((prev: ChildModal) => ({
-            id: openChildModal?.id as number,
-            school_id: prev?.school_id,
-            open: isOpen,
-          }))
-        }
-        guardian_id={openChildModal.id}
-        school_id={openChildModal?.school_id}
-      />
-
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
           {checks.find((val) => val.status === true) ? (
@@ -1245,7 +1222,7 @@ export function ViewAdministrators() {
               </Table.Head>
               <Table.Body
                 ref={tableRef}
-                className="relative divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
                 {getAdministratorsQuery.isFetching &&
                   (getAdministratorsQuery.isRefetching || perPage) && (
@@ -1312,7 +1289,7 @@ export function ViewAdministrators() {
                     (administrator: Administrator, key: number) => (
                       <Table.Row
                         key={key}
-                        className="w-max bg-white dark:bg-gray-800"
+                        className="w-max border-b border-b-gray-300 bg-white dark:border-b-gray-600 dark:bg-gray-800"
                       >
                         <Table.Cell className="sticky left-0 z-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
@@ -1359,11 +1336,8 @@ export function ViewAdministrators() {
                         </Table.Cell>
                         <Table.Cell>
                           <ToggleSwitch
-                            theme={{
-                              toggle: {
-                                base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                              },
-                            }}
+                            theme={customToggleSwitch}
+                            color={brandState}
                             checked={blockSwitch[administrator.id] || false}
                             onChange={() =>
                               setOpenModal({

@@ -1,4 +1,4 @@
-import { Checkbox, Input, MultiSelect } from "@components/input";
+import { Button, Checkbox, Input, MultiSelect } from "@components/input";
 import { addResource, getCategories } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
@@ -250,14 +250,14 @@ export default function AddResources() {
                 )}
               </MultiSelect>
 
-              <button className="btn-default m-0 mt-auto" type="submit">
+              <Button className="btn-default m-0 mt-auto" type="submit">
                 {t("actions.add_entity", {
                   entity:
                     t("determiners.definite.feminine") +
                     " " +
                     t("entities.item"),
                 })}
-              </button>
+              </Button>
             </form>
           </div>
         </div>

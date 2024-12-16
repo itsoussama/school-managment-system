@@ -1,4 +1,4 @@
-import { Checkbox, Input, MultiSelect } from "@src/components/input";
+import { Button, Checkbox, Input, MultiSelect } from "@src/components/input";
 import { addTeacher, getGrades, getSubjects } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
@@ -362,9 +362,9 @@ export default function AddTeacher() {
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
-              <button className="btn-default m-0 mt-auto" type="submit">
+              <Button className="btn-default m-0 mt-auto" type="submit">
                 {t("form.buttons.create", { label: t("general.account") })}
-              </button>
+              </Button>
             </form>
           </div>
         </div>
