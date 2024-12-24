@@ -1,7 +1,6 @@
 import { Button, Input, RSelect } from "@src/components/input";
 
 import {
-  Badge,
   Breadcrumb,
   Checkbox,
   Modal,
@@ -11,11 +10,16 @@ import {
   ToggleSwitch,
   Tooltip,
 } from "flowbite-react";
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  ChangeEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
-  FaEye,
   FaHome,
   FaLock,
   FaPen,
@@ -24,7 +28,6 @@ import {
   FaSortUp,
   FaTrash,
 } from "react-icons/fa";
-import { IoFilter } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 
 import {
@@ -36,12 +39,10 @@ import {
 import {
   deleteUser,
   getUser,
-  getTeachers,
-  setTeacher,
-  getSubjects,
-  getGrades,
-  blockUser,
+  getAdministrators,
+  setAdministrator,
   unblockUser,
+  blockUser,
 } from "@api";
 import {
   SkeletonContent,
@@ -50,16 +51,15 @@ import {
 } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
   customToggleSwitch,
   customTooltip,
 } from "@src/utils/flowbite";
-import React from "react";
 
 interface Check {
   id?: number;
@@ -72,11 +72,13 @@ interface Modal {
   open: boolean;
 }
 
-interface Teacher {
+interface Administrator {
   id: number;
+  imagePath: string;
   name: string;
   email: string;
   phone: string;
+  school_id: number;
   blocked?: boolean;
   role: [
     {
@@ -84,27 +86,8 @@ interface Teacher {
       name: string;
     },
   ];
-  subjects: [
-    {
-      id: string;
-      name: string;
-    },
-  ];
-  grades: [
-    {
-      id: string;
-      label: string;
-    },
-  ];
 }
-interface Grade {
-  id: number;
-  label: string;
-}
-interface Subject {
-  id: number;
-  name: string;
-}
+
 export interface FormData {
   _method: string;
   id: number;
@@ -140,40 +123,47 @@ interface BlockSwitch {
   [key: string]: boolean;
 }
 
+interface File {
+  lastModified: number;
+  name: string;
+  size: number;
+  type: string;
+}
+
 interface Sort {
   column: string;
   direction: "asc" | "desc";
 }
+
 interface Filter {
   name: string;
-  subject: string;
-  gradelevel: string;
+  childName: string;
 }
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
-export function ViewTeachers() {
-  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+export function ViewAdministrators() {
   const queryClient = useQueryClient();
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
+  const location = useLocation();
 
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
     name: "",
-    subject: "",
-    gradelevel: "",
+    childName: "",
   });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
   const isCheckBoxAll = useRef(false);
-  const [checks, setChecks] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
+  const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
+  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [data, setData] = useState<Data>({
     id: 0,
     firstName: "",
@@ -192,97 +182,70 @@ export function ViewTeachers() {
     phone: "",
   });
   const [changePassword, toggleChangePassword] = useState<boolean>(false);
+  // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
-  const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   const minSm = useBreakpoint("min", "sm");
-  const location = useLocation();
-  // const userId = useRef<string>(null)
 
-  const getAllTeachersQuery = useQuery({
-    queryKey: [
-      "getAllTeachers",
-      filter?.name,
-      filter?.subject,
-      filter?.gradelevel,
-    ],
+  const getAllAdministratorsQuery = useQuery({
+    queryKey: ["getAllAdministrators", filter?.name, filter?.childName],
     queryFn: () =>
-      getTeachers(
+      getAdministrators(
         1,
         -1,
         undefined,
         undefined,
         admin.school_id,
         filter?.name,
-        filter?.subject,
-        filter?.gradelevel,
       ),
     placeholderData: keepPreviousData,
   });
 
-  const getTeachersQuery = useQuery({
+  const getAdministratorsQuery = useQuery({
     queryKey: [
-      "getTeachers",
+      "getAdministrators",
       page,
       perPage,
       sort.column,
       sort.direction,
       admin.school_id,
       filter?.name,
-      filter?.subject,
-      filter?.gradelevel,
+      filter?.childName,
     ],
     queryFn: () =>
-      getTeachers(
+      getAdministrators(
         page,
         perPage,
         sort.column,
         sort.direction,
         admin.school_id,
         filter?.name,
-        filter?.subject,
-        filter?.gradelevel,
       ),
     placeholderData: keepPreviousData,
   });
 
-  const getTeacherQuery = useQuery({
-    queryKey: ["getTeacher", openModal?.id],
-    queryFn: () => getUser(openModal?.id as number),
+  const getAdministratorQuery = useQuery({
+    queryKey: ["getAdministrator", openModal?.id, "administrator"],
+    queryFn: () => getUser(openModal?.id as number, "administrator"),
     enabled: !!openModal?.id,
   });
 
-  const getAllSubjectsQuery = useQuery({
-    queryKey: [
-      "getAllSubjects",
-      // filter?.name,
-      // filter?.subject,
-      // filter?.gradelevel,
-    ],
-    queryFn: () => getSubjects(1, -1, undefined, undefined, admin.school_id),
-  });
-
-  const getGradesQuery = useQuery({
-    queryKey: ["getGrades"],
-    queryFn: getGrades,
-  });
-
-  const teacherMutation = useMutation({
-    mutationFn: setTeacher,
+  const administratorMutation = useMutation({
+    mutationFn: setAdministrator,
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({
-        queryKey: ["getTeacher"],
+        queryKey: ["getAdministrator"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getTeachers"],
+        queryKey: ["getAdministrators"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
+        queryKey: ["getAllAdministrators"],
       });
 
       setData({
@@ -306,7 +269,6 @@ export function ViewTeachers() {
 
       setPreviewImg(undefined);
     },
-
     onError: () => {
       toggleAlert({
         status: "fail",
@@ -320,13 +282,13 @@ export function ViewTeachers() {
     mutationFn: deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getTeachers"],
+        queryKey: ["getAdministrators"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
+        queryKey: ["getAllAdministrators"],
       });
-      // setOpenDeleteModal(undefined);
+
       setOpenModal(undefined);
       setPage(1);
 
@@ -360,16 +322,17 @@ export function ViewTeachers() {
     mutationFn: blockUser,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getTeacher"],
+        queryKey: ["getAdministrator"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getTeachers"],
+        queryKey: ["getAdministrators"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
+        queryKey: ["getAllAdministrators"],
       });
+
       toggleAlert({
         status: "success",
         message: "Operation Successful",
@@ -390,16 +353,17 @@ export function ViewTeachers() {
     mutationFn: unblockUser,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["getTeacher"],
+        queryKey: ["getAdministrator"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getTeachers"],
+        queryKey: ["getAdministrators"],
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
+        queryKey: ["getAllAdministrators"],
       });
+
       toggleAlert({
         status: "success",
         message: "Operation Successful",
@@ -415,6 +379,7 @@ export function ViewTeachers() {
       });
     },
   });
+
   // const [selectedItem, setSelectedItem] = useState()
 
   const onChange = (event: ChangeEvent) => {
@@ -428,8 +393,52 @@ export function ViewTeachers() {
           ? selectElem.options[selectElem.selectedIndex].value
           : inputElem.value,
     }));
-    // console.log((event.target as HTMLInputElement).value);
   };
+
+  const handleCheck = async (id?: number) => {
+    const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
+    // console.log(id);
+
+    if (!id) {
+      setChecks([]);
+      await handleChecks(firstCheckbox);
+    } else {
+      const getValue = checks.find((elem) => elem.id === id);
+      const filteredArr = checks.filter((elem) => elem.id !== id);
+      setChecks([
+        ...(filteredArr as []),
+        { id: id, status: !getValue?.status },
+      ]);
+      firstCheckbox.checked = false;
+    }
+  };
+
+  const handleChecks = useCallback(
+    async (firstCheckbox: HTMLInputElement) => {
+      if (getAllAdministratorsQuery.isFetched) {
+        await getAllAdministratorsQuery.data?.data.forEach(
+          (administrator: Administrator) => {
+            setChecks((prev) => {
+              const checkedData = prev.some(
+                (item) => item.id === administrator.id,
+              );
+              if (firstCheckbox.checked && !checkedData) {
+                return [
+                  ...prev,
+                  { id: administrator.id as number, status: true },
+                ];
+              }
+              return [
+                ...prev,
+                { id: administrator.id as number, status: false },
+              ];
+            });
+          },
+        );
+      }
+    },
+    [getAllAdministratorsQuery.data?.data, getAllAdministratorsQuery.isFetched],
+  );
 
   const handleClientError = (field: HTMLFormElement) => {
     // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
@@ -485,40 +494,6 @@ export function ViewTeachers() {
     return error;
   };
 
-  const handleCheck = async (id?: number) => {
-    const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
-
-    if (!id) {
-      setChecks([]);
-      await handleChecks(firstCheckbox);
-    } else {
-      const getValue = checks.find((elem) => elem.id === id);
-      const filteredArr = checks.filter((elem) => elem.id !== id);
-      setChecks([
-        ...(filteredArr as []),
-        { id: id, status: !getValue?.status },
-      ]);
-      firstCheckbox.checked = false;
-    }
-  };
-
-  const handleChecks = useCallback(
-    async (firstCheckbox: HTMLInputElement) => {
-      if (getAllTeachersQuery.isFetched) {
-        await getAllTeachersQuery.data?.data.forEach((teacher: Teacher) => {
-          setChecks((prev) => {
-            const checkedData = prev.some((item) => item.id === teacher.id);
-            if (firstCheckbox.checked && !checkedData) {
-              return [...prev, { id: teacher.id as number, status: true }];
-            }
-            return [...prev, { id: teacher.id as number, status: false }];
-          });
-        });
-      }
-    },
-    [getAllTeachersQuery.data?.data, getAllTeachersQuery.isFetched],
-  );
-
   const handleSort = (column: string) => {
     setSortPosition((prev) => prev + 1);
     switch (sortPosition) {
@@ -553,27 +528,6 @@ export function ViewTeachers() {
     }
   };
 
-  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const userId: number = openModal?.id as number;
-
-    if (!blockSwitch[userId]) {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: true,
-      }));
-      blockUserMutation.mutate({ user_id: userId });
-    } else {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: false,
-      }));
-      unBlockUserMutation.mutate({ user_id: userId });
-    }
-  };
-
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const input = event.target as HTMLFormElement;
@@ -596,7 +550,7 @@ export function ViewTeachers() {
         form["password_confirmation"] = data?.confirm_password;
       }
 
-      teacherMutation.mutate(form);
+      administratorMutation.mutate(form);
     } else {
       toggleAlert({
         status: "fail",
@@ -611,7 +565,7 @@ export function ViewTeachers() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getTeacherQuery.data?.data.name) {
+    if (input.verfication.value !== getAdministratorQuery.data?.data.name) {
       setIsVerficationMatch(false);
       return;
     }
@@ -619,27 +573,50 @@ export function ViewTeachers() {
     deleteUserQuery.mutate(openModal?.id as number);
   };
 
+  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const userId: number = openModal?.id as number;
+
+    if (!blockSwitch[userId]) {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [userId]: true,
+      }));
+      blockUserMutation.mutate({ user_id: userId });
+    } else {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [userId]: false,
+      }));
+      unBlockUserMutation.mutate({ user_id: userId });
+    }
+  };
+
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const { data: teacherData } = await queryClient.ensureQueryData({
-      queryKey: ["getTeacher", id],
+    const { data: administratorData } = await queryClient.ensureQueryData({
+      queryKey: ["getAdministrator", id],
       queryFn: () => getUser(id),
     });
 
     setData({
-      id: teacherData?.id,
-      firstName: getUserName(teacherData?.name).firstName,
-      lastName: getUserName(teacherData?.name).lastName,
-      email: teacherData?.email,
-      phone: teacherData?.phone,
+      id: administratorData?.id,
+      firstName: getUserName(administratorData?.name).firstName,
+      lastName: getUserName(administratorData?.name).lastName,
+      email: administratorData?.email,
+      phone: administratorData?.phone,
       password: "",
       confirm_password: "",
     });
   };
 
   const onCloseModal = () => {
-    teacherMutation.reset();
+    administratorMutation.reset();
     setOpenModal(undefined);
+
+    toggleChangePassword(false);
 
     setData({
       id: 0,
@@ -655,9 +632,9 @@ export function ViewTeachers() {
       firstName: "",
       lastName: "",
       email: "",
-      phone: "",
       password: "",
       confirm_password: "",
+      phone: "",
     });
   };
 
@@ -710,14 +687,16 @@ export function ViewTeachers() {
   }, [page, handleChecks]);
 
   useEffect(() => {
-    if (getTeachersQuery.isFetched) {
+    if (getAdministratorsQuery.isFetched) {
       let data = {};
-      getTeachersQuery.data?.data.data.map((teacher: Teacher) => {
-        data = { ...data, [teacher.id]: !!teacher.blocked };
-      });
+      getAdministratorsQuery.data?.data.data.map(
+        (administrator: Administrator) => {
+          data = { ...data, [administrator.id]: !!administrator.blocked };
+        },
+      );
       setBlockSwitch(data);
     }
-  }, [getTeachersQuery.data, getTeachersQuery.isFetched]);
+  }, [getAdministratorsQuery.data, getAdministratorsQuery.isFetched]);
 
   return (
     <div className="flex w-full flex-col">
@@ -727,36 +706,37 @@ export function ViewTeachers() {
         message={alert.message}
         close={(value) => toggleAlert(value)}
       />
+
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
         className="fade-edge fade-edge-x my-4 flex max-w-max cursor-default rounded-s border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-gray-800"
         aria-label="Breadcrumb"
       >
-        <Link
-          className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-          to="/"
-        >
-          <Breadcrumb.Item icon={FaHome}>
+        <Breadcrumb.Item icon={FaHome}>
+          <Link
+            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+            to="/"
+          >
             {minSm ? t("general.home") : ""}
-          </Breadcrumb.Item>
-        </Link>
+          </Link>
+        </Breadcrumb.Item>
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("entities.teachers")}
+              {t("entities.administrators")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
         <Breadcrumb.Item>
-          {t("actions.view_entity", { entity: t("entities.teacher") })}
+          {t("actions.view_entity", { entity: t("entities.administrators") })}
         </Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
-        size={"4xl"}
+        size={"3xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -771,7 +751,7 @@ export function ViewTeachers() {
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {t("form.fields.id", { entity: t("entities.parent") })}:
+          {t("form.fields.id", { entity: t("entities.administrators") })}:
           <b> {openModal?.id}</b>
         </Modal.Header>
         <Modal.Body>
@@ -779,9 +759,10 @@ export function ViewTeachers() {
             <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource={
-                  getTeacherQuery.data?.data.imagePath
-                    ? SERVER_STORAGE + getTeacherQuery.data?.data.imagePath
-                    : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.data.name).firstName}+${getUserName(getTeacherQuery.data?.data.name).lastName}`
+                  getAdministratorQuery.data?.data.imagePath
+                    ? SERVER_STORAGE +
+                      getAdministratorQuery.data?.data.imagePath
+                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.data.name).firstName}+${getUserName(getAdministratorQuery.data?.data.name).lastName}`
                 }
                 className="h-40 w-40"
               />
@@ -791,11 +772,13 @@ export function ViewTeachers() {
                 </span>
                 <ToggleSwitch
                   theme={customToggleSwitch}
-                  checked={blockSwitch[getTeacherQuery.data?.data.id] || false}
+                  checked={
+                    blockSwitch[getAdministratorQuery.data?.data.id] || false
+                  }
                   color={brandState}
                   onChange={() =>
                     setOpenModal({
-                      id: getTeacherQuery.data?.data.id,
+                      id: getAdministratorQuery.data?.data.id,
                       type: "block",
                       open: true,
                     })
@@ -808,14 +791,17 @@ export function ViewTeachers() {
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   {t("information.personal_information")}
                 </h1>
-                <SkeletonContent isLoaded={getTeacherQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8">
+                <SkeletonContent isLoaded={getAdministratorQuery.isFetched}>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                         {t("form.fields.first_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getTeacherQuery.data?.data.name).firstName}
+                        {
+                          getUserName(getAdministratorQuery.data?.data.name)
+                            .firstName
+                        }
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -823,7 +809,10 @@ export function ViewTeachers() {
                         {t("form.fields.last_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getTeacherQuery.data?.data.name).lastName}
+                        {
+                          getUserName(getAdministratorQuery.data?.data.name)
+                            .lastName
+                        }
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -831,7 +820,7 @@ export function ViewTeachers() {
                         {t("form.fields.email")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getTeacherQuery.data?.data.email}
+                        {getAdministratorQuery.data?.data.email}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -839,7 +828,7 @@ export function ViewTeachers() {
                         {t("form.fields.phone_number")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getTeacherQuery.data?.data.phone}
+                        {getAdministratorQuery.data?.data.phone}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -852,58 +841,6 @@ export function ViewTeachers() {
                     </div>
                   </div>
                 </SkeletonContent>
-              </div>
-
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.academic_information")}
-                </h1>
-                <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {t("form.fields.subjects")}:
-                    </span>
-                    <div className="flex w-max max-w-48 flex-wrap">
-                      {getTeacherQuery.data?.data.subjects.map(
-                        (subject: Subject, index: number) => (
-                          <Badge
-                            key={index}
-                            color={badgeColor[index % badgeColor.length]}
-                            className="mb-1 me-1 rounded-xs"
-                          >
-                            {subject.name}
-                          </Badge>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {t("form.fields.grade_levels")}:
-                    </span>
-                    <div className="flex w-max max-w-48 flex-wrap">
-                      {getTeacherQuery.data?.data.grades.map(
-                        (grade: Grade, index: number) => (
-                          <Badge
-                            key={index}
-                            color={badgeColor[index % badgeColor.length]}
-                            className="mb-1 me-1 rounded-xs"
-                          >
-                            {grade.label}
-                          </Badge>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {t("form.fields.start_date")}:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      2024/01/01
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -928,7 +865,7 @@ export function ViewTeachers() {
       >
         <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
-            {t("form.fields.id", { entity: t("entities.parent") })}:
+            {t("form.fields.id", { entity: t("entities.administrators") })}:
             <b> {openModal?.id}</b>
           </Modal.Header>
           <Modal.Body>
@@ -938,13 +875,13 @@ export function ViewTeachers() {
                   imgSource={
                     previewImg
                       ? previewImg
-                      : getTeacherQuery.data?.data.imagePath
-                        ? SERVER_STORAGE + getTeacherQuery.data?.data.imagePath
-                        : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.data.name).firstName}+${getUserName(getTeacherQuery.data?.data.name).lastName}`
+                      : getAdministratorQuery.data?.data.imagePath
+                        ? SERVER_STORAGE +
+                          getAdministratorQuery.data?.data.imagePath
+                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.data.name).firstName}+${getUserName(getAdministratorQuery.data?.data.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
-
                 <button className="btn-gray relative overflow-hidden">
                   <input
                     type="file"
@@ -968,7 +905,7 @@ export function ViewTeachers() {
                   </span>
                 </div>
               </div>
-              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
+              <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                     {t("information.personal_information")}
@@ -981,7 +918,7 @@ export function ViewTeachers() {
                       label={t("form.fields.first_name")}
                       placeholder={t("form.placeholders.first_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getTeacherQuery.isFetching && true}
+                      disabled={getAdministratorQuery.isFetching && true}
                       value={data?.firstName}
                       onChange={onChange}
                     />
@@ -993,7 +930,7 @@ export function ViewTeachers() {
                       label={t("form.fields.last_name")}
                       placeholder={t("form.placeholders.last_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getTeacherQuery.isFetching && true}
+                      disabled={getAdministratorQuery.isFetching && true}
                       value={data?.lastName}
                       onChange={onChange}
                     />
@@ -1017,7 +954,7 @@ export function ViewTeachers() {
                       placeholder="06 00 00 00"
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getTeacherQuery.isFetching && true}
+                      disabled={getAdministratorQuery.isFetching && true}
                       value={data?.phone}
                       onChange={onChange}
                     />
@@ -1029,7 +966,7 @@ export function ViewTeachers() {
                       label={t("form.fields.email")}
                       placeholder={t("form.placeholders.email")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getTeacherQuery.isFetching && true}
+                      disabled={getAdministratorQuery.isFetching && true}
                       value={data?.email}
                       onChange={onChange}
                     />
@@ -1121,13 +1058,15 @@ export function ViewTeachers() {
       >
         <form onSubmit={onSubmitDelete}>
           <Modal.Header>
-            {t("actions.delete_entity", { entity: t("entities.parent") })}
+            {t("actions.delete_entity", {
+              entity: t("entities.administrators"),
+            })}
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.delete.title")}{" "}
-                <b>{getTeacherQuery.data?.data.name} ?</b>
+                {t("modals.delete.title")}
+                <b>{getAdministratorQuery.data?.data.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -1135,7 +1074,7 @@ export function ViewTeachers() {
               </div>
               <p className="text-gray-900 dark:text-white">
                 {t("modals.delete.label", {
-                  item: getTeacherQuery.data?.data.name,
+                  item: getAdministratorQuery.data?.data.name,
                 })}
               </p>
               <Input
@@ -1152,10 +1091,7 @@ export function ViewTeachers() {
             <button type="submit" className="btn-danger !w-auto">
               {t("modals.delete.delete_button")}
             </button>
-            <button
-              className="btn-outline !ml-0 !w-auto"
-              onClick={onCloseModal}
-            >
+            <button className="btn-outline !w-auto" onClick={onCloseModal}>
               {t("modals.delete.cancel_button")}
             </button>
           </Modal.Footer>
@@ -1187,15 +1123,15 @@ export function ViewTeachers() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.block.title")}{" "}
-                <b>{getTeacherQuery.data?.data.name} ?</b>
+                <b>{getAdministratorQuery.data?.data.name}</b>
               </p>
               {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("delete-modal-message")}</p>
+                <p className="text-white">{t("modals.block.message")}</p>
               </div> */}
               {/* <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")}{" "}
-                <b>{getParentQuery.data?.data.name}</b>
+                {t("modals.block.label")}{" "}
+                <b>{getAdministratorQuery.data?.data.name}</b>
               </p> */}
               {/* <Input
                 type="text"
@@ -1203,7 +1139,7 @@ export function ViewTeachers() {
                 name="verfication"
                 placeholder="John doe"
                 error={
-                  !isVerficationMatch ? t("delete-modal-error") : null
+                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
                 }
                 required
               /> */}
@@ -1211,7 +1147,7 @@ export function ViewTeachers() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
-              {getTeacherQuery.data?.data.blocked == 0
+              {getAdministratorQuery.data?.data.blocked == 0
                 ? t("modals.block.block_button")
                 : t("modals.block.unblock_button")}
             </button>
@@ -1221,6 +1157,7 @@ export function ViewTeachers() {
           </Modal.Footer>
         </form>
       </Modal>
+
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
           {checks.find((val) => val.status === true) ? (
@@ -1251,7 +1188,9 @@ export function ViewTeachers() {
                   />
                 </Table.HeadCell>
                 <Table.HeadCell>
-                  {t("form.fields.id", { entity: t("entities.parent") })}
+                  {t("form.fields.id", {
+                    entity: t("entities.administrators"),
+                  })}
                 </Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center gap-x-3">
@@ -1273,8 +1212,6 @@ export function ViewTeachers() {
                     </div>
                   </div>
                 </Table.HeadCell>
-                <Table.HeadCell>{t("form.fields.subjects")}</Table.HeadCell>
-                <Table.HeadCell>{t("form.fields.grade_levels")}</Table.HeadCell>
                 <Table.HeadCell>{t("form.fields.email")}</Table.HeadCell>
                 <Table.HeadCell>{t("form.fields.phone_number")}</Table.HeadCell>
                 <Table.HeadCell>{t("general.active_time")}</Table.HeadCell>
@@ -1283,13 +1220,12 @@ export function ViewTeachers() {
                   <span className="w-full">{t("general.actions")}</span>
                 </Table.HeadCell>
               </Table.Head>
-
               <Table.Body
                 ref={tableRef}
                 className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
-                {getTeachersQuery.isFetching &&
-                  (getTeachersQuery.isRefetching || perPage) && (
+                {getAdministratorsQuery.isFetching &&
+                  (getAdministratorsQuery.isRefetching || perPage) && (
                     <Table.Row>
                       <Table.Cell className="p-0">
                         <div
@@ -1304,6 +1240,7 @@ export function ViewTeachers() {
                   <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
                   <Table.Cell className="p-2"></Table.Cell>
                   <Table.Cell className="p-2">
+                    {/* <div className="h-2 w-12 bg-red-600"></div> */}
                     <Input
                       id="search"
                       type="text"
@@ -1336,101 +1273,6 @@ export function ViewTeachers() {
                       }
                     />
                   </Table.Cell>
-                  <Table.Cell className="p-2">
-                    <RSelect
-                      id="subject"
-                      name="subject"
-                      icon={
-                        <>
-                          <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.subject !== "" && (
-                            <FaRegCircleXmark
-                              onClick={() =>
-                                setFilter((prev) => ({ ...prev, subject: "" }))
-                              }
-                              className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                            />
-                          )}
-                        </>
-                      }
-                      custom-style={{
-                        inputStyle: "px-9 !py-1 min-w-36",
-                        labelStyle: "mb-0 !inline",
-                      }}
-                      defaultValue={""}
-                      onChange={(e) =>
-                        setFilter((prev) => ({
-                          ...prev,
-                          [e.target.id]:
-                            e.target.options[e.target.selectedIndex].value,
-                        }))
-                      }
-                    >
-                      <option
-                        value=""
-                        selected={filter.subject == "" ? true : false}
-                        disabled
-                      >
-                        {t("general.all")}
-                      </option>
-                      {getAllSubjectsQuery.data?.map(
-                        (subject: Subject, index: number) => (
-                          <option key={index} value={subject.id}>
-                            {subject.name}
-                          </option>
-                        ),
-                      )}
-                    </RSelect>
-                  </Table.Cell>
-                  <Table.Cell className="p-2">
-                    <RSelect
-                      id="gradelevel"
-                      name="gradelevel"
-                      icon={
-                        <>
-                          <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.gradelevel !== "" && (
-                            <FaRegCircleXmark
-                              onClick={() =>
-                                setFilter((prev) => ({
-                                  ...prev,
-                                  gradelevel: "",
-                                }))
-                              }
-                              className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                            />
-                          )}
-                        </>
-                      }
-                      custom-style={{
-                        inputStyle: "px-9 !py-1 min-w-36",
-                        labelStyle: "mb-0 !inline",
-                      }}
-                      defaultValue=""
-                      onChange={(e) =>
-                        setFilter((prev) => ({
-                          ...prev,
-                          [e.target.id]:
-                            e.target.options[e.target.selectedIndex].value,
-                        }))
-                      }
-                    >
-                      <option
-                        value=""
-                        selected={filter.gradelevel == "" ? true : false}
-                        disabled
-                      >
-                        {t("general.all")}
-                      </option>
-                      {getGradesQuery.data?.data.data.map(
-                        (grade: Grade, index: number) => (
-                          <option key={index} value={grade.id}>
-                            {grade.label}
-                          </option>
-                        ),
-                      )}
-                    </RSelect>
-                  </Table.Cell>
 
                   <Table.Cell className="p-2"></Table.Cell>
                   <Table.Cell className="p-2"></Table.Cell>
@@ -1438,100 +1280,76 @@ export function ViewTeachers() {
                   <Table.Cell className="p-2"></Table.Cell>
                   <Table.Cell className="p-2"></Table.Cell>
                 </Table.Row>
-                {getTeachersQuery.isFetching &&
-                !(getTeachersQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={9} />
+
+                {getAdministratorsQuery.isFetching &&
+                !(getAdministratorsQuery.isRefetching || perPage) ? (
+                  <SkeletonTable cols={7} />
                 ) : (
-                  getTeachersQuery.data?.data.data.map(
-                    (teacher: Teacher, key: number) => (
+                  getAdministratorsQuery.data?.data.data.map(
+                    (administrator: Administrator, key: number) => (
                       <Table.Row
                         key={key}
-                        className="w-max !border-b bg-white dark:border-gray-700 dark:bg-gray-800"
+                        className="w-max border-b border-b-gray-300 bg-white dark:border-b-gray-600 dark:bg-gray-800"
                       >
-                        <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                        <Table.Cell className="sticky left-0 z-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
                             className="rounded-xs"
-                            id={teacher.id.toString()}
+                            id={administrator.id.toString()}
                             name="checkbox"
                             checked={
-                              checks.find((check) => check.id == teacher.id)
-                                ?.status == true
+                              checks.find(
+                                (check) => check.id == administrator.id,
+                              )?.status == true
                                 ? true
                                 : false
                             }
-                            onChange={() => handleCheck(teacher.id)}
+                            onChange={() => handleCheck(administrator.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          T00{teacher.id}
+                          {administrator.id}
                         </Table.Cell>
-                        <Table.Cell>{teacher.name}</Table.Cell>
+                        <Table.Cell>{administrator.name}</Table.Cell>
+
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          <div className="flex w-max max-w-36 flex-wrap">
-                            {teacher.subjects.map((subject, index) => (
-                              <Badge
-                                key={index}
-                                color={badgeColor[index % badgeColor.length]}
-                                className="mb-1 me-1 rounded-xs"
-                              >
-                                {subject.name}
-                              </Badge>
-                            ))}
-                          </div>
+                          {administrator.email}
                         </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex w-max max-w-36 flex-wrap">
-                            {teacher.grades.map((grade, index) => (
-                              <Badge
-                                key={index}
-                                color={badgeColor[index % badgeColor.length]}
-                                className="mb-1 me-1 rounded-xs"
-                              >
-                                {grade.label}
-                              </Badge>
-                            ))}
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {teacher.email}
-                        </Table.Cell>
-                        <Table.Cell>{teacher.phone}</Table.Cell>
+                        <Table.Cell>{administrator.phone}</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                           {/* <span>
-                      {formatDuration(teacher.time_spent).hour}
+                      {formatDuration(administrator.time_spent).hour}
                       <span className="text-gray-500 dark:text-gray-400">
                         {" "}
                         h{" "}
                       </span>
-                      {formatDuration(teacher.time_spent).minute > 0
-                        ? formatDuration(teacher.time_spent).minute
+                      {formatDuration(administrator.time_spent).minute > 0
+                        ? formatDuration(administrator.time_spent).minute
                         : ""}
                       <span
                         className="text-gray-500 dark:text-gray-400"
-                        hidden={formatDuration(teacher.time_spent).minute <= 0}
+                        hidden={formatDuration(administrator.time_spent).minute <= 0}
                       >
                         {" "}
                         min
                       </span>
                     </span> */}
-                          -
                         </Table.Cell>
                         <Table.Cell>
                           <ToggleSwitch
                             theme={customToggleSwitch}
                             color={brandState}
-                            checked={blockSwitch[teacher.id] || false}
+                            checked={blockSwitch[administrator.id] || false}
                             onChange={() =>
                               setOpenModal({
-                                id: teacher.id,
+                                id: administrator.id,
                                 type: "block",
                                 open: true,
                               })
                             }
                           />
                         </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex h-full w-fit gap-x-2">
+                        <Table.Cell className="flex w-fit gap-x-2">
+                          <div className="flex w-fit gap-x-2">
                             <Tooltip
                               content="View"
                               style="auto"
@@ -1540,7 +1358,7 @@ export function ViewTeachers() {
                               <div
                                 onClick={() =>
                                   setOpenModal({
-                                    id: teacher.id,
+                                    id: administrator.id,
                                     type: "view",
                                     open: true,
                                   })
@@ -1559,7 +1377,7 @@ export function ViewTeachers() {
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
                                   onOpenEditModal({
-                                    id: teacher.id,
+                                    id: administrator.id,
                                     type: "edit",
                                     open: true,
                                   })
@@ -1577,7 +1395,7 @@ export function ViewTeachers() {
                                 className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                                 onClick={() =>
                                   setOpenModal({
-                                    id: teacher.id,
+                                    id: administrator.id,
                                     type: "delete",
                                     open: true,
                                   })
@@ -1595,18 +1413,17 @@ export function ViewTeachers() {
               </Table.Body>
             </Table>
           </div>
-          {/* <p>`${getTeachers}`</p> */}
 
           <div className="flex w-full items-center justify-between px-5 py-4">
             <span className="text-gray-500 dark:text-gray-400">
               {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getTeachersQuery.data?.data.from}-
-                {getTeachersQuery.data?.data.to}
+                {getAdministratorsQuery.data?.data.from}-
+                {getAdministratorsQuery.data?.data.to}
               </span>{" "}
               {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getTeachersQuery.data?.data.total}
+                {getAdministratorsQuery.data?.data.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
@@ -1615,7 +1432,7 @@ export function ViewTeachers() {
                 name="row-num"
                 onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getTeachersQuery.data?.data.per_page}
+                defaultValue={getAdministratorsQuery.data?.data.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -1627,9 +1444,9 @@ export function ViewTeachers() {
                 showIcons
                 currentPage={page}
                 onPageChange={(page) =>
-                  !getTeachersQuery.isPlaceholderData && setPage(page)
+                  !getAdministratorsQuery.isPlaceholderData && setPage(page)
                 }
-                totalPages={getTeachersQuery.data?.data.last_page ?? 1}
+                totalPages={getAdministratorsQuery.data?.data.last_page ?? 1}
                 nextLabel={minSm ? t("pagination.next") : ""}
                 previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{

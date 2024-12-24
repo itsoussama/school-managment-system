@@ -1,4 +1,4 @@
-import { Input, RSelect } from "@src/components/input";
+import { Button, Input, RSelect } from "@src/components/input";
 
 import {
   Breadcrumb,
@@ -51,11 +51,11 @@ import {
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import Alert from "@src/components/alert";
-import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { FaChevronDown, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown"; // DropdownListButton, // DropdownList,
-import { customTable, customTooltip } from "@src/admin/utils/flowbite";
+import { customTable, customTooltip } from "@src/utils/flowbite";
 
 interface Check {
   id?: number;
@@ -156,7 +156,6 @@ export function ViewResources() {
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
-  const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
 
   // const userId = useRef<string>(null)
@@ -813,9 +812,9 @@ export function ViewResources() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
             </button>
@@ -938,7 +937,7 @@ export function ViewResources() {
               </Table.Head>
               <Table.Body
                 ref={tableRef}
-                className="relative divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
                 {getResourcesQuery.isFetching &&
                   (getResourcesQuery.isRefetching || perPage) && (
@@ -1069,9 +1068,9 @@ export function ViewResources() {
                               />
                             </div>
                           </Dropdown.List>
-                          <button type="submit" className="btn-default h-8">
+                          <Button type="submit" className="btn-default h-8">
                             Save
-                          </button>
+                          </Button>
                         </form>
                       </Dropdown>
                     </div>

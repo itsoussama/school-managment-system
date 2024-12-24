@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import { FaFileExport, FaHome } from "react-icons/fa";
 import Chart from "react-apexcharts";
 import { TransitionAnimation } from "@src/components/animation";
-import { chartOptions } from "@admin/utils/chart";
-import { useEffect } from "react";
+import { chartOptions, colorPalette } from "@src/utils/chart";
+import { CSSProperties, useEffect } from "react";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { Link } from "react-router-dom";
+import { BrandColor } from "@src/utils/colors";
+import { Button } from "@src/components/input";
 
 const chartLabel = ["Jan", "Feb", "Mar", "Apr", "Jun", "Jul"];
 const chartSeries = [
@@ -23,17 +25,12 @@ const chartSeries = [
 ];
 
 function Dashboard() {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const { t } = useTranslation();
 
   const themeChange = useAppSelector(
-    (state) => state.themeModeSlice.themeMode as "light" | "dark",
+    (state) => state.preferenceSlice.themeMode as "light" | "dark" | "auto",
   );
-
-  useEffect(() => {
-    console.log(themeChange);
-
-    // return () => mediaQueryList.removeEventListener("change", themeChange);
-  }, [themeChange]);
 
   return (
     <div className="flex w-full flex-col">
@@ -48,7 +45,7 @@ function Dashboard() {
           <Breadcrumb.Item>{t("general.overview")}</Breadcrumb.Item>
         </Breadcrumb>
         <Link to={"/configuration/data-management"}>
-          <button className="btn-default m-0 mt-auto flex items-center gap-x-2">
+          <Button className="btn-default m-0 mt-auto flex items-center gap-x-2">
             <FaFileExport />
             {t("form.buttons.export", {
               label:
@@ -56,7 +53,7 @@ function Dashboard() {
                 " " +
                 t("general.data_other"),
             })}
-          </button>
+          </Button>
         </Link>
       </div>
       <TransitionAnimation>
@@ -67,7 +64,7 @@ function Dashboard() {
             </h1>
             <Chart
               options={{
-                ...chartOptions(themeChange),
+                ...chartOptions(themeChange, brandState),
                 labels: chartLabel,
               }}
               series={chartSeries}

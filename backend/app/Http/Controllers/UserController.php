@@ -125,7 +125,7 @@ class UserController extends Controller
     }
     public function admins(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff') || auth()->user()->hasRole(config('roles.admin')))) {
             $perPage = $request->input('per_page', 5);
             // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
@@ -136,7 +136,7 @@ class UserController extends Controller
                 ->whereHas(
                     'role',
                     function ($query) {
-                        $query->where('name', config('roles.admin'));
+                        $query->where('name', config('roles.admin_staff'));
                     }
 
                 )
@@ -289,10 +289,9 @@ class UserController extends Controller
 
     public function addAdmin(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+        if (auth()->user()->hasRole(config('roles.admin_staff') || auth()->user()->hasRole(config('roles.admin')))) {
             try {
                 $validation = $request->validate([
-                    'childrens' => 'required|array|exists:users,id',
                     'name' => 'required|string|max:255',
                     'email' => 'required|string|email|max:255|unique:users',
                     'phone' => 'required|string|max:255',
@@ -639,17 +638,16 @@ class UserController extends Controller
             try {
                 if (auth()->user()->hasRole(config('roles.admin'))) {
                     $userStatus = User::whereId($request->user_id)
-                    ->whereDoesntHave('role', function ($query) {
-                        $query->whereIn('name', [
-                            config('roles.admin'),
-                            config('roles.admin_staff'),
-                        ]);
-                    })
-                    ->update(['blocked' => false]);
+                        ->whereDoesntHave('role', function ($query) {
+                            $query->whereIn('name', [
+                                config('roles.admin'),
+                                config('roles.admin_staff'),
+                            ]);
+                        })
+                        ->update(['blocked' => false]);
                     if (!$userStatus) {
                         return response()->json(['error' => 'Error while blocking user, please check if he is not an admin', 'userStatus' => $userStatus], Response::HTTP_FORBIDDEN);
-
-                    }else {
+                    } else {
                         return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
                     }
                 } else if (auth()->user()->hasRole(config('roles.admin_staff'))) {
@@ -672,24 +670,22 @@ class UserController extends Controller
             try {
                 if (auth()->user()->hasRole(config('roles.admin'))) {
                     $userStatus = User::whereId($request->user_id)
-                    ->whereDoesntHave('role', function ($query) {
-                        $query->whereIn('name', [
-                            config('roles.admin'),
-                            config('roles.admin_staff'),
-                        ]);
-                    })
-                    ->update(['blocked' => true]);
+                        ->whereDoesntHave('role', function ($query) {
+                            $query->whereIn('name', [
+                                config('roles.admin'),
+                                config('roles.admin_staff'),
+                            ]);
+                        })
+                        ->update(['blocked' => true]);
                     if (!$userStatus) {
                         return response()->json(['error' => 'Error while blocking user, please check if he is not an admin', 'userStatus' => $userStatus], Response::HTTP_FORBIDDEN);
-
-                    }else {
+                    } else {
                         return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
                     }
                 } else if (auth()->user()->hasRole(config('roles.admin_staff'))) {
                     $userStatus = User::whereId($request->user_id)->update(['blocked' => true]);
                     return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
                 }
-
             } catch (ValidationException $e) {
                 return response()->json([
                     'message' => 'Validation failed for some rows.',

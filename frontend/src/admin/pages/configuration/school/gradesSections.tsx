@@ -1,6 +1,6 @@
-import { alertIntialState } from "@src/admin/utils/alert";
+import { alertIntialState } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
-import { Alert as AlertType } from "@admin/utils/alert";
+import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb, Modal, Table } from "flowbite-react";
 import { ChangeEvent, FormEvent, useState } from "react";
@@ -10,8 +10,8 @@ import { Link } from "react-router-dom";
 import Alert from "@src/components/alert";
 import Accordion from "@src/components/accordion";
 import InfoCard from "@src/admin/components/infoCard";
-import { Input } from "@src/components/input";
-import { customTable } from "@src/admin/utils/flowbite";
+import { Button, Input } from "@src/components/input";
+import { customTable } from "@src/utils/flowbite";
 
 interface Modal {
   id: number;
@@ -329,9 +329,9 @@ export default function GradesSections() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
             </button>

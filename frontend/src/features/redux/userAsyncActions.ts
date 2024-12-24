@@ -10,21 +10,21 @@ interface Data {
 const login = createAsyncThunk<void, Data>('user/login', async (data, {rejectWithValue}) => {
     try {
 
-        const localStorage = window.localStorage
+        // const localStorage = window.localStorage
         let payload = null
 
         const response = await axiosInstance.post("/api/login", data)
-
-        // hammes.mckenzie@example.net
-        //  password
 
         if (response.status === 200) {
             
             localStorage.setItem("accessToken", response.data.token);
             localStorage.setItem("refreshToken", response.data.refresh_token);
-            localStorage.setItem('user', JSON.stringify(response.data.user))
+
+           
 
             payload = response.data
+            console.log(payload);
+            
 
             return payload
         }
@@ -43,8 +43,7 @@ const logout = createAsyncThunk( 'user/logout', async (_,{rejectWithValue}) => {
         if (response.status !== 200) {
             throw Error("Bad Request")
         }
-
-        localStorage.removeItem("user");
+        
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
 

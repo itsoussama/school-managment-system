@@ -1,4 +1,4 @@
-import { Checkbox, Input, MultiSelect } from "@src/components/input";
+import { Button, Checkbox, Input, MultiSelect } from "@src/components/input";
 import { addTeacher, getGrades, getSubjects } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
@@ -8,9 +8,10 @@ import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
+import roles from "@admin/roles.json";
 
 export interface FormData {
   name?: string;
@@ -54,9 +55,14 @@ export default function AddTeacher() {
   const minSm = useBreakpoint("min", "sm");
   const redirect = useNavigate();
 
-  const getSubjectsQuery = useQuery({
-    queryKey: ["getSubjects"],
-    queryFn: getSubjects,
+  const getAllSubjectsQuery = useQuery({
+    queryKey: [
+      "getAllSubjects",
+      // filter?.name,
+      // filter?.subject,
+      // filter?.gradelevel,
+    ],
+    queryFn: () => getSubjects(1, -1, undefined, undefined, admin.school_id),
   });
 
   const getGradesQuery = useQuery({
@@ -103,7 +109,7 @@ export default function AddTeacher() {
           password: data?.password as string,
           password_confirmation: data?.password_confirmation as string,
           phone: data?.phone as string,
-          roles: [2],
+          roles: [roles.teacher],
           subjects: data?.subjects as number[],
           grades: data?.grades as number[],
           image: img[0],
@@ -288,7 +294,7 @@ export default function AddTeacher() {
                   )
                 }
               >
-                {getSubjectsQuery.data?.data.data.map(
+                {getAllSubjectsQuery.data?.map(
                   (subject: Subject, key: number) => (
                     <Checkbox
                       key={key}
@@ -356,9 +362,9 @@ export default function AddTeacher() {
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
-              <button className="btn-default m-0 mt-auto" type="submit">
+              <Button className="btn-default m-0 mt-auto" type="submit">
                 {t("form.buttons.create", { label: t("general.account") })}
-              </button>
+              </Button>
             </form>
           </div>
         </div>

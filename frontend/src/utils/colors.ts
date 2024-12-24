@@ -330,6 +330,8 @@ export type Colors = {"black" : string
         },
       };
 
+      export type BrandColor = keyof typeof colorPalette;
+
 const colors: Array<CardColor> = [
 "indigo",
 "purple",

@@ -13,6 +13,7 @@ import {
 } from "flowbite-react";
 import React, {
   ChangeEvent,
+  CSSProperties,
   useCallback,
   useEffect,
   useRef,
@@ -55,11 +56,16 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import Dropdown from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddChildModal from "@src/admin/components/addChildModal";
-import { Alert as AlertType, alertIntialState } from "@src/admin/utils/alert";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import { customTable, customTooltip } from "@src/admin/utils/flowbite";
+import {
+  customTable,
+  customToggleSwitch,
+  customTooltip,
+} from "@src/utils/flowbite";
+import { BrandColor, colorPalette } from "@src/utils/colors";
 
 interface Check {
   id?: number;
@@ -157,6 +163,7 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewParents() {
   const queryClient = useQueryClient();
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
 
@@ -205,7 +212,6 @@ export function ViewParents() {
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
-  const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
 
   const getAllParentsQuery = useQuery({
@@ -778,11 +784,8 @@ export function ViewParents() {
                   {t("status.active_deactivate")}
                 </span>
                 <ToggleSwitch
-                  theme={{
-                    toggle: {
-                      base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                    },
-                  }}
+                  theme={customToggleSwitch}
+                  color={brandState}
                   checked={blockSwitch[getParentQuery.data?.data.id] || false}
                   onChange={() =>
                     setOpenModal({
@@ -1197,7 +1200,7 @@ export function ViewParents() {
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
               {getParentQuery.data?.data.blocked == 0
-                ? t("block-modal-block-btn")
+                ? t("modals.block.block_button")
                 : t("modals.block.unblock_button")}
             </button>
             <button className="btn-outline !w-auto" onClick={onCloseModal}>
@@ -1283,7 +1286,7 @@ export function ViewParents() {
               </Table.Head>
               <Table.Body
                 ref={tableRef}
-                className="relative divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
                 {getParentsQuery.isFetching &&
                   (getParentsQuery.isRefetching || perPage) && (
@@ -1512,7 +1515,15 @@ export function ViewParents() {
                           </Dropdown>
                           {parent.childrens?.length < 1 && (
                             <div
-                              className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                              className="flex cursor-pointer items-center text-sm font-medium text-[var(--brand-color-600)] hover:underline dark:text-[var(--brand-color-500)]"
+                              style={
+                                {
+                                  "--brand-color-500":
+                                    colorPalette[brandState as BrandColor][500],
+                                  "--brand-color-600":
+                                    colorPalette[brandState as BrandColor][600],
+                                } as CSSProperties
+                              }
                               onClick={() =>
                                 setOpenChildModal({
                                   id: parent.id,
@@ -1551,11 +1562,8 @@ export function ViewParents() {
                         </Table.Cell>
                         <Table.Cell>
                           <ToggleSwitch
-                            theme={{
-                              toggle: {
-                                base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                              },
-                            }}
+                            theme={customToggleSwitch}
+                            color={brandState}
                             checked={blockSwitch[parent.id] || false}
                             onChange={() =>
                               setOpenModal({

@@ -1,13 +1,15 @@
-import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
-import {
-  customBadge,
-  customTable,
-  customTooltip,
-} from "@src/admin/utils/flowbite";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
+import { customBadge, customTable, customTooltip } from "@src/utils/flowbite";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown";
-import { Dropzone, Input, RSelect, RTextArea } from "@src/components/input";
+import {
+  Button,
+  Dropzone,
+  Input,
+  RSelect,
+  RTextArea,
+} from "@src/components/input";
 import {
   SkeletonContent,
   SkeletonProfile,
@@ -696,7 +698,7 @@ export default function MaintenanceRequests() {
           </Breadcrumb.Item>
         </Breadcrumb>
 
-        <button
+        <Button
           className="btn-default m-0 w-auto"
           onClick={() => setOpenModal({ open: true, type: "add" })}
         >
@@ -704,7 +706,7 @@ export default function MaintenanceRequests() {
             entity:
               t("determiners.indefinite.masculine") + " " + t("general.ticket"),
           })}
-        </button>
+        </Button>
       </div>
 
       <Modal
@@ -1085,9 +1087,9 @@ export default function MaintenanceRequests() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button
               type="reset"
               className="btn-danger !w-auto"
@@ -1243,9 +1245,9 @@ export default function MaintenanceRequests() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button
               type="reset"
               className="btn-danger !w-auto"
@@ -1389,7 +1391,7 @@ export default function MaintenanceRequests() {
               </Table.Head>
               <Table.Body
                 ref={tableRef}
-                className="relative divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
                 {getMaintenanceRequestsQuery.isFetching &&
                   (getMaintenanceRequestsQuery.isRefetching || perPage) && (

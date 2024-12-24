@@ -1,32 +1,16 @@
-import { alertIntialState } from "@src/utils/alert";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { Alert as AlertType } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
-import { Button, Input, InputDropdown, RTextArea } from "@src/components/input";
+import { Button, Input, RTextArea } from "@src/components/input";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaHome, FaImage } from "react-icons/fa";
-import { IoIosClose } from "react-icons/io";
+import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-interface Socials {
-  id: number;
-  platform: string;
-  link: string;
-}
-
-export default function GeneralSettings() {
+export default function Profile() {
   const { t } = useTranslation();
-  const socialPlatforms = ["facebook", "instagram", "twitter", "linkedin"];
-  const socialLinksPlaceholders: Record<string, string> = {
-    facebook: "https://facebook.com/yourprofile",
-    instagram: "https://instagram.com/yourhandle",
-    twitter: "https://twitter.com/yourhandle",
-    linkedin: "https://linkedin.com/in/yourname",
-  };
-  const [socials, setSocials] = useState<Array<Socials>>([]);
   // const [data, setData] = useState<FormData>();
   // const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -36,26 +20,6 @@ export default function GeneralSettings() {
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   // const redirect = useNavigate();
-
-  const addSocial = () => {
-    setSocials((prev) => [
-      ...prev,
-      { id: socials.length, platform: "", link: "" },
-    ]);
-  };
-
-  const handleSocialChange = (id: number, field: string, value: string) => {
-    setSocials((prev) =>
-      prev.map((social) =>
-        social.id === id ? { ...social, [field]: value } : social,
-      ),
-    );
-  };
-
-  const removeSocial = (id: number) => {
-    const newSocial = socials.filter((social) => social.id !== id);
-    setSocials(newSocial);
-  };
 
   const readAndPreview = (file: FileList) => {
     if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
@@ -98,23 +62,8 @@ export default function GeneralSettings() {
             {minSm ? t("general.home") : ""}
           </Link>
         </Breadcrumb.Item>
-        {minSm ? (
-          <>
-            <Breadcrumb.Item>
-              <span className="text-gray-600 dark:text-gray-300">
-                {t("entities.configurations")}
-              </span>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <span className="text-gray-600 dark:text-gray-300">
-                {t("entities.school")}
-              </span>
-            </Breadcrumb.Item>
-          </>
-        ) : (
-          <Breadcrumb.Item>...</Breadcrumb.Item>
-        )}
-        <Breadcrumb.Item>{t("general.general")}</Breadcrumb.Item>
+
+        <Breadcrumb.Item>{t("general.profile")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <TransitionAnimation>
@@ -169,7 +118,7 @@ export default function GeneralSettings() {
           <div className="flex flex-[3] flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("information.shcool_information")}
+                {t("information.personal_information")}
               </h1>
             </div>
             <form
@@ -179,11 +128,18 @@ export default function GeneralSettings() {
             >
               <Input
                 type="text"
-                id="schoolName"
-                name="schoolName"
-                custom-style={{ containerStyle: "col-span-full" }}
-                label={t("form.fields.school_name")}
-                placeholder={t("form.placeholders.school_name")}
+                id="firstName"
+                name="firstName"
+                label={t("form.fields.first_name")}
+                placeholder={t("form.placeholders.first_name")}
+                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+              />
+              <Input
+                type="text"
+                id="lastName"
+                name="lastName"
+                label={t("form.fields.last_name")}
+                placeholder={t("form.placeholders.last_name")}
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
@@ -196,21 +152,6 @@ export default function GeneralSettings() {
                 placeholder={t("form.placeholders.address")}
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
-
-              <RTextArea
-                id="description"
-                name="description"
-                custom-style={{ containerStyle: "col-span-full" }}
-                label={t("form.fields.description")}
-                rows={5}
-                placeholder={t("form.placeholders.description")}
-              />
-
-              <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
-
-              <h1 className="col-span-full text-xl font-semibold text-gray-900 dark:text-white">
-                {t("information.contact_information")}
-              </h1>
 
               <Input
                 type="tel"
@@ -231,59 +172,37 @@ export default function GeneralSettings() {
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
+              <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
+
               <Input
-                type="text"
-                id="website"
-                name="website"
-                label={t("form.fields.website")}
-                placeholder="www.example.com"
+                type="password"
+                id="password"
+                name="password"
+                label={t("form.fields.password")}
+                placeholder="●●●●●●●"
+                custom-style={{
+                  inputStyle: "px-10",
+                }}
+                icon={
+                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                }
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
-              <div className="flex flex-col gap-y-2">
-                <span className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
-                  {t("form.fields.social_media")}
-                </span>
-                {socials?.map((social, key) => (
-                  <div key={key} className="flex gap-x-1">
-                    <InputDropdown custom-style={{ containerStyle: "flex-1" }}>
-                      <InputDropdown.Select
-                        options={socialPlatforms}
-                        onSelectedValue={(value) =>
-                          handleSocialChange(social.id, "platform", value)
-                        }
-                        value={social.platform || ""}
-                      />
-                      <InputDropdown.Input
-                        onChange={(e) =>
-                          handleSocialChange(social.id, "link", e.target.value)
-                        }
-                        placeholder={socialLinksPlaceholders[social.platform]}
-                        value={social.link}
-                      />
-                    </InputDropdown>
-                    <button
-                      type="button"
-                      className="aspect-square rounded-s bg-gray-200 text-gray-400 dark:bg-gray-600 dark:text-gray-200"
-                      onClick={() => removeSocial(social.id)}
-                    >
-                      <IoIosClose size="28" className="m-auto" />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  className="btn-outline"
-                  type="button"
-                  onClick={() => addSocial()}
-                >
-                  {t("actions.add_entity", {
-                    entity:
-                      t("determiners.indefinite.feminine") +
-                      " " +
-                      t("general.social"),
-                  })}
-                </button>
-              </div>
+              <Input
+                type="password"
+                id="password_confirmation"
+                name="password_confirmation"
+                label={t("form.fields.confirm_password")}
+                placeholder="●●●●●●●"
+                custom-style={{
+                  inputStyle: "px-10",
+                }}
+                icon={
+                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                }
+                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+              />
 
               <Button className="btn-default m-0 mt-auto" type="submit">
                 {t("form.buttons.create", { label: t("general.account") })}

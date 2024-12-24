@@ -1,4 +1,4 @@
-import { Input, RSelect } from "@src/components/input";
+import { Button, Input, RSelect } from "@src/components/input";
 
 import {
   Badge,
@@ -11,13 +11,7 @@ import {
   ToggleSwitch,
   Tooltip,
 } from "flowbite-react";
-import React, {
-  ChangeEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
@@ -58,10 +52,15 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddParentModal from "@src/admin/components/addParentModal";
 import Alert from "@src/components/alert";
-import { alertIntialState, Alert as AlertType } from "@src/admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import { customTable, customTooltip } from "@src/admin/utils/flowbite";
+import {
+  customTable,
+  customToggleSwitch,
+  customTooltip,
+} from "@src/utils/flowbite";
+import React from "react";
 
 interface Check {
   id?: number;
@@ -170,6 +169,7 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewStudents() {
   const queryClient = useQueryClient();
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
 
   const [sortPosition, setSortPosition] = useState<number>(0);
@@ -794,11 +794,8 @@ export function ViewStudents() {
                   {t("status.active_deactivate")}
                 </span>
                 <ToggleSwitch
-                  theme={{
-                    toggle: {
-                      base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                    },
-                  }}
+                  theme={customToggleSwitch}
+                  color={brandState}
                   checked={blockSwitch[getStudentQuery.data?.data.id] || false}
                   onChange={() =>
                     setOpenModal({
@@ -897,7 +894,7 @@ export function ViewStudents() {
                           }
                         >
                           <FaUser className="me-2" />
-                          {t("general.assign_parent")}
+                          {t("general.assign_to_parent")}
                         </div>
                       )}
                     </div>
@@ -1107,7 +1104,7 @@ export function ViewStudents() {
                       </>
                     ) : (
                       <>
-                        <button
+                        <Button
                           onClick={() => toggleChangePassword(true)}
                           className="btn-default !w-auto"
                         >
@@ -1117,7 +1114,7 @@ export function ViewStudents() {
                               " " +
                               t("form.fields.password"),
                           })}
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
@@ -1126,9 +1123,9 @@ export function ViewStudents() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
             </button>
@@ -1317,7 +1314,9 @@ export function ViewStudents() {
                   </div>
                 </Table.HeadCell>
                 <Table.HeadCell>{t("form.fields.grade_levels")}</Table.HeadCell>
-                <Table.HeadCell>{t("form.fields.date_birth")}</Table.HeadCell>
+                <Table.HeadCell>
+                  {t("form.fields.date_of_birth")}
+                </Table.HeadCell>
                 <Table.HeadCell>
                   {t("form.fields.parent_guardian")}
                 </Table.HeadCell>
@@ -1335,7 +1334,7 @@ export function ViewStudents() {
               </Table.Head>
               <Table.Body
                 ref={tableRef}
-                className="relative divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
                 {getStudentsQuery.isFetching &&
                   (getStudentsQuery.isRefetching || perPage) && (
@@ -1563,11 +1562,8 @@ export function ViewStudents() {
                         </Table.Cell>
                         <Table.Cell>
                           <ToggleSwitch
-                            theme={{
-                              toggle: {
-                                base: "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
-                              },
-                            }}
+                            theme={customToggleSwitch}
+                            color={brandState}
                             checked={blockSwitch[student.id] || false}
                             onChange={() =>
                               setOpenModal({

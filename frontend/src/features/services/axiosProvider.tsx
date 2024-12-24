@@ -1,5 +1,6 @@
 import axios from "axios";
 import { axiosAuthInstance } from "./axiosConfig";
+import { persistor } from "../redux/store";
 
 export default function AxiosProvider() {
   axiosAuthInstance.interceptors.request.use(

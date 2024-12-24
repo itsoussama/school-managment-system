@@ -1,4 +1,4 @@
-import { Checkbox, Input } from "@components/input";
+import { Button, Checkbox, Input } from "@components/input";
 import { addParent, assignParent, getParents } from "@api";
 import {
   keepPreviousData,
@@ -16,7 +16,7 @@ import {
   FaUserTag,
 } from "react-icons/fa";
 import { Card, Modal } from "flowbite-react";
-import { alertIntialState, Alert as AlertType } from "@admin/utils/alert";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 
@@ -67,7 +67,6 @@ export default function AddParentModal({
   const queryClient = useQueryClient();
 
   const { t } = useTranslation();
-  const { t: fieldsTrans } = useTranslation("form-fields");
   const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [openModal, setOpenModal] = useState<boolean>(open);
@@ -253,7 +252,9 @@ export default function AddParentModal({
         }}
         onClose={onCloseModal}
       >
-        <Modal.Header>{t("add-new-parent")}</Modal.Header>
+        <Modal.Header>
+          {t("actions.add_entity", { entity: t("entities.parent") })}
+        </Modal.Header>
         {option === "new" ? (
           <form onSubmit={onSubmitNewParent}>
             <Modal.Body>
@@ -278,17 +279,17 @@ export default function AddParentModal({
                       className="absolute left-0 top-0 cursor-pointer opacity-0"
                       onChange={handleImageUpload}
                     />
-                    {fieldsTrans("upload-photo")}
+                    {t("form.buttons.upload", { label: t("general.photo") })}
                   </button>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-700 dark:text-gray-500">
-                      {fieldsTrans("accepted-format")}:{" "}
+                      {t("form.general.accepted_format")}:{" "}
                       <span className="text-gray-500 dark:text-gray-400">
                         jpg, jpeg, png
                       </span>
                     </span>
                     <span className="text-xs text-gray-700 dark:text-gray-500">
-                      {fieldsTrans("maximum-size")}:{" "}
+                      {t("form.general.maximum_size")}:{" "}
                       <span className="text-gray-500 dark:text-gray-400">
                         1024 mb
                       </span>
@@ -298,15 +299,15 @@ export default function AddParentModal({
                 <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
                   <div className="w-full space-y-3">
                     <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                      {t("personal-information")}
+                      {t("information.personal_information")}
                     </h1>
                     <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                       <Input
                         type="text"
                         id="firstName"
                         name="firstName"
-                        label={fieldsTrans("first-name")}
-                        placeholder={fieldsTrans("first-name-placeholder")}
+                        label={t("form.fields.first_name")}
+                        placeholder={t("form.placeholders.first_name")}
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
                         }
@@ -316,8 +317,8 @@ export default function AddParentModal({
                         type="text"
                         id="lastName"
                         name="lastName"
-                        label={fieldsTrans("last-name")}
-                        placeholder={fieldsTrans("last-name-placeholder")}
+                        label={t("form.fields.last_name")}
+                        placeholder={t("form.placeholders.last_name")}
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
                         }
@@ -327,8 +328,8 @@ export default function AddParentModal({
                         type="text"
                         id="address"
                         name="address"
-                        label={fieldsTrans("address")}
-                        placeholder={fieldsTrans("address-placeholder")}
+                        label={t("form.fields.address")}
+                        placeholder={t("form.placeholders.address")}
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
                         }
@@ -339,7 +340,7 @@ export default function AddParentModal({
                         type="tel"
                         id="phone"
                         name="phone"
-                        label={fieldsTrans("phone-number")}
+                        label={t("form.fields.phone_number")}
                         placeholder="06 00 00 00"
                         pattern="(06|05)[0-9]{2}[0-9]{4}"
                         onChange={(e) =>
@@ -351,7 +352,7 @@ export default function AddParentModal({
                         type="email"
                         id="email"
                         name="email"
-                        label={fieldsTrans("email")}
+                        label={t("form.fields.email")}
                         placeholder="Johndoe@example.com"
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
@@ -364,7 +365,7 @@ export default function AddParentModal({
                         type="password"
                         id="password"
                         name="password"
-                        label={fieldsTrans("password")}
+                        label={t("form.fields.password")}
                         placeholder="●●●●●●●"
                         custom-style={{
                           inputStyle: "px-10",
@@ -381,7 +382,7 @@ export default function AddParentModal({
                         type="password"
                         id="password_confirmation"
                         name="password_confirmation"
-                        label={fieldsTrans("confirm-password")}
+                        label={t("form.fields.confirm_password")}
                         placeholder="●●●●●●●"
                         custom-style={{
                           inputStyle: "px-10",
@@ -399,15 +400,15 @@ export default function AddParentModal({
               </div>
             </Modal.Body>
             <Modal.Footer>
-              <button type="submit" className="btn-default !w-auto">
-                {fieldsTrans("accept")}
-              </button>
+              <Button type="submit" className="btn-default !w-auto">
+                {t("general.accept")}
+              </Button>
               <button
                 type="button"
                 className="btn-danger !w-auto"
                 onClick={onCloseModal}
               >
-                {fieldsTrans("decline")}
+                {t("general.decline")}
               </button>
             </Modal.Footer>
           </form>
@@ -423,7 +424,7 @@ export default function AddParentModal({
                   }
                   label=""
                   onKeyUp={(e) => handleSearch(e.target)}
-                  placeholder={fieldsTrans("filter-all")}
+                  placeholder={t("general.all")}
                   name="search"
                   custom-style={{
                     inputStyle: "px-8 !py-1",
@@ -470,11 +471,11 @@ export default function AddParentModal({
               </div>
             </div>
             <Modal.Footer>
-              <button type="submit" className="btn-default !w-auto">
-                {fieldsTrans("accept")}
-              </button>
+              <Button type="submit" className="btn-default !w-auto">
+                {t("general.accept")}
+              </Button>
               <button className="btn-danger !w-auto" onClick={onCloseModal}>
-                {fieldsTrans("decline")}
+                {t("general.decline")}
               </button>
             </Modal.Footer>
           </form>
@@ -492,7 +493,14 @@ export default function AddParentModal({
               className="font-normal text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
             >
               <FaUserPlus size={48} />
-              <p>{t("new-parent")}</p>
+              <p>
+                {t("actions.new_entity", {
+                  entity:
+                    t("determiners.indefinite.masculine") +
+                    " " +
+                    t("entities.parent"),
+                })}
+              </p>
             </Card>
             <Card
               onClick={() => setOption("exist")}
@@ -506,7 +514,9 @@ export default function AddParentModal({
               className="font-normal text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
             >
               <FaUserTag size={48} />
-              <p>{t("existing-parent")}</p>
+              <p>
+                {t("actions.existing_entity", { entity: t("entities.parent") })}
+              </p>
             </Card>
           </div>
         )}

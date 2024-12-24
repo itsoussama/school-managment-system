@@ -1,7 +1,21 @@
-import { colorPalette } from "./colors";
+import { BrandColor, colorPalette, Colors, colors } from "./colors";
+
+const borderComplementaryColor = {
+  indigo: "lime",
+  purple: "lime",
+  pink: "green",
+  blue: "orange",
+  cyan: "lime",
+  green: "cyan",
+  lime: "purple",
+  red: "cyan",
+  teal: "orange",
+  yellow: "indigo",
+}
 
 
-  const chartOptions = (mode: 'dark' | 'light') =>{ return {
+  const chartOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) =>{
+     return {
     chart: {
       toolbar: {
         show: false,
@@ -23,7 +37,7 @@ import { colorPalette } from "./colors";
     },
     fill: {
       type: ["gradient", "solid"],
-      colors: colorPalette.blue[600],
+      colors: [colorPalette[brandColor as BrandColor][600]],
       gradient: {
         shade: "dark",
         type: "vertical",
@@ -35,6 +49,7 @@ import { colorPalette } from "./colors";
     },
     stroke: {
       width: [0, 4],
+      colors: [undefined, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500]],
       curve: "smooth",
     },
     // ? Enable data on chart
@@ -44,7 +59,7 @@ import { colorPalette } from "./colors";
     },
     grid: {
       show: true,
-      borderColor: mode === "dark" ? colorPalette.gray[700] : colorPalette.gray[200],
+      borderColor: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[700] : colorPalette.gray[200] : mode === "dark" ? colorPalette.gray[700] : colorPalette.gray[200],
       strokeDashArray: 0,
       xaxis: {
         lines: {
@@ -61,13 +76,14 @@ import { colorPalette } from "./colors";
     legend: {
       show: true,
       labels: {
-        colors: mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[600],
+        colors: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[500] : colorPalette.gray[600] : mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[600],
         useSeriesColors: false,
       },
       markers: {
         size: [8, 6],
-        shape: ["line", "circle"],
-        strokeWidth: [2, 0],
+        fillColors: [colorPalette[brandColor as BrandColor][600], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500]],
+        shape: ["square", "line"],
+        strokeWidth: [0, 2],
         offsetX: -5,
       },
       itemMargin: {
@@ -99,13 +115,13 @@ import { colorPalette } from "./colors";
       labels: {
         // ? Change Label style xaxis
         style: {
-          colors: mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[500],
+          colors: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[500] : colorPalette.gray[500] : mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[500],
         },
       },
       // ? Change border style xaxis
       axisBorder: {
         show: true,
-        color: mode === "dark" ? colorPalette.gray[600] : colorPalette.gray[300],
+        color: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[600] : colorPalette.gray[300] : mode === "dark" ? colorPalette.gray[600] : colorPalette.gray[300],
         height: 1,
         width: "100%",
         offsetX: 0,
@@ -119,7 +135,7 @@ import { colorPalette } from "./colors";
       crosshairs: {
         show: true,
         stroke: {
-          color: mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[400],
+          color: mode === "auto" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? colorPalette.gray[500] : colorPalette.gray[400] :  mode === "dark" ? colorPalette.gray[500] : colorPalette.gray[400],
           width: 0,
           dashArray: 0,
         },

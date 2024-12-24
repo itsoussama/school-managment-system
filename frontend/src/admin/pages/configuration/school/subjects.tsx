@@ -1,21 +1,38 @@
-import { colors } from "@src/admin/utils/colors";
-import {
-  customBadge,
-  customTable,
-  customTooltip,
-} from "@src/admin/utils/flowbite";
+import { colors } from "@src/utils/colors";
+import { customBadge, customTable, customTooltip } from "@src/utils/flowbite";
 import { TransitionAnimation } from "@src/components/animation";
-import Dropdown from "@src/components/dropdown";
-import { Checkbox, Input, MultiSelect } from "@src/components/input";
-import { SkeletonTable } from "@src/components/skeleton";
-import { getGrades } from "@src/features/api";
+import {
+  Button,
+  Checkbox,
+  Input,
+  MultiSelect,
+  RSelect,
+} from "@src/components/input";
+import { SkeletonContent, SkeletonTable } from "@src/components/skeleton";
+import { getGrades, getSubject, getSubjects } from "@src/features/api";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { useQuery } from "@tanstack/react-query";
-import { Badge, Breadcrumb, Modal, Table, Tooltip } from "flowbite-react";
-import React, { useState } from "react";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Badge,
+  Breadcrumb,
+  Modal,
+  Pagination,
+  Spinner,
+  Table,
+  Tooltip,
+} from "flowbite-react";
+import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaEye, FaHome, FaPen, FaTrash } from "react-icons/fa";
+import {
+  FaExclamationTriangle,
+  FaEye,
+  FaHome,
+  FaPen,
+  FaTrash,
+} from "react-icons/fa";
 import { Link } from "react-router-dom";
+import React from "react";
 
 interface Modal {
   id?: number;
@@ -23,33 +40,90 @@ interface Modal {
   open: boolean;
 }
 
+interface Subject {
+  id: number;
+  name: string;
+  grades: [];
+}
+
 interface Grades {
   id: string;
   label: string;
 }
 
+interface Data {
+  id: number;
+  name: string;
+  grades: [];
+}
+
 export default function Subjects() {
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const [data, setData] = useState<FormData>();
+  const [data, setData] = useState<Data>({
+    id: 0,
+    name: "",
+    grades: [],
+  });
   const [openModal, setOpenModal] = useState<Modal>();
+  const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
+  const [page, setPage] = useState<number>(1);
+  const [perPage, setPerPage] = useState<number>();
+  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
+  const admin = useAppSelector((state) => state.userSlice.user);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const minSm = useBreakpoint("min", "sm");
+
+  const getSubjectsQuery = useQuery({
+    queryKey: [
+      "getSubjects",
+      page,
+      perPage,
+      sort.column,
+      sort.direction,
+      admin.school_id,
+    ],
+    queryFn: () =>
+      getSubjects(page, perPage, sort.column, sort.direction, admin.school_id),
+  });
+
+  const getSubjectQuery = useQuery({
+    queryKey: ["getSubject", openModal?.id, "subject"],
+    queryFn: () => getSubject(openModal?.id as number),
+    enabled: !!openModal?.id,
+  });
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
     queryFn: getGrades,
   });
 
-  const handleChange = (property: string, value: string | number[]) => {
-    setData((prev) => ({ ...(prev as FormData), [property]: value }));
+  const handlePerPage = (ev: ChangeEvent) => {
+    const target = ev.target as HTMLSelectElement;
+    setPage(1);
+    setPerPage(parseInt(target.value));
+  };
+
+  const onChange = (property: string, value: string | number[]) => {
+    setData((prev) => ({ ...(prev as Data), [property]: value }));
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
+    const { data: subjectData } = await queryClient.ensureQueryData({
+      queryKey: ["getSubject", id],
+      queryFn: () => getSubject(id as number),
+    });
+
+    setData({
+      id: subjectData?.id,
+      name: subjectData?.name,
+      grades: subjectData?.grades,
+    });
   };
 
   const onCloseModal = () => {
-    // parentMutation.reset();
+    // subjectMutation.reset();
     setOpenModal(undefined);
 
     // setData({
@@ -70,6 +144,13 @@ export default function Subjects() {
     //   confirm_password: "",
     //   phone: "",
     // });
+  };
+
+  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  };
+  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
   };
 
   return (
@@ -109,7 +190,7 @@ export default function Subjects() {
           </Breadcrumb.Item>
         </Breadcrumb>
 
-        <button
+        <Button
           className="btn-default m-0 w-auto"
           onClick={() => setOpenModal({ open: true, type: "addSubject" })}
         >
@@ -119,7 +200,7 @@ export default function Subjects() {
               " " +
               t("form.fields.subject"),
           })}
-        </button>
+        </Button>
       </div>
 
       <Modal
@@ -157,13 +238,13 @@ export default function Subjects() {
                 name="subject"
                 label={t("form.fields.subject")}
                 placeholder={t("form.fields.subject")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                // onChange={(e) => onChange(e.target.id, e.target.value)}
               />
               <MultiSelect
                 label={t("form.fields.grade_levels")}
                 name="grades"
                 onSelectItem={(items) =>
-                  handleChange(
+                  onChange(
                     "grades",
                     items.map((item) => parseInt(item.id)),
                   )
@@ -184,11 +265,204 @@ export default function Subjects() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
+            </Button>
             <button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
+            </button>
+          </Modal.Footer>
+        </form>
+      </Modal>
+
+      <Modal
+        show={openModal?.type === "view" ? openModal?.open : false}
+        size={"md"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
+            popup: "pt-0",
+          },
+        }}
+        onClose={onCloseModal}
+      >
+        <Modal.Header>
+          {t("form.fields.id", { entity: t("form.fields.subject") })}:
+          <b> {openModal?.id}</b>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="flex flex-col gap-8 sm:flex-row">
+            <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
+              <div className="w-full space-y-3">
+                <SkeletonContent isLoaded={getSubjectQuery.isFetched}>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {t("form.fields.label")}:
+                      </span>
+                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                        {getSubjectQuery.data?.data.name}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
+                        {t("form.fields.grade_levels")}:
+                      </span>
+                      <div className="flex w-max max-w-48 flex-wrap">
+                        {getSubjectQuery.data?.data.grades.map(
+                          (grade: Grades, index: number) => (
+                            <Badge
+                              key={index}
+                              color={colors[index % colors.length]}
+                              className="mb-1 me-1 rounded-xs"
+                            >
+                              {grade.label}
+                            </Badge>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </SkeletonContent>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
+        show={openModal?.type === "edit" ? openModal?.open : false}
+        size={"lg"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
+            popup: "pt-0",
+          },
+        }}
+        onClose={onCloseModal}
+      >
+        <form onSubmit={onSubmitUpdate}>
+          <Modal.Header>
+            {t("form.fields.id", { entity: t("form.fields.subject") })}:
+            <b> {openModal?.id}</b>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-8 sm:flex-row">
+              <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
+                <div className="w-full space-y-3">
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                    <Input
+                      type="text"
+                      id="name"
+                      name="name"
+                      label={t("form.fields.label")}
+                      placeholder={t("form.fields.label")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getSubjectQuery.isFetching && true}
+                      value={data?.name}
+                      onChange={(e) => onChange(e.target.id, e.target.value)}
+                    />
+
+                    <MultiSelect
+                      label={t("form.fields.grade_levels")}
+                      name="grades"
+                      onSelectItem={(items) =>
+                        onChange(
+                          "grades",
+                          items.map((item) => parseInt(item.id)),
+                        )
+                      }
+                      externalSelectedItems={data?.grades}
+                    >
+                      {getGradesQuery.data?.data.data.map(
+                        (grade: Grades, key: number) => (
+                          <Checkbox
+                            key={key}
+                            label={grade.label}
+                            id={grade.id}
+                            name="grades"
+                            value={grade.label}
+                          />
+                        ),
+                      )}
+                    </MultiSelect>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button type="submit" className="btn-default !w-auto">
+              {t("general.accept")}
+            </Button>
+            <button className="btn-danger !w-auto" onClick={onCloseModal}>
+              {t("general.decline")}
+            </button>
+          </Modal.Footer>
+        </form>
+      </Modal>
+
+      <Modal
+        show={openModal?.type === "delete" ? openModal?.open : false}
+        onClose={onCloseModal}
+        size={"md"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6",
+            popup: "pt-0",
+          },
+        }}
+      >
+        <form onSubmit={onSubmitDelete}>
+          <Modal.Header>
+            {t("actions.delete_entity", { entity: t("form.fields.subject") })}
+          </Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-x-8">
+              <p className="mb-3 text-gray-600 dark:text-gray-300">
+                {t("modals.delete.title")}
+                <b>{getSubjectQuery.data?.data.name}</b>
+              </p>
+              <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
+                <FaExclamationTriangle className="text-white" size={53} />
+                <p className="text-white">{t("modals.delete.message")}</p>
+              </div>
+              <p className="text-gray-900 dark:text-white">
+                {t("modals.delete.label", {
+                  item: getSubjectQuery.data?.data.name,
+                })}
+              </p>
+              <Input
+                type="text"
+                id="verfication"
+                name="verfication"
+                placeholder="John doe"
+                error={!isVerficationMatch ? t("modals.delete.error") : null}
+                required
+              />
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <button type="submit" className="btn-danger !w-auto">
+              {t("modals.delete.delete_button")}
+            </button>
+            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+              {t("modals.delete.cancel_button")}
             </button>
           </Modal.Footer>
         </form>
@@ -234,15 +508,15 @@ export default function Subjects() {
                 <Table.HeadCell>{t("form.fields.grade_levels")}</Table.HeadCell>
                 <Table.HeadCell>{t("entities.teachers")}</Table.HeadCell>
                 <Table.HeadCell className="w-0">
-                  <span className="w-full">Actions</span>
+                  <span className="w-full">{t("general.actions")}</span>
                 </Table.HeadCell>
               </Table.Head>
               <Table.Body
                 ref={tableRef}
-                className="relative divide-y divide-gray-300 dark:divide-gray-600"
+                className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
-                {/* {getMaintenanceRequestsQuery.isFetching &&
-                  (getMaintenanceRequestsQuery.isRefetching || perPage) && (
+                {getSubjectsQuery.isFetching &&
+                  (getSubjectsQuery.isRefetching || perPage) && (
                     <Table.Row>
                       <Table.Cell className="p-0">
                         <div
@@ -252,107 +526,20 @@ export default function Subjects() {
                         </div>
                       </Table.Cell>
                     </Table.Row>
-                  )} */}
-                <Table.Row>
-                  <Table.Cell className="sticky left-0 p-2 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2">
-                    {/* <div className="h-2 w-12 bg-red-600"></div> */}
-                    {/* <Input
-                      id="search"
-                      type="text"
-                      icon={
-                        <>
-                          <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.title !== "" && (
-                            <FaRegCircleXmark
-                              onClick={() =>
-                                setFilter((prev) => ({
-                                  ...prev,
-                                  title: "",
-                                }))
-                              }
-                              className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                            />
-                          )}
-                        </>
-                      }
-                      label=""
-                      placeholder={fieldTrans("filter-all")}
-                      value={filter?.title}
-                      name="search"
-                      custom-style={{
-                        inputStyle: "px-8 !py-1 min-w-36",
-                        labelStyle: "mb-0 !inline",
-                      }}
-                      onChange={(e) =>
-                        setFilter((prev) => ({
-                          ...prev,
-                          title: e.target.value,
-                        }))
-                      }
-                    />
-                  </Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2">
-                    <RSelect
-                      id="status"
-                      name="status"
-                      icon={
-                        <>
-                          <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                          {filter.status !== "" && (
-                            <FaRegCircleXmark
-                              onClick={() =>
-                                setFilter((prev) => ({
-                                  ...prev,
-                                  status: "",
-                                }))
-                              }
-                              className="absolute right-0 top-1/2 mr-4 -translate-x-full -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                            />
-                          )}
-                        </>
-                      }
-                      custom-style={{
-                        inputStyle: "px-9 !py-1 min-w-36",
-                        labelStyle: "mb-0 !inline",
-                      }}
-                      value={filter.status ?? "default"}
-                      onChange={(e) =>
-                        setFilter((prev) => ({
-                          ...prev,
-                          [e.target.id]:
-                            e.target.options[e.target.selectedIndex].value,
-                        }))
-                      }
-                    >
-                      <option value="default" disabled={filter.status !== ""}>
-                        {fieldTrans("filter-all")}
-                      </option>
-                      {Object.entries(statusOptions).map((status, key) => (
-                        <option key={key} value={status[0]}>
-                          {t(status[0])}
-                        </option>
-                      ))}
-                    </RSelect> */}
-                  </Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
-                </Table.Row>
-                {/* {getMaintenanceRequestsQuery.isFetching &&
-                !(getMaintenanceRequestsQuery.isRefetching || perPage) ? ( */}
-                {/* <SkeletonTable cols={7} /> */}
-                {/* ) : (
-                  getMaintenanceRequestsQuery?.data.data.map(
-                    (maintenanceReq: MaintenanceRequests, key: number) => ( */}
-                <Table.Row
-                  // key={key}
-                  className="w-max bg-white dark:bg-gray-800"
-                >
-                  <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
-                    {/* <Checkbox
+                  )}
+
+                {getSubjectsQuery.isFetching &&
+                !(getSubjectsQuery.isRefetching || perPage) ? (
+                  <SkeletonTable cols={5} />
+                ) : (
+                  getSubjectsQuery.data?.data.map(
+                    (subject: Subject, key: number) => (
+                      <Table.Row
+                        key={key}
+                        className="w-max bg-white dark:bg-gray-800"
+                      >
+                        <Table.Cell className="sticky left-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
+                          {/* <Checkbox
                             className="rounded-xs"
                             id={maintenanceReq.id.toString()}
                             name="checkbox"
@@ -365,37 +552,37 @@ export default function Subjects() {
                             }
                             onChange={() => handleCheck(maintenanceReq.id)}
                           /> */}
-                  </Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    0001
-                  </Table.Cell>
-                  <Table.Cell>Mathematics</Table.Cell>
+                        </Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {subject.id}
+                        </Table.Cell>
+                        <Table.Cell>{subject.name}</Table.Cell>
 
-                  <Table.Cell>
-                    <div className="flex w-max max-w-48 flex-wrap">
-                      {new Array(7).fill(null).map(
-                        (_, key) =>
-                          key < 5 && (
+                        <Table.Cell>
+                          <div className="flex w-max max-w-48 flex-wrap">
+                            {subject.grades?.map(
+                              (grade, key) =>
+                                key < 5 && (
+                                  <Badge
+                                    theme={customBadge}
+                                    color={colors[key % colors.length]}
+                                    className="mb-1 me-1 rounded-xs"
+                                  >
+                                    {/* {t(maintenanceReq.status)} */}
+                                    {grade}
+                                  </Badge>
+                                ),
+                            )}
+
                             <Badge
                               theme={customBadge}
-                              color={colors[key % colors.length]}
-                              className="mb-1 me-1 rounded-xs"
+                              color={"gray"}
+                              className="mb-1 me-1 rounded-xs bg-gray-300 dark:bg-gray-500"
                             >
-                              {/* {t(maintenanceReq.status)} */}
-                              Grade 1
+                              +{subject.grades?.length - 5}
                             </Badge>
-                          ),
-                      )}
 
-                      <Badge
-                        theme={customBadge}
-                        color={"gray"}
-                        className="mb-1 me-1 rounded-xs bg-gray-300 dark:bg-gray-500"
-                      >
-                        +2
-                      </Badge>
-
-                      {/* <Dropdown
+                            {/* <Dropdown
                               element={
                                 // <div className=""></div>
                               }
@@ -437,10 +624,10 @@ export default function Subjects() {
                                 )}
                               </Dropdown.List>
                             </Dropdown> */}
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                    {/* <div
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                          {/* <div
                             className="flex cursor-pointer items-center gap-x-2"
                             onClick={() =>
                               redirect("/resources/manage", {
@@ -459,84 +646,83 @@ export default function Subjects() {
                             />
                             <span>{maintenanceReq.resources.label}</span>
                           </div> */}
-                  </Table.Cell>
+                        </Table.Cell>
 
-                  <Table.Cell>
-                    <div className="flex w-fit gap-x-2">
-                      <Tooltip
-                        content="View"
-                        style="auto"
-                        theme={customTooltip}
-                      >
-                        <div
-                          onClick={() =>
-                            setOpenModal({
-                              id: 0,
-                              type: "view",
-                              open: true,
-                            })
-                          }
-                          className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
-                        >
-                          <FaEye className="text-blue-600 dark:text-blue-500" />
-                        </div>
-                      </Tooltip>
-                      <Tooltip
-                        content="Edit"
-                        style="auto"
-                        theme={customTooltip}
-                      >
-                        <div
-                          className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
-                          onClick={() =>
-                            onOpenEditModal({
-                              id: 0,
-                              type: "edit",
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaPen className="text-green-600 dark:text-green-500" />
-                        </div>
-                      </Tooltip>
-                      <Tooltip
-                        content="Delete"
-                        style="auto"
-                        theme={customTooltip}
-                      >
-                        <div
-                          className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
-                          onClick={() =>
-                            setOpenModal({
-                              id: 0,
-                              type: "delete",
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaTrash className="text-red-600 dark:text-red-500" />
-                        </div>
-                      </Tooltip>
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-                {/* ),
+                        <Table.Cell>
+                          <div className="flex w-fit gap-x-2">
+                            <Tooltip
+                              content="View"
+                              style="auto"
+                              theme={customTooltip}
+                            >
+                              <div
+                                onClick={() =>
+                                  setOpenModal({
+                                    id: subject.id,
+                                    type: "view",
+                                    open: true,
+                                  })
+                                }
+                                className="cursor-pointer rounded-s bg-blue-100 p-2 dark:bg-blue-500 dark:bg-opacity-20"
+                              >
+                                <FaEye className="text-blue-600 dark:text-blue-500" />
+                              </div>
+                            </Tooltip>
+                            <Tooltip
+                              content="Edit"
+                              style="auto"
+                              theme={customTooltip}
+                            >
+                              <div
+                                className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
+                                onClick={() =>
+                                  onOpenEditModal({
+                                    id: subject.id,
+                                    type: "edit",
+                                    open: true,
+                                  })
+                                }
+                              >
+                                <FaPen className="text-green-600 dark:text-green-500" />
+                              </div>
+                            </Tooltip>
+                            <Tooltip
+                              content="Delete"
+                              style="auto"
+                              theme={customTooltip}
+                            >
+                              <div
+                                className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
+                                onClick={() =>
+                                  setOpenModal({
+                                    id: subject.id,
+                                    type: "delete",
+                                    open: true,
+                                  })
+                                }
+                              >
+                                <FaTrash className="text-red-600 dark:text-red-500" />
+                              </div>
+                            </Tooltip>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ),
                   )
-                )} */}
+                )}
               </Table.Body>
             </Table>
           </div>
 
           <div className="flex w-full items-center justify-between px-5 py-4">
-            {/* <span className="text-gray-500 dark:text-gray-400">
-              {t("records-number")}{" "}
+            <span className="text-gray-500 dark:text-gray-400">
+              {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getMaintenanceRequestsQuery.data?.from}-
-                {getMaintenanceRequestsQuery.data?.to}
+                {getSubjectsQuery.data?.from}-{getSubjectsQuery.data?.to}
               </span>{" "}
-              {t("total-records")}{" "}
+              {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getMaintenanceRequestsQuery.data?.total}
+                {getSubjectsQuery.data?.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
@@ -545,7 +731,7 @@ export default function Subjects() {
                 name="row-num"
                 onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getMaintenanceRequestsQuery.data?.per_page}
+                defaultValue={getSubjectsQuery.data?.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -557,12 +743,11 @@ export default function Subjects() {
                 showIcons
                 currentPage={page}
                 onPageChange={(page) =>
-                  !getMaintenanceRequestsQuery.isPlaceholderData &&
-                  setPage(page)
+                  !getSubjectsQuery.isPlaceholderData && setPage(page)
                 }
-                totalPages={getMaintenanceRequestsQuery.data?.last_page ?? 1}
-                nextLabel={minSm ? t("next") : ""}
-                previousLabel={minSm ? t("previous") : ""}
+                totalPages={getSubjectsQuery.data?.last_page ?? 1}
+                nextLabel={minSm ? t("pagination.next") : ""}
+                previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{
                   pages: {
                     next: {
@@ -574,7 +759,7 @@ export default function Subjects() {
                   },
                 }}
               />
-            </div> */}
+            </div>
           </div>
         </div>
       </TransitionAnimation>

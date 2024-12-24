@@ -1,8 +1,8 @@
 import { FaPen } from "react-icons/fa";
-import { colorPalette } from "../utils/chart";
+import { colorPalette } from "../../utils/chart";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Dropdown from "@src/components/dropdown";
-import { colors } from "../utils/colors";
+import { colors } from "../../utils/colors";
 
 interface InfoCardType {
   index: number;

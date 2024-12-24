@@ -1,28 +1,29 @@
-import { Button, Checkbox, Input, MultiSelect } from "@components/input";
-import { addResource, getCategories } from "@api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Button, Input } from "@components/input";
+import { addAdministrator } from "@api";
+import { useMutation } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaHome, FaImage } from "react-icons/fa";
+import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
+import roles from "@admin/roles.json";
 
 export interface FormData {
-  label: string;
-  qty: number;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
   school_id: number;
-  category_id: number;
+  roles: number[];
   image: File;
-}
-
-interface Resource {
-  id: number;
-  label: string;
 }
 
 interface File {
@@ -32,25 +33,23 @@ interface File {
   type: string;
 }
 
-export default function AddResources() {
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
+
+export default function AddAdministrators() {
   const { t } = useTranslation();
   const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
-  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
+  // const [formData, setFormData] = useState<FormData>();
   const admin = useAppSelector((state) => state.userSlice.user);
   const minSm = useBreakpoint("min", "sm");
+  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const redirect = useNavigate();
 
-  const getCategoriesQuery = useQuery({
-    queryKey: ["getCategories"],
-    queryFn: () => getCategories(1, -1, undefined, undefined, admin.school_id),
-  });
-
-  const addResourceQuery = useMutation({
-    mutationFn: addResource,
+  const addAdministratorQuery = useMutation({
+    mutationFn: addAdministrator,
     onSuccess: () => {
-      redirect("/resources/manage", {
+      redirect("/administrators/manage", {
         state: {
           alert: {
             status: "success",
@@ -60,7 +59,6 @@ export default function AddResources() {
         },
       });
     },
-
     onError: () => {
       toggleAlert({
         status: "fail",
@@ -76,13 +74,18 @@ export default function AddResources() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.log(data);
+
     try {
       if (img) {
-        addResourceQuery.mutate({
-          label: data?.label as string,
-          qty: data?.qty as number,
-          school_id: admin?.school_id as number,
-          category_id: data?.category_id as number,
+        addAdministratorQuery.mutate({
+          name: data?.firstName + " " + data?.lastName,
+          email: data?.email as string,
+          school_id: admin?.school_id,
+          password: data?.password as string,
+          password_confirmation: data?.password_confirmation as string,
+          phone: data?.phone as string,
+          roles: [roles.administration_staff],
           image: img[0],
         });
       } else {
@@ -141,16 +144,17 @@ export default function AddResources() {
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("entities.resources")}
+              {t("entities.administrators")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
         <Breadcrumb.Item>
-          {t("actions.new_entity", { entity: t("entities.resource") })}
+          {t("actions.add_entity", { entity: t("entities.administrator") })}
         </Breadcrumb.Item>
       </Breadcrumb>
+
       <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="item flex min-w-72 flex-1 flex-col gap-4">
@@ -173,16 +177,16 @@ export default function AddResources() {
                   <FaImage className="h-10 w-10 text-gray-200 dark:text-gray-600" />
                 </div>
               )}
-
               <button className="btn-gray relative overflow-hidden">
                 <input
                   type="file"
                   className="absolute left-0 top-0 cursor-pointer opacity-0"
                   onChange={handleImageUpload}
                 />
-                {t("form.buttons.upload", { label: t("general.photo") })}
+                {t("form.buttons.upload", {
+                  label: t("general.photo"),
+                })}
               </button>
-
               <div className="flex flex-col">
                 <span className="text-sm text-gray-700 dark:text-gray-500">
                   {t("form.general.accepted_format")}:{" "}
@@ -203,7 +207,7 @@ export default function AddResources() {
           <div className="flex flex-[3] flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("information.resource_information")}
+                {t("information.administrator_information")}
               </h1>
             </div>
             <form
@@ -213,50 +217,85 @@ export default function AddResources() {
             >
               <Input
                 type="text"
-                id="label"
-                name="label"
-                label={t("form.fields.label")}
-                placeholder={t("form.placeholders.label")}
+                id="firstName"
+                name="firstName"
+                label={t("form.fields.first_name")}
+                placeholder={t("form.placeholders.first_name")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
               <Input
-                type="number"
-                id="qty"
-                name="qty"
-                label={t("form.fields.quantity")}
-                placeholder="20"
+                type="text"
+                id="lastName"
+                name="lastName"
+                label={t("form.fields.last_name")}
+                placeholder={t("form.placeholders.last_name")}
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
 
-              <MultiSelect
-                label={t("form.fields.category")}
-                name="category_id"
-                onSelectItem={(items) =>
-                  handleChange("category_id", items[0].id)
-                }
-              >
-                {getCategoriesQuery.data?.map(
-                  (resource: Resource, key: number) => (
-                    <Checkbox
-                      key={key}
-                      htmlFor={resource.id.toString()}
-                      label={resource.label}
-                      id={resource.id.toString()}
-                      name="category_id"
-                      value={resource.label}
-                    />
-                  ),
-                )}
-              </MultiSelect>
+              <Input
+                type="text"
+                id="address"
+                name="address"
+                label={t("form.fields.address")}
+                placeholder={t("form.placeholders.address")}
+                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                custom-style={{ containerStyle: "col-span-full" }}
+              />
 
-              <Button className="btn-default m-0 mt-auto" type="submit">
-                {t("actions.add_entity", {
-                  entity:
-                    t("determiners.definite.feminine") +
-                    " " +
-                    t("entities.item"),
-                })}
+              <Input
+                type="tel"
+                id="phone"
+                name="phone"
+                label={t("form.fields.phone_number")}
+                placeholder="06 00 00 00"
+                pattern="(06|05)[0-9]{2}[0-9]{4}"
+                onChange={(e) => handleChange(e.target.id, e.target.value)}
+              />
+
+              <Input
+                type="email"
+                id="email"
+                name="email"
+                label={t("form.fields.email")}
+                placeholder="Johndoe@example.com"
+                onChange={(e) => handleChange(e.target.id, e.target.value)}
+              />
+
+              <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
+
+              <Input
+                type="password"
+                id="password"
+                name="password"
+                label={t("form.fields.password")}
+                placeholder="●●●●●●●"
+                custom-style={{
+                  inputStyle: "px-10",
+                }}
+                icon={
+                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                }
+                onChange={(e) => handleChange(e.target.id, e.target.value)}
+              />
+
+              <Input
+                type="password"
+                id="password_confirmation"
+                name="password_confirmation"
+                label={t("form.fields.confirm_password")}
+                placeholder="●●●●●●●"
+                custom-style={{
+                  inputStyle: "px-10",
+                }}
+                icon={
+                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                }
+                onChange={(e) => handleChange(e.target.id, e.target.value)}
+              />
+
+              <Button className="btn-default" type="submit">
+                {t("form.buttons.create", { label: t("general.account") })}
               </Button>
             </form>
           </div>

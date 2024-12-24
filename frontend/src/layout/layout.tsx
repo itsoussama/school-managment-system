@@ -1,6 +1,6 @@
 import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
-import logo_minimize from "@assets/icon.png";
+import logo_minimize from "@assets/icon.svg";
 import { UseTheme } from "@hooks/useTheme";
 import {
   FaBell,
@@ -12,7 +12,14 @@ import {
   FaGripLines,
   FaUser,
 } from "react-icons/fa";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  CSSProperties,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FaArrowRightFromBracket, FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -21,11 +28,12 @@ import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@src/hooks/useReduxEvent";
 import { Dropdown } from "flowbite-react";
 import { logout } from "@src/features/redux/userAsyncActions";
-import { useLocation, useMatch, useNavigate } from "react-router-dom";
+import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import ReactDOM from "react-dom";
 import { TabBar } from "@src/components/tabBar";
-import { toggleThemeMode } from "@src/features/redux/themeModeSlice";
+import { BrandColor, colorPalette } from "@src/utils/colors";
+import { changeLanguage } from "i18next";
 // import { MegaMenu } from "flowbite-react";
 
 interface Layout {
@@ -43,6 +51,8 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function Layout({ children, menu }: Layout) {
   const { t } = useTranslation();
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+  const langState = useAppSelector((state) => state.preferenceSlice.language);
   const { isOnHover, setIsOnHover } = useContext(hoverContext);
   const [theme, setTheme] = UseTheme();
   const [openMobileMenu, toggleOpenMobileMenu] = useState<boolean>(false);
@@ -50,6 +60,7 @@ export function Layout({ children, menu }: Layout) {
   const [dateTime, setDateTime] = useState<DateTime>({ date: "", time: "" });
   const minXxl = useBreakpoint("min", "2xl");
   const authUser = useAppSelector((state) => state.userSlice.user);
+  const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
   const dispatch = useAppDispatch();
   const route = useNavigate();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -79,7 +90,9 @@ export function Layout({ children, menu }: Layout) {
 
   const handleDateTime = useCallback(
     (options: Intl.DateTimeFormatOptions, date: number): string => {
-      return new Intl.DateTimeFormat(t("locales"), options).format(date);
+      return new Intl.DateTimeFormat(t("general.locales"), options).format(
+        date,
+      );
     },
     [t],
   );
@@ -149,19 +162,16 @@ export function Layout({ children, menu }: Layout) {
   }, []);
 
   useEffect(() => {
-    document.body.className = theme === "dark" ? "dark" : "";
-  }, [theme]);
-
-  useEffect(() => {
     toggleOpenMobileMenu(false);
   }, [location]);
 
+  useEffect(() => {
+    changeLanguage(langState);
+  }, [langState]);
   return (
-    <div
-      className={`relative flex h-full w-full flex-1 ${theme === "dark" ? "dark" : ""}`}
-    >
+    <div id="layout" className={`relative flex w-full flex-1`}>
       <div
-        className={`z-[10] hidden h-full overflow-hidden bg-light-primary sm:absolute sm:block sm:p-3 md:min-w-fit 2xl:relative ${isOnHover ? "sm:w-max" : "sm:w-16"} transition-all dark:bg-dark-primary`}
+        className={`z-[10] hidden h-full overflow-y-auto bg-light-primary sm:absolute sm:block sm:p-3 md:min-w-fit 2xl:relative ${isOnHover ? "sm:w-max" : "sm:w-16"} transition-all dark:bg-dark-primary`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
@@ -172,9 +182,15 @@ export function Layout({ children, menu }: Layout) {
             className={`mx-auto mt-3 transition-all ${!minXxl && !isOnHover ? "w-7" : ""}`}
             src={
               minXxl || isOnHover
-                ? theme === "dark"
+                ? themeState === "dark"
                   ? logo_dark
-                  : logo_light
+                  : themeState === "light"
+                    ? logo_light
+                    : themeState === "auto" &&
+                        window.matchMedia("(prefers-color-scheme: dark)")
+                          .matches
+                      ? logo_dark
+                      : logo_light
                 : logo_minimize
             }
             // width={"150px"}
@@ -182,7 +198,6 @@ export function Layout({ children, menu }: Layout) {
           />
         </div>
         {/* <div className="my-4 w-full border-t border-gray-300 dark:border-gray-700"></div> */}
-
         {menu}
       </div>
       <div
@@ -194,7 +209,17 @@ export function Layout({ children, menu }: Layout) {
             <div className="text-gray-900 dark:text-gray-100">
               {dateTime?.date}
             </div>
-            <div className="text-lg text-blue-600">{dateTime?.time}</div>
+            <div
+              className="text-lg text-[var(--brand-color-500)]"
+              style={
+                {
+                  "--brand-color-500":
+                    colorPalette[brandState as BrandColor][500],
+                } as CSSProperties
+              }
+            >
+              {dateTime?.time}
+            </div>
           </div>
           <div className="top-bar flex gap-4">
             <div className="channels flex items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
@@ -227,7 +252,7 @@ export function Layout({ children, menu }: Layout) {
                   base: "z-10 w-fit divide-y divide-gray-100 rounded-xs shadow-sharp-dark dark:shadow-sharp-light focus:outline-none",
                 },
               }}
-              dismissOnClick={false}
+              dismissOnClick={true}
               renderTrigger={() => (
                 <div className="profile flex cursor-pointer items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
                   <div className="flex items-center gap-4">
@@ -251,13 +276,17 @@ export function Layout({ children, menu }: Layout) {
                 </div>
               )}
             >
-              <Dropdown.Item>Profile</Dropdown.Item>
-              <Dropdown.Item>Settings</Dropdown.Item>
+              <Link to={"/profile"}>
+                <Dropdown.Item>{t("general.profile")}</Dropdown.Item>
+              </Link>
+              <Link to={"/preference"}>
+                <Dropdown.Item>{t("entities.preference")}</Dropdown.Item>
+              </Link>
               <Dropdown.Item
                 onClick={handleLogout}
                 className="items-center justify-between font-medium text-red-600 hover:!bg-red-600 hover:text-white"
               >
-                Sign out
+                {t("general.sign_out")}
                 <FaArrowRightFromBracket size={12} />
               </Dropdown.Item>
             </Dropdown>
@@ -274,19 +303,25 @@ export function Layout({ children, menu }: Layout) {
                   onClick={onToggleFullScreen}
                 />
               )}
-              {theme === "dark" ? (
+              {themeState === "dark" ? (
                 <MdLightMode
                   className="cursor-pointer text-xl text-gray-500"
-                  onClick={() => (
-                    setTheme("light"), dispatch(toggleThemeMode("light"))
-                  )}
+                  onClick={() => setTheme("light")}
                 />
-              ) : (
+              ) : themeState === "light" ? (
                 <MdDarkMode
                   className="cursor-pointer text-xl text-gray-500"
-                  onClick={() => (
-                    setTheme("dark"), dispatch(toggleThemeMode("dark"))
-                  )}
+                  onClick={() => setTheme("dark")}
+                />
+              ) : window.matchMedia("(prefers-color-scheme: dark)").matches ? (
+                <MdLightMode
+                  className="cursor-pointer text-xl text-gray-500"
+                  onClick={() => setTheme("light")}
+                />
+              ) : (
+                <MdLightMode
+                  className="cursor-pointer text-xl text-gray-500"
+                  onClick={() => setTheme("dark")}
                 />
               )}
             </div>

@@ -1,6 +1,6 @@
 import useBreakpoint from "@hooks/useBreakpoint";
 import { TransitionAnimation } from "@src/components/animation";
-import { RSelect } from "@src/components/input";
+import { Button, RSelect } from "@src/components/input";
 import { exportUser } from "@src/features/api";
 import { Breadcrumb } from "flowbite-react";
 import { FormEvent, useState } from "react";
@@ -97,9 +97,9 @@ export default function DataManagement() {
                   <option value="2024">2024</option>
                 </RSelect>
 
-                <button className="btn-default m-0 mt-auto" type="submit">
+                <Button className="btn-default m-0 mt-auto" type="submit">
                   {t("form.buttons.export")}
-                </button>
+                </Button>
               </form>
             </div>
           </div>
