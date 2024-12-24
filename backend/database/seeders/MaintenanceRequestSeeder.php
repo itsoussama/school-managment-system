@@ -23,7 +23,6 @@ class MaintenanceRequestSeeder extends Seeder
             ])->each(function ($mr) {
                 $userIds = User::pluck('id')->toArray();
                 $resource_ids = resource::pluck('id')->toArray();
-                \Log::info($userIds);
                 $mr->resource_id = count($resource_ids) > 0
                     ? $resource_ids[rand(0, count($resource_ids) - 1)]
                     : null;

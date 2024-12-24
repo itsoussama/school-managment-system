@@ -95,4 +95,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(MaintenanceRequest::class);
     }
+
+    public function events() : belongsToMany
+    {
+        return $this->belongsToMany(Event::class);
+    }
 }

@@ -3,6 +3,7 @@
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\ResourceController;
@@ -24,7 +25,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
 
     // Users
     Route::apiResource('users', UserController::class);
-
+    Route::apiResource('events', EventController::class)->middleware('role:' . config('roles.admin') . ',' . config('roles.admin_staff') . ',' . config('roles.teacher'))->except(['show', 'index']);
 
     Route::middleware('role:' . config('roles.admin') . ',' . config('roles.admin_staff'))->group(function () {
         Route::apiResource('schools', SchoolController::class);
