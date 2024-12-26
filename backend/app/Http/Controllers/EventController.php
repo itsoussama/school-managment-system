@@ -17,6 +17,11 @@ class EventController extends Controller
         })->get();
         return response()->json($events);
     }
+    public function show_all()
+    {
+        $events = Event::with('users')->get();
+        return response()->json($events);
+    }
 
     public function show($id)
     {
@@ -27,6 +32,7 @@ class EventController extends Controller
     // Store a new event
     public function store(Request $request)
     {
+        try {
         $request->validate([
             'title' => 'required|string|max:255',
             'start' => 'required|date',
@@ -45,6 +51,9 @@ class EventController extends Controller
         $event->users()->sync($request->assign_to);
 
         return response()->json($event, 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json($e->errors(), 422);
+        }
     }
 
     // Update an event

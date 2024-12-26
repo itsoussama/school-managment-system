@@ -7,8 +7,7 @@ use App\Imports\UsersImport;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+// use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
@@ -457,7 +456,7 @@ class UserController extends Controller
                         $user->imagePath = $path;
                     }
 
-                    if ($user->role()->hasRole(config('roles.admin'))) {
+                    if ($user->hasRole(config('roles.admin'))) {
                         return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
                     }
                     $user->save();

@@ -25,7 +25,8 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
 
     // Users
     Route::apiResource('users', UserController::class);
-    Route::apiResource('events', EventController::class)->middleware('role:' . config('roles.admin') . ',' . config('roles.admin_staff') . ',' . config('roles.teacher'))->except(['show', 'index']);
+    Route::get('/events/all', [EventController::class, 'show_all'])->middleware('role:' . config('roles.admin') . ',' . config('roles.admin_staff'));
+    Route::apiResource('events', EventController::class);
 
     Route::middleware('role:' . config('roles.admin') . ',' . config('roles.admin_staff'))->group(function () {
         Route::apiResource('schools', SchoolController::class);
