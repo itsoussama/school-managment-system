@@ -20,4 +20,8 @@ class Grade extends Model
     {
         return $this->belongsToMany(User::class);
     }
+    public function grades() : BelongsToMany
+    {
+        return $this->belongsToMany(Grade::class);
+    }
 }

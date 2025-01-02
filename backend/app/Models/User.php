@@ -81,6 +81,10 @@ class User extends Authenticatable
         }
         return false;
     }
+    public function student()
+    {
+        return $this->hasOne(Student::class); // One-to-one relationship with Student
+    }
 
     public function guardian()
     {

@@ -10,6 +10,7 @@ use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -51,6 +52,8 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::apiResource('grades', GradeController::class);
     Route::apiResource('subjects', SubjectController::class);
     Route::apiResource('class_rooms', ClassRoomController::class);
+
+    Route::apiResource('students', StudentController::class);
     Route::get('/administrator', [UserController::class, 'admins']);
     Route::get('/teacher', [UserController::class, 'teachers']);
     Route::get('/student', [UserController::class, 'students']);
