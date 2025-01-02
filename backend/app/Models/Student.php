@@ -22,4 +22,8 @@ class Student extends Model
     {
         return $this->belongsTo(Grade::class, 'grade_id'); // One-to-one inverse relationship
     }
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_student');
+    }
 }

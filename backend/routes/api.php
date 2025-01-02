@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GradeController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
@@ -54,6 +55,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::apiResource('class_rooms', ClassRoomController::class);
 
     Route::apiResource('students', StudentController::class);
+    Route::apiResource('groups', GroupController::class);
     Route::get('/administrator', [UserController::class, 'admins']);
     Route::get('/teacher', [UserController::class, 'teachers']);
     Route::get('/student', [UserController::class, 'students']);
