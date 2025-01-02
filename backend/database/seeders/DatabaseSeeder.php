@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ResourceSeeder::class);
         $this->call(MaintenanceRequestSeeder::class);
         $this->call(EventSeeder::class,);
+        $this->call(ClassRoomSeeder::class);
 
     }
 }

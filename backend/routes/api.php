@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TokenAbility;
+use App\Http\Controllers\Api\ClassRoomController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EventController;
@@ -49,12 +50,13 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
 
     Route::apiResource('grades', GradeController::class);
     Route::apiResource('subjects', SubjectController::class);
-
+    Route::apiResource('class_rooms', ClassRoomController::class);
     Route::get('/administrator', [UserController::class, 'admins']);
     Route::get('/teacher', [UserController::class, 'teachers']);
     Route::get('/student', [UserController::class, 'students']);
     Route::get('/parent', [UserController::class, 'parents']);
     Route::get('/export-users', [UserController::class, 'export']);
     Route::post('/import-users', [UserController::class, 'import']);
+
     Route::post('/logout', [AuthController::class, 'logout']);
 });
