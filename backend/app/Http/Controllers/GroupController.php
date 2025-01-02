@@ -28,6 +28,7 @@ class GroupController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|unique:groups,name',
                 'grade_id' => 'required|exists:grades,id',
+                'school_id' => 'required|exists:schools,id',
             ]);
 
             $group = Group::create($validated);
@@ -60,6 +61,7 @@ class GroupController extends Controller
             $validated = $request->validate([
                 'name' => 'sometimes|string|unique:groups,name,' . $group->id,
                 'grade_id' => 'sometimes|exists:grades,id',
+                'school_id' => 'sometimes|exists:schools,id',
             ]);
 
             $group->update($validated);
