@@ -374,7 +374,7 @@ function CheckboxGroup({
       >
         {label}
       </span>
-      <div className={wrapperInputStyle}>{children}</div>
+      <div className={`flex ${wrapperInputStyle}`}>{children}</div>
     </div>
   );
 }

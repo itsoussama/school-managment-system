@@ -15,8 +15,9 @@ import interactionPlugin, {
   EventResizeDoneArg,
 } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
+import dayGridPlugin from "@fullcalendar/daygrid";
 import bootstrap5Plugin from "@fullcalendar/bootstrap5";
-import { Button, Input, RSelect } from "@src/components/input";
+import { Button, CheckboxGroup, Input, RSelect } from "@src/components/input";
 import {
   DateSelectArg,
   EventClickArg,
@@ -248,10 +249,24 @@ export default function Timetable() {
       >
         <form onSubmit={(e) => e.preventDefault()}>
           <Modal.Header>
-            {t("actions.new_entity", { entity: t("general.event") })}
+            {t("actions.filter_entity", { entity: t("general.event") })}
           </Modal.Header>
           <Modal.Body>
             <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8">
+              <CheckboxGroup label="Profile">
+                <CheckboxGroup.Button
+                  custom-style={{ labelStyle: "w-full" }}
+                  label={t("entities.administrator")}
+                />
+                <CheckboxGroup.Button
+                  custom-style={{ labelStyle: "w-full" }}
+                  label={t("entities.teacher")}
+                />
+                <CheckboxGroup.Button
+                  custom-style={{ labelStyle: "w-full" }}
+                  label={t("entities.student")}
+                />
+              </CheckboxGroup>
               <RSelect
                 id="gradeLevel"
                 name="gradeLevel"
@@ -425,8 +440,12 @@ export default function Timetable() {
         }
       >
         <FullCalendar
-          plugins={[timeGridPlugin, bootstrap5Plugin, interactionPlugin]}
-          // themeSystem="bootstrap5"
+          plugins={[
+            timeGridPlugin,
+            dayGridPlugin,
+            bootstrap5Plugin,
+            interactionPlugin,
+          ]}
           slotMinTime={"06:00:00"}
           slotMaxTime={"20:00:00"}
           allDaySlot={false}
@@ -473,7 +492,7 @@ export default function Timetable() {
           headerToolbar={{
             right: "addEvent filter",
             center: "title",
-            left: "prev,next timeGridWeek,timeGridDay",
+            left: "prev,next dayGridMonth,timeGridWeek,timeGridDay",
           }}
           initialView="timeGridWeek"
           locales={allLocales}

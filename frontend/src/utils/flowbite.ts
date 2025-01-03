@@ -97,28 +97,28 @@ const customTooltip = {
       "label": "ms-3 mt-0.5 text-start text-sm font-medium text-gray-900 dark:text-gray-300"
     },
     "toggle": {
-      "base": "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-cyan-500/25",
+      "base": "relative rounded-lg border after:absolute after:rounded-full after:bg-white after:transition-all group-focus:ring-4 group-focus:ring-blue-500/25",
       "checked": {
         "on": "after:translate-x-full after:border-white rtl:after:-translate-x-full",
         "off": "border-gray-200 bg-gray-200 dark:border-gray-600 dark:bg-gray-700",
         "color": {
-          "blue": "border-cyan-700 bg-cyan-700",
+          "blue": "border-blue-500 bg-blue-500",
           "dark": "bg-dark-700 border-dark-900",
           "failure": "border-red-900 bg-red-700",
-          "gray": "border-gray-600 bg-gray-500",
-          "green": "border-green-700 bg-green-600",
+          "gray": "border-gray-500 bg-gray-500",
+          "green": "border-green-200 bg-green-500",
           "light": "bg-light-700 border-light-900",
-          "red": "border-red-900 bg-red-700",
-          "purple": "border-purple-900 bg-purple-700",
+          "red": "border-red-500 bg-red-500",
+          "purple": "border-purple-500 bg-purple-500",
           "success": "border-green-500 bg-green-500",
           "yellow": "border-yellow-400 bg-yellow-400",
           "warning": "border-yellow-600 bg-yellow-600",
           "cyan": "border-cyan-500 bg-cyan-500",
-          "lime": "border-lime-400 bg-lime-400",
-          "indigo": "border-indigo-400 bg-indigo-400",
+          "lime": "border-lime-500 bg-lime-500",
+          "indigo": "border-indigo-500 bg-indigo-500",
           "teal": "bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4",
           "info": "border-cyan-600 bg-cyan-600",
-          "pink": "border-pink-600 bg-pink-600"
+          "pink": "border-pink-500 bg-pink-500"
         }
       },
       "sizes": {

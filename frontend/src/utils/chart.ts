@@ -80,9 +80,9 @@ const borderComplementaryColor = {
         useSeriesColors: false,
       },
       markers: {
-        size: [8, 6],
+        size: [5, 6],
         fillColors: [colorPalette[brandColor as BrandColor][600], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500]],
-        shape: ["square", "line"],
+        shape: ["circle", "line"],
         strokeWidth: [0, 2],
         offsetX: -5,
       },
