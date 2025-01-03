@@ -47,7 +47,9 @@ interface TextArea extends Field, TextareaHTMLAttributes<HTMLTextAreaElement> {}
 interface Checkbox extends Field, InputHTMLAttributes<HTMLInputElement> {
   image?: React.ReactNode;
 }
-interface CheckboxGroup extends Field, InputHTMLAttributes<HTMLInputElement> {}
+interface CheckboxGroup extends Field, InputHTMLAttributes<HTMLInputElement> {
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+}
 interface CheckboxGroupButton
   extends Field,
     InputHTMLAttributes<HTMLInputElement> {}
@@ -365,8 +367,19 @@ function CheckboxGroup({
     labelStyle = "",
     wrapperInputStyle = "",
   } = {},
+  onChange = () => {},
   children,
 }: CheckboxGroup) {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange(event);
+  };
+
+  const childrenWithOnChange = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { onChange: handleChange });
+    }
+    return child;
+  });
   return (
     <div className={`flex flex-col ${containerStyle}`}>
       <span
@@ -374,7 +387,7 @@ function CheckboxGroup({
       >
         {label}
       </span>
-      <div className={`flex ${wrapperInputStyle}`}>{children}</div>
+      <div className={`flex ${wrapperInputStyle}`}>{childrenWithOnChange}</div>
     </div>
   );
 }
@@ -384,6 +397,7 @@ CheckboxGroup.Button = function Button({
   label,
   name,
   "custom-style": { labelStyle = "" } = {},
+  // onChange = (event: ChangeEvent) => {},
   ...attribute
 }: CheckboxGroupButton) {
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
@@ -391,10 +405,11 @@ CheckboxGroup.Button = function Button({
     <>
       <label
         htmlFor={id}
-        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-[var(--brand-color-500)] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
+        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-[var(--brand-color-500)] has-[:checked]:hover:bg-[var(--brand-color-600)] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
         style={
           {
             "--brand-color-500": colorPalette[brandState as BrandColor][500],
+            "--brand-color-600": colorPalette[brandState as BrandColor][600],
           } as CSSProperties
         }
       >
@@ -403,7 +418,7 @@ CheckboxGroup.Button = function Button({
           className={`hidden`}
           name={name}
           id={id}
-          onChange={(e) => console.log(e)}
+          // onChange={onChange}
           {...attribute}
         />
         {label}
