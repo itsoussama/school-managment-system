@@ -65,6 +65,7 @@ class SchoolController extends Controller
         ]);
 
         $school->update($request->all());
+        info($school);
         return response()->json($school);
     }
 

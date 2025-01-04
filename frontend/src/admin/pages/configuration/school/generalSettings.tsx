@@ -5,11 +5,15 @@ import { TransitionAnimation } from "@src/components/animation";
 import { Button, Input, InputDropdown, RTextArea } from "@src/components/input";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage } from "react-icons/fa";
 import { IoIosClose } from "react-icons/io";
 import { Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getSchool, setSchool } from "@src/features/api";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
+import React from "react";
 
 interface Socials {
   id: number;
@@ -17,8 +21,26 @@ interface Socials {
   link: string;
 }
 
+interface Data {
+  id: string;
+  name: string;
+  address: string;
+  image?: File;
+}
+
+export interface FormData extends Data {
+  _method: string;
+}
+
 export default function GeneralSettings() {
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const [img, setImg] = useState<FileList>();
+  const [data, setData] = useState<Data>({
+    id: "",
+    name: "",
+    address: "",
+  });
   const socialPlatforms = ["facebook", "instagram", "twitter", "linkedin"];
   const socialLinksPlaceholders: Record<string, string> = {
     facebook: "https://facebook.com/yourprofile",
@@ -32,10 +54,42 @@ export default function GeneralSettings() {
   const [previewImg, setPreviewImg] = useState<string>();
   // const [openModal, setOpenModal] = useState<boolean>(false);
   // const [formData, setFormData] = useState<FormData>();
-  // const admin = useAppSelector((state) => state.userSlice.user);
+  const admin = useAppSelector((state) => state.userSlice.user);
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   // const redirect = useNavigate();
+
+  const getSchoolQuery = useQuery({
+    queryKey: ["getSchool"],
+    queryFn: () => getSchool(admin.school_id),
+  });
+
+  const schoolMutation = useMutation({
+    mutationFn: setSchool,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["getSchool"] });
+
+      setData({
+        id: data.id,
+        name: data.name,
+        address: data.address,
+      });
+
+      toggleAlert({
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
 
   const addSocial = () => {
     setSocials((prev) => [
@@ -50,6 +104,36 @@ export default function GeneralSettings() {
         social.id === id ? { ...social, [field]: value } : social,
       ),
     );
+  };
+
+  const onChange = (event: ChangeEvent) => {
+    const inputElem = event.target as HTMLInputElement;
+    const selectElem = event.target as HTMLSelectElement;
+    // if (event?.target.nodeType)
+    setData((prev) => ({
+      ...(prev as Data),
+      [event.target.id]:
+        event?.target.nodeName == "SELECT"
+          ? selectElem.options[selectElem.selectedIndex].value
+          : inputElem.value,
+    }));
+  };
+
+  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const form: FormData = {
+      _method: "PUT",
+      id: data?.id,
+      name: data?.name,
+      address: data?.address,
+    };
+
+    if (img) {
+      form["image"] = img[0];
+    }
+
+    schoolMutation.mutate(form);
   };
 
   const removeSocial = (id: number) => {
@@ -75,6 +159,19 @@ export default function GeneralSettings() {
       readAndPreview(file as FileList);
     }
   };
+
+  useEffect(() => {
+    if (getSchoolQuery.data) {
+      const school = getSchoolQuery.data;
+      setData({
+        id: school.id,
+        name: school.name,
+        address: school.address,
+      });
+      // setPreviewImg(school.image);
+      // setSocials(school.socials);
+    }
+  }, [getSchoolQuery.data]);
 
   return (
     <div className="flex flex-col">
@@ -173,18 +270,19 @@ export default function GeneralSettings() {
               </h1>
             </div>
             <form
-              action=""
-              //   onSubmit={onSubmit}
+              onSubmit={onSubmitUpdate}
               className="relative grid grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark sm:grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] dark:bg-dark-primary dark:shadow-sharp-light"
             >
               <Input
                 type="text"
-                id="schoolName"
-                name="schoolName"
+                id="name"
+                name="name"
                 custom-style={{ containerStyle: "col-span-full" }}
                 label={t("form.fields.school_name")}
                 placeholder={t("form.placeholders.school_name")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                disabled={getSchoolQuery.isFetching}
+                value={data.name}
+                onChange={onChange}
               />
 
               <Input
@@ -194,7 +292,9 @@ export default function GeneralSettings() {
                 custom-style={{ containerStyle: "col-span-full" }}
                 label={t("form.fields.address")}
                 placeholder={t("form.placeholders.address")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                disabled={getSchoolQuery.isFetching}
+                value={data.address}
+                onChange={onChange}
               />
 
               <RTextArea

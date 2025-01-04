@@ -14,6 +14,7 @@ import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStu
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
 import { FormData as AddResourceFromData } from "@src/admin/pages/resources/addResources";
 import { FormData as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
+import { FormData as UpdateSchoolFromData } from "@src/admin/pages/configuration/school/generalSettings";
 const axiosApi = AxiosProvider();
 
 const getAdministrators = async (
@@ -454,6 +455,24 @@ const setMaintenanceRequestStatus = async (formData: {
   return response.data;
 };
 
+const getSchool = async (id: string) => {
+  const response = await axiosApi.get("/api/schools/" + id);
+  return response.data;
+};
+
+const setSchool = async (formData: UpdateSchoolFromData) => {
+  const response = await axiosApi.post(
+    "/api/schools/" + formData?.id,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
 export {
   getRoles,
   getAdministrators,
@@ -490,4 +509,6 @@ export {
   setMaintenanceRequest,
   deleteMaintenanceRequest,
   setMaintenanceRequestStatus,
+  getSchool,
+  setSchool,
 };
