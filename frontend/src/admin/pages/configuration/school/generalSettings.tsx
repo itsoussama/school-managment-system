@@ -76,6 +76,7 @@ export default function GeneralSettings() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -84,6 +85,7 @@ export default function GeneralSettings() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -176,6 +178,7 @@ export default function GeneralSettings() {
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}

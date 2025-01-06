@@ -244,6 +244,7 @@ export function ViewResources() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -257,6 +258,7 @@ export function ViewResources() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -286,6 +288,7 @@ export function ViewResources() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -294,6 +297,7 @@ export function ViewResources() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -475,6 +479,7 @@ export function ViewResources() {
     resourceMutation.mutate(form);
     // } else {
     //   toggleAlert({
+    // id: new Date().getTime(),
     //     status: "fail",
     //     message: {
     //       message: "Operation Failed",
@@ -560,6 +565,7 @@ export function ViewResources() {
   useEffect(() => {
     const alertState = location.state?.alert;
     toggleAlert({
+      id: alertState?.id,
       status: alertState?.status,
       message: alertState?.message,
       state: alertState?.state,
@@ -591,13 +597,18 @@ export function ViewResources() {
     }
   }, [page, handleChecks]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex w-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}

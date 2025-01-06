@@ -80,7 +80,7 @@ interface Modal {
 
 interface ChildModal {
   id: number;
-  school_id: number;
+  school_id: string;
   open: boolean;
 }
 
@@ -90,7 +90,7 @@ interface Parent {
   name: string;
   email: string;
   phone: string;
-  school_id: number;
+  school_id: string;
   blocked?: boolean;
   role: [
     {
@@ -118,7 +118,7 @@ export interface FormData {
   password_confirmation?: string;
 }
 
-interface Data {
+export interface Data {
   id: number;
   firstName: string;
   lastName: string;
@@ -182,7 +182,7 @@ export function ViewParents() {
   const [openModal, setOpenModal] = useState<Modal>();
   const [openChildModal, setOpenChildModal] = useState<ChildModal>({
     id: 0,
-    school_id: 0,
+    school_id: "",
     open: false,
   });
   const [img, setImg] = useState<FileList>();
@@ -285,6 +285,7 @@ export function ViewParents() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -297,6 +298,7 @@ export function ViewParents() {
     },
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -329,6 +331,7 @@ export function ViewParents() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -337,6 +340,7 @@ export function ViewParents() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -346,7 +350,7 @@ export function ViewParents() {
 
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getParent"],
       });
@@ -359,15 +363,29 @@ export function ViewParents() {
         queryKey: ["getAllParents"],
       });
 
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
+
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: false,
+      }));
+
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -377,7 +395,7 @@ export function ViewParents() {
 
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getParent"],
       });
@@ -390,15 +408,29 @@ export function ViewParents() {
         queryKey: ["getAllParents"],
       });
 
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
+
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: false,
+      }));
+
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -569,6 +601,7 @@ export function ViewParents() {
       parentMutation.mutate(form);
     } else {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -594,20 +627,12 @@ export function ViewParents() {
     const userId: number = openModal?.id as number;
 
     if (!blockSwitch[userId]) {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: true,
-      }));
       blockUserMutation.mutate({ user_id: userId });
     } else {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: false,
-      }));
       unBlockUserMutation.mutate({ user_id: userId });
     }
+
+    setOpenModal(undefined);
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -683,6 +708,7 @@ export function ViewParents() {
   useEffect(() => {
     const alertState = location.state?.alert;
     toggleAlert({
+      id: alertState?.id,
       status: alertState?.status,
       message: alertState?.message,
       state: alertState?.state,
@@ -712,13 +738,18 @@ export function ViewParents() {
     }
   }, [getParentsQuery.data, getParentsQuery.isFetched]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex w-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
 
       <Breadcrumb

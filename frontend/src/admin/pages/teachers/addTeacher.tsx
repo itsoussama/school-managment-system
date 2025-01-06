@@ -2,7 +2,7 @@ import { Button, Checkbox, Input, MultiSelect } from "@src/components/input";
 import { addTeacher, getGrades, getSubjects } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,7 +21,7 @@ export interface FormData {
   email: string;
   password: string;
   password_confirmation: string;
-  school_id: number;
+  school_id: string;
   roles: number[];
   subjects: number[];
   grades: number[];
@@ -86,6 +86,7 @@ export default function AddTeacher() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -119,6 +120,7 @@ export default function AddTeacher() {
       }
     } catch (e) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -145,13 +147,18 @@ export default function AddTeacher() {
     }
   };
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}

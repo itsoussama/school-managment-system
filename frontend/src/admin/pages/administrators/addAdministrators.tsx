@@ -2,7 +2,7 @@ import { Button, Input } from "@components/input";
 import { addAdministrator } from "@api";
 import { useMutation } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,7 +21,7 @@ export interface FormData {
   email: string;
   password: string;
   password_confirmation: string;
-  school_id: number;
+  school_id: string;
   roles: number[];
   image: File;
 }
@@ -33,7 +33,7 @@ interface File {
   type: string;
 }
 
-const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
+// const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export default function AddAdministrators() {
   const { t } = useTranslation();
@@ -52,6 +52,7 @@ export default function AddAdministrators() {
       redirect("/administrators/manage", {
         state: {
           alert: {
+            id: new Date().getTime(),
             status: "success",
             message: "Operation Successful",
             state: true,
@@ -61,6 +62,7 @@ export default function AddAdministrators() {
     },
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -93,6 +95,7 @@ export default function AddAdministrators() {
       }
     } catch (e) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -119,13 +122,18 @@ export default function AddAdministrators() {
     }
   };
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
 
       <Breadcrumb

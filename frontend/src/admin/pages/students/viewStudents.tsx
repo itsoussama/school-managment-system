@@ -75,7 +75,7 @@ interface Modal {
 
 interface ParentModal {
   id: number;
-  school_id: number;
+  school_id: string;
   open: boolean;
 }
 
@@ -187,7 +187,7 @@ export function ViewStudents() {
   const [openModal, setOpenModal] = useState<Modal>();
   const [openParentModal, setOpenParentModal] = useState<ParentModal>({
     id: 0,
-    school_id: 0,
+    school_id: "",
     open: false,
   });
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
@@ -297,6 +297,7 @@ export function ViewStudents() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -310,6 +311,7 @@ export function ViewStudents() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -342,6 +344,7 @@ export function ViewStudents() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -350,6 +353,7 @@ export function ViewStudents() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -359,7 +363,7 @@ export function ViewStudents() {
 
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getStudent"],
       });
@@ -371,15 +375,28 @@ export function ViewStudents() {
       queryClient.invalidateQueries({
         queryKey: ["getAllStudents"],
       });
+
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: false,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -389,7 +406,7 @@ export function ViewStudents() {
 
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getStudent"],
       });
@@ -401,16 +418,28 @@ export function ViewStudents() {
       queryClient.invalidateQueries({
         queryKey: ["getAllStudents"],
       });
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -580,6 +609,7 @@ export function ViewStudents() {
       studentMutation.mutate(form);
     } else {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -605,20 +635,12 @@ export function ViewStudents() {
     const userId: number = openModal?.id as number;
 
     if (!blockSwitch[userId]) {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: true,
-      }));
       blockUserMutation.mutate({ user_id: userId });
     } else {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: false,
-      }));
       unBlockUserMutation.mutate({ user_id: userId });
     }
+
+    setOpenModal(undefined);
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -694,6 +716,7 @@ export function ViewStudents() {
   useEffect(() => {
     const alertState = location.state?.alert;
     toggleAlert({
+      id: new Date().getTime(),
       status: alertState?.status,
       message: alertState?.message,
       state: alertState?.state,
@@ -726,6 +749,7 @@ export function ViewStudents() {
   return (
     <div className="flex w-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
@@ -1520,7 +1544,7 @@ export function ViewStudents() {
                               onClick={() =>
                                 setOpenParentModal({
                                   id: student.id,
-                                  school_id: student.school_id,
+                                  school_id: student.school_id.toString(),
                                   open: true,
                                 })
                               }

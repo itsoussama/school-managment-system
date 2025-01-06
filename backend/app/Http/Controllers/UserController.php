@@ -457,7 +457,7 @@ class UserController extends Controller
                         $user->imagePath = $path;
                     }
 
-                    if ($user->role()->hasRole(config('roles.admin'))) {
+                    if ($user->hasRole(config('roles.admin'))) {
                         return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
                     }
                     $user->save();
@@ -577,7 +577,7 @@ class UserController extends Controller
                     Storage::disk('public')->delete($user->imagePath);
                 }
             }
-            if ($user->role()->hasRole(config('roles.admin'))) {
+            if ($user->hasRole(config('roles.admin'))) {
                 return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
             }
 
@@ -641,7 +641,7 @@ class UserController extends Controller
                         ->whereDoesntHave('role', function ($query) {
                             $query->whereIn('name', [
                                 config('roles.admin'),
-                                config('roles.admin_staff'),
+                                // config('roles.admin_staff'),
                             ]);
                         })
                         ->update(['blocked' => false]);
@@ -673,7 +673,7 @@ class UserController extends Controller
                         ->whereDoesntHave('role', function ($query) {
                             $query->whereIn('name', [
                                 config('roles.admin'),
-                                config('roles.admin_staff'),
+                                // config('roles.admin_staff'),
                             ]);
                         })
                         ->update(['blocked' => true]);

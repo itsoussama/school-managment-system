@@ -99,7 +99,7 @@ interface MaintenanceRequests {
   file_path: string;
   resolved_date: string;
   created_at: string;
-  school_id: number;
+  school_id: string;
   resources: {
     id: string;
     label: string;
@@ -115,7 +115,7 @@ interface Data {
   file_path?: File;
   resolved_date?: string;
   created_at: string;
-  school_id: number;
+  school_id: string;
   users: number[];
   userData?: Array<Record<string, string>>;
   resource_id: number;
@@ -130,7 +130,7 @@ export interface FormData {
   file_path?: File;
   resolved_date?: string;
   users?: Array<number>;
-  school_id?: number;
+  school_id?: string;
   resource_id?: number;
 }
 
@@ -179,7 +179,7 @@ export default function MaintenanceRequests() {
     resolved_date: "",
     created_at: "",
     users: [],
-    school_id: 0,
+    school_id: "",
     resource_id: 0,
   });
   //   const [formError, setFormError] = useState<DataError>({
@@ -202,7 +202,6 @@ export default function MaintenanceRequests() {
   };
 
   const { t } = useTranslation();
-  const { t: fieldTrans } = useTranslation("form-fields");
   const minSm = useBreakpoint("min", "sm");
 
   const getAllMaintenanceRequestsQuery = useQuery({
@@ -258,6 +257,7 @@ export default function MaintenanceRequests() {
     mutationFn: addMaintenanceRequest,
     onSuccess: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -266,6 +266,7 @@ export default function MaintenanceRequests() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -297,10 +298,11 @@ export default function MaintenanceRequests() {
         users: data?.users,
         created_at: data?.created_at,
         resource_id: data?.resource_id as number,
-        school_id: data?.school_id as number,
+        school_id: data?.school_id,
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -314,6 +316,7 @@ export default function MaintenanceRequests() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -344,11 +347,12 @@ export default function MaintenanceRequests() {
         resolved_date: "",
         created_at: "",
         users: [],
-        school_id: 0,
+        school_id: "",
         resource_id: 0,
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -357,6 +361,7 @@ export default function MaintenanceRequests() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -394,10 +399,11 @@ export default function MaintenanceRequests() {
         users: data?.users,
         created_at: data?.created_at,
         resource_id: data?.resource_id as number,
-        school_id: data?.school_id as number,
+        school_id: data?.school_id,
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -408,6 +414,7 @@ export default function MaintenanceRequests() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -438,7 +445,7 @@ export default function MaintenanceRequests() {
     options: Intl.DateTimeFormatOptions,
     date: number | Date,
   ): string => {
-    return new Intl.DateTimeFormat(t("locales"), options).format(date);
+    return new Intl.DateTimeFormat(t("general.locales"), options).format(date);
   };
 
   const handlePerPage = (ev: ChangeEvent) => {
@@ -545,10 +552,11 @@ export default function MaintenanceRequests() {
         priority: data?.priority,
         users: data?.users,
         resource_id: data?.resource_id as number,
-        school_id: admin?.school_id as number,
+        school_id: admin?.school_id,
       });
     } catch (e) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -630,7 +638,7 @@ export default function MaintenanceRequests() {
       resolved_date: "",
       created_at: "",
       users: [],
-      school_id: 0,
+      school_id: "",
       resource_id: 0,
     });
 
@@ -662,13 +670,18 @@ export default function MaintenanceRequests() {
     }
   }, [page, handleChecks]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex w-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
       <div className="flex items-center justify-between">
         <Breadcrumb

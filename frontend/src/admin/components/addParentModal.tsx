@@ -23,7 +23,7 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 interface AddParentModal {
   open: boolean;
   toggleOpen: (isOpen: boolean) => void;
-  school_id: number;
+  school_id: string;
   child_id: number;
 }
 
@@ -35,7 +35,7 @@ export interface FormData {
   email: string;
   password: string;
   password_confirmation: string;
-  school_id: number;
+  school_id: string;
   childrens: number[];
   roles: number[];
   image: File;
@@ -96,6 +96,7 @@ export default function AddParentModal({
       setPreviewImg(undefined);
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -104,6 +105,7 @@ export default function AddParentModal({
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -121,6 +123,7 @@ export default function AddParentModal({
       setOpenModal(false);
       toggleOpen(false);
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -129,6 +132,7 @@ export default function AddParentModal({
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -189,6 +193,7 @@ export default function AddParentModal({
       }
     } catch (e) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -230,6 +235,7 @@ export default function AddParentModal({
   return (
     <>
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}

@@ -6,6 +6,7 @@ import {
   ChangeEvent,
   CSSProperties,
   FormEvent,
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -28,7 +29,7 @@ export interface FormData {
   email: string;
   password: string;
   password_confirmation: string;
-  school_id: number;
+  school_id: string;
   childrens: number[];
   roles: number[];
   image: File;
@@ -83,6 +84,7 @@ export default function AddParent() {
       redirect("/parents/manage", {
         state: {
           alert: {
+            id: new Date().getTime(),
             status: "success",
             message: "Operation Successful",
             state: true,
@@ -92,6 +94,7 @@ export default function AddParent() {
     },
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -138,6 +141,7 @@ export default function AddParent() {
       }
     } catch (e) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -217,13 +221,18 @@ export default function AddParent() {
     handleChange("childrens", selectedChilds);
   }, [selectedChilds]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
 
       <Breadcrumb

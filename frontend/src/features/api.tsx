@@ -22,7 +22,7 @@ const getAdministrators = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: number,
+  schoolId: string,
   name: string = "",
 ) => {
   const response = await axiosApi.get(
@@ -47,7 +47,7 @@ const getTeachers = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: number,
+  schoolId: string,
   name: string = "",
   subject: string = "",
   grades: string = "",
@@ -78,7 +78,7 @@ const getStudents = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: number,
+  schoolId: string,
   name: string = "",
   grades: string = "",
 ) => {
@@ -106,7 +106,7 @@ const getParents = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: number,
+  schoolId: string,
   name: string = "",
   childName: string = "",
 ) => {
@@ -221,7 +221,7 @@ const getSubjects = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: number,
+  schoolId: string,
 ) => {
   const response = await axiosApi.get(
     "/api/subjects?page=" +
@@ -283,7 +283,7 @@ const getResources = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: number,
+  schoolId: string,
   label = "",
   maxQty = 0,
   minQty = 0,
@@ -349,7 +349,7 @@ const getCategories = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: number,
+  schoolId: string,
 ) => {
   const response = await axiosApi.get(
     "/api/categories?page=" +
@@ -371,7 +371,7 @@ const getMaintenanceRequests = async (
   perPage = 5,
   sortColumn = "id",
   sortDirection = "asc",
-  schoolId: number,
+  schoolId: string,
   title = "",
   status = "",
   // minQty = 0,

@@ -7,7 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Card, Modal } from "flowbite-react";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaImage,
@@ -23,7 +23,7 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 interface AddChildModal {
   open: boolean;
   toggleOpen: (isOpen: boolean) => void;
-  school_id: number;
+  school_id: string;
   guardian_id: number;
 }
 
@@ -109,6 +109,7 @@ function AddChildModal({
       setPreviewImg(undefined);
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -117,6 +118,7 @@ function AddChildModal({
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -134,6 +136,7 @@ function AddChildModal({
       setOpenModal(false);
       toggleOpen(false);
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -142,6 +145,7 @@ function AddChildModal({
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -223,6 +227,7 @@ function AddChildModal({
       }
     } catch (e) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -269,13 +274,18 @@ function AddChildModal({
     setOpenModal(open);
   }, [open]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <>
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
       <Modal
         show={openModal}

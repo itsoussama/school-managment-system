@@ -2,7 +2,7 @@ import { Button, Checkbox, Input, MultiSelect } from "@components/input";
 import { addResource, getCategories } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,7 +15,7 @@ import { TransitionAnimation } from "@src/components/animation";
 export interface FormData {
   label: string;
   qty: number;
-  school_id: number;
+  school_id: string;
   category_id: number;
   image: File;
 }
@@ -53,6 +53,7 @@ export default function AddResources() {
       redirect("/resources/manage", {
         state: {
           alert: {
+            id: new Date().getTime(),
             status: "success",
             message: "Operation Successful",
             state: true,
@@ -63,6 +64,7 @@ export default function AddResources() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -81,7 +83,7 @@ export default function AddResources() {
         addResourceQuery.mutate({
           label: data?.label as string,
           qty: data?.qty as number,
-          school_id: admin?.school_id as number,
+          school_id: admin?.school_id as string,
           category_id: data?.category_id as number,
           image: img[0],
         });
@@ -90,6 +92,7 @@ export default function AddResources() {
       }
     } catch (e) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -116,13 +119,18 @@ export default function AddResources() {
     }
   };
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
 
       <Breadcrumb
