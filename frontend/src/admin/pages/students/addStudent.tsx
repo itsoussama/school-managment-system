@@ -2,7 +2,7 @@ import { Button, Checkbox, Input, MultiSelect } from "@components/input";
 import { addStudent, getGrades } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import Alert from "@src/components/alert";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import roles from "@admin/roles.json";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
 
 export interface FormData {
   guardian_id: number | null;
@@ -22,7 +23,7 @@ export interface FormData {
   email: string;
   password: string;
   password_confirmation: string;
-  school_id: number;
+  school_id: string;
   roles: number[];
   subjects: number[];
   grades: number[];
@@ -62,6 +63,7 @@ export default function AddStudent() {
       redirect("/students/manage", {
         state: {
           alert: {
+            id: new Date().getTime(),
             status: "success",
             message: "Operation Successful",
             state: true,
@@ -72,6 +74,7 @@ export default function AddStudent() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -105,6 +108,7 @@ export default function AddStudent() {
       }
     } catch (e) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -131,13 +135,18 @@ export default function AddStudent() {
     }
   };
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
 
       <Breadcrumb
@@ -304,11 +313,9 @@ export default function AddStudent() {
                 name="password"
                 label={t("form.fields.password")}
                 placeholder="●●●●●●●"
-                custom-style={{
-                  inputStyle: "px-10",
-                }}
-                icon={
-                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
                 }
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
@@ -319,11 +326,9 @@ export default function AddStudent() {
                 name="password_confirmation"
                 label={t("form.fields.confirm_password")}
                 placeholder="●●●●●●●"
-                custom-style={{
-                  inputStyle: "px-10",
-                }}
-                icon={
-                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
                 }
                 onChange={(e) => handleChange(e.target.id, e.target.value)}
               />

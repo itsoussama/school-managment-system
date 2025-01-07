@@ -1064,9 +1064,7 @@ export default function MaintenanceRequests() {
                       type="text"
                       readOnly
                       label={t("form.fields.assign_to")}
-                      icon={
-                        <FaChevronDown className="absolute right-0 top-1/2 mr-3 -translate-y-1/2 text-[12px] text-[#7f868e36] dark:text-gray-500" />
-                      }
+                      leftIcon={FaChevronDown}
                       custom-style={{
                         inputStyle: "cursor-default",
                       }}
@@ -1374,9 +1372,7 @@ export default function MaintenanceRequests() {
                 </Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center gap-x-3">
-                    <span className="inline-block">
-                      {fieldTrans("subject")}
-                    </span>
+                    <span className="inline-block">{t("subject")}</span>
                     <div
                       className="flex flex-col"
                       onClick={() => handleSort("title")}
@@ -1426,7 +1422,7 @@ export default function MaintenanceRequests() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.title !== "" && (
@@ -1441,7 +1437,7 @@ export default function MaintenanceRequests() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter?.title}
@@ -1463,7 +1459,7 @@ export default function MaintenanceRequests() {
                     <RSelect
                       id="status"
                       name="status"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.status !== "" && (
@@ -1478,7 +1474,7 @@ export default function MaintenanceRequests() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       custom-style={{
                         inputStyle: "px-9 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",

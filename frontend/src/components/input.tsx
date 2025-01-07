@@ -7,6 +7,7 @@ import React, {
   cloneElement,
   CSSProperties,
   InputHTMLAttributes,
+  JSXElementConstructor,
   ReactElement,
   ReactNode,
   SelectHTMLAttributes,
@@ -23,11 +24,15 @@ import { FileInput, Label } from "flowbite-react";
 import { useTranslation } from "react-i18next";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { IconBaseProps, IconContext } from "react-icons/lib";
 
 interface Field {
   htmlFor?: string;
   label?: string;
-  icon?: React.ReactNode;
+  leftIcon?: JSXElementConstructor<IconBaseProps>;
+  rightIcon?: (
+    isPasswordVisible?: boolean,
+  ) => JSXElementConstructor<IconBaseProps>;
   "custom-style"?: {
     inputStyle?: string;
     labelStyle?: string;
@@ -39,7 +44,9 @@ interface Field {
   children?: React.ReactNode;
 }
 
-interface Input extends Field, InputHTMLAttributes<HTMLInputElement> {}
+interface Input extends Field, InputHTMLAttributes<HTMLInputElement> {
+  type: string;
+}
 
 interface InputDropdown extends Field {}
 
@@ -62,9 +69,11 @@ interface ButtonType extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 function Input({
+  type,
   htmlFor,
   label = "",
-  icon,
+  leftIcon,
+  rightIcon,
   "custom-style": {
     inputStyle = "",
     labelStyle = "",
@@ -75,6 +84,8 @@ function Input({
 }: Input) {
   // const [inputValue, setInputValue] = useState<string>(value ?? "");
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+  const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
+
   return (
     <div className={containerStyle}>
       <label
@@ -84,9 +95,17 @@ function Input({
         {label}
       </label>
       <div className="relative">
-        {icon}
+        <IconContext.Provider
+          value={{
+            className:
+              "absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400",
+          }}
+        >
+          {leftIcon && React.createElement(leftIcon, { size: "16px" })}
+        </IconContext.Provider>
         <input
-          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${inputStyle}`}
+          type={isPasswordVisible ? "text" : type}
+          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${leftIcon ? "px-10" : ""} ${inputStyle}`}
           style={
             {
               "--brand-color-500": colorPalette[brandState as BrandColor][500],
@@ -95,6 +114,21 @@ function Input({
           }
           {...attribute}
         />
+        <IconContext.Provider
+          value={{
+            className:
+              "absolute top-1/2 mx-3 right-0 -translate-y-1/2 text-gray-500 dark:text-gray-400",
+          }}
+        >
+          {rightIcon &&
+            rightIcon &&
+            React.createElement(
+              rightIcon(isPasswordVisible),
+              type === "password"
+                ? { onClick: () => setIsPasswordVisible(!isPasswordVisible) }
+                : null,
+            )}
+        </IconContext.Provider>
       </div>
       {error && (
         <div className="mt-1.5 flex items-start">
@@ -258,7 +292,8 @@ InputDropdown.Input = function Input({
 function RTextArea({
   htmlFor,
   label = "",
-  icon,
+  leftIcon,
+  rightIcon,
   "custom-style": {
     inputStyle = "",
     labelStyle = "",
@@ -278,7 +313,7 @@ function RTextArea({
         {label}
       </label>
       <div className="relative">
-        {icon}
+        {leftIcon && leftIcon && React.createElement(leftIcon)}
         <textarea
           className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${inputStyle}`}
           style={
@@ -289,6 +324,7 @@ function RTextArea({
           }
           {...attribute}
         />
+        {rightIcon && rightIcon && React.createElement(rightIcon())}
       </div>
       {error && (
         <div className="mt-1.5 flex items-start">
@@ -430,7 +466,8 @@ CheckboxGroup.Button = function Button({
 function RSelect({
   htmlFor,
   label = "",
-  icon,
+  leftIcon,
+  rightIcon,
   "custom-style": {
     inputStyle = "",
     labelStyle = "",
@@ -450,7 +487,7 @@ function RSelect({
         {label}
       </label>
       <div className="relative">
-        {icon}
+        {leftIcon && leftIcon && React.createElement(leftIcon)}
         <select
           className={`block w-full rounded-s border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-700 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${inputStyle}`}
           style={
@@ -463,6 +500,7 @@ function RSelect({
         >
           {children}
         </select>
+        {rightIcon && rightIcon && React.createElement(rightIcon())}
       </div>
       {error && (
         <div className="mt-1.5 flex items-center">

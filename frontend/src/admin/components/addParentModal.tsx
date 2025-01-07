@@ -19,6 +19,7 @@ import { Card, Modal } from "flowbite-react";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
 
 interface AddParentModal {
   open: boolean;
@@ -373,11 +374,9 @@ export default function AddParentModal({
                         name="password"
                         label={t("form.fields.password")}
                         placeholder="●●●●●●●"
-                        custom-style={{
-                          inputStyle: "px-10",
-                        }}
-                        icon={
-                          <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        leftIcon={FaLock}
+                        rightIcon={(isPasswordVisible) =>
+                          isPasswordVisible ? FaEyeSlash : FaEye
                         }
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
@@ -390,11 +389,9 @@ export default function AddParentModal({
                         name="password_confirmation"
                         label={t("form.fields.confirm_password")}
                         placeholder="●●●●●●●"
-                        custom-style={{
-                          inputStyle: "px-10",
-                        }}
-                        icon={
-                          <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        leftIcon={FaLock}
+                        rightIcon={(isPasswordVisible) =>
+                          isPasswordVisible ? FaEyeSlash : FaEye
                         }
                         onChange={(e) =>
                           handleChange(e.target.id, e.target.value)
@@ -425,9 +422,7 @@ export default function AddParentModal({
                 <Input
                   id="search"
                   type="text"
-                  icon={
-                    <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                  }
+                  leftIcon={FaSearch}
                   label=""
                   onKeyUp={(e) => handleSearch(e.target)}
                   placeholder={t("general.all")}

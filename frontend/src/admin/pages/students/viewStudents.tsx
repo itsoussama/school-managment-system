@@ -15,7 +15,6 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
-  FaEye,
   FaHome,
   FaLock,
   FaPen,
@@ -53,7 +52,7 @@ import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddParentModal from "@src/admin/components/addParentModal";
 import Alert from "@src/components/alert";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
-import { FaRegCircleXmark } from "react-icons/fa6";
+import { FaEyeSlash, FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
@@ -1103,8 +1102,9 @@ export function ViewStudents() {
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
                         />
@@ -1120,8 +1120,9 @@ export function ViewStudents() {
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
                         />
@@ -1380,7 +1381,7 @@ export function ViewStudents() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.name !== "" && (
@@ -1392,7 +1393,7 @@ export function ViewStudents() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter?.name}
@@ -1414,7 +1415,7 @@ export function ViewStudents() {
                     <RSelect
                       id="gradelevel"
                       name="gradelevel"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.gradelevel !== "" && (
@@ -1429,7 +1430,7 @@ export function ViewStudents() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       custom-style={{
                         inputStyle: "px-9 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
@@ -1467,9 +1468,7 @@ export function ViewStudents() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
-                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                      }
+                      leftIcon={FaSearch}
                       label=""
                       placeholder={t("general.all")}
                       name="search"

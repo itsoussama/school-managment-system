@@ -58,7 +58,7 @@ import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddChildModal from "@src/admin/components/addChildModal";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaEyeSlash, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
@@ -1071,8 +1071,9 @@ export function ViewParents() {
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
                         />
@@ -1088,8 +1089,9 @@ export function ViewParents() {
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
                         />
@@ -1339,7 +1341,7 @@ export function ViewParents() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.name !== "" && (
@@ -1351,7 +1353,7 @@ export function ViewParents() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter.name}
@@ -1372,7 +1374,7 @@ export function ViewParents() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.childName !== "" && (
@@ -1387,7 +1389,7 @@ export function ViewParents() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter.childName}

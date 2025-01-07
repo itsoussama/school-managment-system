@@ -1,6 +1,6 @@
 import { Button, Checkbox, Input } from "@components/input";
 import { useAppDispatch, useAppSelector } from "@hooks/useReduxEvent";
-import { UseTheme } from "@hooks/useTheme";
+// import { UseTheme } from "@hooks/useTheme";
 import {
   ChangeEvent,
   CSSProperties,
@@ -8,7 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { FaCircleXmark } from "react-icons/fa6";
+import { FaCircleXmark, FaEye, FaEyeSlash } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
 import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
@@ -16,6 +16,7 @@ import learningLightImg from "@assets/learning_light.png";
 import learningDarkImg from "@assets/learning_dark.png";
 import { login } from "@redux/userAsyncActions";
 import { BrandColor, colorPalette } from "@src/utils/colors";
+import { FaLock } from "react-icons/fa";
 
 interface Data {
   email: string;
@@ -40,7 +41,7 @@ export default function Login() {
     password: "",
     form: "",
   });
-  const [theme] = UseTheme();
+  // const [theme] = UseTheme();
   // const [isPasswordHidden, setIsPasswordHidden] = useState<boolean>(true);
 
   // selector
@@ -190,6 +191,10 @@ export default function Login() {
                 placeholder="••••••••"
                 label="Password"
                 onChange={handleChange}
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
+                }
                 error={formError?.password}
               />
               <div className="flex items-center justify-between">

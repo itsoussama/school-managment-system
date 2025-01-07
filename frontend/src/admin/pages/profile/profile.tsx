@@ -8,6 +8,7 @@ import { ChangeEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -43,6 +44,7 @@ export default function Profile() {
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
@@ -180,11 +182,9 @@ export default function Profile() {
                 name="password"
                 label={t("form.fields.password")}
                 placeholder="●●●●●●●"
-                custom-style={{
-                  inputStyle: "px-10",
-                }}
-                icon={
-                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
                 }
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
@@ -195,11 +195,9 @@ export default function Profile() {
                 name="password_confirmation"
                 label={t("form.fields.confirm_password")}
                 placeholder="●●●●●●●"
-                custom-style={{
-                  inputStyle: "px-10",
-                }}
-                icon={
-                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
                 }
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />

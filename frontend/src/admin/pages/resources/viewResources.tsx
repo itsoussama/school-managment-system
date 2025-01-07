@@ -970,7 +970,7 @@ export function ViewResources() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.label !== "" && (
@@ -985,7 +985,7 @@ export function ViewResources() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter?.label}
@@ -1013,7 +1013,7 @@ export function ViewResources() {
                             <Input
                               type="text"
                               readOnly
-                              icon={
+                              leftIcon={() => (
                                 <>
                                   <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                                   {(filter.maxQty !== undefined ||
@@ -1032,7 +1032,7 @@ export function ViewResources() {
                                     />
                                   )}
                                 </>
-                              }
+                              )}
                               custom-style={{
                                 inputStyle:
                                   "cursor-default min-w-36 px-8 !py-1",
@@ -1090,7 +1090,7 @@ export function ViewResources() {
                     <RSelect
                       id="category_id"
                       name="categories"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.category_id !== undefined && (
@@ -1105,7 +1105,7 @@ export function ViewResources() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       custom-style={{
                         inputStyle: "px-9 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
