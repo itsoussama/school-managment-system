@@ -18,6 +18,10 @@ class Student extends Model
     {
         return $this->belongsTo(User::class, 'user_id'); // One-to-one inverse relationship
     }
+    public function parents()
+    {
+        return $this->belongsTo(Parents::class, 'parent_id'); // One-to-one inverse relationship
+    }
     public function grade()
     {
         return $this->belongsTo(Grade::class, 'grade_id'); // One-to-one inverse relationship

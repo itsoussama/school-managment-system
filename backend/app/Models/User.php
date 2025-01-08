@@ -89,6 +89,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Teacher::class); // One-to-one relationship with Student
     }
+    public function parent()
+    {
+        return $this->hasOne(Parents::class); // One-to-one relationship with Student
+    }
 
     public function guardian()
     {

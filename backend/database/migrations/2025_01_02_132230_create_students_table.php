@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id'); // Foreign key reference to users table
             $table->unsignedBigInteger('grade_id'); // Foreign key reference to users table
+            $table->unsignedBigInteger('parent_id');
             $table->string('student_number')->unique();
             $table->date('birthdate');
             $table->string('address')->nullable();
@@ -22,6 +23,7 @@ return new class extends Migration
 
             // Add foreign key constraint
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('parent_id')->references('id')->on('parents')->onDelete('cascade');
             $table->foreign('grade_id')->references('id')->on('grades')->onDelete('cascade');
         });
     }
