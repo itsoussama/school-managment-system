@@ -21,6 +21,7 @@ import { TransitionAnimation } from "@src/components/animation";
 import roles from "@admin/roles.json";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 export interface FormData {
   name?: string;
@@ -59,8 +60,12 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export default function AddParent() {
   const { t } = useTranslation();
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [openModal, setOpenModal] = useState<boolean>(false);
@@ -103,10 +108,6 @@ export default function AddParent() {
     },
   });
 
-  const handleChange = (property: string, value: string | number[]) => {
-    setData((prev) => ({ ...(prev as FormData), [property]: value }));
-  };
-
   const handleSearch = (e: EventTarget) => {
     setSearchValue((e as HTMLInputElement).value);
     // console.log();
@@ -117,36 +118,38 @@ export default function AddParent() {
     setSelectedChilds(childId);
     setDataChild(childs);
 
-    handleChange("childrens", childId);
+    setFormData("childrens", childId);
   };
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(data);
 
-    try {
-      if (img) {
-        addParentQuery.mutate({
-          name: data?.firstName + " " + data?.lastName,
-          email: data?.email as string,
-          school_id: admin?.school_id,
-          password: data?.password as string,
-          password_confirmation: data?.password_confirmation as string,
-          phone: data?.phone as string,
-          childrens: data?.childrens as number[],
-          roles: [roles.parent],
-          image: img[0],
+    const validationResult = validateForm();
+    if (validationResult.isValid) {
+      try {
+        if (img) {
+          addParentQuery.mutate({
+            name: formData?.firstName + " " + formData?.lastName,
+            email: formData?.email as string,
+            school_id: admin?.school_id,
+            password: formData?.password as string,
+            password_confirmation: formData?.password_confirmation as string,
+            phone: formData?.phone as string,
+            childrens: formData?.childrens as number[],
+            roles: [roles.parent],
+            image: img[0],
+          });
+        } else {
+          throw new Error("image not found");
+        }
+      } catch (e) {
+        toggleAlert({
+          id: new Date().getTime(),
+          status: "fail",
+          message: "Operation Failed",
+          state: true,
         });
-      } else {
-        throw new Error("image not found");
       }
-    } catch (e) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
     }
   };
 
@@ -219,8 +222,8 @@ export default function AddParent() {
   };
 
   useEffect(() => {
-    handleChange("childrens", selectedChilds);
-  }, [selectedChilds]);
+    setFormData("childrens", selectedChilds);
+  }, [selectedChilds, setFormData]);
 
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);
@@ -412,7 +415,7 @@ export default function AddParent() {
                 name="firstName"
                 label={t("form.fields.first_name")}
                 placeholder={t("form.placeholders.first_name")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -421,7 +424,7 @@ export default function AddParent() {
                 name="lastName"
                 label={t("form.fields.last_name")}
                 placeholder={t("form.placeholders.last_name")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -430,7 +433,7 @@ export default function AddParent() {
                 name="address"
                 label={t("form.fields.address")}
                 placeholder={t("form.placeholders.address")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
                 custom-style={{ containerStyle: "col-span-full" }}
               />
 
@@ -441,7 +444,7 @@ export default function AddParent() {
                 label={t("form.fields.phone_number")}
                 placeholder="06 00 00 00"
                 pattern="(06|05)[0-9]{2}[0-9]{4}"
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -450,7 +453,9 @@ export default function AddParent() {
                 name="email"
                 label={t("form.fields.email")}
                 placeholder="Johndoe@example.com"
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.email}
               />
 
               <MultiSelect
@@ -520,7 +525,9 @@ export default function AddParent() {
                 rightIcon={(isPasswordVisible) =>
                   isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.password}
               />
 
               <Input
@@ -533,7 +540,9 @@ export default function AddParent() {
                 rightIcon={(isPasswordVisible) =>
                   isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.password_confirmation}
               />
 
               <Button className="btn-default m-0 mt-auto" type="submit">

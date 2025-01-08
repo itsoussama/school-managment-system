@@ -20,6 +20,7 @@ import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface AddChildModal {
   open: boolean;
@@ -76,11 +77,16 @@ function AddChildModal({
   const queryClient = useQueryClient();
 
   const { t } = useTranslation();
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
+
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [openModal, setOpenModal] = useState<boolean>(open);
   const [option, setOption] = useState<Options>();
-  const [formData, setFormData] = useState<FormData>();
   const [searchValue, setSearchValue] = useState<string>("");
   const [selectedChilds, setSelectedChilds] = useState<number[]>([]);
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -154,13 +160,6 @@ function AddChildModal({
     },
   });
 
-  const handleChange = (property: string, value: string | number[]) => {
-    setFormData((prev) => ({
-      ...(prev as FormData),
-      [property]: value,
-    }));
-  };
-
   const handleSearch = (e: EventTarget) => {
     setSearchValue((e as HTMLInputElement).value);
     // console.log();
@@ -171,26 +170,6 @@ function AddChildModal({
     setOpenModal(false);
     toggleOpen(false);
     setOption(undefined);
-    setFormData({
-      name: "",
-      firstName: "",
-      lastName: "",
-      guardian_id: 0,
-      phone: "",
-      email: "",
-      password: "",
-      password_confirmation: "",
-      school_id: 0,
-      roles: [],
-      subjects: [],
-      grades: [],
-      image: {
-        lastModified: 0,
-        name: "",
-        size: 0,
-        type: "",
-      },
-    });
   };
 
   const getSelectedChilds = (event: ChangeEvent<HTMLInputElement>) => {
@@ -208,31 +187,34 @@ function AddChildModal({
   const onSubmitNewChild = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    try {
-      if (img) {
-        addStudentQuery.mutate({
-          name: formData?.firstName + " " + formData?.lastName,
-          email: formData?.email as string,
-          school_id: school_id,
-          guardian_id: guardian_id,
-          password: formData?.password as string,
-          password_confirmation: formData?.password_confirmation as string,
-          phone: formData?.phone as string,
-          roles: [3],
-          subjects: [1],
-          grades: formData?.grades as number[],
-          image: img[0],
+    const validationResult = validateForm();
+    if (validationResult.isValid) {
+      try {
+        if (img) {
+          addStudentQuery.mutate({
+            name: formData?.firstName + " " + formData?.lastName,
+            email: formData?.email as string,
+            school_id: school_id,
+            guardian_id: guardian_id,
+            password: formData?.password as string,
+            password_confirmation: formData?.password_confirmation as string,
+            phone: formData?.phone as string,
+            roles: [3],
+            subjects: [1],
+            grades: formData?.grades as number[],
+            image: img[0],
+          });
+        } else {
+          throw new Error("image not found");
+        }
+      } catch (e) {
+        toggleAlert({
+          id: new Date().getTime(),
+          status: "fail",
+          message: "Operation Failed",
+          state: true,
         });
-      } else {
-        throw new Error("image not found");
       }
-    } catch (e) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
     }
   };
 
@@ -309,7 +291,7 @@ function AddChildModal({
           <form onSubmit={onSubmitNewChild}>
             <Modal.Body>
               <div className="flex flex-col gap-8 sm:flex-row">
-                <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+                <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                   {previewImg ? (
                     <img
                       className="h-44 w-44 rounded-full object-cover"
@@ -360,7 +342,7 @@ function AddChildModal({
                         placeholder={t("form.placeholders.first_name")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -372,7 +354,7 @@ function AddChildModal({
                         placeholder={t("form.placeholders.last_name")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -395,7 +377,7 @@ function AddChildModal({
                         pattern="(06|05)[0-9]{6}"
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -407,15 +389,17 @@ function AddChildModal({
                         placeholder={t("form.placeholders.email")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.email}
                       />
 
                       <MultiSelect
                         label={t("form.fields.grade_levels")}
                         name="grades"
                         onSelectItem={(items) =>
-                          handleChange(
+                          setFormData(
                             "grades",
                             items.map((item) => parseInt(item.id)),
                           )
@@ -448,8 +432,10 @@ function AddChildModal({
                           isPasswordVisible ? FaEyeSlash : FaEye
                         }
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.password}
                       />
 
                       <Input
@@ -463,8 +449,10 @@ function AddChildModal({
                           isPasswordVisible ? FaEyeSlash : FaEye
                         }
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.password_confirmation}
                       />
                     </div>
                   </div>

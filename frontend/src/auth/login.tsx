@@ -1,13 +1,7 @@
 import { Button, Checkbox, Input } from "@components/input";
 import { useAppDispatch, useAppSelector } from "@hooks/useReduxEvent";
 // import { UseTheme } from "@hooks/useTheme";
-import {
-  ChangeEvent,
-  CSSProperties,
-  FormEvent,
-  useEffect,
-  useState,
-} from "react";
+import { ChangeEvent, CSSProperties } from "react";
 import { FaCircleXmark, FaEye, FaEyeSlash } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
 import logo_dark from "@assets/logo_dark.png";
@@ -17,131 +11,58 @@ import learningDarkImg from "@assets/learning_dark.png";
 import { login } from "@redux/userAsyncActions";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { FaLock } from "react-icons/fa";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface Data {
   email: string;
   password: string;
 }
 
-interface DataError {
-  email?: string;
-  password?: string;
-  form?: string;
-}
+// interface DataError {
+//   email?: string;
+//   password?: string;
+//   form?: string;
+// }
 
 export default function Login() {
+  const { formData, errors, setFormData, validateForm, setError } =
+    useFormValidation({
+      email: "",
+      password: "",
+    });
+
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-
-  const [data, setData] = useState<Data>({
-    email: "",
-    password: "",
-  }); // for testing purpose
-  const [formError, setFormError] = useState<DataError>({
-    email: "",
-    password: "",
-    form: "",
-  });
-  // const [theme] = UseTheme();
-  // const [isPasswordHidden, setIsPasswordHidden] = useState<boolean>(true);
-
-  // selector
   const auth = useAppSelector((state) => state.userSlice);
   const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
-
-  // dispatcher
   const dispatch = useAppDispatch();
-
-  // Route
   const route = useNavigate();
 
-  // Effects
-  useEffect(() => {
-    const listener = (e: Event) => {
-      setFormError(handleClientError((e.target as HTMLFormElement).form));
-    };
-
-    window.addEventListener("focusout", listener);
-
-    return () => {
-      window.removeEventListener("focusout", listener);
-    };
-  }, [data, formError]);
-
-  // useEffect(() => {
-  //     !auth.loading && Object.entries(auth.user).length > 0 && route('/')
-  // }, [auth, route])
-
-  // functions
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    // const target = event.target as HTMLFormElement;
-
-    console.log(formError);
-    if (formError?.email === "" && formError?.password === "") {
-      // if (target.email.value !== "" && target.password.value !== "") {
-      if (data.email !== "" && data.password !== "") {
-        const response = await dispatch(login(data as Data));
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const validationResult = validateForm();
+      if (validationResult.isValid) {
+        const response = await dispatch(login(formData as unknown as Data));
 
         if (response.meta.requestStatus === "fulfilled") {
           return route("/");
         }
 
-        setFormError({
-          form: "You have entered an invalid username or password",
-        });
-      } else {
-        setFormError((prev) => ({ prev, form: "Invalid login credentiales" }));
+        throw Error("You have entered an invalid username or password");
       }
+    } catch (error) {
+      const message = (error as Error).message;
+      setError("form", message);
     }
   };
 
   const handleChange = (event: ChangeEvent) => {
     const target = event.target as HTMLInputElement;
-    if (event.target.id === "remember") {
-      // setData(prev => ({...prev, [event.target.id]: event.target.checked}))
-      return;
-    }
-    setData((prev) => ({
-      ...(prev as Data),
-      [target.id as string]: target.value as string,
-    }));
-    // console.log("handle change ", event.target.value);
-    // setTimeout(() => {
-    //     return window.removeEventListener('keyup', listener)
-    // }, 2000)
-  };
-
-  const handleClientError = (field: HTMLFormElement) => {
-    const emailValidation = new RegExp(
-      /[A-Za-z0-9]{4,}@[A-Za-z0-9]{3,}\.[A-Za-z]{2,}/,
-    );
-    // const passwordValidation = new RegExp(
-    //   /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/,
-    // );
-    const passwordValidation = new RegExp(/[*]*/);
-    const messages = {
-      email: "This field is required.",
-      password: "This field is required.",
-    };
-
-    if (field.email.value != "") {
-      if (!field.email.value.match(emailValidation)) {
-        messages.email = "Please enter a valid email address.";
-      } else {
-        messages.email = "";
-      }
-    }
-
-    if (field.password.value != "") {
-      if (!field.password.value.match(passwordValidation)) {
-        messages.password =
-          "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.";
-      } else {
-        messages.password = "";
-      }
-    }
-
-    return messages;
+    // if (event.target.id === "remember") {
+    //   // setData(prev => ({...prev, [event.target.id]: event.target.checked}))
+    //   return;
+    // }
+    setFormData(target.id as string, target.value as string);
   };
 
   return (
@@ -169,10 +90,12 @@ export default function Login() {
               Sign in to your account
             </h1>
             <div
-              className={`form-message rounded-md bg-red-500 ${formError?.form ? "flex" : "hidden"} items-center px-4 py-3`}
+              className={`form-message rounded-md bg-red-500 ${errors?.form ? "flex" : "hidden"} items-center px-4 py-3`}
             >
               <FaCircleXmark color="white" />
-              <p className="message ms-3 text-white">{formError?.form}</p>
+              <p className="message ms-3 text-white">
+                {errors?.form as string}
+              </p>
             </div>
             <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
               <Input
@@ -182,7 +105,8 @@ export default function Login() {
                 placeholder="Johndoe@company.com"
                 label="Email"
                 onChange={handleChange}
-                error={formError?.email}
+                onBlur={() => validateForm()}
+                error={errors?.email}
               />
               <Input
                 type="password"
@@ -191,11 +115,12 @@ export default function Login() {
                 placeholder="••••••••"
                 label="Password"
                 onChange={handleChange}
+                onBlur={() => validateForm()}
                 leftIcon={FaLock}
                 rightIcon={(isPasswordVisible) =>
                   isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                error={formError?.password}
+                error={errors?.password}
               />
               <div className="flex items-center justify-between">
                 <Checkbox
@@ -204,7 +129,6 @@ export default function Login() {
                   id="remember"
                   label="Remember me"
                   htmlFor="remember"
-                  onChange={handleChange}
                 />
                 <Link
                   to={"/auth/forget-password/request-link"}

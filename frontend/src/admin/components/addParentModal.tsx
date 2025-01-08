@@ -20,6 +20,7 @@ import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface AddParentModal {
   open: boolean;
@@ -68,7 +69,12 @@ export default function AddParentModal({
   const queryClient = useQueryClient();
 
   const { t } = useTranslation();
-  const [data, setData] = useState<FormData>();
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
+
   const [img, setImg] = useState<FileList>();
   const [openModal, setOpenModal] = useState<boolean>(open);
   const [option, setOption] = useState<Options>();
@@ -141,10 +147,6 @@ export default function AddParentModal({
     },
   });
 
-  const handleChange = (property: string, value: string | number[]) => {
-    setData((prev) => ({ ...(prev as FormData), [property]: value }));
-  };
-
   const handleSearch = (e: EventTarget) => {
     setSearchValue((e as HTMLInputElement).value);
     // console.log();
@@ -152,6 +154,7 @@ export default function AddParentModal({
 
   const onCloseModal = () => {
     addParentQuery.reset();
+    setOpenModal(false);
     toggleOpen(false);
     setOption(undefined);
   };
@@ -175,30 +178,32 @@ export default function AddParentModal({
 
   const onSubmitNewParent = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    try {
-      if (img) {
-        addParentQuery.mutate({
-          name: data?.firstName + " " + data?.lastName,
-          email: data?.email as string,
-          school_id: school_id,
-          password: data?.password as string,
-          password_confirmation: data?.password_confirmation as string,
-          phone: data?.phone as string,
-          childrens: [child_id],
-          roles: [4],
-          image: img[0],
+    const validationResult = validateForm();
+    if (validationResult.isValid) {
+      try {
+        if (img) {
+          addParentQuery.mutate({
+            name: formData?.firstName + " " + formData?.lastName,
+            email: formData?.email as string,
+            school_id: school_id,
+            password: formData?.password as string,
+            password_confirmation: formData?.password_confirmation as string,
+            phone: formData?.phone as string,
+            childrens: [child_id],
+            roles: [4],
+            image: img[0],
+          });
+        } else {
+          throw new Error("image not found");
+        }
+      } catch (e) {
+        toggleAlert({
+          id: new Date().getTime(),
+          status: "fail",
+          message: "Operation Failed",
+          state: true,
         });
-      } else {
-        throw new Error("image not found");
       }
-    } catch (e) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
     }
   };
 
@@ -316,7 +321,7 @@ export default function AddParentModal({
                         label={t("form.fields.first_name")}
                         placeholder={t("form.placeholders.first_name")}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -327,7 +332,7 @@ export default function AddParentModal({
                         label={t("form.fields.last_name")}
                         placeholder={t("form.placeholders.last_name")}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -338,7 +343,7 @@ export default function AddParentModal({
                         label={t("form.fields.address")}
                         placeholder={t("form.placeholders.address")}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                         custom-style={{ containerStyle: "col-span-full" }}
                       />
@@ -351,7 +356,7 @@ export default function AddParentModal({
                         placeholder="06 00 00 00"
                         pattern="(06|05)[0-9]{2}[0-9]{4}"
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -362,8 +367,10 @@ export default function AddParentModal({
                         label={t("form.fields.email")}
                         placeholder="Johndoe@example.com"
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.email}
                       />
 
                       <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-600"></div>
@@ -379,8 +386,10 @@ export default function AddParentModal({
                           isPasswordVisible ? FaEyeSlash : FaEye
                         }
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.password}
                       />
 
                       <Input
@@ -394,8 +403,10 @@ export default function AddParentModal({
                           isPasswordVisible ? FaEyeSlash : FaEye
                         }
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.password_confirmation}
                       />
                     </div>
                   </div>

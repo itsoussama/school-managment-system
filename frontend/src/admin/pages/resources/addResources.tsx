@@ -11,6 +11,7 @@ import useBreakpoint from "@src/hooks/useBreakpoint";
 import Alert from "@src/components/alert";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 export interface FormData {
   label: string;
@@ -34,7 +35,7 @@ interface File {
 
 export default function AddResources() {
   const { t } = useTranslation();
-  const [data, setData] = useState<FormData>();
+  const { formData, setFormData } = useFormValidation({});
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -72,19 +73,15 @@ export default function AddResources() {
     },
   });
 
-  const handleChange = (property: string, value: string | number[]) => {
-    setData((prev) => ({ ...(prev as FormData), [property]: value }));
-  };
-
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
       if (img) {
         addResourceQuery.mutate({
-          label: data?.label as string,
-          qty: data?.qty as number,
+          label: formData?.label as string,
+          qty: formData?.qty as number,
           school_id: admin?.school_id as string,
-          category_id: data?.category_id as number,
+          category_id: formData?.category_id as number,
           image: img[0],
         });
       } else {
@@ -225,7 +222,7 @@ export default function AddResources() {
                 name="label"
                 label={t("form.fields.label")}
                 placeholder={t("form.placeholders.label")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -234,14 +231,14 @@ export default function AddResources() {
                 name="qty"
                 label={t("form.fields.quantity")}
                 placeholder="20"
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <MultiSelect
                 label={t("form.fields.category")}
                 name="category_id"
                 onSelectItem={(items) =>
-                  handleChange("category_id", items[0].id)
+                  setFormData("category_id", items[0].id)
                 }
               >
                 {getCategoriesQuery.data?.map(

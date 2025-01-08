@@ -301,12 +301,19 @@ class UserController extends Controller
                     'roles.*' => 'exists:roles,id',
                 ]);
                 if ($validation) {
+                    $path = '';
+                    if ($request->hasFile('image')) {
+                        // $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
+                        // $request->file('image')->move(public_path('images/users'), $filename);
+                        $path = $request->file('image')->store('images', 'public');
+                    }
                     $user = User::create([
                         'name' => $request->name,
                         'email' => $request->email,
                         'phone' => $request->phone,
                         'password' => bcrypt($request->password),
                     ]);
+                    $user->imagePath = $path;
                     $user->school()->associate($request->school_id);
                     $user->role()->sync($request->roles);
                     $user->save();

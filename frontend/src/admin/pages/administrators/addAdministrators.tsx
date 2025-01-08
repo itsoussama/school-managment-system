@@ -13,6 +13,7 @@ import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import roles from "@admin/roles.json";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 export interface FormData {
   name?: string;
@@ -38,7 +39,12 @@ interface File {
 
 export default function AddAdministrators() {
   const { t } = useTranslation();
-  const [data, setData] = useState<FormData>();
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
+  // const [data, setData] = useState<FormData>();
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   // const [formData, setFormData] = useState<FormData>();
@@ -71,36 +77,33 @@ export default function AddAdministrators() {
     },
   });
 
-  const handleChange = (property: string, value: string | number[]) => {
-    setData((prev) => ({ ...(prev as FormData), [property]: value }));
-  };
-
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(data);
-
-    try {
-      if (img) {
-        addAdministratorQuery.mutate({
-          name: data?.firstName + " " + data?.lastName,
-          email: data?.email as string,
-          school_id: admin?.school_id,
-          password: data?.password as string,
-          password_confirmation: data?.password_confirmation as string,
-          phone: data?.phone as string,
-          roles: [roles.administration_staff],
-          image: img[0],
+    const validationResult = validateForm();
+    if (validationResult.isValid) {
+      try {
+        if (img) {
+          addAdministratorQuery.mutate({
+            name: formData?.firstName + " " + formData?.lastName,
+            email: formData?.email as string,
+            school_id: admin?.school_id,
+            password: formData?.password as string,
+            password_confirmation: formData?.password_confirmation as string,
+            phone: formData?.phone as string,
+            roles: [roles.administration_staff],
+            image: img[0],
+          });
+        } else {
+          throw new Error("image not found");
+        }
+      } catch (e) {
+        toggleAlert({
+          id: new Date().getTime(),
+          status: "fail",
+          message: "Operation Failed",
+          state: true,
         });
-      } else {
-        throw new Error("image not found");
       }
-    } catch (e) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
     }
   };
 
@@ -230,7 +233,7 @@ export default function AddAdministrators() {
                 name="firstName"
                 label={t("form.fields.first_name")}
                 placeholder={t("form.placeholders.first_name")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -239,7 +242,7 @@ export default function AddAdministrators() {
                 name="lastName"
                 label={t("form.fields.last_name")}
                 placeholder={t("form.placeholders.last_name")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -248,7 +251,7 @@ export default function AddAdministrators() {
                 name="address"
                 label={t("form.fields.address")}
                 placeholder={t("form.placeholders.address")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
                 custom-style={{ containerStyle: "col-span-full" }}
               />
 
@@ -259,7 +262,7 @@ export default function AddAdministrators() {
                 label={t("form.fields.phone_number")}
                 placeholder="06 00 00 00"
                 pattern="(06|05)[0-9]{2}[0-9]{4}"
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -268,7 +271,9 @@ export default function AddAdministrators() {
                 name="email"
                 label={t("form.fields.email")}
                 placeholder="Johndoe@example.com"
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.email}
               />
 
               <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
@@ -283,7 +288,9 @@ export default function AddAdministrators() {
                 rightIcon={(isPasswordVisible) =>
                   isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.password}
               />
 
               <Input
@@ -296,7 +303,9 @@ export default function AddAdministrators() {
                 rightIcon={(isPasswordVisible) =>
                   isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.password_confirmation}
               />
 
               <Button className="btn-default" type="submit">

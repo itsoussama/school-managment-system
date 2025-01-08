@@ -40,7 +40,7 @@ interface Field {
     wrapperLabelStyle?: string;
     containerStyle?: string;
   };
-  error?: null | string;
+  error?: unknown | string;
   children?: React.ReactNode;
 }
 
@@ -130,10 +130,10 @@ function Input({
             )}
         </IconContext.Provider>
       </div>
-      {error && (
+      {(error as string) && (
         <div className="mt-1.5 flex items-start">
           <FaExclamationCircle className="mr-2 mt-0.5 min-w-4 text-red-500" />
-          <span className="error text-sm text-red-500">{error}</span>
+          <span className="error text-sm text-red-500">{error as string}</span>
         </div>
       )}
     </div>
@@ -148,10 +148,10 @@ function InputDropdown({
   return (
     <div className={containerStyle}>
       <div className="flex">{children}</div>
-      {error && (
+      {(error as string) && (
         <div className="mt-1.5 flex items-start">
           <FaExclamationCircle className="mr-2 mt-0.5 min-w-4 text-red-500" />
-          <span className="error text-sm text-red-500">{error}</span>
+          <span className="error text-sm text-red-500">{error as string}</span>
         </div>
       )}
     </div>
@@ -326,10 +326,10 @@ function RTextArea({
         />
         {rightIcon && rightIcon && React.createElement(rightIcon())}
       </div>
-      {error && (
+      {(error as string) && (
         <div className="mt-1.5 flex items-start">
           <FaExclamationCircle className="mr-2 mt-0.5 min-w-4 text-red-500" />
-          <span className="error text-sm text-red-500">{error}</span>
+          <span className="error text-sm text-red-500">{error as string}</span>
         </div>
       )}
     </div>
@@ -374,10 +374,10 @@ function Checkbox({
           size="xs"
           className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 peer-checked:block"
         />
-        {error && (
+        {(error as string) && (
           <div className="mt-1.5 flex items-center">
             <FaExclamationCircle className="mr-2 text-red-500" />
-            <span className="error text-red-500">{error}</span>
+            <span className="error text-red-500">{error as string}</span>
           </div>
         )}
       </div>
@@ -502,10 +502,10 @@ function RSelect({
         </select>
         {rightIcon && rightIcon && React.createElement(rightIcon())}
       </div>
-      {error && (
+      {(error as string) && (
         <div className="mt-1.5 flex items-center">
           <FaExclamationCircle className="mr-2 text-red-500" />
-          <span className="error text-red-500">{error}</span>
+          <span className="error text-red-500">{error as string}</span>
         </div>
       )}
     </div>
