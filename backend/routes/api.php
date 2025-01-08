@@ -3,6 +3,7 @@
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Api\ClassRoomController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GradeController;
@@ -55,7 +56,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::apiResource('grades', GradeController::class);
     Route::apiResource('subjects', SubjectController::class);
     Route::apiResource('class_rooms', ClassRoomController::class);
-
+    Route::apiResource('calendars', CalendarController::class);
     Route::apiResource('students', StudentController::class);
     Route::apiResource('groups', GroupController::class);
     Route::get('/administrator', [UserController::class, 'admins']);
