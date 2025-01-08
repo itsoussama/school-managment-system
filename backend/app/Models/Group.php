@@ -24,4 +24,9 @@ class Group extends Model
     {
         return $this->belongsTo(School::class);
     }
+
+    public function calendars()
+    {
+        return $this->hasMany(Calendar::class);
+    }
 }

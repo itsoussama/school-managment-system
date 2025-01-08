@@ -30,4 +30,8 @@ class Student extends Model
     {
         return $this->belongsToMany(Group::class, 'group_student');
     }
+    public function calendars()
+    {
+        return $this->hasMany(Calendar::class);
+    }
 }
