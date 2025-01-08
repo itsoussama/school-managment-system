@@ -18,6 +18,7 @@ class EventFactory extends Factory
     {
         return [
             'title' => $this->faker->sentence(3), // Random event title
+            'description' => $this->faker->sentence(3), // Random event title
             'start' => $this->faker->dateTimeBetween('+1 days', '+1 month'), // Random start date within the next month
             'end' => $this->faker->dateTimeBetween('+1 month', '+2 months'), // Random end date after the start date
         ];
