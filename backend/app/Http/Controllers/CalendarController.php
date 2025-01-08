@@ -9,7 +9,7 @@ class CalendarController extends Controller
 {
     public function index()
     {
-        return Calendar::with(['teacher', 'group', 'classroom', 'subject', 'school'])->get();
+        return Calendar::with(['teacher.user', 'group', 'classroom', 'subject', 'school'])->get();
     }
 
     public function store(Request $request)
