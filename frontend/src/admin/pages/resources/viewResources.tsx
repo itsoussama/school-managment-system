@@ -56,6 +56,7 @@ import { FaChevronDown, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown"; // DropdownListButton, // DropdownList,
 import { customTable, customTooltip } from "@src/utils/flowbite";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface Check {
   id?: number;
@@ -81,30 +82,30 @@ export interface Resource {
 
 export interface FormData {
   _method: string;
-  id: number;
+  id: string;
   label: string;
   qty: number;
-  category_id: number;
+  category_id: string;
   image?: File;
 }
 
-interface Data {
-  id: number;
-  label: string;
-  qty: number;
-  category_id: number;
-  image?: File;
-}
+// interface Data {
+//   id: number;
+//   label: string;
+//   qty: number;
+//   category_id: number;
+//   image?: File;
+// }
 
 interface Category {
   id: number;
   label: string;
 }
 
-interface DataError {
-  label: string;
-  qty: number;
-}
+// interface DataError {
+//   label: string;
+//   qty: number;
+// }
 
 interface Sort {
   column: string;
@@ -121,6 +122,7 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewResources() {
   const queryClient = useQueryClient();
+  const { formData, setData } = useFormValidation({});
 
   const location = useLocation();
   const [sortPosition, setSortPosition] = useState<number>(0);
@@ -142,16 +144,6 @@ export function ViewResources() {
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
-  const [data, setData] = useState<Data>({
-    id: 0,
-    label: "",
-    qty: 0,
-    category_id: 0,
-  });
-  const [formError, setFormError] = useState<DataError>({
-    label: "",
-    qty: 0,
-  });
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
@@ -237,10 +229,10 @@ export function ViewResources() {
       });
 
       setData({
-        id: data?.id as number,
+        id: data?.id as string,
         label: data?.label as string,
         qty: data?.qty as number,
-        category_id: data?.category_id as number,
+        category_id: data?.category_id as string,
       });
 
       toggleAlert({
@@ -281,10 +273,10 @@ export function ViewResources() {
       setPage(1);
 
       setData({
-        id: 0,
+        id: "",
         label: "",
         qty: 0,
-        category_id: 0,
+        category_id: "",
       });
 
       toggleAlert({
@@ -312,7 +304,7 @@ export function ViewResources() {
     const selectElem = event.target as HTMLSelectElement;
     // if (event?.target.nodeType)
     setData((prev) => ({
-      ...(prev as Data),
+      ...prev,
       [event.target.id]:
         event?.target.nodeName == "SELECT"
           ? selectElem.options[selectElem.selectedIndex].value
@@ -461,34 +453,29 @@ export function ViewResources() {
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // const input = event.target as HTMLFormElement;
 
-    // if (!handleClientError(input)) {
-    const form: FormData = {
-      _method: "PUT",
-      id: data?.id,
-      label: data?.label,
-      qty: data?.qty,
-      category_id: data?.category_id,
-    };
+    try {
+      const form: FormData = {
+        _method: "PUT",
+        id: formData?.id as string,
+        label: formData?.label as string,
+        qty: formData?.qty as number,
+        category_id: formData?.category_id as string,
+      };
 
-    if (img) {
-      form["image"] = img[0];
+      if (img) {
+        form["image"] = img[0];
+      }
+
+      resourceMutation.mutate(form);
+    } catch {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
     }
-
-    resourceMutation.mutate(form);
-    // } else {
-    //   toggleAlert({
-    // id: new Date().getTime(),
-    //     status: "fail",
-    //     message: {
-    //       message: "Operation Failed",
-    //       description: "Something went wrong. Please try again later.",
-    //     },
-
-    //     state: true,
-    //   });
-    // }
   };
 
   const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
@@ -524,15 +511,10 @@ export function ViewResources() {
     setOpenModal(undefined);
 
     setData({
-      id: 0,
+      id: "",
       label: "",
       qty: 0,
-      category_id: 0,
-    });
-
-    setFormError({
-      label: "",
-      qty: 0,
+      category_id: "",
     });
   };
 
@@ -778,7 +760,7 @@ export function ViewResources() {
                       placeholder={t("form.placeholders.label")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getResourceQuery.isFetching && true}
-                      value={data?.label}
+                      value={(formData?.label as string) || ""}
                       onChange={onChange}
                     />
 
@@ -790,7 +772,7 @@ export function ViewResources() {
                       placeholder="20"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getResourceQuery.isFetching && true}
-                      value={data?.qty}
+                      value={(formData?.label as number) || 0}
                       onChange={onChange}
                     />
 
@@ -800,18 +782,12 @@ export function ViewResources() {
                       label={t("form.fields.category")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getResourceQuery.isFetching && true}
-                      defaultValue={data?.id}
+                      value={formData?.category_id as string}
                       onChange={onChange}
                     >
                       {getCategoriesQuery.data?.map(
                         (category: Category, index: number) => (
-                          <option
-                            key={index}
-                            value={category.id}
-                            selected={
-                              data?.category_id == category.id ? true : false
-                            }
-                          >
+                          <option key={index} value={category.id}>
                             {category.label}
                           </option>
                         ),
@@ -1007,31 +983,16 @@ export function ViewResources() {
                       <Dropdown
                         onClose={(state) => setCloseDropDown(state as boolean)}
                         close={closeDropDown}
-                        additionalStyle={{ containerStyle: "px-2 rounded-s" }}
+                        additionalStyle={{
+                          dropdownStyle: "px-2 rounded-xs",
+                        }}
                         element={
                           <div className="relative">
                             <Input
                               type="text"
                               readOnly
                               leftIcon={() => (
-                                <>
-                                  <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                                  {(filter.maxQty !== undefined ||
-                                    filter.minQty !== undefined) && (
-                                    <FaRegCircleXmark
-                                      onClick={() => (
-                                        setCloseDropDown(true),
-                                        setFilter((prev) => ({
-                                          ...prev,
-                                          maxQty: undefined,
-                                          minQty: undefined,
-                                        }))
-                                      )}
-                                      // onClick={(e) => e.stopPropagation()}
-                                      className="absolute right-0 top-1/2 mr-6 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
-                                    />
-                                  )}
-                                </>
+                                <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                               )}
                               custom-style={{
                                 inputStyle:
@@ -1051,6 +1012,22 @@ export function ViewResources() {
                             />
 
                             <FaChevronDown className="absolute right-0 top-1/2 mr-2 -translate-y-1/2 text-[11px] text-[#7f868e36] dark:text-gray-400" />
+                            {(filter.maxQty !== undefined ||
+                              filter.minQty !== undefined) && (
+                              <FaRegCircleXmark
+                                onClick={() => (
+                                  console.log("clicked"),
+                                  setCloseDropDown(true),
+                                  setFilter((prev) => ({
+                                    ...prev,
+                                    maxQty: undefined,
+                                    minQty: undefined,
+                                  }))
+                                )}
+                                // onClick={(e) => e.stopPropagation()}
+                                className="absolute right-0 top-1/2 mr-6 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
+                              />
+                            )}
                           </div>
                         }
                       >

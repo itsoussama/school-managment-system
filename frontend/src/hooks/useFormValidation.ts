@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { formValidation, ValidationResult } from '../utils/formValidation';
 
 interface UseFormValidation {
   formData: Record<string, unknown>;
   errors: Record<string, unknown>;
-  setFormData: (id: string, value: unknown) => void;
+  setData: Dispatch<SetStateAction<Record<string, unknown>>>;
+  setFormData: (id : string, value: unknown) => void;
   setError: (key: string, value: string) => void;
   validateForm: () => ValidationResult;
 }
@@ -39,6 +40,7 @@ return {
     errors,
     setError: handleError,
     setFormData: handleFromData,
+    setData: setFormData,
     validateForm,
 };
 };

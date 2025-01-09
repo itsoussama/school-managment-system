@@ -60,6 +60,7 @@ import {
   customToggleSwitch,
   customTooltip,
 } from "@src/utils/flowbite";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface Check {
   id?: number;
@@ -99,26 +100,6 @@ export interface FormData {
   password_confirmation?: string;
 }
 
-interface Data {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirm_password: string;
-  phone: string;
-  image?: File;
-}
-
-interface DataError {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirm_password: string;
-}
-
 interface BlockSwitch {
   [key: string]: boolean;
 }
@@ -144,6 +125,12 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewAdministrators() {
   const queryClient = useQueryClient();
+  const { formData, errors, validateForm, setData } = useFormValidation({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
@@ -164,23 +151,6 @@ export function ViewAdministrators() {
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [data, setData] = useState<Data>({
-    id: 0,
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirm_password: "",
-  });
-  const [formError, setFormError] = useState<DataError>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirm_password: "",
-    phone: "",
-  });
   const [changePassword, toggleChangePassword] = useState<boolean>(false);
   // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
@@ -252,10 +222,9 @@ export function ViewAdministrators() {
         id: data?.id,
         firstName: getUserName(data?.name).firstName,
         lastName: getUserName(data?.name).lastName,
+        address: data?.address,
         email: data?.email,
         phone: data?.phone,
-        password: "",
-        confirm_password: "",
       });
 
       toggleAlert({
@@ -293,16 +262,6 @@ export function ViewAdministrators() {
 
       setOpenModal(undefined);
       setPage(1);
-
-      setData({
-        id: 0,
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirm_password: "",
-      });
 
       toggleAlert({
         id: new Date().getTime(),
@@ -418,12 +377,17 @@ export function ViewAdministrators() {
     const selectElem = event.target as HTMLSelectElement;
     // if (event?.target.nodeType)
     setData((prev) => ({
-      ...(prev as Data),
+      ...prev,
       [event.target.id]:
         event?.target.nodeName == "SELECT"
           ? selectElem.options[selectElem.selectedIndex].value
           : inputElem.value,
     }));
+  };
+
+  const handleChangePassword = (isVisible: boolean) => {
+    toggleChangePassword(isVisible);
+    setData({ ...formData, password: "", password_confirmation: "" });
   };
 
   const handleCheck = async (id?: number) => {
@@ -471,60 +435,6 @@ export function ViewAdministrators() {
     [getAllAdministratorsQuery.data?.data, getAllAdministratorsQuery.isFetched],
   );
 
-  const handleClientError = (field: HTMLFormElement) => {
-    // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
-    const passwordValidation = /[0-9]{8}/;
-
-    // Error messages for empty or invalid fields
-    const messages = {
-      password:
-        "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
-      confirm_password: "Passwords do not match. Please try again.",
-    };
-
-    const isEmpty = (value: string) => value.trim() === "";
-    let error = false;
-
-    // Function to set error messages and update the error flag
-    const setError = (fieldName: string, message: string) => {
-      setFormError((prev) => ({
-        ...prev,
-        [fieldName]: message,
-      }));
-      error = true;
-    };
-
-    // Clear error messages if validation is successful
-    const clearError = (fieldName: string) => {
-      setFormError((prev) => ({
-        ...prev,
-        [fieldName]: "",
-      }));
-    };
-
-    // Validate password field
-    if (changePassword) {
-      if (isEmpty(field.password.value)) {
-        setError("password", "Password field is required.");
-      } else if (!passwordValidation.test(field.password.value)) {
-        setError("password", messages.password);
-      } else {
-        clearError("password");
-      }
-
-      // Validate confirm password field
-      if (isEmpty(field.confirm_password.value)) {
-        setError("confirm_password", "Please confirm your password.");
-      } else if (field.password.value !== field.confirm_password.value) {
-        setError("confirm_password", messages.confirm_password);
-      } else {
-        clearError("confirm_password");
-      }
-    }
-
-    return error;
-  };
-
   const handleSort = (column: string) => {
     setSortPosition((prev) => prev + 1);
     switch (sortPosition) {
@@ -561,28 +471,31 @@ export function ViewAdministrators() {
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const input = event.target as HTMLFormElement;
 
-    if (!handleClientError(input)) {
-      const form: FormData = {
-        _method: "PUT",
-        id: data?.id,
-        name: data?.firstName + " " + data?.lastName,
-        email: data?.email,
-        phone: data?.phone,
-      };
+    try {
+      const validationResult = validateForm();
+      if (validationResult.isValid) {
+        const form: FormData = {
+          _method: "PUT",
+          id: formData?.id as number,
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          phone: formData?.phone as string,
+        };
 
-      if (img) {
-        form["image"] = img[0];
+        if (img) {
+          form["image"] = img[0];
+        }
+
+        if (form?.password) {
+          form["password"] = formData?.password as string;
+          form["password_confirmation"] =
+            formData?.password_confirmation as string;
+        }
+
+        administratorMutation.mutate(form);
       }
-
-      if (data?.password) {
-        form["password"] = data?.password;
-        form["password_confirmation"] = data?.confirm_password;
-      }
-
-      administratorMutation.mutate(form);
-    } else {
+    } catch (error) {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
@@ -629,10 +542,9 @@ export function ViewAdministrators() {
       id: administratorData?.id,
       firstName: getUserName(administratorData?.name).firstName,
       lastName: getUserName(administratorData?.name).lastName,
+      address: "address",
       email: administratorData?.email,
       phone: administratorData?.phone,
-      password: "",
-      confirm_password: "",
     });
   };
 
@@ -647,18 +559,10 @@ export function ViewAdministrators() {
       firstName: "",
       lastName: "",
       email: "",
+      address: "",
       phone: "",
       password: "",
       confirm_password: "",
-    });
-
-    setFormError({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirm_password: "",
-      phone: "",
     });
   };
 
@@ -949,7 +853,7 @@ export function ViewAdministrators() {
                       placeholder={t("form.placeholders.first_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getAdministratorQuery.isFetching && true}
-                      value={data?.firstName}
+                      value={(formData.firstName as string) || ""}
                       onChange={onChange}
                     />
 
@@ -961,7 +865,7 @@ export function ViewAdministrators() {
                       placeholder={t("form.placeholders.last_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getAdministratorQuery.isFetching && true}
-                      value={data?.lastName}
+                      value={(formData.lastName as string) || ""}
                       onChange={onChange}
                     />
 
@@ -971,8 +875,8 @@ export function ViewAdministrators() {
                       name="address"
                       label={t("form.fields.address")}
                       placeholder={t("form.placeholders.address")}
-                      value="123 Rue Principale"
-                      onChange={(e) => console.log(e.target.value)}
+                      value={(formData.address as string) || ""}
+                      onChange={onChange}
                       custom-style={{ containerStyle: "col-span-full" }}
                     />
 
@@ -985,7 +889,7 @@ export function ViewAdministrators() {
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getAdministratorQuery.isFetching && true}
-                      value={data?.phone}
+                      value={(formData.phone as string) || ""}
                       onChange={onChange}
                     />
 
@@ -997,8 +901,10 @@ export function ViewAdministrators() {
                       placeholder={t("form.placeholders.email")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getAdministratorQuery.isFetching && true}
-                      value={data?.email}
+                      value={(formData.email as string) || ""}
                       onChange={onChange}
+                      onBlur={() => validateForm()}
+                      error={errors?.email}
                     />
 
                     <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
@@ -1011,8 +917,7 @@ export function ViewAdministrators() {
                           name="password"
                           label={t("form.fields.password")}
                           placeholder="●●●●●●●"
-                          error={formError.password}
-                          value={data?.password}
+                          value={(formData.password as string) || ""}
                           custom-style={{
                             inputStyle: "px-10",
                           }}
@@ -1021,6 +926,8 @@ export function ViewAdministrators() {
                             isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
+                          onBlur={() => validateForm()}
+                          error={errors?.password}
                         />
 
                         <Input
@@ -1029,8 +936,7 @@ export function ViewAdministrators() {
                           name="confirm_password"
                           label={t("form.fields.confirm_password")}
                           placeholder="●●●●●●●"
-                          error={formError.confirm_password}
-                          value={data?.confirm_password}
+                          value={(formData.confirm_password as string) || ""}
                           custom-style={{
                             inputStyle: "px-10",
                           }}
@@ -1039,12 +945,14 @@ export function ViewAdministrators() {
                             isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
+                          onBlur={() => validateForm()}
+                          error={errors?.confirm_password}
                         />
                       </>
                     ) : (
                       <>
                         <Button
-                          onClick={() => toggleChangePassword(true)}
+                          onClick={() => handleChangePassword(true)}
                           className="btn-default !w-auto"
                         >
                           {t("form.buttons.change", {

@@ -76,6 +76,7 @@ import { IoFilter } from "react-icons/io5";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Resource } from "./viewResources";
 import UserListModal from "@src/components/userListModal";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface Check {
   id?: number;
@@ -106,20 +107,20 @@ interface MaintenanceRequests {
   };
 }
 
-interface Data {
-  id?: number;
-  title: string;
-  description: string;
-  status: Status;
-  priority: string;
-  file_path?: File;
-  resolved_date?: string;
-  created_at: string;
-  school_id: string;
-  users: number[];
-  userData?: Array<Record<string, string>>;
-  resource_id: number;
-}
+// interface Data {
+//   id?: number;
+//   title: string;
+//   description: string;
+//   status: Status;
+//   priority: string;
+//   file_path?: File;
+//   resolved_date?: string;
+//   created_at: string;
+//   school_id: string;
+//   users: number[];
+//   userData?: Array<Record<string, string>>;
+//   resource_id: number;
+// }
 export interface FormData {
   _method?: string;
   id?: number;
@@ -148,6 +149,7 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export default function MaintenanceRequests() {
   const queryClient = useQueryClient();
+  const { formData, setData } = useFormValidation({});
 
   const location = useLocation();
   const redirect = useNavigate();
@@ -170,18 +172,6 @@ export default function MaintenanceRequests() {
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   //   const [img, setImg] = useState<FileList>();
   //   const [previewImg, setPreviewImg] = useState<string>();
-  const [data, setData] = useState<Data>({
-    id: 0,
-    title: "",
-    description: "",
-    status: "pending",
-    priority: "",
-    resolved_date: "",
-    created_at: "",
-    users: [],
-    school_id: "",
-    resource_id: 0,
-  });
   //   const [formError, setFormError] = useState<DataError>({
   //     label: "",
   //     qty: 0,
@@ -262,6 +252,22 @@ export default function MaintenanceRequests() {
         message: "Operation Successful",
         state: true,
       });
+
+      setData({
+        id: 0,
+        title: "",
+        description: "",
+        status: "pending",
+        priority: "",
+        resolved_date: "",
+        created_at: "",
+        users: [],
+        school_id: "",
+        resource_id: 0,
+      });
+
+      setOpenModal(undefined);
+      setPage(1);
     },
 
     onError: () => {
@@ -337,19 +343,6 @@ export default function MaintenanceRequests() {
 
       setOpenModal(undefined);
       setPage(1);
-
-      setData({
-        id: 0,
-        title: "",
-        description: "",
-        status: "pending",
-        priority: "",
-        resolved_date: "",
-        created_at: "",
-        users: [],
-        school_id: "",
-        resource_id: 0,
-      });
 
       toggleAlert({
         id: new Date().getTime(),
@@ -518,7 +511,7 @@ export default function MaintenanceRequests() {
     const selectElem = event.target as HTMLSelectElement;
     // if (event?.target.nodeType)
     setData((prev) => ({
-      ...(prev as Data),
+      ...prev,
       [event.target.id]:
         event?.target.nodeName == "SELECT"
           ? selectElem.options[selectElem.selectedIndex].value
@@ -535,7 +528,7 @@ export default function MaintenanceRequests() {
     name?: Array<Record<string, string>>,
   ) => {
     setData((prev) => ({
-      ...(prev as Data),
+      ...prev,
       [key]: value,
       userData: name,
     }));
@@ -545,13 +538,13 @@ export default function MaintenanceRequests() {
     event.preventDefault();
     try {
       addMaintenanceRequestQuery.mutate({
-        id: data?.id as number,
-        title: data?.title as string,
-        description: data?.description as string,
-        status: data?.status,
-        priority: data?.priority,
-        users: data?.users,
-        resource_id: data?.resource_id as number,
+        id: formData?.id as number,
+        title: formData?.title as string,
+        description: formData?.description as string,
+        status: "pending",
+        priority: formData?.priority as string,
+        users: formData?.users as number[],
+        resource_id: formData?.resource_id as number,
         school_id: admin?.school_id,
       });
     } catch (e) {
@@ -566,31 +559,27 @@ export default function MaintenanceRequests() {
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // const input = event.target as HTMLFormElement;
 
-    // if (!handleClientError(input)) {
-    const form: FormData = {
-      _method: "PUT",
-      id: data.id as number,
-      title: data?.title as string,
-      description: data?.description as string,
-      status: data?.status,
-      priority: data?.priority,
-      // users: data?.users,
-    };
+    try {
+      const form: FormData = {
+        _method: "PUT",
+        id: formData.id as number,
+        title: formData?.title as string,
+        description: formData?.description as string,
+        status: formData?.status as Status,
+        priority: formData?.priority as string,
+        // users: data?.users,
+      };
 
-    maintenanceRequestMutation.mutate(form);
-    // } else {
-    //   toggleAlert({
-    //     status: "fail",
-    //     message: {
-    //       message: "Operation Failed",
-    //       description: "Something went wrong. Please try again later.",
-    //     },
-
-    //     state: true,
-    //   });
-    // }
+      maintenanceRequestMutation.mutate(form);
+    } catch (e) {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    }
   };
 
   const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
@@ -1003,7 +992,7 @@ export default function MaintenanceRequests() {
                         containerStyle: "col-span-full",
                       }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      value={data?.title}
+                      value={(formData.title as string) || ""}
                       onChange={onChange}
                     />
 
@@ -1013,7 +1002,7 @@ export default function MaintenanceRequests() {
                       label={t("entities.item")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue="default"
+                      value={(formData.resource_id as string) || ""}
                       onChange={onChange}
                     >
                       <option value="default">Choose Item</option>
@@ -1032,7 +1021,7 @@ export default function MaintenanceRequests() {
                       label={t("form.fields.priority")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue="default"
+                      value={(formData.priority as string) || ""}
                       onChange={onChange}
                     >
                       <option value="default">Choose Priority</option>
@@ -1064,14 +1053,16 @@ export default function MaintenanceRequests() {
                       type="text"
                       readOnly
                       label={t("form.fields.assign_to")}
-                      leftIcon={FaChevronDown}
+                      rightIcon={() => FaChevronDown}
                       custom-style={{
                         inputStyle: "cursor-default",
                       }}
                       placeholder="Assign To"
                       onClick={() => setOpenUserListModal(true)}
                       value={
-                        data.userData?.length ? data.userData[0].label : ""
+                        (formData.userData as [])?.length
+                          ? formData.userData[0].label
+                          : ""
                       }
                     />
 
@@ -1082,7 +1073,7 @@ export default function MaintenanceRequests() {
                       placeholder={t("form.placeholders.note")}
                       custom-style={{ containerStyle: "col-span-full" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue={data?.description}
+                      value={(formData.description as string) || ""}
                       onChange={onChange}
                     />
 
@@ -1140,8 +1131,8 @@ export default function MaintenanceRequests() {
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
-                      id="subject"
-                      name="subject"
+                      id="title"
+                      name="title"
                       label={t("general.title")}
                       placeholder={t("form.placeholders.subject")}
                       custom-style={{
@@ -1149,7 +1140,7 @@ export default function MaintenanceRequests() {
                         containerStyle: "col-span-full",
                       }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue={data?.title}
+                      value={(formData.title as string) || ""}
                       onChange={onChange}
                     />
 
@@ -1171,7 +1162,7 @@ export default function MaintenanceRequests() {
                       label={t("form.fields.status")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue={data?.status}
+                      value={(formData.status as Status) || ""}
                       onChange={onChange}
                     >
                       {Object.entries(statusOptions).map((status, key) => (
@@ -1187,7 +1178,7 @@ export default function MaintenanceRequests() {
                       label={t("form.fields.priority")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue={data?.priority}
+                      value={(formData?.priority as Priority) || ""}
                       onChange={onChange}
                     >
                       {Object.entries(priorityOptions).map((priority, key) => (
@@ -1204,12 +1195,12 @@ export default function MaintenanceRequests() {
                       placeholder={t("form.placeholders.note")}
                       custom-style={{ containerStyle: "col-span-full" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      defaultValue={data?.description}
+                      value={(formData?.description as Priority) || ""}
                       onChange={onChange}
                     />
 
                     <Input
-                      type="date"
+                      type="datetime-local"
                       id="created_at"
                       name="issuedDate"
                       label={t("form.fields.issued_date")}
@@ -1219,14 +1210,13 @@ export default function MaintenanceRequests() {
                       }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       value={
-                        data?.created_at &&
-                        new Date(data?.created_at)?.toISOString()?.split("T")[0]
+                        (formData?.created_at as string)?.slice(0, 16) || ""
                       }
                       onChange={onChange}
                     />
 
                     <Input
-                      type="date"
+                      type="datetime-local"
                       id="resolved_date"
                       name="resolvedDate"
                       label={t("form.fields.resolved_date")}
@@ -1236,10 +1226,7 @@ export default function MaintenanceRequests() {
                       }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       value={
-                        data?.resolved_date &&
-                        new Date(data?.resolved_date)
-                          ?.toISOString()
-                          ?.split("T")[0]
+                        (formData?.resolved_date as string)?.slice(0, 16) || ""
                       }
                       onChange={onChange}
                     />
@@ -1336,6 +1323,7 @@ export default function MaintenanceRequests() {
         open={openUserListModal}
         onChange={(key, value, name) => onSelectUser(key, value, name)}
         onClose={(status) => setOpenUserListModal(status)}
+        selectedUsersList={formData.users as number[]}
         userList={getAllResourcesQuery.data}
       />
 
@@ -1372,7 +1360,9 @@ export default function MaintenanceRequests() {
                 </Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center gap-x-3">
-                    <span className="inline-block">{t("subject")}</span>
+                    <span className="inline-block">
+                      {t("form.fields.subject")}
+                    </span>
                     <div
                       className="flex flex-col"
                       onClick={() => handleSort("title")}
@@ -1569,16 +1559,14 @@ export default function MaintenanceRequests() {
                               }
                               width="max-content"
                               additionalStyle={{
-                                containerStyle: "rounded-s px-1 py-0",
+                                dropdownStyle: "px-2 rounded-xs",
                               }}
                               onClose={(state) =>
                                 setCloseDropDown(state as boolean)
                               }
                               close={closeDropDown}
                             >
-                              <Dropdown.List
-                                additionalStyle={{ containerStyle: " py-1" }}
-                              >
+                              <Dropdown.List>
                                 {Object.entries(statusOptions).map(
                                   (status, key) => (
                                     <div

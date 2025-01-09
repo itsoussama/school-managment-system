@@ -21,19 +21,16 @@ export const formValidation = (field: string, value: unknown, formData: Record<s
     if (!value) {
       isValid = false;
       errors.password = "Password is required";
-    } else if ((value as string).length < 6) {
+    } else if (!/.{8,}$/.test(value as string)) { // (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"])
       isValid = false;
-      errors.password = "Password must be at least 6 characters";
+      errors.password = "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.";
     }
   }
 
   if (field === 'password_confirmation' && formData.password !== "") {
-    if (!value) {
+    if (!value && ((value as string) !== formData?.password)) {
       isValid = false;
-      errors.password_confirmation = "password_confirmation is required";
-    } else if ((value as string) !== formData?.password) {
-      isValid = false;
-      errors.password_confirmation = "Password must be at least 6 characters";
+      errors.password_confirmation = "Passwords do not match. Please try again.";
     }
   }
 

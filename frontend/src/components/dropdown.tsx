@@ -86,7 +86,7 @@ function Dropdown({
     }
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
+  const closeDropDown = useCallback(() => {
     setIsVisible(false);
   }, []);
 
@@ -98,19 +98,19 @@ function Dropdown({
     setIsVisible(true);
   }, []);
 
-  const updateDropdownPosition = () => {
-    if (triggerRef.current && dropdownRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const availableSpace = window.innerHeight - rect?.bottom;
+  // const updateDropdownPosition = () => {
+  //   if (triggerRef.current && dropdownRef.current) {
+  //     const rect = triggerRef.current.getBoundingClientRect();
+  //     const availableSpace = window.innerHeight - rect?.bottom;
 
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-        maxHeight: Math.max(availableSpace - 20, 70),
-      });
-    }
-  };
+  //     setDropdownPosition({
+  //       top: rect.bottom + window.scrollY,
+  //       left: rect.left + window.scrollX,
+  //       width: rect.width,
+  //       maxHeight: Math.max(availableSpace - 20, 70),
+  //     });
+  //   }
+  // };
 
   // Add event listeners for hover and click triggers
   useEffect(() => {
@@ -125,19 +125,19 @@ function Dropdown({
         "mouseenter",
         handleMouseEnterDropdown,
       );
-      triggerRef.current?.addEventListener("mouseleave", handleMouseLeave);
-      dropdownRef.current?.addEventListener("mouseleave", handleMouseLeave);
+      triggerRef.current?.addEventListener("mouseleave", closeDropDown);
+      dropdownRef.current?.addEventListener("mouseleave", closeDropDown);
     }
 
     if (isVisible) {
-      window.addEventListener("scroll", updateDropdownPosition, true); // `true` for capturing phase
-      window.addEventListener("resize", updateDropdownPosition);
+      window.addEventListener("scroll", closeDropDown, true); // `true` for capturing phase
+      window.addEventListener("resize", closeDropDown);
 
       if (closeOnEvent === "click" || closeOnEvent === "both") {
         document.addEventListener("mousedown", handleOutsideClick);
       }
       if (closeOnEvent === "hover" || closeOnEvent === "both") {
-        dropdownRef.current?.addEventListener("mouseleave", handleMouseLeave);
+        dropdownRef.current?.addEventListener("mouseleave", closeDropDown);
       }
     }
 
@@ -153,17 +153,14 @@ function Dropdown({
           "mouseenter",
           handleMouseEnterDropdown,
         );
-        triggerRef.current?.removeEventListener("mouseleave", handleMouseLeave);
-        dropdownRef.current?.removeEventListener(
-          "mouseleave",
-          handleMouseLeave,
-        );
+        triggerRef.current?.removeEventListener("mouseleave", closeDropDown);
+        dropdownRef.current?.removeEventListener("mouseleave", closeDropDown);
       }
 
       document.removeEventListener("mousedown", handleOutsideClick);
-      dropdownRef.current?.removeEventListener("mouseleave", handleMouseLeave);
-      window.removeEventListener("scroll", updateDropdownPosition, true);
-      window.removeEventListener("resize", updateDropdownPosition);
+      dropdownRef.current?.removeEventListener("mouseleave", closeDropDown);
+      window.removeEventListener("scroll", closeDropDown);
+      window.removeEventListener("resize", closeDropDown);
     };
   }, [
     isVisible,
@@ -171,7 +168,7 @@ function Dropdown({
     closeOnEvent,
     toggleDropdown,
     handleOutsideClick,
-    handleMouseLeave,
+    closeDropDown,
     handleMouseEnterDropdown,
     handleMouseEnterTrigger,
   ]);
@@ -204,7 +201,7 @@ function Dropdown({
       <div
         ref={triggerRef}
         className={containerStyle}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => console.log("clicked")}
       >
         {element}
       </div>
@@ -214,7 +211,7 @@ function Dropdown({
         ReactDOM.createPortal(
           <div
             ref={dropdownRef}
-            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow dark:border-gray-600 dark:bg-gray-700 ${dropdownStyle}`}
+            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-lg border border-gray-400 bg-white shadow dark:border-gray-500 dark:bg-gray-700 ${dropdownStyle}`}
             style={{
               top: dropdownPosition?.top,
               left: dropdownPosition?.left,
