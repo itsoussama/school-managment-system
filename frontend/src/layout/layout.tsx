@@ -9,8 +9,6 @@ import {
   FaCog,
   FaCompress,
   FaExpand,
-  FaGripLines,
-  FaUser,
 } from "react-icons/fa";
 import {
   CSSProperties,
@@ -207,7 +205,9 @@ export function Layout({ children, menu }: Layout) {
         <div className="hidden h-12 w-full justify-between border-white sm:flex">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">
-              {dateTime?.date}
+              {dateTime?.date &&
+                dateTime?.date.split("")[0].toUpperCase() +
+                  dateTime?.date.slice(1)}
             </div>
             <div
               className="text-lg text-[var(--brand-color-500)]"

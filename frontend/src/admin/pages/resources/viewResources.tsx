@@ -210,7 +210,7 @@ export function ViewResources() {
 
   const getCategoriesQuery = useQuery({
     queryKey: ["getCategories"],
-    queryFn: () => getCategories(1, -1, undefined, undefined, admin?.id),
+    queryFn: () => getCategories(1, -1, undefined, undefined, admin?.school_id),
   });
 
   const resourceMutation = useMutation({
@@ -516,6 +516,8 @@ export function ViewResources() {
       qty: 0,
       category_id: "",
     });
+
+    setPreviewImg(undefined);
   };
 
   // const formatDuration = (duration: number) => {
@@ -716,9 +718,11 @@ export function ViewResources() {
               <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
                   imgSource={
-                    getResourceQuery.data?.imagePath
-                      ? SERVER_STORAGE + getResourceQuery.data?.imagePath
-                      : `https://ui-avatars.com/api/?background=random&name=${getResourceQuery.data?.label}`
+                    previewImg !== undefined
+                      ? previewImg
+                      : getResourceQuery.data?.imagePath
+                        ? SERVER_STORAGE + getResourceQuery.data?.imagePath
+                        : `https://ui-avatars.com/api/?background=random&name=${getResourceQuery.data?.label}`
                   }
                   className="h-40 w-40"
                 />
@@ -873,7 +877,7 @@ export function ViewResources() {
 
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
-                  {t("delete-records")}
+                  {t("general.delete")}
                   <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
                 </button>
               </div>

@@ -44,7 +44,8 @@
                 "filter": "Filter",
                 "sign_out": "Sign out",
                 "changes": "Changes",
-                "change": "Change"
+                "change": "Change",
+                "loading": "Loading"
             },
             "determiners": {
                 "definite": {
@@ -98,7 +99,9 @@
                 "item": "Item",
                 "preference": "Preference",
                 "administrators": "Administrators",
-                "administrator": "Administrator"
+                "administrator": "Administrator",
+                "staff_members": "Staff Members",
+                "staff_member": "Staff Member"
             },
             "actions": {
                 "add_entity": "Add {{entity}}",
@@ -109,7 +112,10 @@
                 "delete_entity": "Delete {{entity}}",
                 "block_entity": "Block {{entity}}",
                 "existing_entity": "Existing {{entity}}",
-                "save_entity": "Save {{entity}}"
+                "save_entity": "Save {{entity}}",
+                "select_user": "Select {{entity}}",
+                "designate_user": "Designate {{entity}}",
+                "filter_entity": "Filtrer {{entity}}"
             },
             "modals": {
                 "delete": {
@@ -136,6 +142,13 @@
                     "system_preferred": "System Preferred",
                     "light": "Light",
                     "dark": "Dark"
+                },
+                "auth": {
+                    "login": "Sign in to your account",
+                    "email": "Email",
+                    "dont_have_account": "Don't have an account?",
+                    "sign_up": "Sign Up",
+                    "forgot_password": "Forgot Password"
                 },
                 "fields": {
                     "id": "{{entity}} ID",
@@ -178,16 +191,20 @@
                     "language": "Language",
                     "date_time_format": "Date and Time Format",
                     "theme": "Theme",
-                    "font_size": "Font Size"
+                    "font_size": "Font Size",
+                    "remember_me": "Remember me"
                 },
                 "placeholders": {
+                    "title": "Enter title",
+                    "label": "Enter label",
                     "first_name": "Enter first name",
                     "last_name": "Enter last name",
                     "email": "Enter email",
                     "address": "Enter address",
                     "note": "Add additional notes...",
                     "school_name": "Enter school name",
-                    "description": "Enter description"
+                    "description": "Enter description",
+                    "resolved_date": "Select resolved date"
                 },
                 "buttons": {
                     "create": "Create {{label}}",
@@ -208,14 +225,20 @@
                 "active": "Active",
                 "inactive": "Inactive",
                 "active_deactivate": "Activate / Deactivate",
-                "completed": "Completed",
-                "in_progress": "In Progress",
-                "pending": "Pending"
+                "base": "{{options}}",
+                "options": {
+                    "completed": "Completed",
+                    "in_progress": "In Progress",
+                    "pending": "Pending"
+                }
             },
             "priority": {
-                "low": "Low",
-                "medium": "Medium",
-                "high": "High"
+                "base": "{{options}}",
+                "options": {
+                    "low": "Low",
+                    "medium": "Medium",
+                    "high": "High"
+                }
             }
         }
     },
@@ -265,7 +288,8 @@
                 "filter": "Filtre",
                 "sign_out": "Se déconnecter",
                 "changes": "Modifications",
-                "change": "Modification"
+                "change": "Modification",
+                "loading": "Chargement"
             },
             "determiners": {
                 "definite": {
@@ -319,7 +343,9 @@
                 "item": "Article",
                 "preference": "Préférence",
                 "administrators": "Administrateurs",
-                "administrator": "Administrateur"
+                "administrator": "Administrateur",
+                "staff_members": "Fonctionnaires",
+                "staff_member": "Fonctionnaire"
             },
             "actions": {
                 "add_entity": "Ajouter {{entity}}",
@@ -330,7 +356,10 @@
                 "delete_entity": "Supprimer {{entity}}",
                 "block_entity": "Bloquer {{entity}}",
                 "existing_entity": "{{entity}} existant",
-                "save_entity": "Enregistrer {{entity}}"
+                "save_entity": "Enregistrer {{entity}}",
+                "select_user": "Sélectionner {{entity}}",
+                "designate_user": "Désigner {{entity}}",
+                "filter_entity": "Filtrer {{entity}}"
             },
             "modals": {
                 "delete": {
@@ -357,6 +386,13 @@
                     "system_preferred": "System Preferred",
                     "light": "Light",
                     "dark": "Dark"
+                },
+                "auth": {
+                    "login": "Se connecter à votre compte",
+                    "email": "E-mail",
+                    "dont_have_account": "Vous n'avez pas de compte?",
+                    "sign_up": "S'inscrire",
+                    "forgot_password": "Mot de passe oublié"
                 },
                 "fields": {
                     "id": "ID {{entity}}",
@@ -399,16 +435,20 @@
                     "language": "Langue",
                     "date_time_format": "Format de date et d'heure",
                     "theme": "Thème",
-                    "font_size": "Taille de police"
+                    "font_size": "Taille de police",
+                    "remember_me": "Se souvenir de moi"
                 },
                 "placeholders": {
+                    "label": "Saisissez l'étiquette",
+                    "title": "Saisissez le titre",
                     "first_name": "Saisissez le prénom",
                     "last_name": "Saisissez le nom",
                     "email": "Saisissez l'email",
                     "address": "Saisissez l'adresse",
                     "note": "Ajoutez des notes supplémentaires...",
                     "school_name": "Saisissez le nom de l'école",
-                    "description": "Saisissez une description"
+                    "description": "Saisissez une description",
+                    "resolved_date": "Sélectionnez la date de résolution"
                 },
                 "buttons": {
                     "create": "Créer {{label}}",
@@ -429,14 +469,20 @@
                 "active": "Actif",
                 "inactive": "Inactif",
                 "active_deactivate": "Activer / Désactiver",
-                "completed": "Terminé",
-                "in_progress": "En cours",
-                "pending": "En cours"
+                "base": "{{options}}",
+                "options": {
+                    "completed": "Terminé",
+                    "in_progress": "En cours",
+                    "pending": "En cours"
+                }
             },
             "priority": {
-                "low": "Faible",
-                "medium": "Moyen",
-                "high": "Élevé"
+                "base": "{{options}}",
+                "options": {
+                    "low": "Faible",
+                    "medium": "Moyen",
+                    "high": "Élevé"
+                }
             }
         }
     }

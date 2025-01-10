@@ -269,7 +269,7 @@ export default function GeneralSettings() {
           <div className="flex flex-[3] flex-col gap-4">
             <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("information.shcool_information")}
+                {t("information.school_information")}
               </h1>
             </div>
             <form

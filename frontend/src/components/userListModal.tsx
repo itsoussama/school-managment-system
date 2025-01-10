@@ -59,7 +59,6 @@ export default function UserListModal({
   >([]);
 
   const { t } = useTranslation();
-
   const handleSearch = (e: EventTarget) => {
     setSearchValue((e as HTMLInputElement).value);
     // console.log();
@@ -133,7 +132,7 @@ export default function UserListModal({
       }}
       onClose={onCloseModal}
     >
-      <Modal.Header>{t(modalHeader)}</Modal.Header>
+      <Modal.Header>{modalHeader}</Modal.Header>
       <div className="flex max-h-[50vh] flex-col p-2">
         {options.search && (
           <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">

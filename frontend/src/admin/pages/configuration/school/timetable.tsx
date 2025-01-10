@@ -198,6 +198,7 @@ export default function Timetable() {
   return (
     <div className="flex h-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
@@ -299,7 +300,11 @@ export default function Timetable() {
                   <option value={"section3"}>section3</option>
                 </RSelect>
               ) : filters.profile === "teacher" ? (
-                <RSelect id="group" name="grade" label={t("form.fields.grade")}>
+                <RSelect
+                  id="group"
+                  name="grade"
+                  label={t("form.fields.grade_level")}
+                >
                   <option value={"grade1"}>grade1</option>
                   <option value={"grade2"}>grade2</option>
                   <option value={"grade3"}>grade3</option>

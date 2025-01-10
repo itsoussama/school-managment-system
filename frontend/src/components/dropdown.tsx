@@ -114,6 +114,9 @@ function Dropdown({
 
   // Add event listeners for hover and click triggers
   useEffect(() => {
+    const triggerElement = triggerRef?.current;
+    const dropdownElement = dropdownRef?.current;
+
     if (triggerEvent === "click") {
       triggerRef.current?.addEventListener("click", toggleDropdown);
     } else if (triggerEvent === "hover") {
@@ -121,12 +124,9 @@ function Dropdown({
         "mouseenter",
         handleMouseEnterTrigger,
       );
-      dropdownRef.current?.addEventListener(
-        "mouseenter",
-        handleMouseEnterDropdown,
-      );
+      dropdownElement?.addEventListener("mouseenter", handleMouseEnterDropdown);
       triggerRef.current?.addEventListener("mouseleave", closeDropDown);
-      dropdownRef.current?.addEventListener("mouseleave", closeDropDown);
+      dropdownElement?.addEventListener("mouseleave", closeDropDown);
     }
 
     if (isVisible) {
@@ -137,28 +137,28 @@ function Dropdown({
         document.addEventListener("mousedown", handleOutsideClick);
       }
       if (closeOnEvent === "hover" || closeOnEvent === "both") {
-        dropdownRef.current?.addEventListener("mouseleave", closeDropDown);
+        dropdownElement?.addEventListener("mouseleave", closeDropDown);
       }
     }
 
     return () => {
       if (triggerEvent === "click") {
-        triggerRef.current?.removeEventListener("click", toggleDropdown);
+        triggerElement?.removeEventListener("click", toggleDropdown);
       } else if (triggerEvent === "hover") {
-        triggerRef.current?.removeEventListener(
+        triggerElement?.removeEventListener(
           "mouseenter",
           handleMouseEnterTrigger,
         );
-        dropdownRef.current?.removeEventListener(
+        dropdownElement?.removeEventListener(
           "mouseenter",
           handleMouseEnterDropdown,
         );
-        triggerRef.current?.removeEventListener("mouseleave", closeDropDown);
-        dropdownRef.current?.removeEventListener("mouseleave", closeDropDown);
+        triggerElement?.removeEventListener("mouseleave", closeDropDown);
+        dropdownElement?.removeEventListener("mouseleave", closeDropDown);
       }
 
       document.removeEventListener("mousedown", handleOutsideClick);
-      dropdownRef.current?.removeEventListener("mouseleave", closeDropDown);
+      dropdownElement?.removeEventListener("mouseleave", closeDropDown);
       window.removeEventListener("scroll", closeDropDown);
       window.removeEventListener("resize", closeDropDown);
     };
@@ -198,11 +198,7 @@ function Dropdown({
   return (
     <>
       {/* Trigger element */}
-      <div
-        ref={triggerRef}
-        className={containerStyle}
-        onClick={(e) => console.log("clicked")}
-      >
+      <div ref={triggerRef} className={containerStyle}>
         {element}
       </div>
 

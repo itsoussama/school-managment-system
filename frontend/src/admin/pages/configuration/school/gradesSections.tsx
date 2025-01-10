@@ -120,6 +120,7 @@ export default function GradesSections() {
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}

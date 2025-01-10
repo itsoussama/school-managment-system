@@ -10,11 +10,7 @@ import {
   RSelect,
   RTextArea,
 } from "@src/components/input";
-import {
-  SkeletonContent,
-  SkeletonProfile,
-  SkeletonTable,
-} from "@src/components/skeleton";
+import { SkeletonContent, SkeletonTable } from "@src/components/skeleton";
 import {
   addMaintenanceRequest,
   deleteMaintenanceRequest,
@@ -70,10 +66,9 @@ import {
   FaDownload,
   FaFileLines,
   FaRegCircleXmark,
-  FaXmark,
 } from "react-icons/fa6";
 import { IoFilter } from "react-icons/io5";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Resource } from "./viewResources";
 import UserListModal from "@src/components/userListModal";
 import { useFormValidation } from "@src/hooks/useFormValidation";
@@ -151,7 +146,7 @@ export default function MaintenanceRequests() {
   const queryClient = useQueryClient();
   const { formData, setData } = useFormValidation({});
 
-  const location = useLocation();
+  // const location = useLocation();
   const redirect = useNavigate();
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
@@ -883,9 +878,10 @@ export default function MaintenanceRequests() {
                             }
                             className="w-max rounded-s px-2 py-0.5"
                           >
-                            {t(
-                              `priority.${getMaintenanceRequestQuery.data?.priority}`,
-                            )}
+                            {t("priority.base", {
+                              options:
+                                getMaintenanceRequestQuery.data?.priority,
+                            })}
                           </Badge>
                         </span>
                       </div>
@@ -905,9 +901,9 @@ export default function MaintenanceRequests() {
                             }
                             className="w-max rounded-s"
                           >
-                            {t(
-                              `status.${getMaintenanceRequestQuery.data?.status}`,
-                            )}
+                            {t("status.base", {
+                              options: getMaintenanceRequestQuery.data?.status,
+                            })}
                           </Badge>
                         </span>
                       </div>
@@ -986,7 +982,7 @@ export default function MaintenanceRequests() {
                       id="title"
                       name="title"
                       label={t("general.title")}
-                      placeholder={t("form.placeholders.subject")}
+                      placeholder={t("form.placeholders.title")}
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                         containerStyle: "col-span-full",
@@ -1027,7 +1023,9 @@ export default function MaintenanceRequests() {
                       <option value="default">Choose Priority</option>
                       {Object.entries(priorityOptions).map((priority, key) => (
                         <option key={key} value={priority[0]}>
-                          {t(`priority.${priority[0]}`)}
+                          {t("priority.base", {
+                            options: priority[0],
+                          })}
                         </option>
                       ))}
                     </RSelect>
@@ -1052,7 +1050,7 @@ export default function MaintenanceRequests() {
                     <Input
                       type="text"
                       readOnly
-                      label={t("form.fields.assign_to")}
+                      label={t("general.assign_to")}
                       rightIcon={() => FaChevronDown}
                       custom-style={{
                         inputStyle: "cursor-default",
@@ -1061,7 +1059,8 @@ export default function MaintenanceRequests() {
                       onClick={() => setOpenUserListModal(true)}
                       value={
                         (formData.userData as [])?.length
-                          ? formData.userData[0].label
+                          ? (formData.userData as Array<{ label: string }>)[0]
+                              ?.label
                           : ""
                       }
                     />
@@ -1134,7 +1133,7 @@ export default function MaintenanceRequests() {
                       id="title"
                       name="title"
                       label={t("general.title")}
-                      placeholder={t("form.placeholders.subject")}
+                      placeholder={t("form.placeholders.title")}
                       custom-style={{
                         inputStyle: "disabled:opacity-50",
                         containerStyle: "col-span-full",
@@ -1167,7 +1166,9 @@ export default function MaintenanceRequests() {
                     >
                       {Object.entries(statusOptions).map((status, key) => (
                         <option key={key} value={status[0]}>
-                          {t(`status.${status[0]}`)}
+                          {t("status.base", {
+                            options: status[0],
+                          })}
                         </option>
                       ))}
                     </RSelect>
@@ -1183,7 +1184,9 @@ export default function MaintenanceRequests() {
                     >
                       {Object.entries(priorityOptions).map((priority, key) => (
                         <option key={key} value={priority[0]}>
-                          {t(`priority.${priority[0]}`)}
+                          {t("priority.base", {
+                            options: priority[0],
+                          })}
                         </option>
                       ))}
                     </RSelect>
@@ -1317,7 +1320,11 @@ export default function MaintenanceRequests() {
       </Modal>
 
       <UserListModal
-        modalHeader="users"
+        modalHeader={
+          t("actions.designate_user", {
+            entity: `${t("determiners.indefinite.masculine")} ${t("entities.staff_member")}`,
+          }) as string
+        }
         modalSize="md"
         name="users"
         open={openUserListModal}
@@ -1483,7 +1490,9 @@ export default function MaintenanceRequests() {
                       </option>
                       {Object.entries(statusOptions).map((status, key) => (
                         <option key={key} value={status[0]}>
-                          {t(`status.${status[0]}`)}
+                          {t("status.base", {
+                            options: status[0],
+                          })}
                         </option>
                       ))}
                     </RSelect>
@@ -1551,7 +1560,9 @@ export default function MaintenanceRequests() {
                               }
                               className="w-max rounded-s"
                             >
-                              {t(`status.${maintenanceReq.status}`)}
+                              {t("status.base", {
+                                options: maintenanceReq.status,
+                              })}
                             </Badge>
                             <Dropdown
                               element={
@@ -1586,7 +1597,9 @@ export default function MaintenanceRequests() {
                                         color={status[1]}
                                         key={key}
                                       >
-                                        {t(`status.${status[0]}`)}
+                                        {t("status.base", {
+                                          options: status[0],
+                                        })}
                                       </Badge>
                                     </div>
                                   ),
