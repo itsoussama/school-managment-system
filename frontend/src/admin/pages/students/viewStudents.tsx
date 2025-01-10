@@ -15,7 +15,6 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
-  FaEye,
   FaHome,
   FaLock,
   FaPen,
@@ -53,7 +52,7 @@ import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddParentModal from "@src/admin/components/addParentModal";
 import Alert from "@src/components/alert";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
-import { FaRegCircleXmark } from "react-icons/fa6";
+import { FaEyeSlash, FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
@@ -75,7 +74,7 @@ interface Modal {
 
 interface ParentModal {
   id: number;
-  school_id: number;
+  school_id: string;
   open: boolean;
 }
 
@@ -187,7 +186,7 @@ export function ViewStudents() {
   const [openModal, setOpenModal] = useState<Modal>();
   const [openParentModal, setOpenParentModal] = useState<ParentModal>({
     id: 0,
-    school_id: 0,
+    school_id: "",
     open: false,
   });
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
@@ -297,6 +296,7 @@ export function ViewStudents() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -310,6 +310,7 @@ export function ViewStudents() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -342,6 +343,7 @@ export function ViewStudents() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -350,6 +352,7 @@ export function ViewStudents() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -359,7 +362,7 @@ export function ViewStudents() {
 
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getStudent"],
       });
@@ -371,15 +374,28 @@ export function ViewStudents() {
       queryClient.invalidateQueries({
         queryKey: ["getAllStudents"],
       });
+
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: false,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -389,7 +405,7 @@ export function ViewStudents() {
 
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getStudent"],
       });
@@ -401,16 +417,28 @@ export function ViewStudents() {
       queryClient.invalidateQueries({
         queryKey: ["getAllStudents"],
       });
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -580,6 +608,7 @@ export function ViewStudents() {
       studentMutation.mutate(form);
     } else {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -605,20 +634,12 @@ export function ViewStudents() {
     const userId: number = openModal?.id as number;
 
     if (!blockSwitch[userId]) {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: true,
-      }));
       blockUserMutation.mutate({ user_id: userId });
     } else {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: false,
-      }));
       unBlockUserMutation.mutate({ user_id: userId });
     }
+
+    setOpenModal(undefined);
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -694,6 +715,7 @@ export function ViewStudents() {
   useEffect(() => {
     const alertState = location.state?.alert;
     toggleAlert({
+      id: new Date().getTime(),
       status: alertState?.status,
       message: alertState?.message,
       state: alertState?.state,
@@ -726,6 +748,7 @@ export function ViewStudents() {
   return (
     <div className="flex w-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
@@ -1079,8 +1102,9 @@ export function ViewStudents() {
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
                         />
@@ -1096,8 +1120,9 @@ export function ViewStudents() {
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
                         />
@@ -1356,7 +1381,7 @@ export function ViewStudents() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.name !== "" && (
@@ -1368,7 +1393,7 @@ export function ViewStudents() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter?.name}
@@ -1390,7 +1415,7 @@ export function ViewStudents() {
                     <RSelect
                       id="gradelevel"
                       name="gradelevel"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.gradelevel !== "" && (
@@ -1405,7 +1430,7 @@ export function ViewStudents() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       custom-style={{
                         inputStyle: "px-9 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
@@ -1443,9 +1468,7 @@ export function ViewStudents() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
-                        <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                      }
+                      leftIcon={FaSearch}
                       label=""
                       placeholder={t("general.all")}
                       name="search"
@@ -1520,7 +1543,7 @@ export function ViewStudents() {
                               onClick={() =>
                                 setOpenParentModal({
                                   id: student.id,
-                                  school_id: student.school_id,
+                                  school_id: student.school_id.toString(),
                                   open: true,
                                 })
                               }

@@ -15,7 +15,6 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
-  FaEye,
   FaHome,
   FaLock,
   FaPen,
@@ -52,7 +51,7 @@ import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaEyeSlash, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
@@ -296,6 +295,7 @@ export function ViewTeachers() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -309,6 +309,7 @@ export function ViewTeachers() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -341,6 +342,7 @@ export function ViewTeachers() {
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -349,6 +351,7 @@ export function ViewTeachers() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -358,7 +361,7 @@ export function ViewTeachers() {
 
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getTeacher"],
       });
@@ -370,15 +373,27 @@ export function ViewTeachers() {
       queryClient.invalidateQueries({
         queryKey: ["getAllTeachers"],
       });
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: false,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -388,7 +403,7 @@ export function ViewTeachers() {
 
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getTeacher"],
       });
@@ -400,15 +415,27 @@ export function ViewTeachers() {
       queryClient.invalidateQueries({
         queryKey: ["getAllTeachers"],
       });
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: false,
+      }));
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -558,20 +585,12 @@ export function ViewTeachers() {
     const userId: number = openModal?.id as number;
 
     if (!blockSwitch[userId]) {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: true,
-      }));
       blockUserMutation.mutate({ user_id: userId });
     } else {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: false,
-      }));
       unBlockUserMutation.mutate({ user_id: userId });
     }
+
+    setOpenModal(undefined);
   };
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
@@ -599,6 +618,7 @@ export function ViewTeachers() {
       teacherMutation.mutate(form);
     } else {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -690,6 +710,7 @@ export function ViewTeachers() {
   useEffect(() => {
     const alertState = location.state?.alert;
     toggleAlert({
+      id: alertState?.id,
       status: alertState?.status,
       message: alertState?.message,
       state: alertState?.state,
@@ -719,13 +740,18 @@ export function ViewTeachers() {
     }
   }, [getTeachersQuery.data, getTeachersQuery.isFetched]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex w-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
@@ -1049,8 +1075,9 @@ export function ViewTeachers() {
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
                         />
@@ -1066,8 +1093,9 @@ export function ViewTeachers() {
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
                         />
@@ -1307,7 +1335,7 @@ export function ViewTeachers() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.name !== "" && (
@@ -1319,7 +1347,7 @@ export function ViewTeachers() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter.name}
@@ -1340,7 +1368,7 @@ export function ViewTeachers() {
                     <RSelect
                       id="subject"
                       name="subject"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.subject !== "" && (
@@ -1352,7 +1380,7 @@ export function ViewTeachers() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       custom-style={{
                         inputStyle: "px-9 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
@@ -1386,7 +1414,7 @@ export function ViewTeachers() {
                     <RSelect
                       id="gradelevel"
                       name="gradelevel"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <IoFilter className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.gradelevel !== "" && (
@@ -1401,7 +1429,7 @@ export function ViewTeachers() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       custom-style={{
                         inputStyle: "px-9 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",

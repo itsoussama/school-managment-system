@@ -58,7 +58,7 @@ import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddChildModal from "@src/admin/components/addChildModal";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaEyeSlash, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
@@ -66,6 +66,7 @@ import {
   customTooltip,
 } from "@src/utils/flowbite";
 import { BrandColor, colorPalette } from "@src/utils/colors";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface Check {
   id?: number;
@@ -80,7 +81,7 @@ interface Modal {
 
 interface ChildModal {
   id: number;
-  school_id: number;
+  school_id: string;
   open: boolean;
 }
 
@@ -90,7 +91,7 @@ interface Parent {
   name: string;
   email: string;
   phone: string;
-  school_id: number;
+  school_id: string;
   blocked?: boolean;
   role: [
     {
@@ -118,25 +119,16 @@ export interface FormData {
   password_confirmation?: string;
 }
 
-interface Data {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirm_password: string;
-  phone: string;
-  image?: File;
-}
-
-interface DataError {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirm_password: string;
-}
+// export interface Data {
+//   id: number;
+//   firstName: string;
+//   lastName: string;
+//   email: string;
+//   password: string;
+//   confirm_password: string;
+//   phone: string;
+//   image?: File;
+// }
 
 interface BlockSwitch {
   [key: string]: boolean;
@@ -163,6 +155,12 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewParents() {
   const queryClient = useQueryClient();
+  const { formData, errors, validateForm, setData } = useFormValidation({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
@@ -182,29 +180,12 @@ export function ViewParents() {
   const [openModal, setOpenModal] = useState<Modal>();
   const [openChildModal, setOpenChildModal] = useState<ChildModal>({
     id: 0,
-    school_id: 0,
+    school_id: "",
     open: false,
   });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [data, setData] = useState<Data>({
-    id: 0,
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirm_password: "",
-  });
-  const [formError, setFormError] = useState<DataError>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirm_password: "",
-    phone: "",
-  });
   const [changePassword, toggleChangePassword] = useState<boolean>(false);
   // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
@@ -278,13 +259,13 @@ export function ViewParents() {
         id: data?.id,
         firstName: getUserName(data?.name).firstName,
         lastName: getUserName(data?.name).lastName,
+        address: data?.address,
         email: data?.email,
         phone: data?.phone,
-        password: "",
-        confirm_password: "",
       });
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -297,6 +278,7 @@ export function ViewParents() {
     },
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -318,17 +300,8 @@ export function ViewParents() {
       setOpenModal(undefined);
       setPage(1);
 
-      setData({
-        id: 0,
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirm_password: "",
-      });
-
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -337,6 +310,7 @@ export function ViewParents() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -346,7 +320,7 @@ export function ViewParents() {
 
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getParent"],
       });
@@ -359,15 +333,29 @@ export function ViewParents() {
         queryKey: ["getAllParents"],
       });
 
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
+
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: false,
+      }));
+
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -377,7 +365,7 @@ export function ViewParents() {
 
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
-    onSuccess: () => {
+    onSuccess: (_, { user_id }) => {
       queryClient.invalidateQueries({
         queryKey: ["getParent"],
       });
@@ -390,15 +378,29 @@ export function ViewParents() {
         queryKey: ["getAllParents"],
       });
 
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: true,
+      }));
+
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
       });
     },
 
-    onError: () => {
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: false,
+      }));
+
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -413,12 +415,17 @@ export function ViewParents() {
     const selectElem = event.target as HTMLSelectElement;
     // if (event?.target.nodeType)
     setData((prev) => ({
-      ...(prev as Data),
+      ...prev,
       [event.target.id]:
         event?.target.nodeName == "SELECT"
           ? selectElem.options[selectElem.selectedIndex].value
           : inputElem.value,
     }));
+  };
+
+  const handleChangePassword = (isVisible: boolean) => {
+    toggleChangePassword(isVisible);
+    setData({ ...formData, password: "", password_confirmation: "" });
   };
 
   const handleCheck = async (id?: number) => {
@@ -456,60 +463,6 @@ export function ViewParents() {
     [getAllParentsQuery.data?.data, getAllParentsQuery.isFetched],
   );
 
-  const handleClientError = (field: HTMLFormElement) => {
-    // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
-    const passwordValidation = /[0-9]{8}/;
-
-    // Error messages for empty or invalid fields
-    const messages = {
-      password:
-        "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
-      confirm_password: "Passwords do not match. Please try again.",
-    };
-
-    const isEmpty = (value: string) => value.trim() === "";
-    let error = false;
-
-    // Function to set error messages and update the error flag
-    const setError = (fieldName: string, message: string) => {
-      setFormError((prev) => ({
-        ...prev,
-        [fieldName]: message,
-      }));
-      error = true;
-    };
-
-    // Clear error messages if validation is successful
-    const clearError = (fieldName: string) => {
-      setFormError((prev) => ({
-        ...prev,
-        [fieldName]: "",
-      }));
-    };
-
-    // Validate password field
-    if (changePassword) {
-      if (isEmpty(field.password.value)) {
-        setError("password", "Password field is required.");
-      } else if (!passwordValidation.test(field.password.value)) {
-        setError("password", messages.password);
-      } else {
-        clearError("password");
-      }
-
-      // Validate confirm password field
-      if (isEmpty(field.confirm_password.value)) {
-        setError("confirm_password", "Please confirm your password.");
-      } else if (field.password.value !== field.confirm_password.value) {
-        setError("confirm_password", messages.confirm_password);
-      } else {
-        clearError("confirm_password");
-      }
-    }
-
-    return error;
-  };
-
   const handleSort = (column: string) => {
     setSortPosition((prev) => prev + 1);
     switch (sortPosition) {
@@ -546,29 +499,33 @@ export function ViewParents() {
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const input = event.target as HTMLFormElement;
 
-    if (!handleClientError(input)) {
-      const form: FormData = {
-        _method: "PUT",
-        id: data?.id,
-        name: data?.firstName + " " + data?.lastName,
-        email: data?.email,
-        phone: data?.phone,
-      };
+    try {
+      const validationResult = validateForm();
+      if (validationResult.isValid) {
+        const form: FormData = {
+          _method: "PUT",
+          id: formData?.id as number,
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          phone: formData?.phone as string,
+        };
 
-      if (img) {
-        form["image"] = img[0];
+        if (img) {
+          form["image"] = img[0];
+        }
+
+        if (form?.password) {
+          form["password"] = formData?.password as string;
+          form["password_confirmation"] =
+            formData?.password_confirmation as string;
+        }
+
+        parentMutation.mutate(form);
       }
-
-      if (data?.password) {
-        form["password"] = data?.password;
-        form["password_confirmation"] = data?.confirm_password;
-      }
-
-      parentMutation.mutate(form);
-    } else {
+    } catch (error) {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -594,20 +551,12 @@ export function ViewParents() {
     const userId: number = openModal?.id as number;
 
     if (!blockSwitch[userId]) {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: true,
-      }));
       blockUserMutation.mutate({ user_id: userId });
     } else {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [userId]: false,
-      }));
       unBlockUserMutation.mutate({ user_id: userId });
     }
+
+    setOpenModal(undefined);
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
@@ -621,10 +570,9 @@ export function ViewParents() {
       id: parentData?.id,
       firstName: getUserName(parentData?.name).firstName,
       lastName: getUserName(parentData?.name).lastName,
+      address: "address",
       email: parentData?.email,
       phone: parentData?.phone,
-      password: "",
-      confirm_password: "",
     });
   };
 
@@ -639,18 +587,10 @@ export function ViewParents() {
       firstName: "",
       lastName: "",
       email: "",
+      address: "",
       phone: "",
       password: "",
       confirm_password: "",
-    });
-
-    setFormError({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirm_password: "",
-      phone: "",
     });
   };
 
@@ -683,6 +623,7 @@ export function ViewParents() {
   useEffect(() => {
     const alertState = location.state?.alert;
     toggleAlert({
+      id: alertState?.id,
       status: alertState?.status,
       message: alertState?.message,
       state: alertState?.state,
@@ -712,13 +653,18 @@ export function ViewParents() {
     }
   }, [getParentsQuery.data, getParentsQuery.isFetched]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex w-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
 
       <Breadcrumb
@@ -973,7 +919,7 @@ export function ViewParents() {
                       placeholder={t("form.placeholders.first_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getParentQuery.isFetching && true}
-                      value={data?.firstName}
+                      value={(formData.firstName as string) || ""}
                       onChange={onChange}
                     />
 
@@ -985,7 +931,7 @@ export function ViewParents() {
                       placeholder={t("form.placeholders.last_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getParentQuery.isFetching && true}
-                      value={data?.lastName}
+                      value={(formData.lastName as string) || ""}
                       onChange={onChange}
                     />
 
@@ -995,7 +941,7 @@ export function ViewParents() {
                       name="address"
                       label={t("form.fields.address")}
                       placeholder={t("form.placeholders.address")}
-                      value="123 Rue Principale"
+                      value={(formData.address as string) || ""}
                       onChange={(e) => console.log(e.target.value)}
                       custom-style={{ containerStyle: "col-span-full" }}
                     />
@@ -1009,7 +955,7 @@ export function ViewParents() {
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getParentQuery.isFetching && true}
-                      value={data?.phone}
+                      value={(formData.phone as string) || ""}
                       onChange={onChange}
                     />
 
@@ -1021,8 +967,10 @@ export function ViewParents() {
                       placeholder={t("form.placeholders.email")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getParentQuery.isFetching && true}
-                      value={data?.email}
+                      value={(formData.email as string) || ""}
                       onChange={onChange}
+                      onBlur={() => validateForm()}
+                      error={errors?.email}
                     />
 
                     <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
@@ -1035,15 +983,17 @@ export function ViewParents() {
                           name="password"
                           label={t("form.fields.password")}
                           placeholder="●●●●●●●"
-                          error={formError.password}
-                          value={data?.password}
+                          value={(formData.password as string) || ""}
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
+                          onBlur={() => validateForm()}
+                          error={errors?.password}
                         />
 
                         <Input
@@ -1052,21 +1002,23 @@ export function ViewParents() {
                           name="confirm_password"
                           label={t("form.fields.confirm_password")}
                           placeholder="●●●●●●●"
-                          error={formError.confirm_password}
-                          value={data?.confirm_password}
+                          value={(formData.confirm_password as string) || ""}
                           custom-style={{
                             inputStyle: "px-10",
                           }}
-                          icon={
-                            <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                          leftIcon={FaLock}
+                          rightIcon={(isPasswordVisible) =>
+                            isPasswordVisible ? FaEyeSlash : FaEye
                           }
                           onChange={onChange}
+                          onBlur={() => validateForm()}
+                          error={errors?.confirm_password}
                         />
                       </>
                     ) : (
                       <>
                         <button
-                          onClick={() => toggleChangePassword(true)}
+                          onClick={() => handleChangePassword(true)}
                           className="btn-default !w-auto"
                         >
                           {t("form.buttons.change", {
@@ -1308,7 +1260,7 @@ export function ViewParents() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.name !== "" && (
@@ -1320,7 +1272,7 @@ export function ViewParents() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter.name}
@@ -1341,7 +1293,7 @@ export function ViewParents() {
                     <Input
                       id="search"
                       type="text"
-                      icon={
+                      leftIcon={() => (
                         <>
                           <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                           {filter.childName !== "" && (
@@ -1356,7 +1308,7 @@ export function ViewParents() {
                             />
                           )}
                         </>
-                      }
+                      )}
                       label=""
                       placeholder={t("general.all")}
                       value={filter.childName}

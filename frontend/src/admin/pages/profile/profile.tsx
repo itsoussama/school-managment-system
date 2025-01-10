@@ -1,16 +1,23 @@
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
-import { Button, Input, RTextArea } from "@src/components/input";
+import { Button, Input } from "@src/components/input";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 export default function Profile() {
   const { t } = useTranslation();
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
   // const [data, setData] = useState<FormData>();
   // const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -20,6 +27,14 @@ export default function Profile() {
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   // const redirect = useNavigate();
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const validationResult = validateForm();
+    if (validationResult.isValid) {
+      // handle submit
+    }
+  };
 
   const readAndPreview = (file: FileList) => {
     if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
@@ -43,6 +58,7 @@ export default function Profile() {
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
@@ -123,7 +139,7 @@ export default function Profile() {
             </div>
             <form
               action=""
-              //   onSubmit={onSubmit}
+              onSubmit={onSubmit}
               className="relative grid grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark sm:grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] dark:bg-dark-primary dark:shadow-sharp-light"
             >
               <Input
@@ -132,7 +148,7 @@ export default function Profile() {
                 name="firstName"
                 label={t("form.fields.first_name")}
                 placeholder={t("form.placeholders.first_name")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
               <Input
                 type="text"
@@ -140,7 +156,7 @@ export default function Profile() {
                 name="lastName"
                 label={t("form.fields.last_name")}
                 placeholder={t("form.placeholders.last_name")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -150,7 +166,7 @@ export default function Profile() {
                 custom-style={{ containerStyle: "col-span-full" }}
                 label={t("form.fields.address")}
                 placeholder={t("form.placeholders.address")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -160,7 +176,7 @@ export default function Profile() {
                 label={t("form.fields.phone_number")}
                 placeholder="06 00 00 00"
                 pattern="(06|05)[0-9]{2}[0-9]{4}"
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -169,7 +185,9 @@ export default function Profile() {
                 name="email"
                 label={t("form.fields.email")}
                 placeholder="Johndoe@example.com"
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.email}
               />
 
               <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
@@ -180,13 +198,13 @@ export default function Profile() {
                 name="password"
                 label={t("form.fields.password")}
                 placeholder="●●●●●●●"
-                custom-style={{
-                  inputStyle: "px-10",
-                }}
-                icon={
-                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.password}
               />
 
               <Input
@@ -195,13 +213,13 @@ export default function Profile() {
                 name="password_confirmation"
                 label={t("form.fields.confirm_password")}
                 placeholder="●●●●●●●"
-                custom-style={{
-                  inputStyle: "px-10",
-                }}
-                icon={
-                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.password_confirmation}
               />
 
               <Button className="btn-default m-0 mt-auto" type="submit">

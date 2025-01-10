@@ -2,7 +2,7 @@ import { Button, Checkbox, Input, MultiSelect } from "@src/components/input";
 import { addTeacher, getGrades, getSubjects } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage, FaLock } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,6 +12,8 @@ import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import roles from "@admin/roles.json";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 export interface FormData {
   name?: string;
@@ -21,7 +23,7 @@ export interface FormData {
   email: string;
   password: string;
   password_confirmation: string;
-  school_id: number;
+  school_id: string;
   roles: number[];
   subjects: number[];
   grades: number[];
@@ -46,8 +48,11 @@ interface File {
 
 export default function AddTeacher() {
   const { t } = useTranslation();
-
-  const [data, setData] = useState<FormData>();
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -86,6 +91,7 @@ export default function AddTeacher() {
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -93,36 +99,35 @@ export default function AddTeacher() {
     },
   });
 
-  const handleChange = (property: string, value: string | number[]) => {
-    setData((prev) => ({ ...(prev as FormData), [property]: value }));
-  };
-
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(data);
-    try {
-      if (img) {
-        addTeacherQuery.mutate({
-          name: data?.firstName + " " + data?.lastName,
-          email: data?.email as string,
-          school_id: admin?.school_id,
-          password: data?.password as string,
-          password_confirmation: data?.password_confirmation as string,
-          phone: data?.phone as string,
-          roles: [roles.teacher],
-          subjects: data?.subjects as number[],
-          grades: data?.grades as number[],
-          image: img[0],
+    const validationResult = validateForm();
+    if (validationResult.isValid) {
+      try {
+        if (img) {
+          addTeacherQuery.mutate({
+            name: formData?.firstName + " " + formData?.lastName,
+            email: formData?.email as string,
+            school_id: admin?.school_id,
+            password: formData?.password as string,
+            password_confirmation: formData?.password_confirmation as string,
+            phone: formData?.phone as string,
+            roles: [roles.teacher],
+            subjects: formData?.subjects as number[],
+            grades: formData?.grades as number[],
+            image: img[0],
+          });
+        } else {
+          throw new Error("image not found");
+        }
+      } catch (e) {
+        toggleAlert({
+          id: new Date().getTime(),
+          status: "fail",
+          message: "Operation Failed",
+          state: true,
         });
-      } else {
-        throw new Error("image not found");
       }
-    } catch (e) {
-      toggleAlert({
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
     }
   };
 
@@ -145,13 +150,18 @@ export default function AddTeacher() {
     }
   };
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
       <Breadcrumb
         theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
@@ -243,7 +253,7 @@ export default function AddTeacher() {
                 name="firstName"
                 label={t("form.fields.first_name")}
                 placeholder={t("form.placeholders.first_name")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -252,7 +262,7 @@ export default function AddTeacher() {
                 name="lastName"
                 label={t("form.fields.last_name")}
                 placeholder={t("form.placeholders.last_name")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -261,7 +271,7 @@ export default function AddTeacher() {
                 name="address"
                 label={t("form.fields.address")}
                 placeholder={t("form.placeholders.address")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
                 custom-style={{ containerStyle: "col-span-full" }}
               />
 
@@ -272,7 +282,7 @@ export default function AddTeacher() {
                 label={t("form.fields.phone_number")}
                 placeholder="06 00 00 00"
                 pattern="(06|05)[0-9]{2}[0-9]{4}"
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -281,14 +291,16 @@ export default function AddTeacher() {
                 name="email"
                 label={t("form.fields.email")}
                 placeholder={t("form.fields.email")}
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.email}
               />
 
               <MultiSelect
                 label={t("form.fields.subjects")}
                 name="subjects"
                 onSelectItem={(items) =>
-                  handleChange(
+                  setFormData(
                     "subjects",
                     items.map((item) => parseInt(item.id)),
                   )
@@ -311,7 +323,7 @@ export default function AddTeacher() {
                 label={t("form.fields.grade_levels")}
                 name="grades"
                 onSelectItem={(items) =>
-                  handleChange(
+                  setFormData(
                     "grades",
                     items.map((item) => parseInt(item.id)),
                   )
@@ -338,13 +350,13 @@ export default function AddTeacher() {
                 name="password"
                 label={t("form.fields.password")}
                 placeholder="●●●●●●●"
-                custom-style={{
-                  inputStyle: "px-10",
-                }}
-                icon={
-                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.password}
               />
 
               <Input
@@ -353,13 +365,13 @@ export default function AddTeacher() {
                 name="password_confirmation"
                 label={t("form.fields.confirm_password")}
                 placeholder="●●●●●●●"
-                custom-style={{
-                  inputStyle: "px-10",
-                }}
-                icon={
-                  <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                leftIcon={FaLock}
+                rightIcon={(isPasswordVisible) =>
+                  isPasswordVisible ? FaEyeSlash : FaEye
                 }
-                onChange={(e) => handleChange(e.target.id, e.target.value)}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.password_confirmation}
               />
 
               <Button className="btn-default m-0 mt-auto" type="submit">

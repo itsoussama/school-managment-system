@@ -17,19 +17,24 @@ class School extends Model
     ];
     use HasFactory;
 
-    public function users() : HasMany
+    protected $fillable = [
+        'name',
+        'address',
+    ];
+
+    public function users(): HasMany
     {
         return $this->hasMany(User::class, 'school_id', 'id');
     }
-    public function resources() : HasMany
+    public function resources(): HasMany
     {
         return $this->hasMany(resource::class, 'school_id', 'id');
     }
-    public function grades() : HasMany
+    public function grades(): HasMany
     {
         return $this->hasMany(Grade::class, 'school_id', 'id');
     }
-    public function maintenanceRequests() : HasMany
+    public function maintenanceRequests(): HasMany
     {
         return $this->hasMany(MaintenanceRequest::class, 'school_id', 'id');
     }

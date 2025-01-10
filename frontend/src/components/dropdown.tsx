@@ -86,7 +86,7 @@ function Dropdown({
     }
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
+  const closeDropDown = useCallback(() => {
     setIsVisible(false);
   }, []);
 
@@ -98,22 +98,25 @@ function Dropdown({
     setIsVisible(true);
   }, []);
 
-  const updateDropdownPosition = () => {
-    if (triggerRef.current && dropdownRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const availableSpace = window.innerHeight - rect?.bottom;
+  // const updateDropdownPosition = () => {
+  //   if (triggerRef.current && dropdownRef.current) {
+  //     const rect = triggerRef.current.getBoundingClientRect();
+  //     const availableSpace = window.innerHeight - rect?.bottom;
 
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-        maxHeight: Math.max(availableSpace - 20, 70),
-      });
-    }
-  };
+  //     setDropdownPosition({
+  //       top: rect.bottom + window.scrollY,
+  //       left: rect.left + window.scrollX,
+  //       width: rect.width,
+  //       maxHeight: Math.max(availableSpace - 20, 70),
+  //     });
+  //   }
+  // };
 
   // Add event listeners for hover and click triggers
   useEffect(() => {
+    const triggerElement = triggerRef?.current;
+    const dropdownElement = dropdownRef?.current;
+
     if (triggerEvent === "click") {
       triggerRef.current?.addEventListener("click", toggleDropdown);
     } else if (triggerEvent === "hover") {
@@ -121,49 +124,43 @@ function Dropdown({
         "mouseenter",
         handleMouseEnterTrigger,
       );
-      dropdownRef.current?.addEventListener(
-        "mouseenter",
-        handleMouseEnterDropdown,
-      );
-      triggerRef.current?.addEventListener("mouseleave", handleMouseLeave);
-      dropdownRef.current?.addEventListener("mouseleave", handleMouseLeave);
+      dropdownElement?.addEventListener("mouseenter", handleMouseEnterDropdown);
+      triggerRef.current?.addEventListener("mouseleave", closeDropDown);
+      dropdownElement?.addEventListener("mouseleave", closeDropDown);
     }
 
     if (isVisible) {
-      window.addEventListener("scroll", updateDropdownPosition, true); // `true` for capturing phase
-      window.addEventListener("resize", updateDropdownPosition);
+      window.addEventListener("scroll", closeDropDown, true); // `true` for capturing phase
+      window.addEventListener("resize", closeDropDown);
 
       if (closeOnEvent === "click" || closeOnEvent === "both") {
         document.addEventListener("mousedown", handleOutsideClick);
       }
       if (closeOnEvent === "hover" || closeOnEvent === "both") {
-        dropdownRef.current?.addEventListener("mouseleave", handleMouseLeave);
+        dropdownElement?.addEventListener("mouseleave", closeDropDown);
       }
     }
 
     return () => {
       if (triggerEvent === "click") {
-        triggerRef.current?.removeEventListener("click", toggleDropdown);
+        triggerElement?.removeEventListener("click", toggleDropdown);
       } else if (triggerEvent === "hover") {
-        triggerRef.current?.removeEventListener(
+        triggerElement?.removeEventListener(
           "mouseenter",
           handleMouseEnterTrigger,
         );
-        dropdownRef.current?.removeEventListener(
+        dropdownElement?.removeEventListener(
           "mouseenter",
           handleMouseEnterDropdown,
         );
-        triggerRef.current?.removeEventListener("mouseleave", handleMouseLeave);
-        dropdownRef.current?.removeEventListener(
-          "mouseleave",
-          handleMouseLeave,
-        );
+        triggerElement?.removeEventListener("mouseleave", closeDropDown);
+        dropdownElement?.removeEventListener("mouseleave", closeDropDown);
       }
 
       document.removeEventListener("mousedown", handleOutsideClick);
-      dropdownRef.current?.removeEventListener("mouseleave", handleMouseLeave);
-      window.removeEventListener("scroll", updateDropdownPosition, true);
-      window.removeEventListener("resize", updateDropdownPosition);
+      dropdownElement?.removeEventListener("mouseleave", closeDropDown);
+      window.removeEventListener("scroll", closeDropDown);
+      window.removeEventListener("resize", closeDropDown);
     };
   }, [
     isVisible,
@@ -171,7 +168,7 @@ function Dropdown({
     closeOnEvent,
     toggleDropdown,
     handleOutsideClick,
-    handleMouseLeave,
+    closeDropDown,
     handleMouseEnterDropdown,
     handleMouseEnterTrigger,
   ]);
@@ -201,11 +198,7 @@ function Dropdown({
   return (
     <>
       {/* Trigger element */}
-      <div
-        ref={triggerRef}
-        className={containerStyle}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div ref={triggerRef} className={containerStyle}>
         {element}
       </div>
 
@@ -214,7 +207,7 @@ function Dropdown({
         ReactDOM.createPortal(
           <div
             ref={dropdownRef}
-            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow dark:border-gray-600 dark:bg-gray-700 ${dropdownStyle}`}
+            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-lg border border-gray-400 bg-white shadow dark:border-gray-500 dark:bg-gray-700 ${dropdownStyle}`}
             style={{
               top: dropdownPosition?.top,
               left: dropdownPosition?.left,

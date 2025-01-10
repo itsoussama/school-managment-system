@@ -19,6 +19,7 @@ interface UserList {
     | "6xl"
     | "7xl";
   userList: Array<Record<string, string>>;
+  selectedUsersList: Array<number>;
   name: string;
   options?: {
     search: boolean;
@@ -40,6 +41,7 @@ export default function UserListModal({
   modalHeader,
   modalSize = "lg",
   userList,
+  selectedUsersList,
   name,
   options = {
     search: false,
@@ -57,8 +59,6 @@ export default function UserListModal({
   >([]);
 
   const { t } = useTranslation();
-  const { t: fieldsTrans } = useTranslation();
-
   const handleSearch = (e: EventTarget) => {
     setSearchValue((e as HTMLInputElement).value);
     // console.log();
@@ -132,16 +132,14 @@ export default function UserListModal({
       }}
       onClose={onCloseModal}
     >
-      <Modal.Header>{t(modalHeader)}</Modal.Header>
+      <Modal.Header>{modalHeader}</Modal.Header>
       <div className="flex max-h-[50vh] flex-col p-2">
         {options.search && (
           <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
             <Input
               id="search"
               type="text"
-              icon={
-                <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-              }
+              rightIcon={() => FaSearch}
               label=""
               onKeyUp={(e) => handleSearch(e.target)}
               placeholder={t("general.all")}
@@ -181,12 +179,12 @@ export default function UserListModal({
                       data-name={user?.label}
                       onChange={getSelectedUsers}
                       checked={
-                        selectedUsers.includes(parseInt(user?.id))
+                        selectedUsersList?.includes(parseInt(user?.id))
                           ? true
                           : false
                       }
                       custom-style={{
-                        containerStyle: `${!multipleSelection && (selectedUsers.length >= 1 && !selectedUsers.includes(parseInt(user?.id)) ? "disable" : "")}`,
+                        containerStyle: `${!multipleSelection && (selectedUsersList?.length >= 1 && !selectedUsersList?.includes(parseInt(user?.id)) ? "disable" : "")}`,
                       }}
                       value={user?.label}
                     />

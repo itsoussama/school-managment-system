@@ -7,7 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Card, Modal } from "flowbite-react";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaImage,
@@ -19,11 +19,13 @@ import {
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface AddChildModal {
   open: boolean;
   toggleOpen: (isOpen: boolean) => void;
-  school_id: number;
+  school_id: string;
   guardian_id: number;
 }
 
@@ -75,11 +77,16 @@ function AddChildModal({
   const queryClient = useQueryClient();
 
   const { t } = useTranslation();
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
+
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [openModal, setOpenModal] = useState<boolean>(open);
   const [option, setOption] = useState<Options>();
-  const [formData, setFormData] = useState<FormData>();
   const [searchValue, setSearchValue] = useState<string>("");
   const [selectedChilds, setSelectedChilds] = useState<number[]>([]);
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -109,6 +116,7 @@ function AddChildModal({
       setPreviewImg(undefined);
 
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -117,6 +125,7 @@ function AddChildModal({
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
@@ -134,6 +143,7 @@ function AddChildModal({
       setOpenModal(false);
       toggleOpen(false);
       toggleAlert({
+        id: new Date().getTime(),
         status: "success",
         message: "Operation Successful",
         state: true,
@@ -142,19 +152,13 @@ function AddChildModal({
 
     onError: () => {
       toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
         message: "Operation Failed",
         state: true,
       });
     },
   });
-
-  const handleChange = (property: string, value: string | number[]) => {
-    setFormData((prev) => ({
-      ...(prev as FormData),
-      [property]: value,
-    }));
-  };
 
   const handleSearch = (e: EventTarget) => {
     setSearchValue((e as HTMLInputElement).value);
@@ -166,26 +170,6 @@ function AddChildModal({
     setOpenModal(false);
     toggleOpen(false);
     setOption(undefined);
-    setFormData({
-      name: "",
-      firstName: "",
-      lastName: "",
-      guardian_id: 0,
-      phone: "",
-      email: "",
-      password: "",
-      password_confirmation: "",
-      school_id: 0,
-      roles: [],
-      subjects: [],
-      grades: [],
-      image: {
-        lastModified: 0,
-        name: "",
-        size: 0,
-        type: "",
-      },
-    });
   };
 
   const getSelectedChilds = (event: ChangeEvent<HTMLInputElement>) => {
@@ -203,30 +187,34 @@ function AddChildModal({
   const onSubmitNewChild = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    try {
-      if (img) {
-        addStudentQuery.mutate({
-          name: formData?.firstName + " " + formData?.lastName,
-          email: formData?.email as string,
-          school_id: school_id,
-          guardian_id: guardian_id,
-          password: formData?.password as string,
-          password_confirmation: formData?.password_confirmation as string,
-          phone: formData?.phone as string,
-          roles: [3],
-          subjects: [1],
-          grades: formData?.grades as number[],
-          image: img[0],
+    const validationResult = validateForm();
+    if (validationResult.isValid) {
+      try {
+        if (img) {
+          addStudentQuery.mutate({
+            name: formData?.firstName + " " + formData?.lastName,
+            email: formData?.email as string,
+            school_id: school_id,
+            guardian_id: guardian_id,
+            password: formData?.password as string,
+            password_confirmation: formData?.password_confirmation as string,
+            phone: formData?.phone as string,
+            roles: [3],
+            subjects: [1],
+            grades: formData?.grades as number[],
+            image: img[0],
+          });
+        } else {
+          throw new Error("image not found");
+        }
+      } catch (e) {
+        toggleAlert({
+          id: new Date().getTime(),
+          status: "fail",
+          message: "Operation Failed",
+          state: true,
         });
-      } else {
-        throw new Error("image not found");
       }
-    } catch (e) {
-      toggleAlert({
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
     }
   };
 
@@ -269,13 +257,18 @@ function AddChildModal({
     setOpenModal(open);
   }, [open]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <>
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
       <Modal
         show={openModal}
@@ -298,7 +291,7 @@ function AddChildModal({
           <form onSubmit={onSubmitNewChild}>
             <Modal.Body>
               <div className="flex flex-col gap-8 sm:flex-row">
-                <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+                <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                   {previewImg ? (
                     <img
                       className="h-44 w-44 rounded-full object-cover"
@@ -349,7 +342,7 @@ function AddChildModal({
                         placeholder={t("form.placeholders.first_name")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -361,7 +354,7 @@ function AddChildModal({
                         placeholder={t("form.placeholders.last_name")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -384,7 +377,7 @@ function AddChildModal({
                         pattern="(06|05)[0-9]{6}"
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
                       />
 
@@ -396,15 +389,17 @@ function AddChildModal({
                         placeholder={t("form.placeholders.email")}
                         custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.email}
                       />
 
                       <MultiSelect
                         label={t("form.fields.grade_levels")}
                         name="grades"
                         onSelectItem={(items) =>
-                          handleChange(
+                          setFormData(
                             "grades",
                             items.map((item) => parseInt(item.id)),
                           )
@@ -432,15 +427,15 @@ function AddChildModal({
                         name="password"
                         label={t("form.fields.password")}
                         placeholder="●●●●●●●"
-                        custom-style={{
-                          inputStyle: "px-10",
-                        }}
-                        icon={
-                          <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        leftIcon={FaLock}
+                        rightIcon={(isPasswordVisible) =>
+                          isPasswordVisible ? FaEyeSlash : FaEye
                         }
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.password}
                       />
 
                       <Input
@@ -449,15 +444,15 @@ function AddChildModal({
                         name="password_confirmation"
                         label={t("form.fields.confirm_password")}
                         placeholder="●●●●●●●"
-                        custom-style={{
-                          inputStyle: "px-10",
-                        }}
-                        icon={
-                          <FaLock className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        leftIcon={FaLock}
+                        rightIcon={(isPasswordVisible) =>
+                          isPasswordVisible ? FaEyeSlash : FaEye
                         }
                         onChange={(e) =>
-                          handleChange(e.target.id, e.target.value)
+                          setFormData(e.target.id, e.target.value)
                         }
+                        onBlur={() => validateForm()}
+                        error={errors?.password_confirmation}
                       />
                     </div>
                   </div>
@@ -480,9 +475,7 @@ function AddChildModal({
                 <Input
                   id="search"
                   type="text"
-                  icon={
-                    <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                  }
+                  leftIcon={FaSearch}
                   label=""
                   onKeyUp={(e) => handleSearch(e.target)}
                   placeholder={t("general.all")}

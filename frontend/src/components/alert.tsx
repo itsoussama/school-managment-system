@@ -6,7 +6,7 @@ import {
   Alert as AlertUtil,
 } from "@src/utils/alert";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 
 const ALERT_DURATION = import.meta.env.VITE_ALERT_DURATION;
 
@@ -22,7 +22,7 @@ interface AlertUI {
 }
 
 interface AlertProps {
-  // duration?: 7000;
+  id: number;
   status: string;
   state: boolean;
   message: string;
@@ -55,31 +55,29 @@ const alertUi: AlertUI = {
 };
 
 export default function Alert({
-  // duration,
+  id,
   status,
   state,
   message,
   close,
 }: AlertProps) {
-  const resetAlert = useCallback(() => {
-    close(alertIntialState);
-  }, [close]);
-
+  const alertId = useMemo(() => id, [id]);
   useEffect(() => {
-    const alertTimeOut = setTimeout(resetAlert, ALERT_DURATION);
+    if (alertId) {
+      console.log("alert ", alertId);
+    }
+    const alertTimeOut = setTimeout(() => {
+      close(alertIntialState);
+    }, ALERT_DURATION);
     return () => {
       clearTimeout(alertTimeOut);
     };
-  }, [state, resetAlert]);
-
-  // useEffect(() => {
-  //   // setAlertDuration(duration);
-  //   console.log(alertDuration);
-  // }, [duration]);
+  }, [alertId, close]);
 
   return ReactDOM.createPortal(
     state && (
       <Toast
+        key={id}
         theme={{
           toggle: {
             base: "",

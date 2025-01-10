@@ -84,6 +84,7 @@ class SchoolController extends Controller
     {
         try {
 
+
             $validation = $request->validate([
                 'name' => 'required|string|max:255',
                 'address' => 'required|string|max:255',
@@ -113,6 +114,7 @@ class SchoolController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json($e->errors(), 422);
         }
+
     }
 
     /**

@@ -300,12 +300,19 @@ class UserController extends Controller
                     'roles.*' => 'exists:roles,id',
                 ]);
                 if ($validation) {
+                    $path = '';
+                    if ($request->hasFile('image')) {
+                        // $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
+                        // $request->file('image')->move(public_path('images/users'), $filename);
+                        $path = $request->file('image')->store('images', 'public');
+                    }
                     $user = User::create([
                         'name' => $request->name,
                         'email' => $request->email,
                         'phone' => $request->phone,
                         'password' => bcrypt($request->password),
                     ]);
+                    $user->imagePath = $path;
                     $user->school()->associate($request->school_id);
                     $user->role()->sync($request->roles);
                     $user->save();
@@ -576,7 +583,7 @@ class UserController extends Controller
                     Storage::disk('public')->delete($user->imagePath);
                 }
             }
-            if ($user->role()->hasRole(config('roles.admin'))) {
+            if ($user->hasRole(config('roles.admin'))) {
                 return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
             }
 
@@ -640,7 +647,7 @@ class UserController extends Controller
                         ->whereDoesntHave('role', function ($query) {
                             $query->whereIn('name', [
                                 config('roles.admin'),
-                                config('roles.admin_staff'),
+                                // config('roles.admin_staff'),
                             ]);
                         })
                         ->update(['blocked' => false]);
@@ -672,7 +679,7 @@ class UserController extends Controller
                         ->whereDoesntHave('role', function ($query) {
                             $query->whereIn('name', [
                                 config('roles.admin'),
-                                config('roles.admin_staff'),
+                                // config('roles.admin_staff'),
                             ]);
                         })
                         ->update(['blocked' => true]);

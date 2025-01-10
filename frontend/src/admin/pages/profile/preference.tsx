@@ -22,11 +22,24 @@ import { Theme, UseTheme } from "@src/hooks/useTheme";
 import { Breadcrumb, ToggleSwitch } from "flowbite-react";
 import i18next from "i18next";
 import { changeLanguage } from "i18next";
-import { ChangeEvent, CSSProperties, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  CSSProperties,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaImage } from "react-icons/fa";
 import { json, Link } from "react-router-dom";
 
+interface Preferences {
+  language: string;
+  reduceMotion: boolean;
+  theme: Theme;
+  brand: BrandColor;
+}
 export default function Preference() {
   const { t } = useTranslation();
   // const [data, setData] = useState<FormData>();
@@ -35,6 +48,9 @@ export default function Preference() {
   // const [formData, setFormData] = useState<FormData>();
   // const admin = useAppSelector((state) => state.userSlice.user);
   const minSm = useBreakpoint("min", "sm");
+  const [preferences, setPreferences] = useState<Preferences>(
+    {} as Preferences,
+  );
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [theme, setTheme] = UseTheme();
   const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
@@ -53,35 +69,56 @@ export default function Preference() {
       const systemLang = Intl.DateTimeFormat()
         .resolvedOptions()
         .locale.slice(0, 2);
-      dispatch(toggleLanguage(systemLang));
+      setPreferences({ ...preferences, language: systemLang });
       changeLanguage(systemLang);
-
       return;
     }
-    dispatch(toggleLanguage(target.value));
+    setPreferences({ ...preferences, language: target.value });
     changeLanguage(target.value);
   };
 
   const handleReduceMotionChange = (checked: boolean) => {
     document.body.style.animation = "none !important";
-    dispatch(toggleAnimation(checked));
+    setPreferences({ ...preferences, reduceMotion: checked });
   };
 
   const handleBrandColorChange = (color: string) => {
-    dispatch(changeBrandColor(color));
+    setPreferences({ ...preferences, brand: color as BrandColor });
+  };
+
+  const onSave = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const target = event.target as HTMLFormElement;
+    dispatch(toggleLanguage(preferences.language || target.language.value));
+    dispatch(
+      toggleAnimation(preferences.reduceMotion || target.reduceMotion.checked),
+    );
+    dispatch(changeBrandColor(preferences.brand || target.brand.value));
+
+    toggleAlert({
+      id: new Date().getTime(),
+      state: true,
+      status: "success",
+      message: t("general.success"),
+    });
   };
 
   useEffect(() => {
     changeLanguage(langState);
   }, [langState]);
 
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
+
   return (
     <div className="flex flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={(value) => toggleAlert(value)}
+        close={closeAlert}
       />
 
       <Breadcrumb
@@ -153,7 +190,7 @@ export default function Preference() {
           <div className="flex flex-[3] flex-col gap-4">
             <form
               action=""
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={onSave}
               className="-c relative grid grid-cols-[repeat(auto-fit,_minmax(250px,400px))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark sm:grid-cols-[repeat(auto-fit,_minmax(250px,400px))] dark:bg-dark-primary dark:shadow-sharp-light"
             >
               <RSelect
@@ -230,12 +267,21 @@ export default function Preference() {
                     <p className="text-sm text-gray-900 dark:text-white">
                       Branding
                     </p>
+                    <input
+                      type="hidden"
+                      id="brand"
+                      name="brand"
+                      defaultValue={brandState}
+                    />
                     <div className="h-8 w-14 cursor-pointer rounded-s border border-gray-300 bg-gray-50 p-1.5 dark:border-gray-600 dark:bg-gray-700">
                       <div
                         className="h-full w-full rounded-xs"
                         style={{
                           backgroundColor:
-                            colorPalette[brandState as BrandColor][500],
+                            colorPalette[
+                              (preferences?.brand as BrandColor) ||
+                                (brandState as BrandColor)
+                            ][500],
                         }}
                       ></div>
                     </div>
@@ -268,10 +314,12 @@ export default function Preference() {
 
               <ToggleSwitch
                 className="col-start-1 col-end-2"
+                id="reduceMotion"
+                name="reduceMotion"
                 theme={customToggleSwitch}
                 color={brandState}
                 label={t("form.fields.reduce_motion")}
-                checked={animtionState}
+                checked={preferences.reduceMotion}
                 onChange={(checked) => handleReduceMotionChange(checked)}
               />
 

@@ -3,7 +3,7 @@ import { alertIntialState } from "@src/utils/alert";
 import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb, Modal } from "flowbite-react";
-import { CSSProperties, FormEvent, useState } from "react";
+import { ChangeEvent, CSSProperties, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaTrash } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -15,8 +15,9 @@ import interactionPlugin, {
   EventResizeDoneArg,
 } from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
+import dayGridPlugin from "@fullcalendar/daygrid";
 import bootstrap5Plugin from "@fullcalendar/bootstrap5";
-import { Button, Input, RSelect } from "@src/components/input";
+import { Button, CheckboxGroup, Input, RSelect } from "@src/components/input";
 import {
   DateSelectArg,
   EventClickArg,
@@ -25,6 +26,7 @@ import {
 import allLocales from "@fullcalendar/core/locales-all";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { options } from "@fullcalendar/core/preact.js";
 
 interface Modal {
   id: string;
@@ -60,6 +62,10 @@ export default function Timetable() {
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [openModal, setOpenModal] = useState<Modal>();
+  const [filters, setFilters] = useState({
+    profile: "administrator",
+    options: {},
+  });
   const [events, setEvents] = useState<Array<Events>>([
     {
       id: "1",
@@ -192,6 +198,7 @@ export default function Timetable() {
   return (
     <div className="flex h-full flex-col">
       <Alert
+        id={alert.id}
         status={alert.status}
         state={alert.state}
         message={alert.message}
@@ -248,30 +255,84 @@ export default function Timetable() {
       >
         <form onSubmit={(e) => e.preventDefault()}>
           <Modal.Header>
-            {t("actions.new_entity", { entity: t("general.event") })}
+            {t("actions.filter_entity", { entity: t("general.event") })}
           </Modal.Header>
           <Modal.Body>
             <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8">
-              <RSelect
-                id="gradeLevel"
-                name="gradeLevel"
-                label={t("form.fields.grade_levels")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+              <CheckboxGroup
+                label="Profile"
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    profile: e.target.dataset.value as string,
+                  }))
+                }
               >
-                <option value={"grade1"}>grade1</option>
-                <option value={"grade2"}>grade2</option>
-                <option value={"grade3"}>grade3</option>
-              </RSelect>
-              <RSelect
-                id="group"
-                name="group"
-                label={t("form.fields.group")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
-              >
-                <option value={"a"}>A</option>
-                <option value={"b"}>B</option>
-                <option value={"c"}>C</option>
-              </RSelect>
+                <CheckboxGroup.Button
+                  defaultChecked={true}
+                  data-value="administrator"
+                  name="profile"
+                  custom-style={{ labelStyle: "w-full" }}
+                  // onChange={(e) => console.log(e.target.checked)}
+                  label={t("entities.administrator")}
+                />
+                <CheckboxGroup.Button
+                  data-value="teacher"
+                  name="profile"
+                  custom-style={{ labelStyle: "w-full" }}
+                  label={t("entities.teacher")}
+                />
+                <CheckboxGroup.Button
+                  data-value="student"
+                  name="profile"
+                  custom-style={{ labelStyle: "w-full" }}
+                  label={t("entities.student")}
+                />
+              </CheckboxGroup>
+              {filters.profile === "administrator" ? (
+                <RSelect
+                  id="section"
+                  name="section"
+                  label={t("form.fields.section")}
+                >
+                  <option value={"section1"}>section1</option>
+                  <option value={"section2"}>section2</option>
+                  <option value={"section3"}>section3</option>
+                </RSelect>
+              ) : filters.profile === "teacher" ? (
+                <RSelect
+                  id="group"
+                  name="grade"
+                  label={t("form.fields.grade_level")}
+                >
+                  <option value={"grade1"}>grade1</option>
+                  <option value={"grade2"}>grade2</option>
+                  <option value={"grade3"}>grade3</option>
+                </RSelect>
+              ) : (
+                <>
+                  <RSelect
+                    id="gradeLevel"
+                    name="gradeLevel"
+                    label={t("form.fields.grade_levels")}
+                    // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                  >
+                    <option value={"grade1"}>grade1</option>
+                    <option value={"grade2"}>grade2</option>
+                    <option value={"grade3"}>grade3</option>
+                  </RSelect>
+                  <RSelect
+                    id="group"
+                    name="group"
+                    label={t("form.fields.group")}
+                    // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                  >
+                    <option value={"a"}>A</option>
+                    <option value={"b"}>B</option>
+                    <option value={"c"}>C</option>
+                  </RSelect>
+                </>
+              )}
             </div>
           </Modal.Body>
           <Modal.Footer>
@@ -425,8 +486,12 @@ export default function Timetable() {
         }
       >
         <FullCalendar
-          plugins={[timeGridPlugin, bootstrap5Plugin, interactionPlugin]}
-          // themeSystem="bootstrap5"
+          plugins={[
+            timeGridPlugin,
+            dayGridPlugin,
+            bootstrap5Plugin,
+            interactionPlugin,
+          ]}
           slotMinTime={"06:00:00"}
           slotMaxTime={"20:00:00"}
           allDaySlot={false}
@@ -473,7 +538,7 @@ export default function Timetable() {
           headerToolbar={{
             right: "addEvent filter",
             center: "title",
-            left: "prev,next timeGridWeek,timeGridDay",
+            left: "prev,next dayGridMonth,timeGridWeek,timeGridDay",
           }}
           initialView="timeGridWeek"
           locales={allLocales}

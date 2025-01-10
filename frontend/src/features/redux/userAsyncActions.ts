@@ -7,6 +7,12 @@ interface Data {
     password: string
 }
 
+interface ErrorResponse extends Error {
+    response: {
+        payload : string
+    }
+}
+
 const login = createAsyncThunk<void, Data>('user/login', async (data, {rejectWithValue}) => {
     try {
 
@@ -29,8 +35,8 @@ const login = createAsyncThunk<void, Data>('user/login', async (data, {rejectWit
             return payload
         }
     } catch (error) {
-        
-        return rejectWithValue(error?.response.payload)
+        const response = (error as ErrorResponse).response;
+        return rejectWithValue(response?.payload)
     }
 })
 

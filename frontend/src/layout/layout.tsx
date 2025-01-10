@@ -9,8 +9,6 @@ import {
   FaCog,
   FaCompress,
   FaExpand,
-  FaGripLines,
-  FaUser,
 } from "react-icons/fa";
 import {
   CSSProperties,
@@ -207,7 +205,9 @@ export function Layout({ children, menu }: Layout) {
         <div className="hidden h-12 w-full justify-between border-white sm:flex">
           <div className="date text-right font-semibold text-white">
             <div className="text-gray-900 dark:text-gray-100">
-              {dateTime?.date}
+              {dateTime?.date &&
+                dateTime?.date.split("")[0].toUpperCase() +
+                  dateTime?.date.slice(1)}
             </div>
             <div
               className="text-lg text-[var(--brand-color-500)]"
@@ -225,8 +225,24 @@ export function Layout({ children, menu }: Layout) {
             <div className="channels flex items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
               <div className="notifications relative">
                 <span className="absolute flex h-2 w-2 rounded-full">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500"></span>
+                  <span
+                    className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--brand-color-500)] opacity-75"
+                    style={
+                      {
+                        "--brand-color-500":
+                          colorPalette[brandState as BrandColor][500],
+                      } as CSSProperties
+                    }
+                  ></span>
+                  <span
+                    className="relative inline-flex h-2 w-2 rounded-full bg-[var(--brand-color-500)]"
+                    style={
+                      {
+                        "--brand-color-500":
+                          colorPalette[brandState as BrandColor][500],
+                      } as CSSProperties
+                    }
+                  ></span>
                 </span>
                 <FaBell className="text-xl text-gray-500" />
               </div>
@@ -348,8 +364,24 @@ export function Layout({ children, menu }: Layout) {
           </div>
           <div className="notifications relative">
             <span className="absolute flex h-2 w-2 rounded-full">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500"></span>
+              <span
+                className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--brand-color-500)] opacity-75"
+                style={
+                  {
+                    "--brand-color-400":
+                      colorPalette[brandState as BrandColor][500],
+                  } as CSSProperties
+                }
+              ></span>
+              <span
+                className="relative inline-flex h-2 w-2 rounded-full bg-[var(--brand-color-500)]"
+                style={
+                  {
+                    "--brand-color-600":
+                      colorPalette[brandState as BrandColor][500],
+                  } as CSSProperties
+                }
+              ></span>
             </span>
             <FaBell className="text-xl text-gray-500" />
           </div>
