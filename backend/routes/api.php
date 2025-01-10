@@ -1,14 +1,20 @@
 <?php
 
 use App\Enums\TokenAbility;
+use App\Http\Controllers\Api\ClassRoomController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\GradeController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +30,8 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
 
     // Users
     Route::apiResource('users', UserController::class);
-
+    Route::get('/events/all', [EventController::class, 'show_all'])->middleware('role:' . config('roles.admin') . ',' . config('roles.admin_staff'));
+    Route::apiResource('events', EventController::class);
 
     Route::middleware('role:' . config('roles.admin') . ',' . config('roles.admin_staff'))->group(function () {
         Route::apiResource('schools', SchoolController::class);
@@ -34,6 +41,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
         Route::post('/assign-parent', [UserController::class, 'assignParent']);
         Route::post('/block', [UserController::class, 'blockUser']);
         Route::post('/unblock', [UserController::class, 'unblockUser']);
+        Route::apiResource('teachers', TeacherController::class);
     });
 
     // Roles
@@ -47,12 +55,16 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
 
     Route::apiResource('grades', GradeController::class);
     Route::apiResource('subjects', SubjectController::class);
-
+    Route::apiResource('class_rooms', ClassRoomController::class);
+    Route::apiResource('calendars', CalendarController::class);
+    Route::apiResource('students', StudentController::class);
+    Route::apiResource('groups', GroupController::class);
     Route::get('/administrator', [UserController::class, 'admins']);
     Route::get('/teacher', [UserController::class, 'teachers']);
     Route::get('/student', [UserController::class, 'students']);
     Route::get('/parent', [UserController::class, 'parents']);
     Route::get('/export-users', [UserController::class, 'export']);
     Route::post('/import-users', [UserController::class, 'import']);
+
     Route::post('/logout', [AuthController::class, 'logout']);
 });

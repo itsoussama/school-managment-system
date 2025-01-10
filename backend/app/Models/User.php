@@ -81,6 +81,18 @@ class User extends Authenticatable
         }
         return false;
     }
+    public function student()
+    {
+        return $this->hasOne(Student::class); // One-to-one relationship with Student
+    }
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class); // One-to-one relationship with Student
+    }
+    public function parent()
+    {
+        return $this->hasOne(Parents::class); // One-to-one relationship with Student
+    }
 
     public function guardian()
     {
@@ -94,5 +106,10 @@ class User extends Authenticatable
     public function maintenanceRequests()
     {
         return $this->belongsToMany(MaintenanceRequest::class);
+    }
+
+    public function events() : belongsToMany
+    {
+        return $this->belongsToMany(Event::class);
     }
 }
