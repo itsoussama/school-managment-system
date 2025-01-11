@@ -96,6 +96,9 @@ export default function AddParentModal({
       queryClient.invalidateQueries({
         queryKey: ["getStudents"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["getStudent"],
+      });
 
       setOpenModal(false);
       toggleOpen(false);

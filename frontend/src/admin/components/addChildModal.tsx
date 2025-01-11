@@ -139,6 +139,9 @@ function AddChildModal({
       queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["getParent"],
+      });
 
       setOpenModal(false);
       toggleOpen(false);

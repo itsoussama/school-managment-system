@@ -473,6 +473,15 @@ const setSchool = async (formData: UpdateSchoolFromData) => {
   return response.data;
 };
 
+const setProfile = async (formData: UpdateProfileFromData) => {
+  const response = await axiosApi.post("/api/users/" + formData?.id, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
 export {
   getRoles,
   getAdministrators,
@@ -511,4 +520,5 @@ export {
   setMaintenanceRequestStatus,
   getSchool,
   setSchool,
+  setProfile,
 };

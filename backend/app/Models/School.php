@@ -9,17 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class School extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'contact',
         'address',
         'image_path',
-    ];
-    use HasFactory;
-
-    protected $fillable = [
-        'name',
-        'address',
     ];
 
     public function users(): HasMany
@@ -38,7 +34,7 @@ class School extends Model
     {
         return $this->hasMany(MaintenanceRequest::class, 'school_id', 'id');
     }
-    public function groups() : HasMany
+    public function groups(): HasMany
     {
         return $this->hasMany(Group::class);
     }

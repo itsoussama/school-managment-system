@@ -17,6 +17,17 @@ export const formValidation = (field: string, value: unknown, formData: Record<s
     }
   }
 
+  // if (field === 'phone') {
+  //   // if (!value) {
+  //   //   isValid = false;
+  //   //   errors.email = "Email is required";
+  //   // } else
+  //    if (!/^(?:06)(\d){8}$/.test(value as string)) {
+  //     isValid = false;
+  //     errors.email = "Email is invalid";
+  //   }
+  // }
+
   if (field === 'password') {
     if (!value) {
       isValid = false;

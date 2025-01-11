@@ -14,6 +14,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getSchool, setSchool } from "@src/features/api";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import React from "react";
+import { useFormValidation } from "@src/hooks/useFormValidation";
+import { SkeletonProfile } from "@src/components/skeleton";
 
 interface Socials {
   id: number;
@@ -25,6 +27,7 @@ interface Data {
   id: string;
   name: string;
   address: string;
+  contact: string;
   image?: File;
 }
 
@@ -32,15 +35,16 @@ export interface FormData extends Data {
   _method: string;
 }
 
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
+
 export default function GeneralSettings() {
   const queryClient = useQueryClient();
+  const { formData, setFormData, errors, setData, validateForm } =
+    useFormValidation({
+      contact: "",
+    });
   const { t } = useTranslation();
   const [img, setImg] = useState<FileList>();
-  const [data, setData] = useState<Data>({
-    id: "",
-    name: "",
-    address: "",
-  });
   const socialPlatforms = ["facebook", "instagram", "twitter", "linkedin"];
   const socialLinksPlaceholders: Record<string, string> = {
     facebook: "https://facebook.com/yourprofile",
@@ -49,15 +53,10 @@ export default function GeneralSettings() {
     linkedin: "https://linkedin.com/in/yourname",
   };
   const [socials, setSocials] = useState<Array<Socials>>([]);
-  // const [data, setData] = useState<FormData>();
-  // const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
-  // const [openModal, setOpenModal] = useState<boolean>(false);
-  // const [formData, setFormData] = useState<FormData>();
   const admin = useAppSelector((state) => state.userSlice.user);
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
-  // const redirect = useNavigate();
 
   const getSchoolQuery = useQuery({
     queryKey: ["getSchool"],
@@ -108,34 +107,47 @@ export default function GeneralSettings() {
     );
   };
 
-  const onChange = (event: ChangeEvent) => {
-    const inputElem = event.target as HTMLInputElement;
-    const selectElem = event.target as HTMLSelectElement;
-    // if (event?.target.nodeType)
-    setData((prev) => ({
-      ...(prev as Data),
-      [event.target.id]:
-        event?.target.nodeName == "SELECT"
-          ? selectElem.options[selectElem.selectedIndex].value
-          : inputElem.value,
-    }));
-  };
+  // const onChange = (event: ChangeEvent) => {
+  //   const inputElem = event.target as HTMLInputElement;
+  //   const selectElem = event.target as HTMLSelectElement;
+  //   // if (event?.target.nodeType)
+  //   setData((prev) => ({
+  //     ...prev,
+  //     [event.target.id]:
+  //       event?.target.nodeName == "SELECT"
+  //         ? selectElem.options[selectElem.selectedIndex].value
+  //         : inputElem.value,
+  //   }));
+  // };
 
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const validationResult = validateForm();
+    console.log(validationResult.isValid);
 
-    const form: FormData = {
-      _method: "PUT",
-      id: data?.id,
-      name: data?.name,
-      address: data?.address,
-    };
+    if (validationResult.isValid) {
+      try {
+        const form: FormData = {
+          _method: "PUT",
+          id: formData?.id as string,
+          name: formData?.name as string,
+          address: formData?.address as string,
+          contact: formData?.contact as string,
+        };
+        if (img) {
+          form["image"] = img[0];
+        }
 
-    if (img) {
-      form["image"] = img[0];
+        schoolMutation.mutate(form);
+      } catch (error) {
+        toggleAlert({
+          id: new Date().getTime(),
+          status: "fail",
+          message: "Operation Failed",
+          state: true,
+        });
+      }
     }
-
-    schoolMutation.mutate(form);
   };
 
   const removeSocial = (id: number) => {
@@ -157,7 +169,7 @@ export default function GeneralSettings() {
     if (event.target.files) {
       const file = event.target.files;
 
-      // setImg(file);
+      setImg(file);
       readAndPreview(file as FileList);
     }
   };
@@ -169,6 +181,7 @@ export default function GeneralSettings() {
         id: school.id,
         name: school.name,
         address: school.address,
+        contact: school.contact,
       });
       // setPreviewImg(school.image);
       // setSocials(school.socials);
@@ -226,19 +239,17 @@ export default function GeneralSettings() {
               </h1>
             </div>
             <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
-              {previewImg ? (
-                <img
-                  className="h-44 w-44 rounded-full object-cover"
-                  src={previewImg}
-                  alt="profile"
-                />
-              ) : (
-                <div
-                  className={`flex h-44 w-44 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700`}
-                >
-                  <FaImage className="h-10 w-10 text-gray-200 dark:text-gray-600" />
-                </div>
-              )}
+              <SkeletonProfile
+                className="h-44 w-44 rounded-full object-cover"
+                imgSource={
+                  previewImg
+                    ? previewImg
+                    : getSchoolQuery.data?.image_path
+                      ? SERVER_STORAGE + getSchoolQuery.data?.image_path
+                      : `https://ui-avatars.com/api/?background=random&name=${getSchoolQuery.data?.name}`
+                }
+              />
+
               <button className="btn-gray relative overflow-hidden">
                 <input
                   type="file"
@@ -284,8 +295,8 @@ export default function GeneralSettings() {
                 label={t("form.fields.school_name")}
                 placeholder={t("form.placeholders.school_name")}
                 disabled={getSchoolQuery.isFetching}
-                value={data.name}
-                onChange={onChange}
+                value={(formData.name as string) || ""}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <Input
@@ -296,8 +307,8 @@ export default function GeneralSettings() {
                 label={t("form.fields.address")}
                 placeholder={t("form.placeholders.address")}
                 disabled={getSchoolQuery.isFetching}
-                value={data.address}
-                onChange={onChange}
+                value={(formData.address as string) || ""}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
               />
 
               <RTextArea
@@ -317,12 +328,15 @@ export default function GeneralSettings() {
 
               <Input
                 type="tel"
-                id="phone"
-                name="phone"
+                id="contact"
+                name="contact"
                 label={t("form.fields.phone_number")}
                 placeholder="06 00 00 00"
                 pattern="(06|05)[0-9]{2}[0-9]{4}"
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+                value={(formData?.contact as string) || ""}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+                onBlur={() => validateForm()}
+                error={errors?.contact}
               />
 
               <Input

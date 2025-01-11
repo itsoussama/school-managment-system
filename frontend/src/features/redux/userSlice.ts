@@ -4,6 +4,7 @@ import { login, logout } from "@redux/userAsyncActions";
 
 const initialState = {
     user: {
+        id: 0,
         name: "",
         email: "",
         school_id:"",
@@ -18,6 +19,9 @@ export const userSlice = createSlice({
     name: 'user',
     initialState: initialState,
     reducers: {
+        updateUser: (state, {payload}) => {
+            state.user = payload.user
+        },
        refreshToken: (state, {payload}) => {
             state.token = payload?.token
        }
@@ -51,6 +55,6 @@ export const userSlice = createSlice({
     }
 })
 
-export const {refreshToken} = userSlice.actions
+export const {refreshToken, updateUser} = userSlice.actions
 
 export default userSlice.reducer
