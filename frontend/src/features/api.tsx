@@ -4,6 +4,10 @@ import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTea
 import { FormData as UpdateStudentFromData } from "@admin/pages/students/viewStudents";
 import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParents";
 import { FormData as UpdateResourceFromData } from "@admin/pages/resources/viewResources";
+import { FormData as UpdateSchoolFromData } from "@src/admin/pages/configuration/school/generalSettings";
+import { FormData as UpdateProfileFromData } from "@admin/pages/profile/profile";
+import { FormData as UpdateEventFromData } from "@src/admin/pages/configuration/school/timetable";
+
 import {
   Status,
   FormData as UpdateMaintenanceRequestFromData,
@@ -14,7 +18,7 @@ import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStu
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
 import { FormData as AddResourceFromData } from "@src/admin/pages/resources/addResources";
 import { FormData as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
-import { FormData as UpdateSchoolFromData } from "@src/admin/pages/configuration/school/generalSettings";
+import { FormData as AddEventFromData } from "@src/admin/pages/configuration/school/timetable";
 const axiosApi = AxiosProvider();
 
 const getAdministrators = async (
@@ -482,6 +486,31 @@ const setProfile = async (formData: UpdateProfileFromData) => {
   return response.data;
 };
 
+const getEvents = async (schoolId: string) => {
+  const response = await axiosApi.get("/api/events?school_id=" + schoolId);
+  return response.data;
+};
+
+const getEvent = async (id: string) => {
+  const response = await axiosApi.get("/api/events/" + id);
+  return response.data;
+};
+
+const addEvent = async (formData: AddEventFromData) => {
+  const response = await axiosApi.post("/api/events/", formData);
+  return response.data;
+};
+
+const setEvent = async (formData: UpdateEventFromData) => {
+  const response = await axiosApi.post("/api/events/" + formData?.id, formData);
+  return response.data;
+};
+
+const deleteEvent = async (id: string) => {
+  const response = await axiosApi.delete("/api/events/" + id);
+  return response.data;
+};
+
 export {
   getRoles,
   getAdministrators,
@@ -521,4 +550,9 @@ export {
   getSchool,
   setSchool,
   setProfile,
+  getEvents,
+  getEvent,
+  addEvent,
+  setEvent,
+  deleteEvent,
 };

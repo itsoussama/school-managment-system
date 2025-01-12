@@ -119,6 +119,10 @@ body:has(.dark) #root {
   border: 1px solid var(--fc-border-color-dark);
 }
 
+.loading .fc .fc-scrollgrid-section.fc-scrollgrid-section-body {
+  filter: blur(4px);
+}
+
 .dark .fc-theme-standard td,
 .dark .fc-theme-standard th {
   border: 1px solid var(--fc-border-color-dark);
