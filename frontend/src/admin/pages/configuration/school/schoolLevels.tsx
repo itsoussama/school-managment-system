@@ -2,7 +2,7 @@ import { alertIntialState } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { Breadcrumb, Modal, Table } from "flowbite-react";
+import { Breadcrumb, Modal } from "flowbite-react";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaPlus } from "react-icons/fa";
@@ -11,7 +11,10 @@ import Alert from "@src/components/alert";
 import Accordion from "@src/components/accordion";
 import InfoCard from "@src/admin/components/infoCard";
 import { Button, Input } from "@src/components/input";
-import { customTable } from "@src/utils/flowbite";
+import UserListModal from "@src/components/userListModal";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { getStudents, getTeachers } from "@src/features/api";
 
 interface Modal {
   id: number;
@@ -28,7 +31,7 @@ interface Grade extends Section {
   section_id: number;
 }
 
-export default function GradesSections() {
+export default function SchoolLevels() {
   const { t } = useTranslation();
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -42,17 +45,44 @@ export default function GradesSections() {
     { id: 1, label: "Grade", section_id: 1 },
     { id: 2, label: "Grade", section_id: 1 },
   ]);
+  const admin = useAppSelector((state) => state.userSlice.user);
+  const [selectedUser, setSelectedUser] = useState<{
+    teachers: number[];
+    students: number[];
+  }>({
+    students: [],
+    teachers: [],
+  });
+  const [openUserListModal, setOpenUserListModal] = useState<{
+    teachers: boolean;
+    students: boolean;
+  }>({
+    students: false,
+    teachers: false,
+  });
 
-  const changeGradeLevels = (e: ChangeEvent) => {
-    const target = e.target as HTMLInputElement;
-    setGradeLevels((prev) =>
-      prev.map((section) =>
-        section.id.toString() == target.id
-          ? { ...section, label: target.value }
-          : section,
-      ),
-    );
-  };
+  const getAllTeachersQuery = useQuery({
+    queryKey: ["getAllTeachers"],
+    queryFn: () => getTeachers(1, -1, undefined, undefined, admin.school_id),
+    placeholderData: keepPreviousData,
+  });
+
+  const getAllStudentsQuery = useQuery({
+    queryKey: ["getAllStudents"],
+    queryFn: () => getStudents(1, -1, undefined, undefined, admin.school_id),
+    placeholderData: keepPreviousData,
+  });
+
+  // const changeGradeLevels = (e: ChangeEvent) => {
+  //   const target = e.target as HTMLInputElement;
+  //   setGradeLevels((prev) =>
+  //     prev.map((section) =>
+  //       section.id.toString() == target.id
+  //         ? { ...section, label: target.value }
+  //         : section,
+  //     ),
+  //   );
+  // };
 
   const changeSectionTitle = (e: ChangeEvent) => {
     const target = e.target as HTMLInputElement;
@@ -156,7 +186,7 @@ export default function GradesSections() {
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("entities.grades_sections")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("entities.school-levels")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
@@ -195,138 +225,35 @@ export default function GradesSections() {
                 // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
             </div>
-            <div className="mt-8 flex w-full flex-col overflow-hidden rounded-s border border-gray-200 bg-light-primary dark:border-gray-600 dark:bg-dark-primary">
-              <div className="w-full overflow-x-auto rounded-s">
-                <Table
-                  theme={{
-                    ...customTable,
-                    body: { cell: { base: "py-2 px-2" } },
-                  }}
-                  striped
-                >
-                  <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
-                    <Table.HeadCell>{t("entities.teachers")}</Table.HeadCell>
-                    <Table.HeadCell>{t("entities.students")}</Table.HeadCell>
-
-                    {/* <Table.HeadCell className="w-0">
-                  <span className="w-full">Actions</span>
-                </Table.HeadCell> */}
-                  </Table.Head>
-                  <Table.Body
-                    // ref={tableRef}
-                    className="relative divide-y divide-gray-300 dark:divide-gray-600"
-                  >
-                    {/* {getResourcesQuery.isFetching &&
-                  (getResourcesQuery.isRefetching || perPage) && (
-                    <Table.Row>
-                      <Table.Cell className="p-0">
-                        <div
-                          className={`table-loader fixed left-0 top-0 z-[1] grid h-full w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 backdrop-blur-sm dark:bg-gray-900 dark:bg-opacity-60`}
-                        >
-                          <Spinner />
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  )} */}
-
-                    {/* {getResourcesQuery.isFetching &&
-                !(getResourcesQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={5} />
-                ) : (
-                  //  Code goes here
-                )} */}
-                    <Table.Row>
-                      <Table.Cell>
-                        <div className="flex items-center gap-x-2">
-                          <img
-                            // key={key}
-                            className="h-8 w-8 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                            src="https://ui-avatars.com/api/?background=random&name=test"
-                            alt="profile"
-                          />
-
-                          <span className="pointer-events-none">
-                            {t("form.fields.full_name")}
-                          </span>
-                        </div>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center gap-x-2">
-                          <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                            <img
-                              // key={key}
-                              className="h-8 w-8 rounded-full border-2 group-odd:border-white group-even:border-gray-50 dark:group-odd:border-gray-800 dark:group-even:border-gray-700"
-                              src="https://ui-avatars.com/api/?background=random&name=test"
-                              alt="profile"
-                            />
-
-                            <div className="flex min-h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border-2 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 group-odd:border-white group-even:border-gray-50 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500 dark:group-odd:border-gray-800 dark:group-even:border-gray-700">
-                              {`+2`}
-                            </div>
-                          </div>
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                      <Table.Cell>
-                        <button className="btn-outline flex !h-9 items-center justify-center gap-x-2">
-                          <FaPlus />
-                          <span className="test">Add Row</span>
-                        </button>
-                      </Table.Cell>
-                      <Table.Cell></Table.Cell>
-                    </Table.Row>
-                  </Table.Body>
-                </Table>
-              </div>
-
-              {/* <div className="flex w-full items-center justify-between px-5 py-4">
-            <span className="text-gray-500 dark:text-gray-400">
-              {t("records-number")}{" "}
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {getResourcesQuery.data?.from}-{getResourcesQuery.data?.to}
-              </span>{" "}
-              {t("total-records")}{" "}
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {getResourcesQuery.data?.total}
-              </span>
-            </span>
-            <div className="flex items-center gap-x-4">
-              <RSelect
-                id="row-num"
-                name="row-num"
-                onChange={handlePerPage}
-                custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getResourcesQuery.data?.per_page}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-                <option value={20}>20</option>
-              </RSelect>
-              <Pagination
-                layout={minSm ? "pagination" : "navigation"}
-                showIcons
-                currentPage={page}
-                onPageChange={(page) =>
-                  !getResourcesQuery.isPlaceholderData && setPage(page)
-                }
-                totalPages={getResourcesQuery.data?.last_page ?? 1}
-                nextLabel={minSm ? t("next") : ""}
-                previousLabel={minSm ? t("previous") : ""}
-                theme={{
-                  pages: {
-                    next: {
-                      base: "rounded-r-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
-                    },
-                    previous: {
-                      base: "ml-0 rounded-l-s border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-gray-100 enabled:hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
-                    },
-                  },
+            <div className="mt-8 flex w-full flex-col">
+              <Button
+                type="button"
+                className="btn-default"
+                onClick={() => {
+                  setOpenUserListModal((prev) => ({ ...prev, students: true }));
                 }}
-              />
-            </div>
-          </div> */}
+              >
+                {t("actions.add_entity", {
+                  entity:
+                    t("determiners.indefinite.plural.masculine") +
+                    " " +
+                    t("entities.students"),
+                })}
+              </Button>
+              <Button
+                type="button"
+                className="btn-default"
+                onClick={() => {
+                  setOpenUserListModal((prev) => ({ ...prev, teachers: true }));
+                }}
+              >
+                {t("actions.add_entity", {
+                  entity:
+                    t("determiners.indefinite.plural.masculine") +
+                    " " +
+                    t("entities.teachers"),
+                })}
+              </Button>
             </div>
           </Modal.Body>
           <Modal.Footer>
@@ -339,6 +266,126 @@ export default function GradesSections() {
           </Modal.Footer>
         </form>
       </Modal>
+
+      <Modal
+        show={openModal?.type === "editGrade" ? openModal?.open : false}
+        onClose={onCloseModal}
+        size={"md"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6",
+            popup: "pt-0",
+          },
+        }}
+      >
+        <form onSubmit={onSubmitGradeLevel}>
+          <Modal.Header>
+            {t("actions.edit_entity", {
+              entity:
+                t("determiners.indefinite.masculine") +
+                " " +
+                t("form.fields.grade_level"),
+            })}
+          </Modal.Header>
+          <Modal.Body>
+            <div className="flex flex-col gap-x-8">
+              <Input
+                type="text"
+                id="gradeLevel"
+                name="gradeLevel"
+                label={t("form.fields.grade_level")}
+                placeholder={t("form.fields.grade_level")}
+                // onChange={(e) => handleChange(e.target.id, e.target.value)}
+              />
+            </div>
+            <div className="mt-8 flex w-full flex-col">
+              <Button
+                type="button"
+                className="btn-default"
+                onClick={() => {
+                  setOpenUserListModal((prev) => ({ ...prev, students: true }));
+                }}
+              >
+                {t("actions.view_entity", {
+                  entity:
+                    t("determiners.definite.plural") +
+                    " " +
+                    t("entities.students"),
+                })}
+              </Button>
+              <Button
+                type="button"
+                className="btn-default"
+                onClick={() => {
+                  setOpenUserListModal((prev) => ({ ...prev, teachers: true }));
+                }}
+              >
+                {t("actions.view_entity", {
+                  entity:
+                    t("determiners.definite.plural") +
+                    " " +
+                    t("entities.teachers"),
+                })}
+              </Button>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button type="submit" className="btn-default !w-auto">
+              {t("general.accept")}
+            </Button>
+            <button className="btn-danger !w-auto" onClick={onCloseModal}>
+              {t("general.decline")}
+            </button>
+          </Modal.Footer>
+        </form>
+      </Modal>
+
+      <UserListModal
+        modalHeader={
+          t("actions.select_user", {
+            entity: `${t("determiners.definite.plural")} ${t("entities.teachers")}`,
+          }) as string
+        }
+        modalSize="md"
+        name="teachers"
+        open={openUserListModal.teachers}
+        onChange={(_, value) =>
+          setSelectedUser((prev) => ({ ...prev, teachers: value }))
+        }
+        onClose={(status) =>
+          setOpenUserListModal((prev) => ({ ...prev, teachers: status }))
+        }
+        selectedUsersList={selectedUser.teachers as number[]}
+        options={{ img: true, search: true }}
+        userList={getAllTeachersQuery.data?.data}
+        multipleSelection={true}
+      />
+
+      <UserListModal
+        modalHeader={
+          t("actions.select_user", {
+            entity: `${t("determiners.definite.plural")} ${t("entities.students")}`,
+          }) as string
+        }
+        modalSize="md"
+        name="students"
+        open={openUserListModal.students}
+        onChange={(_, value) =>
+          setSelectedUser((prev) => ({ ...prev, students: value }))
+        }
+        onClose={(status) =>
+          setOpenUserListModal((prev) => ({ ...prev, students: status }))
+        }
+        selectedUsersList={selectedUser.students as number[]}
+        options={{ img: true, search: true }}
+        userList={getAllStudentsQuery.data?.data}
+        multipleSelection={true}
+      />
 
       <TransitionAnimation>
         <div className="flex flex-col gap-y-3">
@@ -360,6 +407,13 @@ export default function GradesSections() {
                           title={gradeLevel.label}
                           key={key}
                           onDelete={() => deleteGrade(gradeLevel.id)}
+                          onEdit={() =>
+                            setOpenModal({
+                              id: 0,
+                              type: "editGrade",
+                              open: true,
+                            })
+                          }
                           index={gradeLevel.id}
                         />
                       ),
@@ -378,7 +432,7 @@ export default function GradesSections() {
                     <span className="pointer-events-none">
                       {t("actions.add_entity", {
                         entity:
-                          t("determiners.indefinite.masculine") +
+                          t("determiners.indefinite.feminine") +
                           " " +
                           t("form.fields.grade_level"),
                       })}

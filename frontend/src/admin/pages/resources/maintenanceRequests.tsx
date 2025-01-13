@@ -1331,7 +1331,13 @@ export default function MaintenanceRequests() {
         onChange={(key, value, name) => onSelectUser(key, value, name)}
         onClose={(status) => setOpenUserListModal(status)}
         selectedUsersList={formData.users as number[]}
-        userList={getAllResourcesQuery.data}
+        userList={getAllResourcesQuery.data.map(
+          (user: Record<string, string>) => ({
+            id: user.id,
+            name: user.label,
+            imagePath: user.imagePath,
+          }),
+        )}
       />
 
       <TransitionAnimation>

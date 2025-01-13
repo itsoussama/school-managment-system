@@ -12,13 +12,13 @@ import AddResources from "./pages/resources/addResources";
 import { ViewResources } from "./pages/resources/viewResources";
 import MaintenanceRequests from "./pages/resources/maintenanceRequests";
 import GeneralSettings from "./pages/configuration/school/generalSettings";
-import GradesSections from "./pages/configuration/school/gradesSections";
 import Timetable from "./pages/configuration/school/timetable";
 import Subjects from "./pages/configuration/school/subjects";
 import Profile from "./pages/profile/profile";
 import Preference from "./pages/profile/preference";
 import AddAdministrators from "./pages/administrators/addAdministrators";
 import { ViewAdministrators } from "./pages/administrators/viewAdministrators";
+import SchoolLevels from "./pages/configuration/school/schoolLevels";
 
 export const AdminRouter = {
   path: "/",
@@ -121,8 +121,8 @@ export const AdminRouter = {
               element: <GeneralSettings />,
             },
             {
-              path: "grades-and-sections",
-              element: <GradesSections />,
+              path: "school-levels",
+              element: <SchoolLevels />,
             },
             {
               path: "subjects",

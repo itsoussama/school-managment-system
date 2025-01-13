@@ -314,7 +314,7 @@ export default function Subjects() {
                         {t("form.fields.grade_levels")}:
                       </span>
                       <div className="flex w-max max-w-48 flex-wrap">
-                        {getSubjectQuery.data?.data.grades.map(
+                        {/* {getSubjectQuery.data?.data.grades.map(
                           (grade: Grades, index: number) => (
                             <Badge
                               key={index}
@@ -324,7 +324,7 @@ export default function Subjects() {
                               {grade.label}
                             </Badge>
                           ),
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </div>

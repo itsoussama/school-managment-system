@@ -1,8 +1,8 @@
-import { FaPen } from "react-icons/fa";
 import { colorPalette } from "../../utils/chart";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import Dropdown from "@src/components/dropdown";
 import { colors } from "../../utils/colors";
+import { useTranslation } from "react-i18next";
 
 interface InfoCardType {
   index: number;
@@ -17,6 +17,7 @@ export default function InfoCard({
   onEdit,
   onDelete,
 }: InfoCardType) {
+  const { t } = useTranslation();
   const handleColorSequence = (index: number) => {
     const styles = {
       primary: colorPalette[colors[index % colors.length]][700],
@@ -39,12 +40,12 @@ export default function InfoCard({
           <Dropdown.List>
             <Dropdown.Item>
               <span className="cursor-pointer" onClick={onEdit}>
-                Edit
+                {t("general.edit")}
               </span>
             </Dropdown.Item>
             <Dropdown.Item>
               <span className="cursor-pointer" onClick={onDelete}>
-                Delete
+                {t("general.delete")}
               </span>
             </Dropdown.Item>
           </Dropdown.List>

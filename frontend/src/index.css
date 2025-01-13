@@ -78,3 +78,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+*::first-letter {
+  text-transform: capitalize;
+}

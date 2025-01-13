@@ -325,17 +325,15 @@ function Menu() {
           />
         </Link>
         <Link
-          to="/configuration/settings/grades-and-sections"
+          to="/configuration/settings/school-levels"
           state={{ active: true }}
         >
           <Items
             isActive={
-              useMatch("/configuration/settings/grades-and-sections")
-                ? true
-                : false
+              useMatch("/configuration/settings/school-levels") ? true : false
             }
             itemId="subitem-2"
-            itemName={t("entities.grades_sections")}
+            itemName={t("entities.school-levels")}
           />
         </Link>
         <Link to="/configuration/settings/subjects" state={{ active: true }}>

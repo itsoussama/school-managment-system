@@ -441,7 +441,7 @@ CheckboxGroup.Button = function Button({
     <>
       <label
         htmlFor={id}
-        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-[var(--brand-color-500)] has-[:checked]:hover:bg-[var(--brand-color-600)] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
+        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-[var(--brand-color-600)] has-[:checked]:text-white has-[:checked]:hover:bg-[var(--brand-color-500)] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
         style={
           {
             "--brand-color-500": colorPalette[brandState as BrandColor][500],

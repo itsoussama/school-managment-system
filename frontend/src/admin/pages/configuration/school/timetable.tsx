@@ -3,14 +3,7 @@ import { alertIntialState } from "@src/utils/alert";
 import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb, Modal, Spinner } from "flowbite-react";
-import {
-  ChangeEvent,
-  CSSProperties,
-  FormEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { CSSProperties, FormEvent, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaTrash } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -33,10 +26,13 @@ import {
 import allLocales from "@fullcalendar/core/locales-all";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { options } from "@fullcalendar/core/preact.js";
+// import { options } from "@fullcalendar/core/preact.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React from "react";
 import { addEvent, deleteEvent, getEvents, setEvent } from "@src/features/api";
+import React from "react";
+import { IoFilter } from "react-icons/io5";
+import { FaPlus } from "react-icons/fa6";
+import ReactDOM from "react-dom";
 
 interface Modal {
   id: string;
@@ -81,6 +77,7 @@ export default function Timetable() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+  const langState = useAppSelector((state) => state.preferenceSlice.language);
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [openModal, setOpenModal] = useState<Modal>();
@@ -330,6 +327,18 @@ export default function Timetable() {
     // });
   };
 
+  const addElement = (
+    element: React.ReactElement,
+    containerElement: Element | null,
+  ) => {
+    const container = containerElement;
+
+    if (container) {
+      container.setAttribute("style", "height:100%;");
+      return ReactDOM.createPortal(element, container);
+    }
+  };
+
   useEffect(() => {
     if (getEventsQuery?.data) {
       const eventsCollection: Array<Events> = getEventsQuery?.data;
@@ -347,6 +356,28 @@ export default function Timetable() {
 
   return (
     <div className="flex h-full flex-col">
+      {[
+        addElement(
+          <div className="flex items-center justify-center gap-1">
+            <IoFilter className="text-white" />{" "}
+            <span>{t("general.filter")}</span>{" "}
+          </div>,
+          document.querySelector(
+            ".fc-filter-button.fc-button.fc-button-primary",
+          ),
+        ),
+        addElement(
+          <div className="flex items-center justify-center gap-1">
+            <FaPlus className="text-white" />{" "}
+            <span>
+              {t("actions.new_entity", { entity: t("general.event") })}
+            </span>{" "}
+          </div>,
+          document.querySelector(
+            ".fc-addEvent-button.fc-button.fc-button-primary",
+          ),
+        ),
+      ]}
       <Alert
         id={alert.id}
         status={alert.status}
@@ -656,7 +687,7 @@ export default function Timetable() {
           // droppable={true}
           customButtons={{
             addEvent: {
-              text: t("actions.new_entity", { entity: t("general.event") }),
+              // text: t("actions.new_entity", { entity: t("general.event") }),
               hint: t("actions.new_entity", { entity: t("general.event") }),
               click: () => {
                 setOpenModal({
@@ -668,7 +699,7 @@ export default function Timetable() {
               // icon: "calendar-plus-fill",
             },
             filter: {
-              text: t("general.filter"),
+              // text: t("general.filter"),
               hint: t("general.filter"),
               click: () => {
                 setOpenModal({
@@ -695,7 +726,7 @@ export default function Timetable() {
           }}
           initialView="timeGridWeek"
           locales={allLocales}
-          locale="fr"
+          locale={langState}
           events={events}
           loading={() =>
             (isLoading.current = getEventsQuery.isFetching ? true : false)

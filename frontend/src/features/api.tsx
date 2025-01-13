@@ -243,7 +243,7 @@ const getSubjects = async (
 };
 
 const getSubject = async (id: number) => {
-  const response = await axiosApi.get("/api/users/" + id);
+  const response = await axiosApi.get("/api/subjects/" + id);
   return response;
 };
 
