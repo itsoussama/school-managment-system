@@ -1,4 +1,10 @@
-import { Button, Checkbox, Input, MultiSelect } from "@components/input";
+import {
+  Button,
+  Checkbox,
+  Input,
+  MultiSelect,
+  RSelect,
+} from "@components/input";
 import { addStudent, getGrades } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
@@ -307,6 +313,36 @@ export default function AddStudent() {
                   ),
                 )}
               </MultiSelect>
+
+              <RSelect
+                id="payment_frequency"
+                name="payment_frequency"
+                label={t("form.fields.payment_frequency")}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+              >
+                <option value={"1"}>
+                  {t("form.fields.month_count", { count: 1 })}
+                </option>
+                <option value={"2"}>
+                  {t("form.fields.month_count", { count: 3 })}
+                </option>
+                <option value={"3"}>
+                  {t("form.fields.month_count", { count: 6 })}
+                </option>
+                <option value={"4"}>
+                  {t("form.fields.year_count", { count: 1 })}
+                </option>
+              </RSelect>
+
+              <RSelect
+                id="payment_method"
+                name="payment_method"
+                label={t("form.fields.payment_method")}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+              >
+                <option value={"1"}>{t("form.fields.cash")}</option>
+                <option value={"2"}>{t("form.fields.check")}</option>
+              </RSelect>
 
               <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 

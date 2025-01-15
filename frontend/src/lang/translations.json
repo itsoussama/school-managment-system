@@ -117,6 +117,17 @@
                 "designate_user": "Designate {{entity}}",
                 "filter_entity": "Filtrer {{entity}}"
             },
+            "notifications": {
+                "created_success": "Created successfully",
+                "updated_success": "Updated successfully",
+                "deleted_success": "Deleted successfully",
+                "saved_success": "Saved successfully",
+                "submission_failed": "Submission failed",
+                "edit_success": "Edit successful",
+                "view_success": "View successful",
+                "approved_success": "Approved successfully",
+                "rejected_success": "Rejected successfully"
+            },
             "modals": {
                 "delete": {
                     "title": "Are you sure you want to delete {{item}}?",
@@ -192,7 +203,25 @@
                     "date_time_format": "Date and Time Format",
                     "theme": "Theme",
                     "font_size": "Font Size",
-                    "remember_me": "Remember me"
+                    "remember_me": "Remember me",
+                    "payment_frequency": "Payment frequency",
+                    "payroll_frequency": "Payroll frequency",
+                    "weekly": "Weekly",
+                    "bi_weekly": "Bi-weekly",
+                    "semi_monthly": "Semi-monthly",
+                    "monthly": "Monthly",
+                    "hourly_rate": "Hourly rate",
+                    "salary": "Salary",
+                    "month_count_one": "{{count}} month",
+                    "month_count_other": "{{count}} months",
+                    "year_count_one": "{{count}} year",
+                    "year_count_other": "{{count}} years",
+                    "payment_method": "Payment method",
+                    "check": "Check",
+                    "cash": "Cash"
+                },
+                "errors": {
+                    "payment_frequency": ""
                 },
                 "placeholders": {
                     "title": "Enter title",
@@ -361,6 +390,17 @@
                 "designate_user": "Désigner {{entity}}",
                 "filter_entity": "Filtrer {{entity}}"
             },
+            "notifications": {
+                "created_success": "Créé avec succès",
+                "updated_success": "Mis à jour avec succès",
+                "deleted_success": "Supprimé avec succès",
+                "saved_success": "Enregistré avec succès",
+                "submission_failed": "Échec de la soumission",
+                "edit_success": "Modification réussie",
+                "view_success": "Affichage réussi",
+                "approved_success": "Approuvé avec succès",
+                "rejected_success": "Rejeté avec succès"
+            },
             "modals": {
                 "delete": {
                     "title": "Êtes-vous sûr de vouloir supprimer {{item}}",
@@ -436,7 +476,25 @@
                     "date_time_format": "Format de date et d'heure",
                     "theme": "Thème",
                     "font_size": "Taille de police",
-                    "remember_me": "Se souvenir de moi"
+                    "remember_me": "Se souvenir de moi",
+                    "payment_frequency": "Fréquence de paiement",
+                    "payroll_frequency": "Fréquence de la paie",
+                    "hourly_rate": "Taux horaire",
+                    "salary": "Salaire",
+                    "weekly": "Hebdomadaire",
+                    "bi_weekly": "Bi-hebdomadaire",
+                    "semi_monthly": "Semi-mensuel",
+                    "monthly": "Mensuel",
+                    "month_count_one": "{{count}} mois",
+                    "month_count_other": "{{count}} mois",
+                    "year_count_one": "{{count}} année",
+                    "year_count_other": "{{count}} années",
+                    "payment_method": "Méthode de paiement",
+                    "check": "Chèque",
+                    "cash": "Espèces"
+                },
+                "errors": {
+                    "payment_frequency": ""
                 },
                 "placeholders": {
                     "label": "Saisissez l'étiquette",

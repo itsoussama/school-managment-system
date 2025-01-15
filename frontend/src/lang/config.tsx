@@ -15,9 +15,11 @@ i18n
       alwaysFormat: true,
       skipOnVariables: true,
       format: (value, _, lng) => {
-        if (lng === "fr") {
-          return value?.toLowerCase();
-        }
+        // if (lng === "fr") {
+        //   if (value) {
+        //     return value.toLowerCase();
+        //   }
+        // }
         return value;
       },
     },

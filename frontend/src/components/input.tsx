@@ -46,6 +46,7 @@ interface Field {
 
 interface Input extends Field, InputHTMLAttributes<HTMLInputElement> {
   type: string;
+  addon?: string;
 }
 
 interface InputDropdown extends Field {}
@@ -74,6 +75,7 @@ function Input({
   label = "",
   leftIcon,
   rightIcon,
+  addon,
   "custom-style": {
     inputStyle = "",
     labelStyle = "",
@@ -103,17 +105,26 @@ function Input({
         >
           {leftIcon && React.createElement(leftIcon, { size: "16px" })}
         </IconContext.Provider>
-        <input
-          type={isPasswordVisible ? "text" : type}
-          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${leftIcon ? "px-10" : ""} ${inputStyle}`}
-          style={
-            {
-              "--brand-color-500": colorPalette[brandState as BrandColor][500],
-              "--brand-color-600": colorPalette[brandState as BrandColor][600],
-            } as CSSProperties
-          }
-          {...attribute}
-        />
+        <div className="flex">
+          <input
+            type={isPasswordVisible ? "text" : type}
+            className={`${addon ? "rounded-s-s" : "rounded-s"} border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${leftIcon ? "px-10" : ""} ${inputStyle}`}
+            style={
+              {
+                "--brand-color-500":
+                  colorPalette[brandState as BrandColor][500],
+                "--brand-color-600":
+                  colorPalette[brandState as BrandColor][600],
+              } as CSSProperties
+            }
+            {...attribute}
+          />
+          {addon && (
+            <p className="flex items-center justify-center rounded-e-s border border-gray-300 bg-gray-100 px-2.5 text-gray-500 first-letter:lowercase dark:border-gray-600 dark:bg-gray-600 dark:text-gray-400">
+              {addon}
+            </p>
+          )}
+        </div>
         <IconContext.Provider
           value={{
             className:
@@ -695,7 +706,7 @@ function MultiSelect({
           <div
             ref={dropdownList}
             id={dropdownUid}
-            className="dropdown-content absolute left-0 z-50 mt-1 flex max-h-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-300 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-700"
+            className="dropdown-content absolute left-0 z-50 mt-1 flex max-h-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-400 bg-gray-50 p-2 dark:border-gray-500 dark:bg-gray-700"
             style={{
               display: isDropdownOpen && dropdownStyles ? "flex" : "none",
               width: `${dropdownStyles?.width}px`,

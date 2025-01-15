@@ -1,4 +1,10 @@
-import { Button, Checkbox, Input, MultiSelect } from "@src/components/input";
+import {
+  Button,
+  Checkbox,
+  Input,
+  MultiSelect,
+  RSelect,
+} from "@src/components/input";
 import { addTeacher, getGrades, getSubjects } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
@@ -341,6 +347,43 @@ export default function AddTeacher() {
                   ),
                 )}
               </MultiSelect>
+
+              <RSelect
+                id="payroll_frequency"
+                name="payroll_frequency"
+                label={t("form.fields.payroll_frequency")}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+              >
+                <option value={"1"}>{t("form.fields.weekly")}</option>
+                <option value={"2"}>{t("form.fields.bi_weekly")}</option>
+                <option value={"3"}>{t("form.fields.semi_monthly")}</option>
+                <option value={"4"}>{t("form.fields.monthly")}</option>
+              </RSelect>
+
+              {formData.payroll_frequency !== "4" ? (
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  step={0.01}
+                  placeholder="30.55"
+                  id="hourly_rate"
+                  name="hourly_rate"
+                  addon="hr"
+                  label={t("form.fields.hourly_rate")}
+                  onChange={(e) => setFormData(e.target.id, e.target.value)}
+                />
+              ) : (
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  step={0.01}
+                  placeholder="2500.55"
+                  id="salary"
+                  name="salary"
+                  label={t("form.fields.salary")}
+                  onChange={(e) => setFormData(e.target.id, e.target.value)}
+                />
+              )}
 
               <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 
