@@ -12,6 +12,7 @@ import {
   FaUserTie,
 } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
+import { SiGoogleclassroom } from "react-icons/si";
 import { Link, Outlet, useMatch } from "react-router-dom";
 import useBreakpoint from "@hooks/useBreakpoint";
 import { useTranslation } from "react-i18next";
@@ -265,7 +266,7 @@ function Menu() {
         >
           <Link to="resources/new" state={{ active: true }}>
             <Items
-              isActive={useMatch("/Resources/new") ? true : false}
+              isActive={useMatch("/resources/new") ? true : false}
               itemId="subitem-1"
               itemName={t("actions.new_entity", {
                 entity: t("entities.resource"),
@@ -294,11 +295,46 @@ function Menu() {
             />
           </Link>
         </Items>
+
+        <Items
+          itemId="item-7"
+          itemName={t("entities.classrooms")}
+          icon={
+            <SiGoogleclassroom
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
+            />
+          }
+          // containerClass="locked"
+          subMenuVisible={subMenuVisible}
+          onToggleSubMenu={onToggleSubMenu}
+        >
+          <Link to="classrooms/new" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/classrooms/new") ? true : false}
+              itemId="subitem-1"
+              itemName={t("actions.new_entity", {
+                entity: t("entities.classroom"),
+              })}
+            />
+          </Link>
+          <Link to="classrooms/manage" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/classrooms/manage") ? true : false}
+              itemId="subitem-2"
+              itemName={t("actions.view_entity", {
+                entity:
+                  t("determiners.definite.plural") +
+                  " " +
+                  t("entities.classrooms"),
+              })}
+            />
+          </Link>
+        </Items>
       </div>
       <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>
       {/* configuration */}
       <Items
-        itemId="item-7"
+        itemId="item-8"
         itemName={t("entities.configurations")}
         icon={
           <FaCog

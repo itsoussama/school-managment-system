@@ -4,6 +4,7 @@ import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTea
 import { FormData as UpdateStudentFromData } from "@admin/pages/students/viewStudents";
 import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParents";
 import { FormData as UpdateResourceFromData } from "@admin/pages/resources/viewResources";
+import { FormData as UpdateClassroomFromData } from "@admin/pages/classrooms/viewClassrooms";
 import { FormData as UpdateSchoolFromData } from "@src/admin/pages/configuration/school/generalSettings";
 import { FormData as UpdateProfileFromData } from "@admin/pages/profile/profile";
 import { FormData as UpdateEventFromData } from "@src/admin/pages/configuration/school/timetable";
@@ -17,6 +18,7 @@ import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTea
 import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStudent";
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
 import { FormData as AddResourceFromData } from "@src/admin/pages/resources/addResources";
+import { FormData as AddClassroomFromData } from "@src/admin/pages/classrooms/addClassroom";
 import { FormData as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
 import { FormData as AddEventFromData } from "@src/admin/pages/configuration/school/timetable";
 const axiosApi = AxiosProvider();
@@ -348,6 +350,54 @@ const deleteResource = async (id: number) => {
   return response.data;
 };
 
+const getClassrooms = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  name = "",
+  schoolId: string,
+) => {
+  const response = await axiosApi.get(
+    "/api/class_rooms?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&name=" +
+      name +
+      "&school_id=" +
+      schoolId,
+  );
+  return response.data;
+};
+
+const getClassroom = async (id: number) => {
+  const response = await axiosApi.get("/api/class_rooms/" + id);
+  return response?.data;
+};
+
+const addClassroom = async (formData: AddClassroomFromData) => {
+  const response = await axiosApi.post("/api/class_rooms", formData);
+  return response.data;
+};
+
+const setClassroom = async (formData: UpdateClassroomFromData) => {
+  const response = await axiosApi.post(
+    "/api/class_rooms/" + formData?.id,
+    formData,
+  );
+  return response.data;
+};
+
+const deleteClassroom = async (id: number) => {
+  const response = await axiosApi.delete("/api/class_rooms/" + id);
+  return response.data;
+};
+
 const getCategories = async (
   page = 1,
   perPage = 5,
@@ -540,6 +590,11 @@ export {
   addResource,
   setResource,
   deleteResource,
+  getClassrooms,
+  getClassroom,
+  addClassroom,
+  setClassroom,
+  deleteClassroom,
   getCategories,
   getMaintenanceRequests,
   getMaintenanceRequest,

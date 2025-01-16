@@ -19,6 +19,8 @@ import Preference from "./pages/profile/preference";
 import AddAdministrators from "./pages/administrators/addAdministrators";
 import { ViewAdministrators } from "./pages/administrators/viewAdministrators";
 import SchoolLevels from "./pages/configuration/school/schoolLevels";
+import AddClassroom from "./pages/classrooms/addClassroom";
+import { ViewClassrooms } from "./pages/classrooms/viewClassrooms";
 
 export const AdminRouter = {
   path: "/",
@@ -103,6 +105,19 @@ export const AdminRouter = {
         {
           path: "maintenance-requests",
           element: <MaintenanceRequests />,
+        },
+      ],
+    },
+    {
+      path: "classrooms",
+      children: [
+        {
+          path: "new",
+          element: <AddClassroom />,
+        },
+        {
+          path: "manage",
+          element: <ViewClassrooms />,
         },
       ],
     },

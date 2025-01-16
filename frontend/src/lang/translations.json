@@ -76,7 +76,8 @@
                 "personal_information": "Personal Information",
                 "academic_information": "Academic Information",
                 "shcool_information": "School Information",
-                "contact_information": "Contact Information"
+                "contact_information": "Contact Information",
+                "classrooms_information": "Classrooms Information"
             },
             "entities": {
                 "teachers": "Teachers",
@@ -90,6 +91,8 @@
                 "data_management": "Data Management",
                 "resources": "Resources",
                 "resource": "Resource",
+                "classrooms": "Classrooms",
+                "classroom": "Classroom",
                 "requests": "Maintenance Requests",
                 "request": "Maintenance Request",
                 "general_settings": "General Settings",
@@ -217,13 +220,25 @@
                     "year_count_one": "{{count}} year",
                     "year_count_other": "{{count}} years",
                     "payment_method": "Payment method",
+                    "capacity": "Capacity",
+                    "location": "Location",
                     "check": "Check",
-                    "cash": "Cash"
+                    "cash": "Cash",
+                    "name": "Name",
+                    "types": "Type",
+                    "classroom_types_options": {
+                        "lecture": "Lecture",
+                        "lab": "Lab",
+                        "computer_lab": "Computer Lab",
+                        "gymnasium": "Gymnasium"
+                    }
                 },
                 "errors": {
                     "payment_frequency": ""
                 },
                 "placeholders": {
+                    "name": "Enter name",
+                    "types": "Select type",
                     "title": "Enter title",
                     "label": "Enter label",
                     "first_name": "Enter first name",
@@ -233,7 +248,9 @@
                     "note": "Add additional notes...",
                     "school_name": "Enter school name",
                     "description": "Enter description",
-                    "resolved_date": "Select resolved date"
+                    "resolved_date": "Select resolved date",
+                    "capacity": "Enter capacity",
+                    "location": "Enter location"
                 },
                 "buttons": {
                     "create": "Create {{label}}",
@@ -349,7 +366,8 @@
                 "personal_information": "Informations personnelles",
                 "academic_information": "Informations académiques",
                 "contact_information": "Informations de contact",
-                "school_information": "Informations sur l'école"
+                "school_information": "Informations sur l'école",
+                "classrooms_information": "Informations sur la classe"
             },
             "entities": {
                 "teachers": "Enseignants",
@@ -366,6 +384,8 @@
                 "timetable": "Les horaires",
                 "resources": "Ressources",
                 "resource": "Ressource",
+                "classrooms": "Classes",
+                "classroom": "Classe",
                 "requests": "Demandes de maintenance",
                 "request": "Demande de maintenance",
                 "items": "Articles",
@@ -490,13 +510,25 @@
                     "year_count_one": "{{count}} année",
                     "year_count_other": "{{count}} années",
                     "payment_method": "Méthode de paiement",
+                    "capacity": "Capacité",
+                    "location": "Emplacement",
                     "check": "Chèque",
-                    "cash": "Espèces"
+                    "cash": "Espèces",
+                    "name": "Nom",
+                    "type": "Type",
+                    "classroom_type_options": {
+                        "lecture": "Conférence",
+                        "lab": "Laboratoire",
+                        "computer_lab": "Laboratoire informatique",
+                        "gymnasium": "Gymnase"
+                    }
                 },
                 "errors": {
                     "payment_frequency": ""
                 },
                 "placeholders": {
+                    "name": "Saisissez le nom",
+                    "types": "Sélectionnez une type",
                     "label": "Saisissez l'étiquette",
                     "title": "Saisissez le titre",
                     "first_name": "Saisissez le prénom",
@@ -506,7 +538,9 @@
                     "note": "Ajoutez des notes supplémentaires...",
                     "school_name": "Saisissez le nom de l'école",
                     "description": "Saisissez une description",
-                    "resolved_date": "Sélectionnez la date de résolution"
+                    "resolved_date": "Sélectionnez la date de résolution",
+                    "capacity": "Saisissez la Capacité",
+                    "location": "Saisissez la Location"
                 },
                 "buttons": {
                     "create": "Créer {{label}}",
