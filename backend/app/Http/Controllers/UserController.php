@@ -463,9 +463,6 @@ class UserController extends Controller
                         $user->imagePath = $path;
                     }
 
-                    if (!$user->hasRole(config('roles.admin'))) {
-                        return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
-                    }
                     $user->save();
 
                     // Sync roles if provided
@@ -582,9 +579,6 @@ class UserController extends Controller
                 if (Storage::disk('public')->exists($user->imagePath)) {
                     Storage::disk('public')->delete($user->imagePath);
                 }
-            }
-            if (!$user->hasRole(config('roles.admin'))) {
-                return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
             }
 
             $user->role()->detach();

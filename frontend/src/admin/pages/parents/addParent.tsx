@@ -34,7 +34,7 @@ export interface FormData {
   school_id: string;
   childrens: number[];
   roles: number[];
-  image: File;
+  image?: File;
 }
 
 interface Childs {
@@ -127,21 +127,23 @@ export default function AddParent() {
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
+        const form: FormData = {
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          school_id: admin?.school_id,
+          password: formData?.password as string,
+          password_confirmation: formData?.password_confirmation as string,
+          phone: formData?.phone as string,
+          childrens: selectedChilds,
+          roles: [roles.parent],
+        };
         if (img) {
-          addParentQuery.mutate({
-            name: formData?.firstName + " " + formData?.lastName,
-            email: formData?.email as string,
-            school_id: admin?.school_id,
-            password: formData?.password as string,
-            password_confirmation: formData?.password_confirmation as string,
-            phone: formData?.phone as string,
-            childrens: formData?.childrens as number[],
-            roles: [roles.parent],
-            image: img[0],
-          });
+          form["image"] = img[0];
         } else {
           throw new Error("image not found");
         }
+
+        addParentQuery.mutate(form);
       } catch (e) {
         toggleAlert({
           id: new Date().getTime(),

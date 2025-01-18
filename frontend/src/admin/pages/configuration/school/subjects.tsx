@@ -309,9 +309,8 @@ export default function Subjects() {
     const input = event.target as HTMLFormElement;
 
     if (
-      (input.verfication.value as string).localeCompare(
-        getSubjectQuery.data?.data.name,
-      )
+      (input.verfication.value as string).toLowerCase() ===
+      getSubjectQuery.data?.data.name
     ) {
       setIsVerficationMatch(false);
       return;

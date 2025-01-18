@@ -33,7 +33,7 @@ export interface FormData {
   roles: number[];
   subjects: number[];
   grades: number[];
-  image: File;
+  image?: File;
 }
 
 interface Subject {
@@ -110,22 +110,23 @@ export default function AddTeacher() {
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
+        const form: FormData = {
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          school_id: admin?.school_id as string,
+          password: formData?.password as string,
+          password_confirmation: formData?.password_confirmation as string,
+          phone: formData?.phone as string,
+          roles: [roles.teacher],
+          subjects: formData?.subjects as number[],
+          grades: formData?.grades as number[],
+        };
+
         if (img) {
-          addTeacherQuery.mutate({
-            name: formData?.firstName + " " + formData?.lastName,
-            email: formData?.email as string,
-            school_id: admin?.school_id,
-            password: formData?.password as string,
-            password_confirmation: formData?.password_confirmation as string,
-            phone: formData?.phone as string,
-            roles: [roles.teacher],
-            subjects: formData?.subjects as number[],
-            grades: formData?.grades as number[],
-            image: img[0],
-          });
-        } else {
-          throw new Error("image not found");
+          form["image"] = img[0];
         }
+
+        addTeacherQuery.mutate(form);
       } catch (e) {
         toggleAlert({
           id: new Date().getTime(),

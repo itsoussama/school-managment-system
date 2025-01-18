@@ -582,7 +582,10 @@ export default function MaintenanceRequests() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getMaintenanceRequestQuery.data?.title) {
+    if (
+      (input.verfication.value as string).toLowerCase() ===
+      getMaintenanceRequestQuery.data?.data.name
+    ) {
       setIsVerficationMatch(false);
       return;
     }

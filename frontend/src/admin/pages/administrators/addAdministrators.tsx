@@ -25,7 +25,7 @@ export interface FormData {
   password_confirmation: string;
   school_id: string;
   roles: number[];
-  image: File;
+  image?: File;
 }
 
 interface File {
@@ -82,20 +82,20 @@ export default function AddAdministrators() {
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
+        const form: FormData = {
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          school_id: admin?.school_id,
+          password: formData?.password as string,
+          password_confirmation: formData?.password_confirmation as string,
+          phone: formData?.phone as string,
+          roles: [roles.administration_staff],
+        };
         if (img) {
-          addAdministratorQuery.mutate({
-            name: formData?.firstName + " " + formData?.lastName,
-            email: formData?.email as string,
-            school_id: admin?.school_id,
-            password: formData?.password as string,
-            password_confirmation: formData?.password_confirmation as string,
-            phone: formData?.phone as string,
-            roles: [roles.administration_staff],
-            image: img[0],
-          });
-        } else {
-          throw new Error("image not found");
+          form["image"] = img[0];
         }
+
+        addAdministratorQuery.mutate(form);
       } catch (e) {
         toggleAlert({
           id: new Date().getTime(),

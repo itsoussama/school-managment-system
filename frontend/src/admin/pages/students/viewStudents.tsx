@@ -621,7 +621,10 @@ export function ViewStudents() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getStudentQuery.data?.data.name) {
+    if (
+      (input.verfication.value as string).toLowerCase() ===
+      getStudentQuery.data?.data.name
+    ) {
       setIsVerficationMatch(false);
       return;
     }

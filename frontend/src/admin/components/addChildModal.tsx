@@ -21,6 +21,7 @@ import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
+import { FormData as AddChildFromData } from "@src/admin/pages/students/addStudent";
 
 interface AddChildModal {
   open: boolean;
@@ -29,28 +30,28 @@ interface AddChildModal {
   guardian_id: number;
 }
 
-export interface FormData {
-  guardian_id: number;
-  name?: string;
-  firstName?: string;
-  lastName?: string;
-  phone: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-  school_id: number;
-  roles: number[];
-  subjects: number[];
-  grades: number[];
-  image: File;
-}
+// interface FormData {
+//   guardian_id: number;
+//   name?: string;
+//   firstName?: string;
+//   lastName?: string;
+//   phone: string;
+//   email: string;
+//   password: string;
+//   password_confirmation: string;
+//   school_id: string;
+//   roles: number[];
+//   subjects: number[];
+//   grades: number[];
+//   image?: File;
+// }
 
-interface File {
-  lastModified: number;
-  name: string;
-  size: number;
-  type: string;
-}
+// interface File {
+//   lastModified: number;
+//   name: string;
+//   size: number;
+//   type: string;
+// }
 
 interface Grades {
   id: string;
@@ -193,23 +194,23 @@ function AddChildModal({
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
+        const form: AddChildFromData = {
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          school_id: school_id,
+          guardian_id: guardian_id,
+          password: formData?.password as string,
+          password_confirmation: formData?.password_confirmation as string,
+          phone: formData?.phone as string,
+          roles: [3],
+          subjects: [1],
+          grades: formData?.grades as number[],
+        };
         if (img) {
-          addStudentQuery.mutate({
-            name: formData?.firstName + " " + formData?.lastName,
-            email: formData?.email as string,
-            school_id: school_id,
-            guardian_id: guardian_id,
-            password: formData?.password as string,
-            password_confirmation: formData?.password_confirmation as string,
-            phone: formData?.phone as string,
-            roles: [3],
-            subjects: [1],
-            grades: formData?.grades as number[],
-            image: img[0],
-          });
-        } else {
-          throw new Error("image not found");
+          form["image"] = img[0];
         }
+
+        addStudentQuery.mutate(form);
       } catch (e) {
         toggleAlert({
           id: new Date().getTime(),

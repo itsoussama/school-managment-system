@@ -538,7 +538,10 @@ export function ViewParents() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getParentQuery.data?.data.name) {
+    if (
+      (input.verfication.value as string).toLowerCase() ===
+      getParentQuery.data?.data.name
+    ) {
       setIsVerficationMatch(false);
       return;
     }

@@ -21,6 +21,7 @@ import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
+import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
 
 interface AddParentModal {
   open: boolean;
@@ -184,21 +185,22 @@ export default function AddParentModal({
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
+        const form: AddParentFromData = {
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          school_id: school_id,
+          password: formData?.password as string,
+          password_confirmation: formData?.password_confirmation as string,
+          phone: formData?.phone as string,
+          childrens: [child_id],
+          roles: [4],
+        };
+
         if (img) {
-          addParentQuery.mutate({
-            name: formData?.firstName + " " + formData?.lastName,
-            email: formData?.email as string,
-            school_id: school_id,
-            password: formData?.password as string,
-            password_confirmation: formData?.password_confirmation as string,
-            phone: formData?.phone as string,
-            childrens: [child_id],
-            roles: [4],
-            image: img[0],
-          });
-        } else {
-          throw new Error("image not found");
+          form["image"] = img[0];
         }
+
+        addParentQuery.mutate(form);
       } catch (e) {
         toggleAlert({
           id: new Date().getTime(),

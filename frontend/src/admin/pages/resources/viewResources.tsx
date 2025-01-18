@@ -483,7 +483,10 @@ export function ViewResources() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getResourceQuery.data?.label) {
+    if (
+      (input.verfication.value as string).toLowerCase() ===
+      getResourceQuery.data?.data.name
+    ) {
       setIsVerficationMatch(false);
       return;
     }

@@ -18,7 +18,7 @@ export interface FormData {
   qty: number;
   school_id: string;
   category_id: number;
-  image: File;
+  image?: File;
 }
 
 interface Resource {
@@ -76,17 +76,20 @@ export default function AddResources() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
+      const form: FormData = {
+        label: formData?.label as string,
+        qty: formData?.qty as number,
+        school_id: admin?.school_id as string,
+        category_id: formData?.category_id as number,
+      };
+
       if (img) {
-        addResourceQuery.mutate({
-          label: formData?.label as string,
-          qty: formData?.qty as number,
-          school_id: admin?.school_id as string,
-          category_id: formData?.category_id as number,
-          image: img[0],
-        });
+        form["image"] = img[0];
       } else {
         throw new Error("image not found");
       }
+
+      addResourceQuery.mutate(form);
     } catch (e) {
       toggleAlert({
         id: new Date().getTime(),

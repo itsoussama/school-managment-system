@@ -631,7 +631,10 @@ export function ViewTeachers() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getTeacherQuery.data?.data.name) {
+    if (
+      (input.verfication.value as string).toLowerCase() ===
+      getTeacherQuery.data?.data.name
+    ) {
       setIsVerficationMatch(false);
       return;
     }

@@ -510,7 +510,10 @@ export function ViewAdministrators() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getAdministratorQuery.data?.data.name) {
+    if (
+      (input.verfication.value as string).toLowerCase() ===
+      getAdministratorQuery.data?.data.name
+    ) {
       setIsVerficationMatch(false);
       return;
     }

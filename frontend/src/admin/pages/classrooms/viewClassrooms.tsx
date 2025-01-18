@@ -327,7 +327,10 @@ export function ViewClassrooms() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getClassroomQuery.data?.name) {
+    if (
+      (input.verfication.value as string).toLowerCase() ===
+      getClassroomQuery.data?.data.name
+    ) {
       setIsVerficationMatch(false);
       return;
     }
