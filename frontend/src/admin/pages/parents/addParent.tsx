@@ -139,8 +139,6 @@ export default function AddParent() {
         };
         if (img) {
           form["image"] = img[0];
-        } else {
-          throw new Error("image not found");
         }
 
         addParentQuery.mutate(form);
