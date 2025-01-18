@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); // Foreign key reference to users table
-            $table->string('teacher_number')->unique();
-            $table->date('birthdate');
+            $table->string('teacher_number')->unique()->nullable();
+            $table->date('birthdate')->nullable();
             $table->string('address')->nullable();
             $table->string('phone')->nullable();
             $table->timestamps();

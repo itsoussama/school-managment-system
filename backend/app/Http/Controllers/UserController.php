@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\UsersExport;
 use App\Imports\UsersImport;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -339,7 +341,7 @@ class UserController extends Controller
                     'name' => 'required|string|max:255',
                     'email' => 'required|string|email|max:255|unique:users',
                     'phone' => 'required|string|max:255',
-                    'password' => 'required|string|min:8|confirmed',
+                    'password' => ['required',Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
                     'school_id' => 'required|exists:schools,id',
                     'guardian_id' => 'nullable|integer',
                     'roles' => 'required|array',
@@ -348,13 +350,14 @@ class UserController extends Controller
                     'subjects.*' => 'exists:subjects,id',
                     'grades' => 'required|array',
                     'grades.*' => 'exists:grades,id',
+                    'numbers' => 'nullable|string',
+                    'birthdate' => 'nullable|date',
+                    'address' => 'nullable|string',
                     'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
                 ]);
                 if ($validation) {
                     $path = '';
                     if ($request->hasFile('image')) {
-                        // $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
-                        // $request->file('image')->move(public_path('images/users'), $filename);
                         $path = $request->file('image')->store('images', 'public');
                     }
                     info('path : ' . $path);
@@ -371,7 +374,21 @@ class UserController extends Controller
                     $user->subjects()->sync($request->subjects);
                     $user->grades()->sync($request->grades);
                     $user->save();
+                    foreach ($user->role as $role) {
+                        if ($user->hasRole($role->name) == config('roles.teacher')) {
+                            $teacher = Teacher::create([
+                                'user_id' => $user->id,
+                                'teacher_number' => 'XBDKOO99',
+                                'address' => $user->address,
+                                'birthdate' => '2024-01-01',
+                                'phone' => $user->phone,
 
+                            ]);
+                            $teacher->subjects()->sync($request->subjects);
+                            $teacher->grades()->sync($request->grades);
+                            $teacher->save();
+                        }
+                    }
                     // to call the image in frontend `http://localhost:8000/storage/${imagePath}`;
 
                 } else {
@@ -463,7 +480,7 @@ class UserController extends Controller
                         $user->imagePath = $path;
                     }
 
-                    if (!$user->hasRole(config('roles.admin'))) {
+                    if (auth()->user()->hasRole(config('roles.admin')) && $user->hasRole(config('roles.admin'))) {
                         return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
                     }
                     $user->save();
@@ -583,7 +600,7 @@ class UserController extends Controller
                     Storage::disk('public')->delete($user->imagePath);
                 }
             }
-            if (!$user->hasRole(config('roles.admin'))) {
+            if (auth()->user()->hasRole(config('roles.admin')) && $user->hasRole(config('roles.admin'))) {
                 return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
             }
 
