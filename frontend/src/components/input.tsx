@@ -562,11 +562,13 @@ function MultiSelect({
     let itemsCollection: SelectedData[];
 
     if (target.type === "checkbox") {
-      const hasItem = selectedItems.find((item) => item.id === target.id);
+      const hasItem = selectedItems.find(
+        (item) => item.id.toString() === target.id,
+      );
 
       if (hasItem) {
         const newItemsSet = selectedItems.filter(
-          (item) => item.id !== target.id,
+          (item) => item.id.toString() !== target.id,
         );
         itemsCollection = newItemsSet;
         setSelectedItems(newItemsSet);
@@ -577,7 +579,6 @@ function MultiSelect({
         ];
         setSelectedItems(itemsCollection);
       }
-
       onSelectItem(itemsCollection); // Notify parent
     }
   };
@@ -585,6 +586,7 @@ function MultiSelect({
   const deleteItem = (event: React.MouseEvent) => {
     event.stopPropagation();
     const target = event.target as HTMLSpanElement;
+    console.log(target);
 
     // Uncheck the corresponding checkbox in the dropdown list
     document.getElementsByName(name).forEach((item) => {
@@ -595,7 +597,7 @@ function MultiSelect({
 
     // Filter out the deleted item
     const newItemsSet = selectedItems.filter(
-      (item) => item.id !== target.parentElement?.id,
+      (item) => item.id.toString() !== target.parentElement?.id,
     );
     setSelectedItems(newItemsSet);
     onSelectItem(newItemsSet); // Notify parent
@@ -615,7 +617,9 @@ function MultiSelect({
 
     if (document.getElementById(dropdownUid)?.id == dropdownUid) {
       selectedItems.forEach((item) => {
-        (document.getElementById(item.id) as HTMLInputElement).checked = true;
+        (
+          document.getElementById(item.id.toString()) as HTMLInputElement
+        ).checked = true;
       });
     }
 
@@ -650,8 +654,6 @@ function MultiSelect({
   useEffect(() => {
     // Check if externalSelectedItems is different from selectedItems
     if (externalSelectedItems) {
-      console.log(externalSelectedItems);
-
       setSelectedItems(externalSelectedItems);
     }
   }, [externalSelectedItems]);

@@ -14,6 +14,6 @@ class SubjectSeeder extends Seeder
     public function run(): void
     {
         $subjects = [['name' => 'Math'], ['name' => 'Science'], ['name' => 'Physics'], ['name' => 'Lecture'], ['name' => 'IT'], ['name' => 'Sport']];
-        Subject::factory(count($subjects))->sequence(...$subjects)->create();
+        Subject::factory(count($subjects))->sequence(...$subjects)->hasGrades(1)->hasSchools(1)->create();
     }
 }

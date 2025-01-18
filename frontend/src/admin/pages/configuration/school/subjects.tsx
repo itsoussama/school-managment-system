@@ -9,10 +9,17 @@ import {
   RSelect,
 } from "@src/components/input";
 import { SkeletonContent, SkeletonTable } from "@src/components/skeleton";
-import { getGrades, getSubject, getSubjects } from "@src/features/api";
+import {
+  addSubject,
+  deleteSubject,
+  getGrades,
+  getSubject,
+  getSubjects,
+  setSubject,
+} from "@src/features/api";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Badge,
   Breadcrumb,
@@ -22,7 +29,7 @@ import {
   Table,
   Tooltip,
 } from "flowbite-react";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
@@ -33,6 +40,9 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import React from "react";
+import { useFormValidation } from "@src/hooks/useFormValidation";
+import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
+import Alert from "@src/components/alert";
 
 interface Modal {
   id?: number;
@@ -43,28 +53,26 @@ interface Modal {
 interface Subject {
   id: number;
   name: string;
-  grades: [];
+  grades: Grades[];
 }
 
+export interface FormData {
+  _method?: string;
+  id: number;
+  name: string;
+  coef: number;
+  grades: string[];
+  school_id: string;
+}
 interface Grades {
   id: string;
   label: string;
 }
 
-interface Data {
-  id: number;
-  name: string;
-  grades: [];
-}
-
 export default function Subjects() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const [data, setData] = useState<Data>({
-    id: 0,
-    name: "",
-    grades: [],
-  });
+  const { formData, setFormData, setData } = useFormValidation({});
   const [openModal, setOpenModal] = useState<Modal>();
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [page, setPage] = useState<number>(1);
@@ -72,6 +80,7 @@ export default function Subjects() {
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const admin = useAppSelector((state) => state.userSlice.user);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
+  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const minSm = useBreakpoint("min", "sm");
 
   const getSubjectsQuery = useQuery({
@@ -88,7 +97,7 @@ export default function Subjects() {
   });
 
   const getSubjectQuery = useQuery({
-    queryKey: ["getSubject", openModal?.id, "subject"],
+    queryKey: ["getSubject", openModal?.id],
     queryFn: () => getSubject(openModal?.id as number),
     enabled: !!openModal?.id,
   });
@@ -98,32 +107,154 @@ export default function Subjects() {
     queryFn: getGrades,
   });
 
+  const addSubjectQuery = useMutation({
+    mutationFn: addSubject,
+
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getSubject"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getSubjects"],
+      });
+
+      console.log(data);
+
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+
+      setOpenModal(undefined);
+      setPage(1);
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const setSubjectQuery = useMutation({
+    mutationFn: setSubject,
+
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getSubject"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getSubjects"],
+      });
+
+      console.log(data);
+
+      setData({
+        id: data?.id as string,
+        name: data?.name as string,
+        grades: data.grades as [],
+      });
+
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+
+      setOpenModal(undefined);
+      setPage(1);
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const deleteSubjectQuery = useMutation({
+    mutationFn: deleteSubject,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getSubject"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getSubjects"],
+      });
+
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+
+      setOpenModal(undefined);
+      setPage(1);
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
   const handlePerPage = (ev: ChangeEvent) => {
     const target = ev.target as HTMLSelectElement;
     setPage(1);
     setPerPage(parseInt(target.value));
   };
 
-  const onChange = (property: string, value: string | number[]) => {
-    setData((prev) => ({ ...(prev as Data), [property]: value }));
+  const onChange = (property: string, value: string | unknown[]) => {
+    const exists = getSubjectsQuery.data?.data.some(
+      (subject: Subject) => subject.name === value,
+    );
+    if (exists) {
+      setData((prev) => ({
+        ...prev,
+        [property]: prev[property] === value ? "" : value,
+      }));
+
+      return;
+    }
+    setData((prev) => ({ ...prev, [property]: value }));
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const { data: subjectData } = await queryClient.ensureQueryData({
+    const { data } = await queryClient.ensureQueryData({
       queryKey: ["getSubject", id],
       queryFn: () => getSubject(id as number),
     });
 
+    console.log(data);
+
     setData({
-      id: subjectData?.id,
-      name: subjectData?.name,
-      grades: subjectData?.grades,
+      id: data?.id,
+      name: data?.name,
+      grades: data?.grades,
     });
   };
 
   const onCloseModal = () => {
-    // subjectMutation.reset();
+    // setSubjectQuery.reset();
     setOpenModal(undefined);
 
     // setData({
@@ -146,15 +277,89 @@ export default function Subjects() {
     // });
   };
 
+  const onSubmitAdd = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    try {
+      const gradesArray =
+        (formData?.grades as Grades[]).map((grade) => grade.id) || [];
+
+      const form: FormData = {
+        id: formData?.id as number,
+        name: formData?.name as string,
+        coef: 2,
+        grades: gradesArray as string[],
+        school_id: admin.school_id,
+      };
+
+      addSubjectQuery.mutate(form);
+    } catch (error) {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    }
+  };
+
   const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsVerficationMatch(true);
+    const input = event.target as HTMLFormElement;
+
+    if (
+      (input.verfication.value as string).localeCompare(
+        getSubjectQuery.data?.data.name,
+      )
+    ) {
+      setIsVerficationMatch(false);
+      return;
+    }
+
+    deleteSubjectQuery.mutate(openModal?.id as number);
   };
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    try {
+      const gradesArray =
+        (formData?.grades as Grades[]).map((grade) => grade.id) || [];
+
+      const form: FormData = {
+        _method: "PUT",
+        id: formData?.id as number,
+        name: formData?.name as string,
+        coef: 2,
+        grades: gradesArray as string[],
+        school_id: admin.school_id,
+      };
+
+      setSubjectQuery.mutate(form);
+    } catch (error) {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    }
   };
+
+  const closeAlert = useCallback((value: AlertType) => {
+    toggleAlert(value);
+  }, []);
 
   return (
     <div className="flex w-full flex-col">
+      <Alert
+        id={alert.id}
+        status={alert.status}
+        state={alert.state}
+        message={alert.message}
+        close={closeAlert}
+      />
+
       <div className="flex items-center justify-between">
         <Breadcrumb
           theme={{ list: "flex items-center overflow-x-auto px-5 py-3" }}
@@ -219,9 +424,7 @@ export default function Subjects() {
           },
         }}
       >
-        <form
-        // onSubmit={onSubmitGradeLevel}
-        >
+        <form onSubmit={onSubmitAdd}>
           <Modal.Header>
             {t("actions.add_entity", {
               entity:
@@ -234,21 +437,16 @@ export default function Subjects() {
             <div className="flex flex-col gap-8">
               <Input
                 type="text"
-                id="subject"
-                name="subject"
+                id="name"
+                name="name"
                 label={t("form.fields.subject")}
                 placeholder={t("form.fields.subject")}
-                // onChange={(e) => onChange(e.target.id, e.target.value)}
+                onChange={(e) => onChange(e.target.id, e.target.value)}
               />
               <MultiSelect
                 label={t("form.fields.grade_levels")}
                 name="grades"
-                onSelectItem={(items) =>
-                  onChange(
-                    "grades",
-                    items.map((item) => parseInt(item.id)),
-                  )
-                }
+                onSelectItem={(items) => setFormData("grades", items)}
               >
                 {getGradesQuery.data?.data.data.map(
                   (grade: Grades, key: number) => (
@@ -314,7 +512,7 @@ export default function Subjects() {
                         {t("form.fields.grade_levels")}:
                       </span>
                       <div className="flex w-max max-w-48 flex-wrap">
-                        {/* {getSubjectQuery.data?.data.grades.map(
+                        {getSubjectQuery.data?.data.grades.map(
                           (grade: Grades, index: number) => (
                             <Badge
                               key={index}
@@ -324,7 +522,7 @@ export default function Subjects() {
                               {grade.label}
                             </Badge>
                           ),
-                        )} */}
+                        )}
                       </div>
                     </div>
                   </div>
@@ -369,20 +567,15 @@ export default function Subjects() {
                       placeholder={t("form.fields.label")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getSubjectQuery.isFetching && true}
-                      value={data?.name}
+                      value={(formData?.name as string) || ""}
                       onChange={(e) => onChange(e.target.id, e.target.value)}
                     />
 
                     <MultiSelect
                       label={t("form.fields.grade_levels")}
                       name="grades"
-                      onSelectItem={(items) =>
-                        onChange(
-                          "grades",
-                          items.map((item) => parseInt(item.id)),
-                        )
-                      }
-                      externalSelectedItems={data?.grades}
+                      onSelectItem={(items) => setFormData("grades", items)}
+                      externalSelectedItems={formData?.grades as Grades[]}
                     >
                       {getGradesQuery.data?.data.data.map(
                         (grade: Grades, key: number) => (
@@ -392,6 +585,14 @@ export default function Subjects() {
                             id={grade.id}
                             name="grades"
                             value={grade.label}
+                            checked={
+                              (formData?.grades as Grades[])?.find(
+                                (value) =>
+                                  value.id.toString() === grade.id.toString(),
+                              )
+                                ? true
+                                : false
+                            }
                           />
                         ),
                       )}
@@ -562,25 +763,28 @@ export default function Subjects() {
                           <div className="flex w-max max-w-48 flex-wrap">
                             {subject.grades?.map(
                               (grade, key) =>
-                                key < 5 && (
+                                key <= 5 && (
                                   <Badge
+                                    key={key}
                                     theme={customBadge}
                                     color={colors[key % colors.length]}
                                     className="mb-1 me-1 rounded-xs"
                                   >
                                     {/* {t(maintenanceReq.status)} */}
-                                    {grade}
+                                    {grade.label}
                                   </Badge>
                                 ),
                             )}
 
-                            <Badge
-                              theme={customBadge}
-                              color={"gray"}
-                              className="mb-1 me-1 rounded-xs bg-gray-300 dark:bg-gray-500"
-                            >
-                              +{subject.grades?.length - 5}
-                            </Badge>
+                            {subject.grades?.length > 5 && (
+                              <Badge
+                                theme={customBadge}
+                                color={"gray"}
+                                className="mb-1 me-1 rounded-xs bg-gray-300 dark:bg-gray-500"
+                              >
+                                +{subject.grades?.length - 5}
+                              </Badge>
+                            )}
 
                             {/* <Dropdown
                               element={

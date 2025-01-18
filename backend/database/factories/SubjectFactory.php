@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\School;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class SubjectFactory extends Factory
 {
+
     /**
      * Define the model's default state.
      *
@@ -19,6 +21,8 @@ class SubjectFactory extends Factory
         return [
             'name' => null,
             'coef' => fake()->numberBetween(1, 7),
+            'school_id' => 1
+            // School::factory()
         ];
     }
 }

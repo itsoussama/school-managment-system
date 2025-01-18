@@ -5,6 +5,7 @@ import { FormData as UpdateStudentFromData } from "@admin/pages/students/viewStu
 import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParents";
 import { FormData as UpdateResourceFromData } from "@admin/pages/resources/viewResources";
 import { FormData as UpdateClassroomFromData } from "@admin/pages/classrooms/viewClassrooms";
+import { FormData as UpdateSubjectFromData } from "@admin/pages/configuration/school/subjects";
 import { FormData as UpdateSchoolFromData } from "@src/admin/pages/configuration/school/generalSettings";
 import { FormData as UpdateProfileFromData } from "@admin/pages/profile/profile";
 import { FormData as UpdateEventFromData } from "@src/admin/pages/configuration/school/timetable";
@@ -19,6 +20,7 @@ import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStu
 import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
 import { FormData as AddResourceFromData } from "@src/admin/pages/resources/addResources";
 import { FormData as AddClassroomFromData } from "@src/admin/pages/classrooms/addClassroom";
+import { FormData as AddSubjectFromData } from "@admin/pages/configuration/school/subjects";
 import { FormData as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
 import { FormData as AddEventFromData } from "@src/admin/pages/configuration/school/timetable";
 const axiosApi = AxiosProvider();
@@ -247,6 +249,24 @@ const getSubjects = async (
 const getSubject = async (id: number) => {
   const response = await axiosApi.get("/api/subjects/" + id);
   return response;
+};
+
+const addSubject = async (formData: AddSubjectFromData) => {
+  const response = await axiosApi.post("/api/subjects/", formData);
+  return response.data;
+};
+
+const setSubject = async (formData: UpdateSubjectFromData) => {
+  const response = await axiosApi.post(
+    "/api/subjects/" + formData?.id,
+    formData,
+  );
+  return response.data;
+};
+
+const deleteSubject = async (id: number) => {
+  const response = await axiosApi.delete("/api/subjects/" + id);
+  return response.data;
 };
 
 const getGrades = async () => {
@@ -584,6 +604,9 @@ export {
   exportUser,
   getSubjects,
   getSubject,
+  addSubject,
+  setSubject,
+  deleteSubject,
   getGrades,
   getResources,
   getResource,
