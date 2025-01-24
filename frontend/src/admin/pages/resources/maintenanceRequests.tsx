@@ -1577,7 +1577,7 @@ export default function MaintenanceRequests() {
                               element={
                                 <BsThreeDotsVertical className="cursor-pointer" />
                               }
-                              width="max-content"
+                              width="auto"
                               additionalStyle={{
                                 dropdownStyle: "px-2 rounded-xs",
                               }}

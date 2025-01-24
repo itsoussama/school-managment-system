@@ -20,6 +20,7 @@ class Group extends Model
     {
         return $this->belongsTo(Grade::class);
     }
+
     public function school()
     {
         return $this->belongsTo(School::class);

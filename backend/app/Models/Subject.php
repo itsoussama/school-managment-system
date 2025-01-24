@@ -17,15 +17,15 @@ class Subject extends Model
     ];
 
     use HasFactory;
-    public function users(): BelongsToMany
+    public function teachers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_id', 'id');
+        return $this->belongsToMany(User::class, 'subject_user');
     }
 
-    public function teachers()
-    {
-        return $this->belongsToMany(Teacher::class, 'teacher_subject');
-    }
+    // public function teachers()
+    // {
+    //     return $this->belongsToMany(Teacher::class, 'teacher_subject');
+    // }
 
     public function grades(): BelongsToMany
     {

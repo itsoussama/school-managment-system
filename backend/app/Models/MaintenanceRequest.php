@@ -11,7 +11,7 @@ class MaintenanceRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'status', 'priority','school_id', 'resource_id', 'resolved_date', 'file_path', 'created_at', 'updated_at'];
+    protected $fillable = ['title', 'description', 'status', 'priority', 'school_id', 'resource_id', 'resolved_date', 'file_path', 'created_at', 'updated_at'];
 
     const STATUS_PENDING = 'pending';
     const STATUS_IN_PROGRESS = 'in_progress';
@@ -37,15 +37,15 @@ class MaintenanceRequest extends Model
             self::PERIORITY_HIGH,
         ];
     }
-    public function users() : BelongsToMany
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }
-    public function schools() : BelongsTo
+    public function school(): BelongsTo
     {
         return $this->BelongsTo(School::class, 'school_id', 'id');
     }
-    public function resources() : BelongsTo
+    public function resources(): BelongsTo
     {
         return $this->BelongsTo(Resource::class, 'resource_id', 'id');
     }

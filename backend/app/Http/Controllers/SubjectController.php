@@ -19,7 +19,7 @@ class SubjectController extends Controller
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
         $schoolID = $request->input('school_id');
-        $subjects = Subject::with('grades')->where("school_id", $schoolID)->orderBy($sortColumn, $sortDirection);
+        $subjects = Subject::with(['grades', 'teachers'])->where("school_id", $schoolID)->orderBy($sortColumn, $sortDirection);
 
         if ($perPage == -1) {
             return response()->json($subjects->get(), Response::HTTP_OK);
@@ -39,12 +39,17 @@ class SubjectController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'coef' => 'required|numeric|min:0',
+            'teachers' => 'nullable|array',
+            'teachers.*' => 'exists:users,id',
+            'grades' => 'nullable|array',
+            'grades.*' => 'exists:grades,id',
             'school_id' => 'required|exists:schools,id',
         ]);
 
 
         $subject = Subject::create($request->all());
         $subject->grades()->sync($request->input('grades'));
+        $subject->teachers()->sync($request->input('teachers'));
 
         return response()->json($subject, Response::HTTP_CREATED);
     }
@@ -57,7 +62,7 @@ class SubjectController extends Controller
      */
     public function show(Subject $subject)
     {
-        return response()->json($subject->load(['grades']));
+        return response()->json($subject->load(['grades', 'teachers']));
     }
 
     /**
@@ -72,13 +77,18 @@ class SubjectController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'coef' => 'required|numeric|min:0',
+            'teachers' => 'nullable|array',
+            'teachers.*' => 'exists:users,id',
+            'grades' => 'nullable|array',
+            'grades.*' => 'exists:grades,id',
             'school_id' => 'required|exists:schools,id',
         ]);
 
         $subject->grades()->sync($request->input('grades'));
+        $subject->teachers()->sync($request->input('teachers'));
         $subject->update($request->all());
 
-        return response()->json($subject->load(['grades']));
+        return response()->json($subject->load(['grades', 'teachers']));
     }
 
     /**

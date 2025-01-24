@@ -71,7 +71,7 @@ interface Modal {
   open: boolean;
 }
 
-interface Teacher {
+export interface Teacher {
   id: number;
   name: string;
   email: string;

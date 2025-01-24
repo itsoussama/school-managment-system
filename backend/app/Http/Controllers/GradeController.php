@@ -18,7 +18,7 @@ class GradeController extends Controller
         $perPage = $request->input('per_page', 5);
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $grades = Grade::orderBy($sortColumn, $sortDirection)->paginate($perPage);
+        $grades = Grade::with(['groups', 'stage'])->orderBy($sortColumn, $sortDirection)->paginate($perPage);
         return response()->json($grades);
     }
 
@@ -46,7 +46,7 @@ class GradeController extends Controller
      */
     public function show(Grade $grade)
     {
-        return response()->json($grade);
+        return response()->json($grade->load(['groups', 'stage']));
     }
 
     /**

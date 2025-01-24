@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\School;
+use App\Models\Stage;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,6 +20,7 @@ class GradeFactory extends Factory
     {
         return [
             'label' => fake()->word(),
+            'stage_id' => Stage::inRandomOrder()->first()->id,
             'school_id' => 1
             // School::factory()
         ];

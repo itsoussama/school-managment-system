@@ -25,7 +25,7 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { IoFilter } from "react-icons/io5";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   keepPreviousData,
@@ -217,6 +217,7 @@ export function ViewStudents() {
   const { t } = useTranslation();
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   const minSm = useBreakpoint("min", "sm");
+  const navigate = useNavigate();
   const location = useLocation();
 
   // const userId = useRef<string>(null)
@@ -727,6 +728,18 @@ export function ViewStudents() {
   }, [location]);
 
   useEffect(() => {
+    const childState = location.state?.child?.id;
+    if (childState) {
+      setOpenModal({
+        id: childState,
+        type: "view",
+        open: true,
+      });
+      window.history.replaceState({}, "");
+    }
+  }, [location]);
+
+  useEffect(() => {
     const checkedVal = checks.filter((val) => val.status === true)
       .length as number;
     setNumChecked(checkedVal);
@@ -893,7 +906,18 @@ export function ViewStudents() {
                         {t("form.fields.parent_guardian")}:
                       </span>
                       {getStudentQuery.data?.data.guardian ? (
-                        <div className="mt-2 flex items-center gap-x-2">
+                        <div
+                          className="mt-2 flex w-max cursor-pointer items-center gap-x-2 rounded-s py-2 pl-2 pr-4 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          onClick={() =>
+                            navigate("/parents/manage", {
+                              state: {
+                                parent: {
+                                  id: getStudentQuery.data?.data.guardian.id,
+                                },
+                              },
+                            })
+                          }
+                        >
                           <img
                             className="w-7 rounded-full"
                             src={
@@ -1527,7 +1551,18 @@ export function ViewStudents() {
                         <Table.Cell>{/* {student.date_birth} */}-</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                           {student.guardian ? (
-                            <div className="flex items-center gap-x-2">
+                            <div
+                              className="flex w-max cursor-pointer items-center gap-x-2 rounded-s py-2 pl-2 pr-4 hover:bg-gray-100 dark:hover:bg-gray-600"
+                              onClick={() =>
+                                navigate("/parents/manage", {
+                                  state: {
+                                    parent: {
+                                      id: student.guardian.id,
+                                    },
+                                  },
+                                })
+                              }
+                            >
                               <img
                                 className="w-8 rounded-full"
                                 src={

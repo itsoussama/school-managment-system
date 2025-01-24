@@ -1,7 +1,6 @@
-import { Input, RSelect } from "@src/components/input";
+import { Button, Input, RSelect } from "@src/components/input";
 
 import {
-  Badge,
   Breadcrumb,
   Checkbox,
   Modal,
@@ -31,7 +30,7 @@ import {
   FaTrash,
   FaUser,
 } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   keepPreviousData,
@@ -85,6 +84,12 @@ interface ChildModal {
   open: boolean;
 }
 
+interface Childrens {
+  id: string;
+  imagePath: string;
+  name: string;
+}
+
 interface Parent {
   id: number;
   imagePath: string;
@@ -99,13 +104,7 @@ interface Parent {
       name: string;
     },
   ];
-  childrens: [
-    {
-      id: string;
-      imagePath: string;
-      name: string;
-    },
-  ];
+  childrens: Childrens[];
 }
 
 export interface FormData {
@@ -194,6 +193,7 @@ export function ViewParents() {
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
   const minSm = useBreakpoint("min", "sm");
+  const navigate = useNavigate();
 
   const getAllParentsQuery = useQuery({
     queryKey: ["getAllParents", filter?.name, filter?.childName],
@@ -656,6 +656,18 @@ export function ViewParents() {
     }
   }, [getParentsQuery.data, getParentsQuery.isFetched]);
 
+  useEffect(() => {
+    const parentState = location.state?.parent?.id;
+    if (parentState) {
+      setOpenModal({
+        id: parentState,
+        type: "view",
+        open: true,
+      });
+      window.history.replaceState({}, "");
+    }
+  }, [location]);
+
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);
   }, []);
@@ -805,32 +817,105 @@ export function ViewParents() {
                   <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
                     {t("form.fields.childrens")}:
                   </span>
-                  <div className="flex w-max max-w-52 flex-wrap">
-                    {getParentQuery.data?.data.childrens.length > 0 ? (
-                      (getParentQuery.data?.data as Parent).childrens?.map(
-                        (child, key) => (
-                          <Badge
+                  <Dropdown
+                    triggerEvent="hover"
+                    additionalStyle={{
+                      containerStyle: "!w-auto",
+                      dropdownStyle: "z-50",
+                    }}
+                    width="auto"
+                    element={
+                      <div className="flex items-center gap-x-2">
+                        {getParentQuery.data?.data.childrens.length > 2 ? (
+                          <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
+                            {getParentQuery.data?.data.childrens?.map(
+                              (children: Childrens, key: number) =>
+                                key < 2 && (
+                                  <img
+                                    key={key}
+                                    className="h-10 w-10 rounded-full border-2 border-gray-50 dark:border-gray-700"
+                                    src={
+                                      children?.imagePath
+                                        ? SERVER_STORAGE + children?.imagePath
+                                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(children?.name).firstName}+${getUserName(children?.name).lastName}`
+                                    }
+                                    alt="profile"
+                                  />
+                                ),
+                            )}
+                            <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 border-gray-50 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 dark:border-gray-700 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500">
+                              {`+${getParentQuery.data?.data.childrens.length - 2}`}
+                            </div>
+                          </div>
+                        ) : getParentQuery.data?.data.childrens.length > 1 ? (
+                          <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
+                            {getParentQuery.data?.data.childrens?.map(
+                              (children: Childrens, key: number) =>
+                                key < 2 && (
+                                  <img
+                                    key={key}
+                                    className="h-10 w-10 rounded-full border-2 border-gray-50 dark:border-gray-700"
+                                    src={
+                                      children?.imagePath
+                                        ? SERVER_STORAGE + children?.imagePath
+                                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(children?.name).firstName}+${getUserName(children?.name).lastName}`
+                                    }
+                                    alt="profile"
+                                  />
+                                ),
+                            )}
+                          </div>
+                        ) : (
+                          getParentQuery.data?.data.childrens?.length == 1 && (
+                            <>
+                              <img
+                                className="h-10 w-10 rounded-full border-2 border-gray-50 dark:border-gray-700"
+                                src={
+                                  getParentQuery.data?.data.childrens[0]
+                                    ?.imagePath
+                                    ? SERVER_STORAGE +
+                                      getParentQuery.data?.data.childrens[0]
+                                        ?.imagePath
+                                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.data.childrens[0]?.name).firstName}+${getUserName(getParentQuery.data?.data.childrens[0]?.name).lastName}`
+                                }
+                                alt="profile"
+                              />
+                              <span className="pointer-events-none text-black dark:text-white">
+                                {getParentQuery.data?.data.childrens[0]?.name}
+                              </span>
+                            </>
+                          )
+                        )}
+                      </div>
+                    }
+                  >
+                    <Dropdown.List>
+                      {getParentQuery.data?.data.childrens.map(
+                        (children: Childrens, key: number) => (
+                          <Dropdown.Item
                             key={key}
-                            color="dark"
-                            className="mb-1 me-1 whitespace-nowrap rounded-xs"
+                            img={
+                              children.imagePath
+                                ? SERVER_STORAGE + children.imagePath
+                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(children.name).firstName}+${getUserName(children.name).lastName}`
+                            }
+                            onClick={() =>
+                              navigate("/students/manage", {
+                                state: {
+                                  child: {
+                                    id: children.id,
+                                  },
+                                },
+                              })
+                            }
                           >
-                            <img
-                              key={key}
-                              className="me-2 inline-block h-5 w-5 rounded-full"
-                              src={
-                                child?.imagePath
-                                  ? SERVER_STORAGE + child?.imagePath
-                                  : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
-                              }
-                              alt="profile"
-                            />
-                            {child.name}
-                          </Badge>
+                            {children.name}
+                          </Dropdown.Item>
                         ),
-                      )
-                    ) : (
-                      <div
-                        className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
+                      )}
+                    </Dropdown.List>
+                    <Dropdown.Button>
+                      <p
                         onClick={() =>
                           setOpenChildModal({
                             id: getParentQuery.data?.data.id,
@@ -839,11 +924,37 @@ export function ViewParents() {
                           })
                         }
                       >
-                        <FaUser className="me-2" />
-                        {t("general.add_new_child")}
-                      </div>
-                    )}
-                  </div>
+                        {t("actions.add_entity", {
+                          entity: t("general.child"),
+                        })}
+                      </p>
+                    </Dropdown.Button>
+                  </Dropdown>
+                  {getParentQuery.data?.data.childrens?.length < 1 && (
+                    <div
+                      className="flex cursor-pointer items-center text-sm font-medium text-[var(--brand-color-600)] hover:underline dark:text-[var(--brand-color-500)]"
+                      style={
+                        {
+                          "--brand-color-500":
+                            colorPalette[brandState as BrandColor][500],
+                          "--brand-color-600":
+                            colorPalette[brandState as BrandColor][600],
+                        } as CSSProperties
+                      }
+                      onClick={() =>
+                        setOpenChildModal({
+                          id: getParentQuery.data?.data.id,
+                          school_id: getParentQuery.data?.data.school_id,
+                          open: true,
+                        })
+                      }
+                    >
+                      <FaUser className="me-2" />
+                      {t("actions.add_entity", {
+                        entity: t("general.child"),
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -885,14 +996,14 @@ export function ViewParents() {
                   }
                   className="h-40 w-40"
                 />
-                <button className="btn-gray relative overflow-hidden">
+                <Button className="btn-gray relative overflow-hidden">
                   <input
                     type="file"
                     className="absolute left-0 top-0 cursor-pointer opacity-0"
                     onChange={handleImageUpload}
                   />
                   {t("form.buttons.upload", { label: t("general.photo") })}
-                </button>
+                </Button>
                 <div className="flex flex-col">
                   <span className="text-xs text-gray-700 dark:text-gray-500">
                     {t("form.general.accepted_format")}:{" "}
@@ -1020,7 +1131,7 @@ export function ViewParents() {
                       </>
                     ) : (
                       <>
-                        <button
+                        <Button
                           onClick={() => handleChangePassword(true)}
                           className="btn-default !w-auto"
                         >
@@ -1030,7 +1141,7 @@ export function ViewParents() {
                               " " +
                               t("form.fields.password"),
                           })}
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
@@ -1039,12 +1150,12 @@ export function ViewParents() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-default !w-auto">
+            <Button type="submit" className="btn-default !w-auto">
               {t("general.accept")}
-            </button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
+            </Button>
+            <Button className="btn-danger !w-auto" onClick={onCloseModal}>
               {t("general.decline")}
-            </button>
+            </Button>
           </Modal.Footer>
         </form>
       </Modal>
@@ -1095,12 +1206,12 @@ export function ViewParents() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
+            <Button type="submit" className="btn-danger !w-auto">
               {t("modals.delete.delete_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+            </Button>
+            <Button className="btn-outline !w-auto" onClick={onCloseModal}>
               {t("modals.delete.cancel_button")}
-            </button>
+            </Button>
           </Modal.Footer>
         </form>
       </Modal>
@@ -1153,14 +1264,14 @@ export function ViewParents() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
+            <Button type="submit" className="btn-danger !w-auto">
               {getParentQuery.data?.data.blocked == 0
                 ? t("modals.block.block_button")
                 : t("modals.block.unblock_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+            </Button>
+            <Button className="btn-outline !w-auto" onClick={onCloseModal}>
               {t("modals.block.cancel_button")}
-            </button>
+            </Button>
           </Modal.Footer>
         </form>
       </Modal>
@@ -1185,11 +1296,11 @@ export function ViewParents() {
               <div className="flex items-center gap-x-4">
                 {/* <CheckboxDropdown /> */}
 
-                <button className="btn-danger !m-0 flex w-max items-center">
+                <Button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
                   {t("actions.delete_entity")}
                   <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -1363,14 +1474,11 @@ export function ViewParents() {
                           {parent.id}
                         </Table.Cell>
                         <Table.Cell>{parent.name}</Table.Cell>
-                        <Table.Cell
-                          className="font-medium text-gray-900 dark:text-gray-300"
-                          // onMouseOver={(e) => setDropDownPos(e.currentTarget)}
-                          // data-id={key}
-                        >
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                           <Dropdown
                             triggerEvent="hover"
                             additionalStyle={{ containerStyle: "!w-auto" }}
+                            width="auto"
                             element={
                               <div className="flex items-center gap-x-2">
                                 {parent.childrens.length > 2 ? (
@@ -1448,6 +1556,15 @@ export function ViewParents() {
                                       ? SERVER_STORAGE + child.imagePath
                                       : `https://ui-avatars.com/api/?background=random&name=${getUserName(child.name).firstName}+${getUserName(child.name).lastName}`
                                   }
+                                  onClick={() =>
+                                    navigate("/students/manage", {
+                                      state: {
+                                        child: {
+                                          id: child.id,
+                                        },
+                                      },
+                                    })
+                                  }
                                 >
                                   {child.name}
                                 </Dropdown.Item>
@@ -1455,14 +1572,13 @@ export function ViewParents() {
                             </Dropdown.List>
                             <Dropdown.Button>
                               <p
-                                onClick={() => (
-                                  console.log("click"),
+                                onClick={() =>
                                   setOpenChildModal({
                                     id: parent.id,
                                     school_id: parent.school_id,
                                     open: true,
                                   })
-                                )}
+                                }
                               >
                                 {t("general.add_new_child")}
                               </p>

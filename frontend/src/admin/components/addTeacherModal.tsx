@@ -1,0 +1,553 @@
+import { Button, Checkbox, Input } from "@components/input";
+import {
+  addParent,
+  addTeacher,
+  assignParent,
+  assignSubjetTeacher,
+  getParents,
+  getTeachers,
+} from "@api";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  FaImage,
+  FaLock,
+  FaSearch,
+  FaUserPlus,
+  FaUserTag,
+} from "react-icons/fa";
+import { Card, Modal } from "flowbite-react";
+import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
+import Alert from "@components/alert";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { useFormValidation } from "@src/hooks/useFormValidation";
+// import { FormData as AddParentFromData } from "@src/admin/pages/teachers/addParent";
+
+interface AddParentModal {
+  open: boolean;
+  toggleOpen: (isOpen: boolean) => void;
+  school_id: string;
+  child_id: number;
+}
+
+export interface FormData {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  school_id: string;
+  roles: number[];
+  image: File;
+}
+
+interface File {
+  lastModified: number;
+  name: string;
+  size: number;
+  type: string;
+}
+
+interface Teacher {
+  id: string;
+  imagePath: string;
+  name: string;
+}
+
+type Options = "new" | "exist";
+
+const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
+
+export default function AddTeacherModal({
+  open,
+  toggleOpen,
+  school_id,
+  subject_id,
+}: AddParentModal) {
+  const queryClient = useQueryClient();
+
+  const { t } = useTranslation();
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
+
+  const [img, setImg] = useState<FileList>();
+  const [openModal, setOpenModal] = useState<boolean>(open);
+  const [option, setOption] = useState<Options>();
+  const [previewImg, setPreviewImg] = useState<string>();
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [selectedParent, setSelectedParent] = useState<number | null>(null);
+  const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
+  const admin = useAppSelector((state) => state.userSlice.user);
+
+  const getTeachersQuery = useQuery({
+    queryKey: ["getAllTeachers"],
+    queryFn: () => getTeachers(1, -1, undefined, undefined, admin.school_id),
+    placeholderData: keepPreviousData,
+  });
+
+  const addTeacherQuery = useMutation({
+    mutationFn: addTeacher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getSubjects"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["getSubject"],
+      });
+
+      setOpenModal(false);
+      toggleOpen(false);
+
+      setPreviewImg(undefined);
+
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const assignTeacherQuery = useMutation({
+    mutationFn: assignSubjetTeacher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getSubject"],
+      });
+
+      setOpenModal(false);
+      toggleOpen(false);
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const handleSearch = (e: EventTarget) => {
+    setSearchValue((e as HTMLInputElement).value);
+    // console.log();
+  };
+
+  const onCloseModal = () => {
+    addParentQuery.reset();
+    setOpenModal(false);
+    toggleOpen(false);
+    setOption(undefined);
+  };
+
+  const getSelectedParent = (event: ChangeEvent<HTMLInputElement>) => {
+    const parentId: number = parseInt(event.target?.id);
+    if (event.target.checked) {
+      setSelectedParent(parentId);
+    } else {
+      setSelectedParent(null);
+    }
+  };
+
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
+  };
+
+  const onSubmitNewParent = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const validationResult = validateForm();
+    if (validationResult.isValid) {
+      try {
+        const form: AddParentFromData = {
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          school_id: school_id,
+          password: formData?.password as string,
+          password_confirmation: formData?.password_confirmation as string,
+          phone: formData?.phone as string,
+          childrens: [child_id],
+          roles: [4],
+        };
+
+        if (img) {
+          form["image"] = img[0];
+        }
+
+        addParentQuery.mutate(form);
+      } catch (e) {
+        toggleAlert({
+          id: new Date().getTime(),
+          status: "fail",
+          message: "Operation Failed",
+          state: true,
+        });
+      }
+    }
+  };
+
+  const onSubmitExistingParent = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    assignParentQuery.mutate({
+      child_id: child_id,
+      parent: selectedParent as number,
+    });
+  };
+
+  const readAndPreview = (file: FileList) => {
+    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
+      const fileReader = new FileReader();
+      fileReader.addEventListener("load", (event) => {
+        setPreviewImg(event.target?.result as string);
+      });
+      fileReader.readAsDataURL(file[0]);
+    }
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const file = event.target.files;
+
+      setImg(file);
+      readAndPreview(file as FileList);
+    }
+  };
+
+  useEffect(() => {
+    setOpenModal(open);
+  }, [open]);
+
+  return (
+    <>
+      <Alert
+        id={alert.id}
+        status={alert.status}
+        state={alert.state}
+        message={alert.message}
+        close={(value) => toggleAlert(value)}
+      />
+
+      <Modal
+        show={openModal}
+        size={option ? "4xl" : "xl"}
+        theme={{
+          content: {
+            base: "relative h-full w-full p-4 md:h-auto",
+            inner:
+              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+          },
+          body: {
+            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
+            popup: "pt-0",
+          },
+        }}
+        onClose={onCloseModal}
+      >
+        <Modal.Header>
+          {t("actions.add_entity", { entity: t("entities.teacher") })}
+        </Modal.Header>
+        {option === "new" ? (
+          <form onSubmit={onSubmitNewParent}>
+            <Modal.Body>
+              <div className="flex flex-col gap-8 sm:flex-row">
+                <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+                  {previewImg ? (
+                    <img
+                      className="h-44 w-44 rounded-full object-cover"
+                      src={previewImg}
+                      alt="profile"
+                    />
+                  ) : (
+                    <div
+                      className={`flex h-44 w-44 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700`}
+                    >
+                      <FaImage className="h-10 w-10 text-gray-200 dark:text-gray-600" />
+                    </div>
+                  )}
+                  <button className="btn-gray relative overflow-hidden">
+                    <input
+                      type="file"
+                      className="absolute left-0 top-0 cursor-pointer opacity-0"
+                      onChange={handleImageUpload}
+                    />
+                    {t("form.buttons.upload", { label: t("general.photo") })}
+                  </button>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-700 dark:text-gray-500">
+                      {t("form.general.accepted_format")}:{" "}
+                      <span className="text-gray-500 dark:text-gray-400">
+                        jpg, jpeg, png
+                      </span>
+                    </span>
+                    <span className="text-xs text-gray-700 dark:text-gray-500">
+                      {t("form.general.maximum_size")}:{" "}
+                      <span className="text-gray-500 dark:text-gray-400">
+                        1024 mb
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
+                  <div className="w-full space-y-3">
+                    <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
+                      {t("information.personal_information")}
+                    </h1>
+                    <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                      <Input
+                        type="text"
+                        id="firstName"
+                        name="firstName"
+                        label={t("form.fields.first_name")}
+                        placeholder={t("form.placeholders.first_name")}
+                        onChange={(e) =>
+                          setFormData(e.target.id, e.target.value)
+                        }
+                      />
+
+                      <Input
+                        type="text"
+                        id="lastName"
+                        name="lastName"
+                        label={t("form.fields.last_name")}
+                        placeholder={t("form.placeholders.last_name")}
+                        onChange={(e) =>
+                          setFormData(e.target.id, e.target.value)
+                        }
+                      />
+
+                      <Input
+                        type="text"
+                        id="address"
+                        name="address"
+                        label={t("form.fields.address")}
+                        placeholder={t("form.placeholders.address")}
+                        onChange={(e) =>
+                          setFormData(e.target.id, e.target.value)
+                        }
+                        custom-style={{ containerStyle: "col-span-full" }}
+                      />
+
+                      <Input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        label={t("form.fields.phone_number")}
+                        placeholder="06 00 00 00"
+                        pattern="(06|05)[0-9]{2}[0-9]{4}"
+                        onChange={(e) =>
+                          setFormData(e.target.id, e.target.value)
+                        }
+                      />
+
+                      <Input
+                        type="email"
+                        id="email"
+                        name="email"
+                        label={t("form.fields.email")}
+                        placeholder="Johndoe@example.com"
+                        onChange={(e) =>
+                          setFormData(e.target.id, e.target.value)
+                        }
+                        onBlur={() => validateForm()}
+                        error={errors?.email}
+                      />
+
+                      <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-600"></div>
+
+                      <Input
+                        type="password"
+                        id="password"
+                        name="password"
+                        label={t("form.fields.password")}
+                        placeholder="●●●●●●●"
+                        leftIcon={FaLock}
+                        rightIcon={(isPasswordVisible) =>
+                          isPasswordVisible ? FaEyeSlash : FaEye
+                        }
+                        onChange={(e) =>
+                          setFormData(e.target.id, e.target.value)
+                        }
+                        onBlur={() => validateForm()}
+                        error={errors?.password}
+                      />
+
+                      <Input
+                        type="password"
+                        id="password_confirmation"
+                        name="password_confirmation"
+                        label={t("form.fields.confirm_password")}
+                        placeholder="●●●●●●●"
+                        leftIcon={FaLock}
+                        rightIcon={(isPasswordVisible) =>
+                          isPasswordVisible ? FaEyeSlash : FaEye
+                        }
+                        onChange={(e) =>
+                          setFormData(e.target.id, e.target.value)
+                        }
+                        onBlur={() => validateForm()}
+                        error={errors?.password_confirmation}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button type="submit" className="btn-default !w-auto">
+                {t("general.accept")}
+              </Button>
+              <button
+                type="button"
+                className="btn-danger !w-auto"
+                onClick={onCloseModal}
+              >
+                {t("general.decline")}
+              </button>
+            </Modal.Footer>
+          </form>
+        ) : option === "exist" ? (
+          <form onSubmit={onSubmitExistingParent}>
+            <div className="flex max-h-[70vh] flex-col p-2">
+              <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
+                <Input
+                  id="search"
+                  type="text"
+                  leftIcon={FaSearch}
+                  label=""
+                  onKeyUp={(e) => handleSearch(e.target)}
+                  placeholder={t("general.all")}
+                  name="search"
+                  custom-style={{
+                    inputStyle: "px-8 !py-1",
+                    labelStyle: "mb-0 !inline",
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-y-3 overflow-y-auto">
+                {getTeachersQuery.data?.data.map(
+                  (teacher: Teacher, key: number) =>
+                    teacher.name.search(new RegExp(searchValue, "i")) !==
+                      -1 && (
+                      <div key={key}>
+                        <Checkbox
+                          htmlFor={teacher.name}
+                          label={teacher.name}
+                          id={teacher.id}
+                          name="childrens"
+                          image={
+                            <img
+                              className="h-7 w-7 rounded-full"
+                              src={
+                                teacher?.imagePath
+                                  ? SERVER_STORAGE + teacher?.imagePath
+                                  : `https://ui-avatars.com/api/?background=random&name=${getUserName(teacher?.name).firstName}+${getUserName(teacher?.name).lastName}`
+                              }
+                              alt="profile"
+                            />
+                          }
+                          onChange={getSelectedParent}
+                          disabled={
+                            selectedParent &&
+                            selectedParent != parseInt(teacher.id)
+                              ? true
+                              : false
+                          }
+                          custom-style={{
+                            containerStyle: `${selectedParent && selectedParent != parseInt(teacher.id) ? "disable" : ""}`,
+                          }}
+                          value={teacher.name}
+                        />
+                      </div>
+                    ),
+                )}
+              </div>
+            </div>
+            <Modal.Footer>
+              <Button type="submit" className="btn-default !w-auto">
+                {t("general.accept")}
+              </Button>
+              <button className="btn-danger !w-auto" onClick={onCloseModal}>
+                {t("general.decline")}
+              </button>
+            </Modal.Footer>
+          </form>
+        ) : (
+          <div className="flex items-center justify-center gap-3 py-9">
+            <Card
+              onClick={() => setOption("new")}
+              theme={{
+                root: {
+                  base: "flex rounded-s cursor-pointer border-2 border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700",
+                  children:
+                    "flex h-full w-56  flex-col items-center justify-center gap-4 p-12",
+                },
+              }}
+              className="font-normal text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
+            >
+              <FaUserPlus size={48} />
+              <p>
+                {t("actions.new_entity", {
+                  entity:
+                    t("determiners.indefinite.masculine") +
+                    " " +
+                    t("entities.teacher"),
+                })}
+              </p>
+            </Card>
+            <Card
+              onClick={() => setOption("exist")}
+              theme={{
+                root: {
+                  base: "flex rounded-s cursor-pointer border-2 border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700",
+                  children:
+                    "flex h-full w-56 flex-col items-center justify-center gap-4 p-12",
+                },
+              }}
+              className="font-normal text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
+            >
+              <FaUserTag size={48} />
+              <p>
+                {t("actions.existing_entity", {
+                  entity: t("entities.teacher"),
+                })}
+              </p>
+            </Card>
+          </div>
+        )}
+      </Modal>
+    </>
+  );
+}

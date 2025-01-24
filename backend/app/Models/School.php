@@ -42,4 +42,8 @@ class School extends Model
     {
         return $this->hasMany(Group::class);
     }
+    public function stages(): HasMany
+    {
+        return $this->hasMany(Stage::class);
+    }
 }

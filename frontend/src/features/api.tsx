@@ -264,6 +264,14 @@ const setSubject = async (formData: UpdateSubjectFromData) => {
   return response.data;
 };
 
+const assignSubjetTeacher = async (formData: {
+  teacher_id: number;
+  subject: number[];
+}) => {
+  const response = await axiosApi.post("/api/assign-teacher-subject", formData);
+  return response;
+};
+
 const deleteSubject = async (id: number) => {
   const response = await axiosApi.delete("/api/subjects/" + id);
   return response.data;
@@ -606,6 +614,7 @@ export {
   getSubject,
   addSubject,
   setSubject,
+  assignSubjetTeacher,
   deleteSubject,
   getGrades,
   getResources,

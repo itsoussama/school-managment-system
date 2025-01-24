@@ -1,9 +1,10 @@
 import { hoverContext } from "@src/features/context/hoverContext";
 import useBreakpoint from "@hooks/useBreakpoint";
-import React, { CSSProperties, useContext, useEffect } from "react";
+import React, { Children, CSSProperties, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
+// import { matchPath } from "react-router";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 
@@ -15,6 +16,7 @@ interface SubMenuVisible {
 interface Item {
   itemId: string;
   itemName: string;
+  path?: string;
   icon?: React.ReactElement;
   isActive?: boolean;
   childActive?: string;
@@ -34,24 +36,42 @@ export default function Items({
   children,
   subMenuVisible = { ref: "", state: false },
   onToggleSubMenu = (param) => param,
+  path,
   containerClass,
 }: Item) {
   const min2xl = useBreakpoint("min", "2xl");
-  const max2xl = useBreakpoint("max", "2xl");
+  // const max2xl = useBreakpoint("max", "2xl");
   const minSm = useBreakpoint("min", "sm");
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-
   const { isOnHover } = useContext(hoverContext);
   const location = useLocation();
+  const matchPath =
+    !subMenuVisible.state && path
+      ? location.pathname.match(path)
+        ? true
+        : false
+      : false;
+
+  // const hasActiveChild = Children.toArray(children).some((child) => {
+  //   if (React.isValidElement(child)) {
+  //     const isChildActive = child.props.children?.props.isActive;
+  //     return isChildActive;
+  //   }
+  //   return false;
+  // });
 
   // const className = customStyle?.className;
+
+  // useEffect(() => {
+  //   console.log(hasActiveChild);
+  // }, [hasActiveChild]);
 
   return (
     <div className="w-full">
       {/* {location.state} */}
       <div
         id={itemId}
-        className={`relative flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${subMenuVisible.state && subMenuVisible.ref === itemId && `${isOnHover || max2xl || min2xl || !minSm ? "bg-gray-100 dark:bg-gray-700" : location.state?.active && "after:max-2xl:absolute after:max-2xl:right-0 after:max-2xl:top-0 after:max-2xl:h-full after:max-2xl:w-1 after:max-2xl:translate-x-3 after:max-2xl:rounded-xs after:max-2xl:bg-[var(--brand-color-600)]"}`} ${isActive ? (isOnHover || min2xl || !minSm ? "bg-[var(--brand-color-600)]" : "after:sm:absolute after:sm:right-0 after:sm:top-0 after:sm:h-full after:sm:w-1 after:sm:translate-x-3 after:sm:rounded-xs after:sm:bg-[var(--brand-color-600)]") : ""} ${containerClass}`}
+        className={`relative flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${(subMenuVisible.state && subMenuVisible.ref === itemId) || (matchPath ) ? "bg-gray-200 dark:bg-gray-600" : ""} ${isActive && Children.count(children) <= 0 ? (isOnHover || min2xl || !minSm ? "bg-[var(--brand-color-600)]" : "after:sm:absolute after:sm:right-0 after:sm:top-0 after:sm:h-full after:sm:w-1 after:sm:translate-x-3 after:sm:rounded-xs after:sm:bg-[var(--brand-color-600)]") : ""} ${containerClass}`}
         style={
           {
             "--brand-color-600": colorPalette[brandState as BrandColor][600],

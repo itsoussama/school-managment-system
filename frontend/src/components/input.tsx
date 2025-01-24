@@ -532,7 +532,7 @@ interface MultiSelectProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export interface SelectedData {
   id: string;
-  label: string;
+  [key: string]: string;
 }
 
 function MultiSelect({
