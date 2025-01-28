@@ -3,7 +3,7 @@ import { TransitionAnimation } from "@src/components/animation";
 import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb, Modal } from "flowbite-react";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -14,7 +14,13 @@ import { Button, Input } from "@src/components/input";
 import UserListModal from "@src/components/userListModal";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { getStudents, getTeachers } from "@src/features/api";
+import {
+  getStage,
+  getStages,
+  getStudents,
+  getTeachers,
+} from "@src/features/api";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface Modal {
   id: number;
@@ -22,29 +28,35 @@ interface Modal {
   open: boolean;
 }
 
-interface Section {
+export interface FormData {
+  _method?: string;
+  id: number;
+  name: string;
+  school_id: string;
+}
+
+interface Grade {
   id: number;
   label: string;
 }
 
-interface Grade extends Section {
-  section_id: number;
+interface Section {
+  id: number;
+  name: string;
+  grades: Grade[];
 }
+
+// interface Grade extends Section {
+//   section_id: number;
+// }
 
 export default function SchoolLevels() {
   const { t } = useTranslation();
+  const { formData, setData } = useFormValidation<Section[]>([]);
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [sections, setSections] = useState<Array<Section>>([
-    { id: 1, label: "Section" },
-    { id: 2, label: "Section" },
-  ]);
-
-  const [gradeLevels, setGradeLevels] = useState<Array<Grade>>([
-    { id: 1, label: "Grade", section_id: 1 },
-    { id: 2, label: "Grade", section_id: 1 },
-  ]);
+  const [newLevel, setNewLevel] = useState<string>("");
   const admin = useAppSelector((state) => state.userSlice.user);
   const [selectedUser, setSelectedUser] = useState<{
     teachers: number[];
@@ -59,6 +71,17 @@ export default function SchoolLevels() {
   }>({
     students: false,
     teachers: false,
+  });
+
+  const getStagesQuery = useQuery({
+    queryKey: ["getStages"],
+    queryFn: () => getStages(admin.school_id),
+    placeholderData: keepPreviousData,
+  });
+
+  const getStageQuery = useQuery({
+    queryKey: ["getStage"],
+    queryFn: () => getStage,
   });
 
   const getAllTeachersQuery = useQuery({
@@ -124,28 +147,14 @@ export default function SchoolLevels() {
   };
 
   const onCloseModal = () => {
-    // parentMutation.reset();
     setOpenModal(undefined);
-
-    // setData({
-    //   id: 0,
-    //   firstName: "",
-    //   lastName: "",
-    //   email: "",
-    //   phone: "",
-    //   password: "",
-    //   confirm_password: "",
-    // });
-
-    // setFormError({
-    //   firstName: "",
-    //   lastName: "",
-    //   email: "",
-    //   password: "",
-    //   confirm_password: "",
-    //   phone: "",
-    // });
   };
+
+  useEffect(() => {
+    if (getStagesQuery.isFetched && getStagesQuery.data) {
+      setData(getStagesQuery.data);
+    }
+  }, [getStagesQuery.isFetched, getStagesQuery.data, setData]);
 
   return (
     <div className="flex flex-col">
@@ -389,35 +398,32 @@ export default function SchoolLevels() {
 
       <TransitionAnimation>
         <div className="flex flex-col gap-y-3">
-          {sections.map((section, key) => (
+          {formData?.map((section: Section, key: number) => (
             <Accordion
               id={section.id}
               key={key}
-              title={section.label}
+              title={section.name}
               onChange={changeSectionTitle}
               deleteItem={() => deleteSection(section.id)}
-              value={section.label}
+              value={section.name}
             >
               <Accordion.section>
                 <div className="flex min-h-36 flex-row gap-x-2 overflow-x-auto p-2">
-                  {gradeLevels.map(
-                    (gradeLevel, key) =>
-                      gradeLevel.section_id === section.id && (
-                        <InfoCard
-                          title={gradeLevel.label}
-                          key={key}
-                          onDelete={() => deleteGrade(gradeLevel.id)}
-                          onEdit={() =>
-                            setOpenModal({
-                              id: 0,
-                              type: "editGrade",
-                              open: true,
-                            })
-                          }
-                          index={gradeLevel.id}
-                        />
-                      ),
-                  )}
+                  {section.grades.map((gradeLevel: Grade, key: number) => (
+                    <InfoCard
+                      title={gradeLevel.label}
+                      key={key}
+                      onDelete={() => deleteGrade(gradeLevel.id)}
+                      onEdit={() =>
+                        setOpenModal({
+                          id: 0,
+                          type: "editGrade",
+                          open: true,
+                        })
+                      }
+                      index={gradeLevel.id}
+                    />
+                  ))}
                   <div
                     className="flex w-80 min-w-60 cursor-pointer flex-col items-center justify-center gap-y-1 rounded-xs border border-dashed border-gray-400 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:border-gray-500 dark:bg-gray-750 dark:text-gray-500 dark:hover:bg-gray-700"
                     onClick={() =>
@@ -444,12 +450,7 @@ export default function SchoolLevels() {
           ))}
           <div
             className="flex cursor-pointer flex-row items-center justify-center gap-x-2 rounded-s border border-dashed border-gray-400 bg-gray-100 p-4 text-gray-500 hover:bg-gray-200 dark:border-gray-500 dark:bg-gray-750 dark:text-gray-500 dark:hover:bg-gray-700"
-            onClick={() =>
-              setSections((prev) => [
-                ...prev,
-                { id: sections.length + 1, label: "Section" },
-              ])
-            }
+            onClick={() => setNewLevel("level")}
           >
             <FaPlus className="pointer-events-none" />
             <span className="pointer-events-none">

@@ -13,15 +13,23 @@ import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 
-export interface FormData {
+export interface Data {
   name: string;
   capacity: number;
   school_id: string;
 }
 
+interface FormData {
+  name: string;
+  capacity: number;
+}
+
 export default function AddClassroom() {
   const { t } = useTranslation();
-  const { formData, setFormData, validateForm } = useFormValidation({});
+  const { formData, setFormData } = useFormValidation<FormData>({
+    name: "",
+    capacity: 0,
+  });
   // const [data, setData] = useState<FormData>();
   // const [formData, setFormData] = useState<FormData>();
   const admin = useAppSelector((state) => state.userSlice.user);
@@ -55,22 +63,21 @@ export default function AddClassroom() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const validationResult = validateForm();
-    if (validationResult.isValid) {
-      try {
-        addClassroomQuery.mutate({
-          name: formData?.name as string,
-          capacity: formData?.capacity as number,
-          school_id: admin.school_id,
-        });
-      } catch (e) {
-        toggleAlert({
-          id: new Date().getTime(),
-          status: "fail",
-          message: "Operation Failed",
-          state: true,
-        });
-      }
+    try {
+      const form: Data = {
+        name: formData?.name,
+        capacity: formData?.capacity,
+        school_id: admin.school_id,
+      };
+
+      addClassroomQuery.mutate(form);
+    } catch (e) {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: t("notifications.submission_failed"),
+        state: true,
+      });
     }
   };
 

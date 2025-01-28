@@ -1,49 +1,65 @@
-export interface ValidationResult {
+export interface ValidationResult<T> {
   isValid: boolean;
-  errors: Record<string, string>;
+  FormError: Partial<Record<keyof T, string>>;
 }
 
-export const formValidation = (field: string, value: unknown, formData: Record<string, unknown>): ValidationResult => {
-  const errors: Record<string, string> = {};
+export const formValidation = <T extends object>(
+  field: keyof T,
+  value: unknown,
+  formData: T
+): ValidationResult<T> => {
+  const passwordReg = /.{8,}$/
+  // /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
+  const emailReg = /\S+@\S+\.\S+/;
+  const errors: Record<keyof T, string> = {
+    email: '',
+    password: '',
+    password_confirmation: ''
+  } as Record<keyof T, string>;
+  let FormError: Partial<Record<keyof T, string>> = {};
   let isValid = true;
-
-  if (field === 'email') {
-    if (!value) {
+  
+  if (field === 'email' && 'email' in errors) {
+    
+    if (value === "") {
       isValid = false;
       errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(value as string)) {
+      console.log('email: ', errors);
+    } else if (typeof value === 'string' && !emailReg.test(value)) {
       isValid = false;
       errors.email = "Email is invalid";
     }
+    FormError = { ...FormError, email: errors.email };
   }
 
-  // if (field === 'phone') {
-  //   // if (!value) {
-  //   //   isValid = false;
-  //   //   errors.email = "Email is required";
-  //   // } else
-  //    if (!/^(?:06)(\d){8}$/.test(value as string)) {
-  //     isValid = false;
-  //     errors.email = "Email is invalid";
-  //   }
-  // }
-
-  if (field === 'password') {
-    if (!value) {
+  if (field === 'password' && 'password' in errors) {
+    if (value === "") {
       isValid = false;
       errors.password = "Password is required";
-    } else if (!/.{8,}$/.test(value as string)) { // (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"])
+    } else if (typeof value === 'string' && !passwordReg.test(value)) {
       isValid = false;
-      errors.password = "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.";
+      errors.password =
+        "Password must be at least 8 characters long.";
     }
+    FormError = { ...FormError, password: errors.password };
   }
 
-  if (field === 'password_confirmation' && formData.password !== "") {
-    if (!value && ((value as string) !== formData?.password)) {
+  if (
+    field === 'password_confirmation' && 'password_confirmation' in errors && "password" in formData &&
+    formData.password !== ""
+  ) {
+    if(passwordReg.test(formData.password as string) && value === "") {
       isValid = false;
-      errors.password_confirmation = "Passwords do not match. Please try again.";
-    }
-  }
+      errors.password_confirmation = "Password Confirmation is required";
 
-  return { isValid, errors };
+    } else if (formData.password !== value) {
+      isValid = false;
+      errors.password_confirmation = "Passwords do not match";
+      
+    }
+    FormError = { ...FormError, password_confirmation: errors.password_confirmation };
+  }
+  
+
+  return { isValid, FormError };
 };

@@ -21,16 +21,26 @@ import roles from "@admin/roles.json";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 
-export interface FormData {
-  name?: string;
-  firstName?: string;
-  lastName?: string;
+export interface Data {
+  name: string;
   phone: string;
   email: string;
   password: string;
   password_confirmation: string;
   school_id: string;
   roles: number[];
+  subjects: number[];
+  grades: number[];
+  image?: File;
+}
+
+interface FormData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
   subjects: number[];
   grades: number[];
   image?: File;
@@ -54,11 +64,17 @@ interface File {
 
 export default function AddTeacher() {
   const { t } = useTranslation();
-  const { formData, errors, setFormData, validateForm } = useFormValidation({
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
+  const { formData, errors, setFormData, validateForm } =
+    useFormValidation<FormData>({
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      password: "",
+      password_confirmation: "",
+      subjects: [],
+      grades: [],
+    });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -88,7 +104,7 @@ export default function AddTeacher() {
         state: {
           alert: {
             status: "success",
-            message: "Operation Successful",
+            message: t("notifications.created_success"),
             state: true,
           },
         },
@@ -99,7 +115,7 @@ export default function AddTeacher() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -110,7 +126,7 @@ export default function AddTeacher() {
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
-        const form: FormData = {
+        const form: Data = {
           name: formData?.firstName + " " + formData?.lastName,
           email: formData?.email as string,
           school_id: admin?.school_id as string,
@@ -131,7 +147,7 @@ export default function AddTeacher() {
         toggleAlert({
           id: new Date().getTime(),
           status: "fail",
-          message: "Operation Failed",
+          message: t("notifications.submission_failed"),
           state: true,
         });
       }
@@ -336,17 +352,15 @@ export default function AddTeacher() {
                   )
                 }
               >
-                {getGradesQuery.data?.data.data.map(
-                  (grade: Grades, key: number) => (
-                    <Checkbox
-                      key={key}
-                      label={grade.label}
-                      id={grade.id}
-                      name="grades"
-                      value={grade.label}
-                    />
-                  ),
-                )}
+                {getGradesQuery.data?.data.map((grade: Grades, key: number) => (
+                  <Checkbox
+                    key={key}
+                    label={grade.label}
+                    id={grade.id}
+                    name="grades"
+                    value={grade.label}
+                  />
+                ))}
               </MultiSelect>
 
               <RSelect

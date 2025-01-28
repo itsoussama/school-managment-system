@@ -17,7 +17,7 @@ class MaintenanceRequestController extends Controller
         $perPage = $request->input('per_page', 5);
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $data = MaintenanceRequest::with('users', 'schools', 'resources')
+        $data = MaintenanceRequest::with('users', 'school', 'resources')
             ->when(request('title'), function ($query, $title) {
                 if (!empty($title)) {
                     $query->where('title', 'LIKE', '%' . $title . '%');
@@ -105,7 +105,7 @@ class MaintenanceRequestController extends Controller
      */
     public function show($id)
     {
-        $maintenanceRequest = MaintenanceRequest::with('users', 'schools', 'resources')->findOrFail($id);
+        $maintenanceRequest = MaintenanceRequest::with('users', 'school', 'resources')->findOrFail($id);
         return response()->json($maintenanceRequest, Response::HTTP_OK);
     }
     /**

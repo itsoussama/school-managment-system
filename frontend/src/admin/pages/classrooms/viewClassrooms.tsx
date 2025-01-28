@@ -16,7 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
   FaHome,
@@ -76,6 +76,13 @@ export interface FormData {
   school_id: string;
 }
 
+interface Data {
+  id?: number;
+  name: string;
+  capacity: string;
+  school_id: string;
+}
+
 interface Sort {
   column: string;
   direction: "asc" | "desc";
@@ -88,9 +95,14 @@ interface Filter {
 
 export function ViewClassrooms() {
   const queryClient = useQueryClient();
-  const { formData, validateForm, setData } = useFormValidation({});
+  const { formData, setData } = useFormValidation<Data>({
+    id: 0,
+    name: "",
+    capacity: "",
+    school_id: "",
+  });
   // const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
+  // await queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
 
   const [sortPosition, setSortPosition] = useState<number>(0);
@@ -144,37 +156,30 @@ export function ViewClassrooms() {
   });
 
   const getClassroomQuery = useQuery({
-    queryKey: ["getClassroom", openModal?.id, "classroom"],
+    queryKey: ["getClassroom", openModal?.id],
     queryFn: () => getClassroom(openModal?.id as number),
     enabled: !!openModal?.id,
   });
 
   const classroomMutation = useMutation({
     mutationFn: setClassroom,
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getClassroom"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getClassrooms"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllClassrooms"],
-      });
-
-      setData({
-        id: data?.id,
-        name: data?.name as string,
-        capacity: data?.capacity as number,
-        school_id: data.school_id as string,
       });
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.created_success"),
         state: true,
       });
 
@@ -185,7 +190,7 @@ export function ViewClassrooms() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -193,12 +198,12 @@ export function ViewClassrooms() {
 
   const deleteClassroomQuery = useMutation({
     mutationFn: deleteClassroom,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getClassrooms"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllClassrooms"],
       });
 
@@ -208,7 +213,7 @@ export function ViewClassrooms() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.deleted_success"),
         state: true,
       });
     },
@@ -217,7 +222,7 @@ export function ViewClassrooms() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -272,6 +277,7 @@ export function ViewClassrooms() {
   );
 
   const handleSort = (column: string) => {
+    setPage(1);
     setSortPosition((prev) => prev + 1);
     switch (sortPosition) {
       case 0:
@@ -300,23 +306,24 @@ export function ViewClassrooms() {
     event.preventDefault();
 
     try {
-      const validationResult = validateForm();
-      if (validationResult.isValid) {
-        const form: FormData = {
-          _method: "PUT",
-          id: formData?.id as number,
-          name: formData?.name as string,
-          capacity: formData?.email as string,
-          school_id: formData?.school_id as string,
-        };
+      // const validationResult = validateForm();
+      // if (validationResult.isValid) {
 
-        classroomMutation.mutate(form);
-      }
+      const form: FormData = {
+        _method: "PUT",
+        id: openModal?.id as number,
+        name: formData?.name,
+        capacity: formData?.capacity,
+        school_id: formData?.school_id,
+      };
+
+      classroomMutation.mutate(form);
+      // }
     } catch (error) {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }
@@ -328,8 +335,8 @@ export function ViewClassrooms() {
     const input = event.target as HTMLFormElement;
 
     if (
-      (input.verfication.value as string).toLowerCase() ===
-      getClassroomQuery.data?.data.name
+      (input.verfication.value as string).toLowerCase() !==
+      getClassroomQuery.data?.data.name.toLowerCase()
     ) {
       setIsVerficationMatch(false);
       return;
@@ -340,15 +347,15 @@ export function ViewClassrooms() {
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const data = await queryClient.ensureQueryData({
+    const data = (await queryClient.ensureQueryData({
       queryKey: ["getClassroom", id],
       queryFn: () => getClassroom(id),
-    });
+    })) as Classroom;
 
     setData({
-      name: data?.name as string,
-      capacity: data?.capacity as number,
-      school_id: data.school_id,
+      name: data?.name,
+      capacity: data?.capacity,
+      school_id: data?.school_id,
     });
   };
 
@@ -643,9 +650,11 @@ export function ViewClassrooms() {
                 <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("modals.delete.label", {
-                  item: getClassroomQuery.data?.name,
-                })}
+                <Trans
+                  i18nKey="modals.delete.label"
+                  values={{ item: getClassroomQuery.data?.name }}
+                  components={{ bold: <strong /> }}
+                />
               </p>
               <Input
                 type="text"
@@ -774,12 +783,13 @@ export function ViewClassrooms() {
                         inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
-                      onChange={(e) =>
+                      onChange={(e) => (
+                        setPage(1),
                         setFilter((prev) => ({
                           ...prev,
                           name: e.target.value,
                         }))
-                      }
+                      )}
                     />
                   </Table.Cell>
 

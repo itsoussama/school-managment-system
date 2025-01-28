@@ -17,7 +17,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
   FaHome,
@@ -89,13 +89,24 @@ interface Administrator {
   ];
 }
 
-export interface FormData {
-  _method: string;
+export interface Data {
+  _method?: string;
   id: number;
   name: string;
   email: string;
   phone: string;
   image?: File;
+  password?: string;
+  password_confirmation?: string;
+}
+
+interface FormData {
+  id: number;
+  firstName: string;
+  lastName: string;
+  address: string;
+  email: string;
+  phone: string;
   password?: string;
   password_confirmation?: string;
 }
@@ -125,14 +136,19 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewAdministrators() {
   const queryClient = useQueryClient();
-  const { formData, errors, validateForm, setData } = useFormValidation({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
+  const { formData, errors, validateForm, setData } =
+    useFormValidation<FormData>({
+      id: 0,
+      firstName: "",
+      lastName: "",
+      email: "",
+      address: "",
+      phone: "",
+      password: "",
+      password_confirmation: "",
+    });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
+  // await queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
 
   const [sortPosition, setSortPosition] = useState<number>(0);
@@ -200,21 +216,21 @@ export function ViewAdministrators() {
   const getAdministratorQuery = useQuery({
     queryKey: ["getAdministrator", openModal?.id, "administrator"],
     queryFn: () => getUser(openModal?.id as number, "administrator"),
-    enabled: !!openModal?.id,
+    enabled: !!openModal?.open,
   });
 
   const administratorMutation = useMutation({
     mutationFn: setAdministrator,
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async ({ data }) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getAdministrator"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAdministrators"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllAdministrators"],
       });
 
@@ -230,7 +246,7 @@ export function ViewAdministrators() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
 
@@ -243,7 +259,7 @@ export function ViewAdministrators() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -251,12 +267,12 @@ export function ViewAdministrators() {
 
   const deleteUserQuery = useMutation({
     mutationFn: deleteUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getAdministrators"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllAdministrators"],
       });
 
@@ -266,7 +282,7 @@ export function ViewAdministrators() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.deleted_success"),
         state: true,
       });
     },
@@ -275,7 +291,7 @@ export function ViewAdministrators() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -283,16 +299,16 @@ export function ViewAdministrators() {
 
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
-    onSuccess: (_, { user_id }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, { user_id }) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getAdministrator"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAdministrators"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllAdministrators"],
       });
 
@@ -305,7 +321,7 @@ export function ViewAdministrators() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
     },
@@ -314,13 +330,13 @@ export function ViewAdministrators() {
       setBlockSwitch((prev) => ({
         ...prev,
         // [userId]: !prev?.[userId],
-        [user_id]: false,
+        [user_id]: prev?.[user_id],
       }));
 
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -328,29 +344,29 @@ export function ViewAdministrators() {
 
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
-    onSuccess: (_, { user_id }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, { user_id }) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getAdministrator"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAdministrators"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllAdministrators"],
       });
 
       setBlockSwitch((prev) => ({
         ...prev,
         // [userId]: !prev?.[userId],
-        [user_id]: true,
+        [user_id]: false,
       }));
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
     },
@@ -359,12 +375,12 @@ export function ViewAdministrators() {
       setBlockSwitch((prev) => ({
         ...prev,
         // [userId]: !prev?.[userId],
-        [user_id]: false,
+        [user_id]: prev?.[user_id],
       }));
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -411,7 +427,7 @@ export function ViewAdministrators() {
   const handleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllAdministratorsQuery.isFetched) {
-        await getAllAdministratorsQuery.data?.data.forEach(
+        await getAllAdministratorsQuery.data?.forEach(
           (administrator: Administrator) => {
             setChecks((prev) => {
               const checkedData = prev.some(
@@ -432,7 +448,7 @@ export function ViewAdministrators() {
         );
       }
     },
-    [getAllAdministratorsQuery.data?.data, getAllAdministratorsQuery.isFetched],
+    [getAllAdministratorsQuery.data, getAllAdministratorsQuery.isFetched],
   );
 
   const handleSort = (column: string) => {
@@ -475,7 +491,7 @@ export function ViewAdministrators() {
     try {
       const validationResult = validateForm();
       if (validationResult.isValid) {
-        const form: FormData = {
+        const form: Data = {
           _method: "PUT",
           id: formData?.id as number,
           name: formData?.firstName + " " + formData?.lastName,
@@ -499,7 +515,7 @@ export function ViewAdministrators() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }
@@ -511,8 +527,8 @@ export function ViewAdministrators() {
     const input = event.target as HTMLFormElement;
 
     if (
-      (input.verfication.value as string).toLowerCase() ===
-      getAdministratorQuery.data?.data.name
+      (input.verfication.value as string).toLowerCase() !==
+      getAdministratorQuery.data?.name.toLowerCase()
     ) {
       setIsVerficationMatch(false);
       return;
@@ -536,18 +552,19 @@ export function ViewAdministrators() {
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const { data: administratorData } = await queryClient.ensureQueryData({
-      queryKey: ["getAdministrator", id],
-      queryFn: () => getUser(id),
-    });
+
+    const data = (await queryClient.ensureQueryData({
+      queryKey: ["getAdministrator", id, "administrator"],
+      queryFn: () => getUser(id, "administrator"),
+    })) as Administrator;
 
     setData({
-      id: administratorData?.id,
-      firstName: getUserName(administratorData?.name).firstName,
-      lastName: getUserName(administratorData?.name).lastName,
-      address: "address",
-      email: administratorData?.email,
-      phone: administratorData?.phone,
+      id: data?.id,
+      firstName: getUserName(data?.name).firstName,
+      lastName: getUserName(data?.name).lastName,
+      address: "123 Rue Principale",
+      email: data?.email,
+      phone: data?.phone,
     });
   };
 
@@ -556,6 +573,7 @@ export function ViewAdministrators() {
     setOpenModal(undefined);
 
     toggleChangePassword(false);
+    setPreviewImg(undefined);
 
     setData({
       id: 0,
@@ -565,7 +583,7 @@ export function ViewAdministrators() {
       address: "",
       phone: "",
       password: "",
-      confirm_password: "",
+      password_confirmation: "",
     });
   };
 
@@ -621,11 +639,9 @@ export function ViewAdministrators() {
   useEffect(() => {
     if (getAdministratorsQuery.isFetched) {
       let data = {};
-      getAdministratorsQuery.data?.data.data.map(
-        (administrator: Administrator) => {
-          data = { ...data, [administrator.id]: !!administrator.blocked };
-        },
-      );
+      getAdministratorsQuery.data?.data.map((administrator: Administrator) => {
+        data = { ...data, [administrator.id]: !!administrator.blocked };
+      });
       setBlockSwitch(data);
     }
   }, [getAdministratorsQuery.data, getAdministratorsQuery.isFetched]);
@@ -696,10 +712,9 @@ export function ViewAdministrators() {
             <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource={
-                  getAdministratorQuery.data?.data.imagePath
-                    ? SERVER_STORAGE +
-                      getAdministratorQuery.data?.data.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.data.name).firstName}+${getUserName(getAdministratorQuery.data?.data.name).lastName}`
+                  getAdministratorQuery.data?.imagePath
+                    ? SERVER_STORAGE + getAdministratorQuery.data?.imagePath
+                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.name).firstName}+${getUserName(getAdministratorQuery.data?.name).lastName}`
                 }
                 className="h-40 w-40"
               />
@@ -709,13 +724,11 @@ export function ViewAdministrators() {
                 </span>
                 <ToggleSwitch
                   theme={customToggleSwitch}
-                  checked={
-                    blockSwitch[getAdministratorQuery.data?.data.id] || false
-                  }
+                  checked={blockSwitch[getAdministratorQuery.data?.id] || false}
                   color={brandState}
                   onChange={() =>
                     setOpenModal({
-                      id: getAdministratorQuery.data?.data.id,
+                      id: getAdministratorQuery.data?.id,
                       type: "block",
                       open: true,
                     })
@@ -736,7 +749,7 @@ export function ViewAdministrators() {
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
                         {
-                          getUserName(getAdministratorQuery.data?.data.name)
+                          getUserName(getAdministratorQuery.data?.name)
                             .firstName
                         }
                       </span>
@@ -746,10 +759,7 @@ export function ViewAdministrators() {
                         {t("form.fields.last_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getUserName(getAdministratorQuery.data?.data.name)
-                            .lastName
-                        }
+                        {getUserName(getAdministratorQuery.data?.name).lastName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -757,7 +767,7 @@ export function ViewAdministrators() {
                         {t("form.fields.email")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.data.email}
+                        {getAdministratorQuery.data?.email}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -765,7 +775,7 @@ export function ViewAdministrators() {
                         {t("form.fields.phone_number")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.data.phone}
+                        {getAdministratorQuery.data?.phone}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -812,10 +822,9 @@ export function ViewAdministrators() {
                   imgSource={
                     previewImg
                       ? previewImg
-                      : getAdministratorQuery.data?.data.imagePath
-                        ? SERVER_STORAGE +
-                          getAdministratorQuery.data?.data.imagePath
-                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.data.name).firstName}+${getUserName(getAdministratorQuery.data?.data.name).lastName}`
+                      : getAdministratorQuery.data?.imagePath
+                        ? SERVER_STORAGE + getAdministratorQuery.data?.imagePath
+                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.name).firstName}+${getUserName(getAdministratorQuery.data?.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
@@ -935,11 +944,13 @@ export function ViewAdministrators() {
 
                         <Input
                           type="password"
-                          id="confirm_password"
-                          name="confirm_password"
+                          id="password_confirmation"
+                          name="password_confirmation"
                           label={t("form.fields.confirm_password")}
                           placeholder="●●●●●●●"
-                          value={(formData.confirm_password as string) || ""}
+                          value={
+                            (formData.password_confirmation as string) || ""
+                          }
                           custom-style={{
                             inputStyle: "px-10",
                           }}
@@ -949,7 +960,7 @@ export function ViewAdministrators() {
                           }
                           onChange={onChange}
                           onBlur={() => validateForm()}
-                          error={errors?.confirm_password}
+                          error={errors?.password_confirmation}
                         />
                       </>
                     ) : (
@@ -1009,16 +1020,18 @@ export function ViewAdministrators() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.delete.title")}
-                <b>{getAdministratorQuery.data?.data.name}</b>
+                <b>{getAdministratorQuery.data?.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
                 <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("modals.delete.label", {
-                  item: getAdministratorQuery.data?.data.name,
-                })}
+                <Trans
+                  i18nKey="modals.delete.label"
+                  values={{ item: getAdministratorQuery.data?.name }}
+                  components={{ bold: <strong /> }}
+                />
               </p>
               <Input
                 type="text"
@@ -1066,7 +1079,7 @@ export function ViewAdministrators() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.block.title")}{" "}
-                <b>{getAdministratorQuery.data?.data.name}</b>
+                <b>{getAdministratorQuery.data?.name}</b>
               </p>
               {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -1074,7 +1087,7 @@ export function ViewAdministrators() {
               </div> */}
               {/* <p className="text-gray-900 dark:text-white">
                 {t("modals.block.label")}{" "}
-                <b>{getAdministratorQuery.data?.data.name}</b>
+                <b>{getAdministratorQuery.data?.name}</b>
               </p> */}
               {/* <Input
                 type="text"
@@ -1090,7 +1103,7 @@ export function ViewAdministrators() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
-              {getAdministratorQuery.data?.data.blocked == 0
+              {getAdministratorQuery.data?.blocked == 0
                 ? t("modals.block.block_button")
                 : t("modals.block.unblock_button")}
             </button>
@@ -1208,12 +1221,13 @@ export function ViewAdministrators() {
                         inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
-                      onChange={(e) =>
+                      onChange={(e) => (
+                        setPage(1),
                         setFilter((prev) => ({
                           ...prev,
                           name: e.target.value,
                         }))
-                      }
+                      )}
                     />
                   </Table.Cell>
 
@@ -1228,7 +1242,7 @@ export function ViewAdministrators() {
                 !(getAdministratorsQuery.isRefetching || perPage) ? (
                   <SkeletonTable cols={7} />
                 ) : (
-                  getAdministratorsQuery.data?.data.data.map(
+                  getAdministratorsQuery.data?.data.map(
                     (administrator: Administrator, key: number) => (
                       <Table.Row
                         key={key}
@@ -1361,12 +1375,12 @@ export function ViewAdministrators() {
             <span className="text-gray-500 dark:text-gray-400">
               {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getAdministratorsQuery.data?.data.from}-
-                {getAdministratorsQuery.data?.data.to}
+                {getAdministratorsQuery.data?.from}-
+                {getAdministratorsQuery.data?.to}
               </span>{" "}
               {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getAdministratorsQuery.data?.data.total}
+                {getAdministratorsQuery.data?.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
@@ -1375,7 +1389,7 @@ export function ViewAdministrators() {
                 name="row-num"
                 onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getAdministratorsQuery.data?.data.per_page}
+                defaultValue={getAdministratorsQuery.data?.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -1389,7 +1403,7 @@ export function ViewAdministrators() {
                 onPageChange={(page) =>
                   !getAdministratorsQuery.isPlaceholderData && setPage(page)
                 }
-                totalPages={getAdministratorsQuery.data?.data.last_page ?? 1}
+                totalPages={getAdministratorsQuery.data?.last_page ?? 1}
                 nextLabel={minSm ? t("pagination.next") : ""}
                 previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{

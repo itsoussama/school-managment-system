@@ -18,7 +18,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
   FaHome,
@@ -107,12 +107,24 @@ interface Parent {
   childrens: Childrens[];
 }
 
-export interface FormData {
+export interface Data {
   _method: string;
   id: number;
   name: string;
   email: string;
   phone: string;
+  image?: File;
+  password?: string;
+  password_confirmation?: string;
+}
+
+interface FormData {
+  id?: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
   image?: File;
   password?: string;
   password_confirmation?: string;
@@ -154,12 +166,17 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewParents() {
   const queryClient = useQueryClient();
-  const { formData, errors, validateForm, setData } = useFormValidation({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
+  const { formData, errors, validateForm, setData } =
+    useFormValidation<FormData>({
+      id: 0,
+      firstName: "",
+      lastName: "",
+      email: "",
+      address: "",
+      phone: "",
+      password: "",
+      password_confirmation: "",
+    });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
@@ -242,21 +259,21 @@ export function ViewParents() {
 
   const parentMutation = useMutation({
     mutationFn: setParent,
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getParent"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllParents"],
       });
 
       setData({
-        id: data?.id,
+        id: data?.id as number,
         firstName: getUserName(data?.name).firstName,
         lastName: getUserName(data?.name).lastName,
         address: data?.address,
@@ -267,7 +284,7 @@ export function ViewParents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
 
@@ -280,7 +297,7 @@ export function ViewParents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -288,12 +305,12 @@ export function ViewParents() {
 
   const deleteUserQuery = useMutation({
     mutationFn: deleteUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllParents"],
       });
 
@@ -303,7 +320,7 @@ export function ViewParents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.deleted_success"),
         state: true,
       });
     },
@@ -312,7 +329,7 @@ export function ViewParents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -320,16 +337,16 @@ export function ViewParents() {
 
   const blockUserMutation = useMutation({
     mutationFn: blockUser,
-    onSuccess: (_, { user_id }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, { user_id }) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getParent"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllParents"],
       });
 
@@ -342,7 +359,7 @@ export function ViewParents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
     },
@@ -351,13 +368,13 @@ export function ViewParents() {
       setBlockSwitch((prev) => ({
         ...prev,
         // [userId]: !prev?.[userId],
-        [user_id]: false,
+        [user_id]: prev?.[user_id],
       }));
 
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -365,34 +382,19 @@ export function ViewParents() {
 
   const unBlockUserMutation = useMutation({
     mutationFn: unblockUser,
-    onSuccess: (_, { user_id }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, { user_id }) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getParent"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllParents"],
       });
 
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: true,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: "Operation Successful",
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
       setBlockSwitch((prev) => ({
         ...prev,
         // [userId]: !prev?.[userId],
@@ -401,8 +403,23 @@ export function ViewParents() {
 
       toggleAlert({
         id: new Date().getTime(),
+        status: "success",
+        message: t("notifications.saved_success"),
+        state: true,
+      });
+    },
+
+    onError: (_, { user_id }) => {
+      setBlockSwitch((prev) => ({
+        ...prev,
+        // [userId]: !prev?.[userId],
+        [user_id]: prev?.[user_id],
+      }));
+
+      toggleAlert({
+        id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -449,7 +466,7 @@ export function ViewParents() {
   const handleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllParentsQuery.isFetched) {
-        await getAllParentsQuery.data?.data.forEach((parent: Parent) => {
+        await getAllParentsQuery.data?.forEach((parent: Parent) => {
           setChecks((prev) => {
             const checkedData = prev.some((item) => item.id === parent.id);
             if (firstCheckbox.checked && !checkedData) {
@@ -460,7 +477,7 @@ export function ViewParents() {
         });
       }
     },
-    [getAllParentsQuery.data?.data, getAllParentsQuery.isFetched],
+    [getAllParentsQuery.data, getAllParentsQuery.isFetched],
   );
 
   const handleSort = (column: string) => {
@@ -503,12 +520,12 @@ export function ViewParents() {
     try {
       const validationResult = validateForm();
       if (validationResult.isValid) {
-        const form: FormData = {
+        const form: Data = {
           _method: "PUT",
           id: formData?.id as number,
           name: formData?.firstName + " " + formData?.lastName,
-          email: formData?.email as string,
-          phone: formData?.phone as string,
+          email: formData?.email,
+          phone: formData?.phone,
         };
 
         if (img) {
@@ -516,9 +533,8 @@ export function ViewParents() {
         }
 
         if (form?.password) {
-          form["password"] = formData?.password as string;
-          form["password_confirmation"] =
-            formData?.password_confirmation as string;
+          form["password"] = formData?.password;
+          form["password_confirmation"] = formData?.password_confirmation;
         }
 
         parentMutation.mutate(form);
@@ -527,7 +543,7 @@ export function ViewParents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }
@@ -539,8 +555,8 @@ export function ViewParents() {
     const input = event.target as HTMLFormElement;
 
     if (
-      (input.verfication.value as string).toLowerCase() ===
-      getParentQuery.data?.data.name
+      (input.verfication.value as string).toLowerCase() !==
+      getParentQuery.data?.name.toLowerCase()
     ) {
       setIsVerficationMatch(false);
       return;
@@ -564,18 +580,18 @@ export function ViewParents() {
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const { data: parentData } = await queryClient.ensureQueryData({
+    const data = (await queryClient.ensureQueryData({
       queryKey: ["getParent", id],
       queryFn: () => getUser(id),
-    });
+    })) as Parent;
 
     setData({
-      id: parentData?.id,
-      firstName: getUserName(parentData?.name).firstName,
-      lastName: getUserName(parentData?.name).lastName,
+      id: data?.id,
+      firstName: getUserName(data?.name).firstName,
+      lastName: getUserName(data?.name).lastName,
       address: "address",
-      email: parentData?.email,
-      phone: parentData?.phone,
+      email: data?.email,
+      phone: data?.phone,
     });
   };
 
@@ -584,6 +600,7 @@ export function ViewParents() {
     setOpenModal(undefined);
 
     toggleChangePassword(false);
+    setPreviewImg(undefined);
 
     setData({
       id: 0,
@@ -593,7 +610,7 @@ export function ViewParents() {
       address: "",
       phone: "",
       password: "",
-      confirm_password: "",
+      password_confirmation: "",
     });
   };
 
@@ -649,7 +666,7 @@ export function ViewParents() {
   useEffect(() => {
     if (getParentsQuery.isFetched) {
       let data = {};
-      getParentsQuery.data?.data.data.map((parent: Parent) => {
+      getParentsQuery.data?.data.map((parent: Parent) => {
         data = { ...data, [parent.id]: !!parent.blocked };
       });
       setBlockSwitch(data);
@@ -734,9 +751,9 @@ export function ViewParents() {
             <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource={
-                  getParentQuery.data?.data.imagePath
-                    ? SERVER_STORAGE + getParentQuery.data?.data.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
+                  getParentQuery.data?.imagePath
+                    ? SERVER_STORAGE + getParentQuery.data?.imagePath
+                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.name).firstName}+${getUserName(getParentQuery.data?.name).lastName}`
                 }
                 className="h-40 w-40"
               />
@@ -747,10 +764,10 @@ export function ViewParents() {
                 <ToggleSwitch
                   theme={customToggleSwitch}
                   color={brandState}
-                  checked={blockSwitch[getParentQuery.data?.data.id] || false}
+                  checked={blockSwitch[getParentQuery.data?.id] || false}
                   onChange={() =>
                     setOpenModal({
-                      id: getParentQuery.data?.data.id,
+                      id: getParentQuery.data?.id,
                       type: "block",
                       open: true,
                     })
@@ -770,7 +787,7 @@ export function ViewParents() {
                         {t("form.fields.first_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getParentQuery.data?.data.name).firstName}
+                        {getUserName(getParentQuery.data?.name).firstName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -778,7 +795,7 @@ export function ViewParents() {
                         {t("form.fields.last_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getParentQuery.data?.data.name).lastName}
+                        {getUserName(getParentQuery.data?.name).lastName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -786,7 +803,7 @@ export function ViewParents() {
                         {t("form.fields.email")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getParentQuery.data?.data.email}
+                        {getParentQuery.data?.email}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -794,7 +811,7 @@ export function ViewParents() {
                         {t("form.fields.phone_number")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getParentQuery.data?.data.phone}
+                        {getParentQuery.data?.phone}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -826,9 +843,9 @@ export function ViewParents() {
                     width="auto"
                     element={
                       <div className="flex items-center gap-x-2">
-                        {getParentQuery.data?.data.childrens.length > 2 ? (
+                        {getParentQuery.data?.childrens.length > 2 ? (
                           <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                            {getParentQuery.data?.data.childrens?.map(
+                            {getParentQuery.data?.childrens?.map(
                               (children: Childrens, key: number) =>
                                 key < 2 && (
                                   <img
@@ -844,12 +861,12 @@ export function ViewParents() {
                                 ),
                             )}
                             <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 border-gray-50 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 dark:border-gray-700 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500">
-                              {`+${getParentQuery.data?.data.childrens.length - 2}`}
+                              {`+${getParentQuery.data?.childrens.length - 2}`}
                             </div>
                           </div>
-                        ) : getParentQuery.data?.data.childrens.length > 1 ? (
+                        ) : getParentQuery.data?.childrens.length > 1 ? (
                           <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                            {getParentQuery.data?.data.childrens?.map(
+                            {getParentQuery.data?.childrens?.map(
                               (children: Childrens, key: number) =>
                                 key < 2 && (
                                   <img
@@ -866,22 +883,21 @@ export function ViewParents() {
                             )}
                           </div>
                         ) : (
-                          getParentQuery.data?.data.childrens?.length == 1 && (
+                          getParentQuery.data?.childrens?.length == 1 && (
                             <>
                               <img
                                 className="h-10 w-10 rounded-full border-2 border-gray-50 dark:border-gray-700"
                                 src={
-                                  getParentQuery.data?.data.childrens[0]
-                                    ?.imagePath
+                                  getParentQuery.data?.childrens[0]?.imagePath
                                     ? SERVER_STORAGE +
-                                      getParentQuery.data?.data.childrens[0]
+                                      getParentQuery.data?.childrens[0]
                                         ?.imagePath
-                                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.data.childrens[0]?.name).firstName}+${getUserName(getParentQuery.data?.data.childrens[0]?.name).lastName}`
+                                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.childrens[0]?.name).firstName}+${getUserName(getParentQuery.data?.childrens[0]?.name).lastName}`
                                 }
                                 alt="profile"
                               />
                               <span className="pointer-events-none text-black dark:text-white">
-                                {getParentQuery.data?.data.childrens[0]?.name}
+                                {getParentQuery.data?.childrens[0]?.name}
                               </span>
                             </>
                           )
@@ -890,7 +906,7 @@ export function ViewParents() {
                     }
                   >
                     <Dropdown.List>
-                      {getParentQuery.data?.data.childrens.map(
+                      {getParentQuery.data?.childrens.map(
                         (children: Childrens, key: number) => (
                           <Dropdown.Item
                             key={key}
@@ -918,8 +934,8 @@ export function ViewParents() {
                       <p
                         onClick={() =>
                           setOpenChildModal({
-                            id: getParentQuery.data?.data.id,
-                            school_id: getParentQuery.data?.data.school_id,
+                            id: getParentQuery.data?.id,
+                            school_id: getParentQuery.data?.school_id,
                             open: true,
                           })
                         }
@@ -930,7 +946,7 @@ export function ViewParents() {
                       </p>
                     </Dropdown.Button>
                   </Dropdown>
-                  {getParentQuery.data?.data.childrens?.length < 1 && (
+                  {getParentQuery.data?.childrens?.length < 1 && (
                     <div
                       className="flex cursor-pointer items-center text-sm font-medium text-[var(--brand-color-600)] hover:underline dark:text-[var(--brand-color-500)]"
                       style={
@@ -943,8 +959,8 @@ export function ViewParents() {
                       }
                       onClick={() =>
                         setOpenChildModal({
-                          id: getParentQuery.data?.data.id,
-                          school_id: getParentQuery.data?.data.school_id,
+                          id: getParentQuery.data?.id,
+                          school_id: getParentQuery.data?.school_id,
                           open: true,
                         })
                       }
@@ -990,9 +1006,9 @@ export function ViewParents() {
                   imgSource={
                     previewImg
                       ? previewImg
-                      : getParentQuery.data?.data.imagePath
-                        ? SERVER_STORAGE + getParentQuery.data?.data.imagePath
-                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.data.name).firstName}+${getUserName(getParentQuery.data?.data.name).lastName}`
+                      : getParentQuery.data?.imagePath
+                        ? SERVER_STORAGE + getParentQuery.data?.imagePath
+                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getParentQuery.data?.name).firstName}+${getUserName(getParentQuery.data?.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
@@ -1112,11 +1128,13 @@ export function ViewParents() {
 
                         <Input
                           type="password"
-                          id="confirm_password"
-                          name="confirm_password"
+                          id="password_confirmation"
+                          name="password_confirmation"
                           label={t("form.fields.confirm_password")}
                           placeholder="●●●●●●●"
-                          value={(formData.confirm_password as string) || ""}
+                          value={
+                            (formData.password_confirmation as string) || ""
+                          }
                           custom-style={{
                             inputStyle: "px-10",
                           }}
@@ -1126,7 +1144,7 @@ export function ViewParents() {
                           }
                           onChange={onChange}
                           onBlur={() => validateForm()}
-                          error={errors?.confirm_password}
+                          error={errors?.password_confirmation}
                         />
                       </>
                     ) : (
@@ -1184,16 +1202,21 @@ export function ViewParents() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.delete.title")}
-                <b>{getParentQuery.data?.data.name}</b>
+                <b>{getParentQuery.data?.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("modals.delete.message")}</p>
+                <p className="text-white">
+                  {t("modals.delete.message")}
+                  <b>{getParentQuery.data?.name}</b>
+                </p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("modals.delete.label", {
-                  item: getParentQuery.data?.data.name,
-                })}
+                <Trans
+                  i18nKey="modals.delete.label"
+                  values={{ item: getParentQuery.data?.name }}
+                  components={{ bold: <strong /> }}
+                />
               </p>
               <Input
                 type="text"
@@ -1240,8 +1263,7 @@ export function ViewParents() {
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.block.title")}{" "}
-                <b>{getParentQuery.data?.data.name}</b>
+                {t("modals.block.title")} <b>{getParentQuery.data?.name}</b>
               </p>
               {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -1249,7 +1271,7 @@ export function ViewParents() {
               </div> */}
               {/* <p className="text-gray-900 dark:text-white">
                 {t("modals.block.label")}{" "}
-                <b>{getParentQuery.data?.data.name}</b>
+                <b>{getParentQuery.data?.name}</b>
               </p> */}
               {/* <Input
                 type="text"
@@ -1265,7 +1287,7 @@ export function ViewParents() {
           </Modal.Body>
           <Modal.Footer>
             <Button type="submit" className="btn-danger !w-auto">
-              {getParentQuery.data?.data.blocked == 0
+              {getParentQuery.data?.blocked == 0
                 ? t("modals.block.block_button")
                 : t("modals.block.unblock_button")}
             </Button>
@@ -1395,12 +1417,13 @@ export function ViewParents() {
                         inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
-                      onChange={(e) =>
+                      onChange={(e) => (
+                        setPage(1),
                         setFilter((prev) => ({
                           ...prev,
                           name: e.target.value,
                         }))
-                      }
+                      )}
                     />
                   </Table.Cell>
                   <Table.Cell className="p-2">
@@ -1450,7 +1473,7 @@ export function ViewParents() {
                 !(getParentsQuery.isRefetching || perPage) ? (
                   <SkeletonTable cols={8} />
                 ) : (
-                  getParentsQuery.data?.data.data.map(
+                  getParentsQuery.data.data?.map(
                     (parent: Parent, key: number) => (
                       <Table.Row
                         key={key}
@@ -1715,12 +1738,11 @@ export function ViewParents() {
             <span className="text-gray-500 dark:text-gray-400">
               {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getParentsQuery.data?.data.from}-
-                {getParentsQuery.data?.data.to}
+                {getParentsQuery.data?.from}-{getParentsQuery.data?.to}
               </span>{" "}
               {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getParentsQuery.data?.data.total}
+                {getParentsQuery.data?.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
@@ -1729,7 +1751,7 @@ export function ViewParents() {
                 name="row-num"
                 onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getParentsQuery.data?.data.per_page}
+                defaultValue={getParentsQuery.data?.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -1743,7 +1765,7 @@ export function ViewParents() {
                 onPageChange={(page) =>
                   !getParentsQuery.isPlaceholderData && setPage(page)
                 }
-                totalPages={getParentsQuery.data?.data.last_page ?? 1}
+                totalPages={getParentsQuery.data?.last_page ?? 1}
                 nextLabel={minSm ? t("pagination.next") : ""}
                 previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{

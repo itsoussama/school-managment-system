@@ -1,46 +1,51 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { formValidation, ValidationResult } from '../utils/formValidation';
 
-interface UseFormValidation {
-  formData: Record<string, unknown>;
-  errors: Record<string, unknown>;
-  setData: Dispatch<SetStateAction<Record<string, unknown>>>;
-  setFormData: (id : string, value: unknown) => void;
-  setError: (key: string, value: string) => void;
-  validateForm: () => ValidationResult;
+interface UseFormValidation<T> {
+  formData: T;
+  errors: Partial<Record<keyof T, string>>;
+  setData: Dispatch<SetStateAction<T>>;
+  setFormData: (id: string, value: unknown) => void;
+  setError: (key: keyof T, value: string) => void;
+  validateForm: () => ValidationResult<T>;
 }
 
-export const useFormValidation = (initialState: Record<string, unknown>): UseFormValidation => {
-  const [formData, setFormData] = useState(initialState);
-  const [errors, setErrors] = useState(initialState);
+export const useFormValidation = <T extends object>(initialState: T): UseFormValidation<T> => {
+  const [formData, setFormData] = useState<T>(initialState);
+  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
 
-  const handleFromData = useCallback((id: string, value: unknown) => {
+  const handleFormData = useCallback((id: string, value: unknown) => {
     setFormData((prevData) => ({ ...prevData, [id]: value }));
   }, []);
 
-  const handleError = useCallback((key: string, value: string) => {
-    setErrors((prev)=> ({...prev, [key] : value}))
+  const handleError = useCallback((key: keyof T, value: string) => {
+    setErrors((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  const validateForm = useCallback((): ValidationResult => {
-       const validationResult: ValidationResult = { isValid: true, errors: {} };
+  const validateForm = useCallback((): ValidationResult<T> => {
+    setErrors({});
+    const validationResult: ValidationResult<T> = { isValid: true, FormError: {} as Partial<Record<keyof T, string>> };
     for (const field in formData) {
-      const result = formValidation(field, formData[field], formData);
+      const result = formValidation<T>(field as keyof T, formData[field], formData);
+      
       if (!result.isValid) {
         validationResult.isValid = false;
-        validationResult.errors = { ...validationResult.errors, ...result.errors };
+        
+        setErrors(prev =>  ({...prev, ...result.FormError}));
       }
     }
-    setErrors(validationResult.errors);
-    return validationResult;
-  }, [formData]);
 
-return {
+    console.log('Errors State: ', errors);
+    
+    return validationResult;
+  }, [formData, errors]);
+
+  return {
     formData,
     errors,
     setError: handleError,
-    setFormData: handleFromData,
+    setFormData: handleFormData,
     setData: setFormData,
     validateForm,
-};
+  };
 };

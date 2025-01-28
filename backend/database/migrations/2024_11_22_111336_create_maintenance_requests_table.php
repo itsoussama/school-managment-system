@@ -18,13 +18,12 @@ return new class extends Migration
             $table->enum('status', ['pending', 'in_progress', 'completed'])->default('pending');
             $table->enum('priority', ['low', 'medium', 'high'])->default('low');
             $table->string('file_path')->nullable();
-            $table->date('resolved_date')->nullable();
+            $table->timestamp('resolved_date')->nullable();
             $table->unsignedBigInteger('school_id')->nullable();
             $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
             $table->unsignedBigInteger('resource_id')->nullable();
             $table->foreign('resource_id')->references('id')->on('resources')->onDelete('cascade');
             $table->timestamps();
-
         });
     }
 

@@ -21,7 +21,8 @@ import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
-import { FormData as AddChildFromData } from "@src/admin/pages/students/addStudent";
+import roles from "@admin/roles.json";
+import { Data as AddChildFromData } from "@src/admin/pages/students/addStudent";
 
 interface AddChildModal {
   open: boolean;
@@ -30,28 +31,25 @@ interface AddChildModal {
   guardian_id: number;
 }
 
-// interface FormData {
-//   guardian_id: number;
-//   name?: string;
-//   firstName?: string;
-//   lastName?: string;
-//   phone: string;
-//   email: string;
-//   password: string;
-//   password_confirmation: string;
-//   school_id: string;
-//   roles: number[];
-//   subjects: number[];
-//   grades: number[];
-//   image?: File;
-// }
+interface FormData {
+  guardian_id: number | null;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  subjects: number[];
+  grades: number[];
+  image?: File;
+}
 
-// interface File {
-//   lastModified: number;
-//   name: string;
-//   size: number;
-//   type: string;
-// }
+interface File {
+  lastModified: number;
+  name: string;
+  size: number;
+  type: string;
+}
 
 interface Grades {
   id: string;
@@ -78,11 +76,18 @@ function AddChildModal({
   const queryClient = useQueryClient();
 
   const { t } = useTranslation();
-  const { formData, errors, setFormData, validateForm } = useFormValidation({
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
+  const { formData, errors, setFormData, validateForm } =
+    useFormValidation<FormData>({
+      guardian_id: guardian_id,
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      password: "",
+      password_confirmation: "",
+      subjects: [1],
+      grades: [],
+    });
 
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -106,20 +111,21 @@ function AddChildModal({
 
   const addStudentQuery = useMutation({
     mutationFn: addStudent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
 
       setOpenModal(false);
       toggleOpen(false);
+      setOption(undefined);
 
       setPreviewImg(undefined);
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.created_success"),
         state: true,
       });
     },
@@ -128,7 +134,7 @@ function AddChildModal({
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -136,20 +142,22 @@ function AddChildModal({
 
   const assignChildsQuery = useMutation({
     mutationFn: assignChilds,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getParents"],
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getParent"],
       });
 
       setOpenModal(false);
       toggleOpen(false);
+      setOption(undefined);
+
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
     },
@@ -158,7 +166,7 @@ function AddChildModal({
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -173,6 +181,7 @@ function AddChildModal({
     addStudentQuery.reset();
     setOpenModal(false);
     toggleOpen(false);
+    setPreviewImg(undefined);
     setOption(undefined);
   };
 
@@ -202,7 +211,7 @@ function AddChildModal({
           password: formData?.password as string,
           password_confirmation: formData?.password_confirmation as string,
           phone: formData?.phone as string,
-          roles: [3],
+          roles: [roles.student],
           subjects: [1],
           grades: formData?.grades as number[],
         };
@@ -409,7 +418,7 @@ function AddChildModal({
                           )
                         }
                       >
-                        {getGradesQuery.data?.data.data.map(
+                        {getGradesQuery.data?.data.map(
                           (grade: Grades, key: number) => (
                             <Checkbox
                               key={key}
@@ -491,7 +500,7 @@ function AddChildModal({
                 />
               </div>
               <div className="flex flex-col gap-y-3 overflow-y-auto">
-                {getChildrensQuery.data?.data.map(
+                {getChildrensQuery.data?.map(
                   (child: Childs, key: number) =>
                     child.name.search(new RegExp(searchValue, "i")) !== -1 && (
                       <div>

@@ -167,6 +167,7 @@ export default function AddTeacherModal({
     addParentQuery.reset();
     setOpenModal(false);
     toggleOpen(false);
+    setPreviewImg(undefined);
     setOption(undefined);
   };
 

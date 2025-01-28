@@ -13,7 +13,7 @@ class StageController extends Controller
      */
     public function index()
     {
-        $stages = Stage::all()->where('school_id', auth()->user()->school_id);
+        $stages = Stage::with('grades')->where('school_id', auth()->user()->school_id)->get();
         return response()->json($stages, Response::HTTP_OK);
     }
 

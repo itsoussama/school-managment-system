@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "flowbite-react";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
   FaHome,
@@ -60,6 +60,7 @@ import {
   customTooltip,
 } from "@src/utils/flowbite";
 import React from "react";
+import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface Check {
   id?: number;
@@ -120,7 +121,7 @@ interface Grade {
   label: string;
 }
 
-export interface FormData {
+export interface Data {
   _method: string;
   id: number;
   name: string;
@@ -131,13 +132,13 @@ export interface FormData {
   password_confirmation?: string;
 }
 
-interface Data {
+interface FormData {
   id: number;
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
-  confirm_password: string;
+  password?: string;
+  password_confirmation?: string;
   phone: string;
   image?: File;
 }
@@ -170,6 +171,15 @@ export function ViewStudents() {
   const queryClient = useQueryClient();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
+  const { formData, setData } = useFormValidation<FormData>({
+    id: 0,
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+    phone: "",
+  });
 
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
@@ -192,15 +202,15 @@ export function ViewStudents() {
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
-  const [data, setData] = useState<Data>({
-    id: 0,
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirm_password: "",
-  });
+  // const [data, setData] = useState<Data>({
+  //   id: 0,
+  //   firstName: "",
+  //   lastName: "",
+  //   email: "",
+  //   phone: "",
+  //   password: "",
+  //   confirm_password: "",
+  // });
   const [formError, setFormError] = useState<DataError>({
     firstName: "",
     lastName: "",
@@ -273,16 +283,16 @@ export function ViewStudents() {
 
   const studentMutation = useMutation({
     mutationFn: setStudent,
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getStudent"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getStudents"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllStudents"],
       });
 
@@ -293,13 +303,13 @@ export function ViewStudents() {
         email: data?.email,
         phone: data?.phone,
         password: "",
-        confirm_password: "",
+        password_confirmation: "",
       });
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
 
@@ -313,7 +323,7 @@ export function ViewStudents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -321,12 +331,12 @@ export function ViewStudents() {
 
   const deleteUserQuery = useMutation({
     mutationFn: deleteUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getStudents"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllStudents"],
       });
       // setOpenDeleteModal(undefined);
@@ -340,13 +350,13 @@ export function ViewStudents() {
         email: "",
         phone: "",
         password: "",
-        confirm_password: "",
+        password_confirmation: "",
       });
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.deleted_success"),
         state: true,
       });
     },
@@ -355,7 +365,7 @@ export function ViewStudents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -384,7 +394,7 @@ export function ViewStudents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
     },
@@ -393,12 +403,12 @@ export function ViewStudents() {
       setBlockSwitch((prev) => ({
         ...prev,
         // [userId]: !prev?.[userId],
-        [user_id]: false,
+        [user_id]: prev?.[user_id],
       }));
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -421,13 +431,13 @@ export function ViewStudents() {
       setBlockSwitch((prev) => ({
         ...prev,
         // [userId]: !prev?.[userId],
-        [user_id]: true,
+        [user_id]: false,
       }));
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
     },
@@ -436,12 +446,12 @@ export function ViewStudents() {
       setBlockSwitch((prev) => ({
         ...prev,
         // [userId]: !prev?.[userId],
-        [user_id]: true,
+        [user_id]: prev?.[user_id],
       }));
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -453,7 +463,7 @@ export function ViewStudents() {
     const selectElem = event.target as HTMLSelectElement;
     // if (event?.target.nodeType)
     setData((prev) => ({
-      ...(prev as Data),
+      ...prev,
       [event.target.id]:
         event?.target.nodeName == "SELECT"
           ? selectElem.options[selectElem.selectedIndex].value
@@ -536,7 +546,7 @@ export function ViewStudents() {
   const handleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllStudentsQuery.isFetched) {
-        await getAllStudentsQuery.data?.data.forEach((student: Student) => {
+        await getAllStudentsQuery.data?.forEach((student: Student) => {
           setChecks((prev) => {
             const checkedData = prev.some((item) => item.id === student.id);
             if (firstCheckbox.checked && !checkedData) {
@@ -547,7 +557,7 @@ export function ViewStudents() {
         });
       }
     },
-    [getAllStudentsQuery.data?.data, getAllStudentsQuery.isFetched],
+    [getAllStudentsQuery.data, getAllStudentsQuery.isFetched],
   );
 
   const handleSort = (column: string) => {
@@ -589,21 +599,21 @@ export function ViewStudents() {
     const input = event.target as HTMLFormElement;
 
     if (!handleClientError(input)) {
-      const form: FormData = {
+      const form: Data = {
         _method: "PUT",
-        id: data?.id,
-        name: data?.firstName + " " + data?.lastName,
-        email: data?.email,
-        phone: data?.phone,
+        id: formData?.id,
+        name: formData?.firstName + " " + formData?.lastName,
+        email: formData?.email,
+        phone: formData?.phone,
       };
 
       if (img) {
         form["image"] = img[0];
       }
 
-      if (data?.password) {
-        form["password"] = data?.password;
-        form["password_confirmation"] = data?.confirm_password;
+      if (formData?.password) {
+        form["password"] = formData?.password;
+        form["password_confirmation"] = formData?.password_confirmation;
       }
 
       studentMutation.mutate(form);
@@ -611,7 +621,7 @@ export function ViewStudents() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }
@@ -623,8 +633,8 @@ export function ViewStudents() {
     const input = event.target as HTMLFormElement;
 
     if (
-      (input.verfication.value as string).toLowerCase() ===
-      getStudentQuery.data?.data.name
+      (input.verfication.value as string).toLowerCase() !==
+      getStudentQuery.data?.name.toLowerCase()
     ) {
       setIsVerficationMatch(false);
       return;
@@ -648,19 +658,17 @@ export function ViewStudents() {
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const { data: StudentData } = await queryClient.ensureQueryData({
+    const data = (await queryClient.ensureQueryData({
       queryKey: ["getStudent", id],
       queryFn: () => getUser(id),
-    });
+    })) as Student;
 
     setData({
-      id: StudentData?.id,
-      firstName: getUserName(StudentData?.name).firstName,
-      lastName: getUserName(StudentData?.name).lastName,
-      email: StudentData?.email,
-      phone: StudentData?.phone,
-      password: "",
-      confirm_password: "",
+      id: data?.id,
+      firstName: getUserName(data?.name).firstName,
+      lastName: getUserName(data?.name).lastName,
+      email: data?.email,
+      phone: data?.phone,
     });
   };
 
@@ -669,6 +677,7 @@ export function ViewStudents() {
     setOpenModal(undefined);
 
     toggleChangePassword(false);
+    setPreviewImg(undefined);
 
     setData({
       id: 0,
@@ -677,7 +686,7 @@ export function ViewStudents() {
       email: "",
       phone: "",
       password: "",
-      confirm_password: "",
+      password_confirmation: "",
     });
 
     setFormError({
@@ -754,7 +763,7 @@ export function ViewStudents() {
   useEffect(() => {
     if (getStudentsQuery.isFetched) {
       let data = {};
-      getStudentsQuery.data?.data.data.map((student: Student) => {
+      getStudentsQuery.data?.data.map((student: Student) => {
         data = { ...data, [student.id]: !!student.blocked };
       });
       setBlockSwitch(data);
@@ -822,9 +831,9 @@ export function ViewStudents() {
             <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource={
-                  getStudentQuery.data?.data.imagePath
-                    ? SERVER_STORAGE + getStudentQuery.data?.data.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
+                  getStudentQuery.data?.imagePath
+                    ? SERVER_STORAGE + getStudentQuery.data?.imagePath
+                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.name).firstName}+${getUserName(getStudentQuery.data?.name).lastName}`
                 }
                 className="h-40 w-40"
               />
@@ -835,10 +844,10 @@ export function ViewStudents() {
                 <ToggleSwitch
                   theme={customToggleSwitch}
                   color={brandState}
-                  checked={blockSwitch[getStudentQuery.data?.data.id] || false}
+                  checked={blockSwitch[getStudentQuery.data?.id] || false}
                   onChange={() =>
                     setOpenModal({
-                      id: getStudentQuery.data?.data.id,
+                      id: getStudentQuery.data?.id,
                       type: "block",
                       open: true,
                     })
@@ -858,7 +867,7 @@ export function ViewStudents() {
                         {t("form.fields.first_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getStudentQuery.data?.data.name).firstName}
+                        {getUserName(getStudentQuery.data?.name).firstName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -866,7 +875,7 @@ export function ViewStudents() {
                         {t("form.fields.last_name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getStudentQuery.data?.data.name).lastName}
+                        {getUserName(getStudentQuery.data?.name).lastName}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -874,7 +883,7 @@ export function ViewStudents() {
                         {t("form.fields.email")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getStudentQuery.data?.data.email}
+                        {getStudentQuery.data?.email}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -882,7 +891,7 @@ export function ViewStudents() {
                         {t("form.fields.phone_number")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {getStudentQuery.data?.data.phone}
+                        {getStudentQuery.data?.phone}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -905,14 +914,14 @@ export function ViewStudents() {
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                         {t("form.fields.parent_guardian")}:
                       </span>
-                      {getStudentQuery.data?.data.guardian ? (
+                      {getStudentQuery.data?.guardian ? (
                         <div
                           className="mt-2 flex w-max cursor-pointer items-center gap-x-2 rounded-s py-2 pl-2 pr-4 hover:bg-gray-100 dark:hover:bg-gray-600"
                           onClick={() =>
                             navigate("/parents/manage", {
                               state: {
                                 parent: {
-                                  id: getStudentQuery.data?.data.guardian.id,
+                                  id: getStudentQuery.data?.guardian.id,
                                 },
                               },
                             })
@@ -921,15 +930,15 @@ export function ViewStudents() {
                           <img
                             className="w-7 rounded-full"
                             src={
-                              getStudentQuery.data?.data.guardian.imagePath
+                              getStudentQuery.data?.guardian.imagePath
                                 ? SERVER_STORAGE +
-                                  getStudentQuery.data?.data.guardian.imagePath
-                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.data.guardian.name).firstName}+${getUserName(getStudentQuery.data?.data.guardian.name).lastName}`
+                                  getStudentQuery.data?.guardian.imagePath
+                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.guardian.name).firstName}+${getUserName(getStudentQuery.data?.guardian.name).lastName}`
                             }
                             alt="profile"
                           />
                           <span className="text-sm text-dark-primary dark:text-white">
-                            {getStudentQuery.data?.data.guardian?.name}
+                            {getStudentQuery.data?.guardian?.name}
                           </span>
                         </div>
                       ) : (
@@ -937,8 +946,8 @@ export function ViewStudents() {
                           className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
                           onClick={() =>
                             setOpenParentModal({
-                              id: getStudentQuery.data?.data.id,
-                              school_id: getStudentQuery.data?.data.school_id,
+                              id: getStudentQuery.data?.id,
+                              school_id: getStudentQuery.data?.school_id,
                               open: true,
                             })
                           }
@@ -962,7 +971,7 @@ export function ViewStudents() {
                       {t("form.fields.grade_levels")}:
                     </span>
                     <div className="flex w-max max-w-48 flex-wrap">
-                      {getStudentQuery.data?.data.grades.map(
+                      {getStudentQuery.data?.grades.map(
                         (grade: Grade, index: number) => (
                           <Badge
                             key={index}
@@ -1018,9 +1027,9 @@ export function ViewStudents() {
                   imgSource={
                     previewImg
                       ? previewImg
-                      : getStudentQuery.data?.data.imagePath
-                        ? SERVER_STORAGE + getStudentQuery.data?.data.imagePath
-                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.data.name).firstName}+${getUserName(getStudentQuery.data?.data.name).lastName}`
+                      : getStudentQuery.data?.imagePath
+                        ? SERVER_STORAGE + getStudentQuery.data?.imagePath
+                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.name).firstName}+${getUserName(getStudentQuery.data?.name).lastName}`
                   }
                   className="h-40 w-40"
                 />
@@ -1062,7 +1071,7 @@ export function ViewStudents() {
                       placeholder={t("form.placeholders.first_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
-                      value={data?.firstName}
+                      value={formData?.firstName}
                       onChange={onChange}
                     />
 
@@ -1074,7 +1083,7 @@ export function ViewStudents() {
                       placeholder={t("form.placeholders.last_name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
-                      value={data?.lastName}
+                      value={formData?.lastName}
                       onChange={onChange}
                     />
 
@@ -1098,7 +1107,7 @@ export function ViewStudents() {
                       pattern="(06|05)[0-9]{6}"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
-                      value={data?.phone}
+                      value={formData?.phone}
                       onChange={onChange}
                     />
 
@@ -1110,7 +1119,7 @@ export function ViewStudents() {
                       placeholder={t("form.placeholders.email")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getStudentQuery.isFetching && true}
-                      value={data?.email}
+                      value={formData?.email}
                       onChange={onChange}
                     />
 
@@ -1125,7 +1134,7 @@ export function ViewStudents() {
                           label={t("form.fields.password")}
                           placeholder="●●●●●●●"
                           error={formError.password}
-                          value={data?.password}
+                          value={formData?.password}
                           custom-style={{
                             inputStyle: "px-10",
                           }}
@@ -1138,12 +1147,12 @@ export function ViewStudents() {
 
                         <Input
                           type="password"
-                          id="confirm_password"
-                          name="confirm_password"
+                          id="password_confirmation"
+                          name="password_confirmation"
                           label={t("form.fields.confirm_password")}
                           placeholder="●●●●●●●"
                           error={formError.confirm_password}
-                          value={data?.confirm_password}
+                          value={formData?.password_confirmation}
                           custom-style={{
                             inputStyle: "px-10",
                           }}
@@ -1208,17 +1217,18 @@ export function ViewStudents() {
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.delete.title")}{" "}
-                <b>{getStudentQuery.data?.data.name}</b>
+                {t("modals.delete.title")} <b>{getStudentQuery.data?.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
                 <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("modals.delete.label", {
-                  item: getStudentQuery.data?.data.name,
-                })}
+                <Trans
+                  i18nKey="modals.delete.label"
+                  values={{ item: getStudentQuery.data?.name }}
+                  components={{ bold: <strong /> }}
+                />
               </p>
               <Input
                 type="text"
@@ -1265,8 +1275,7 @@ export function ViewStudents() {
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.block.title")}{" "}
-                <b>{getStudentQuery.data?.data.name} ?</b>
+                {t("modals.block.title")} <b>{getStudentQuery.data?.name} ?</b>
               </p>
               {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -1274,7 +1283,7 @@ export function ViewStudents() {
               </div> */}
               {/* <p className="text-gray-900 dark:text-white">
                 {t("delete-modal-label")}{" "}
-                <b>{getParentQuery.data?.data.name}</b>
+                <b>{getParentQuery.data?.name}</b>
               </p> */}
               {/* <Input
                 type="text"
@@ -1290,7 +1299,7 @@ export function ViewStudents() {
           </Modal.Body>
           <Modal.Footer>
             <button type="submit" className="btn-danger !w-auto">
-              {getStudentQuery.data?.data.blocked == 0
+              {getStudentQuery.data?.blocked == 0
                 ? t("modals.block.block_button")
                 : t("modals.block.unblock_button")}
             </button>
@@ -1429,12 +1438,13 @@ export function ViewStudents() {
                         inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
-                      onChange={(e) =>
+                      onChange={(e) => (
+                        setPage(1),
                         setFilter((prev) => ({
                           ...prev,
                           name: e.target.value,
                         }))
-                      }
+                      )}
                     />
                   </Table.Cell>
                   <Table.Cell className="p-2">
@@ -1478,7 +1488,7 @@ export function ViewStudents() {
                       >
                         {t("general.all")}
                       </option>
-                      {getGradesQuery.data?.data.data.map(
+                      {getGradesQuery.data?.data.map(
                         (grade: Grade, index: number) => (
                           <option key={index} value={grade.id}>
                             {grade.label}
@@ -1510,7 +1520,7 @@ export function ViewStudents() {
                 !(getStudentsQuery.isRefetching || perPage) ? (
                   <SkeletonTable cols={12} />
                 ) : (
-                  getStudentsQuery.data?.data.data.map(
+                  getStudentsQuery.data?.data.map(
                     (student: Student, key: number) => (
                       <Table.Row
                         key={key}
@@ -1705,12 +1715,11 @@ export function ViewStudents() {
             <span className="text-gray-500 dark:text-gray-400">
               {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getStudentsQuery.data?.data.from}-
-                {getStudentsQuery.data?.data.to}
+                {getStudentsQuery.data?.from}-{getStudentsQuery.data?.to}
               </span>{" "}
               {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getStudentsQuery.data?.data.total}
+                {getStudentsQuery.data?.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
@@ -1719,7 +1728,7 @@ export function ViewStudents() {
                 name="row-num"
                 onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getStudentsQuery.data?.data.per_page}
+                defaultValue={getStudentsQuery.data?.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -1733,7 +1742,7 @@ export function ViewStudents() {
                 onPageChange={(page) =>
                   !getStudentsQuery.isPlaceholderData && setPage(page)
                 }
-                totalPages={getStudentsQuery.data?.data.last_page ?? 1}
+                totalPages={getStudentsQuery.data?.last_page ?? 1}
                 nextLabel={minSm ? t("pagination.next") : ""}
                 previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{

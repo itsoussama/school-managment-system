@@ -46,7 +46,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { BsThreeDotsVertical, BsTriangleFill } from "react-icons/bs";
 import {
   FaChevronDown,
@@ -116,7 +116,7 @@ interface MaintenanceRequests {
 //   userData?: Array<Record<string, string>>;
 //   resource_id: number;
 // }
-export interface FormData {
+export interface Data {
   _method?: string;
   id?: number;
   title: string;
@@ -124,9 +124,24 @@ export interface FormData {
   status: Status;
   priority: string;
   file_path?: File;
+  created_at?: string;
   resolved_date?: string;
   users?: Array<number>;
   school_id?: string;
+  resource_id?: number;
+}
+
+interface FormData {
+  id?: number;
+  title: string;
+  description: string;
+  status: Status;
+  priority: string;
+  file_path?: File;
+  resolved_date?: string;
+  created_at?: string;
+  users?: Array<number>;
+  userData?: Array<Record<string, string>>;
   resource_id?: number;
 }
 
@@ -144,7 +159,17 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export default function MaintenanceRequests() {
   const queryClient = useQueryClient();
-  const { formData, setData } = useFormValidation({});
+  const { formData, setData } = useFormValidation<FormData>({
+    id: 0,
+    title: "",
+    description: "",
+    status: "pending",
+    priority: "",
+    resolved_date: "",
+    created_at: "",
+    users: [],
+    resource_id: 0,
+  });
 
   // const location = useLocation();
   const redirect = useNavigate();
@@ -244,7 +269,7 @@ export default function MaintenanceRequests() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.created_success"),
         state: true,
       });
 
@@ -257,7 +282,6 @@ export default function MaintenanceRequests() {
         resolved_date: "",
         created_at: "",
         users: [],
-        school_id: "",
         resource_id: 0,
       });
 
@@ -269,7 +293,7 @@ export default function MaintenanceRequests() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -277,16 +301,16 @@ export default function MaintenanceRequests() {
 
   const maintenanceRequestMutation = useMutation({
     mutationFn: setMaintenanceRequest,
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getMaintenanceRequest"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getMaintenanceRequests"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllMaintenanceRequests"],
       });
 
@@ -299,13 +323,12 @@ export default function MaintenanceRequests() {
         users: data?.users,
         created_at: data?.created_at,
         resource_id: data?.resource_id as number,
-        school_id: data?.school_id,
       });
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
 
@@ -319,7 +342,7 @@ export default function MaintenanceRequests() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -327,12 +350,12 @@ export default function MaintenanceRequests() {
 
   const deleteMaintenanceRequestQuery = useMutation({
     mutationFn: deleteMaintenanceRequest,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getMaintenanceRequests"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllMaintenanceRequests"],
       });
 
@@ -342,7 +365,7 @@ export default function MaintenanceRequests() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.deleted_success"),
         state: true,
       });
     },
@@ -351,7 +374,7 @@ export default function MaintenanceRequests() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -365,16 +388,16 @@ export default function MaintenanceRequests() {
 
   const maintenanceRequestStatusMutation = useMutation({
     mutationFn: setMaintenanceRequestStatus,
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getMaintenanceRequest"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getMaintenanceRequests"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllMaintenanceRequests"],
       });
 
@@ -387,13 +410,12 @@ export default function MaintenanceRequests() {
         users: data?.users,
         created_at: data?.created_at,
         resource_id: data?.resource_id as number,
-        school_id: data?.school_id,
       });
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
 
@@ -404,7 +426,7 @@ export default function MaintenanceRequests() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -501,6 +523,19 @@ export default function MaintenanceRequests() {
     ],
   );
 
+  const dateTimeFormatter = (date: string | null) => {
+    if (date !== null) {
+      if (!isNaN(new Date(date).valueOf())) {
+        const dateLocal: Date = new Date(date);
+        const offsetDate = new Date(
+          dateLocal.getTime() - dateLocal.getTimezoneOffset() * 60000,
+        ); // Adjust for local timezone
+        return offsetDate.toISOString().slice(0, 16);
+      }
+    }
+    return "";
+  };
+
   const onChange = (event: ChangeEvent) => {
     const inputElem = event.target as HTMLInputElement;
     const selectElem = event.target as HTMLSelectElement;
@@ -532,7 +567,7 @@ export default function MaintenanceRequests() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      addMaintenanceRequestQuery.mutate({
+      const form: Data = {
         id: formData?.id as number,
         title: formData?.title as string,
         description: formData?.description as string,
@@ -541,12 +576,13 @@ export default function MaintenanceRequests() {
         users: formData?.users as number[],
         resource_id: formData?.resource_id as number,
         school_id: admin?.school_id,
-      });
+      };
+      addMaintenanceRequestQuery.mutate(form);
     } catch (e) {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }
@@ -556,12 +592,14 @@ export default function MaintenanceRequests() {
     event.preventDefault();
 
     try {
-      const form: FormData = {
+      const form: Data = {
         _method: "PUT",
         id: formData.id as number,
         title: formData?.title as string,
         description: formData?.description as string,
         status: formData?.status as Status,
+        created_at: formData?.created_at,
+        resolved_date: formData?.resolved_date,
         priority: formData?.priority as string,
         // users: data?.users,
       };
@@ -571,7 +609,7 @@ export default function MaintenanceRequests() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }
@@ -583,8 +621,8 @@ export default function MaintenanceRequests() {
     const input = event.target as HTMLFormElement;
 
     if (
-      (input.verfication.value as string).toLowerCase() ===
-      getMaintenanceRequestQuery.data?.data.name
+      (input.verfication.value as string).toLowerCase() !==
+      getMaintenanceRequestQuery.data?.title.toLowerCase()
     ) {
       setIsVerficationMatch(false);
       return;
@@ -595,21 +633,23 @@ export default function MaintenanceRequests() {
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-    const MaintenanceReqData = await queryClient.ensureQueryData({
+    const maintenanceReqData: Data = await queryClient.ensureQueryData({
       queryKey: ["getMaintenanceRequest", id],
       queryFn: () => getMaintenanceRequest(id as number),
     });
 
+    console.log(maintenanceReqData);
+
     setData({
-      id: MaintenanceReqData?.id as number,
-      title: MaintenanceReqData?.title as string,
-      description: MaintenanceReqData?.description as string,
-      status: MaintenanceReqData?.status,
-      created_at: MaintenanceReqData?.created_at as string,
-      priority: MaintenanceReqData?.priority,
-      users: MaintenanceReqData?.users,
-      school_id: MaintenanceReqData?.school_id,
-      resource_id: MaintenanceReqData?.resource_id as number,
+      id: maintenanceReqData?.id as number,
+      title: maintenanceReqData?.title as string,
+      description: maintenanceReqData?.description as string,
+      status: maintenanceReqData?.status,
+      created_at: maintenanceReqData?.created_at as string,
+      resolved_date: maintenanceReqData?.resolved_date,
+      priority: maintenanceReqData?.priority,
+      users: maintenanceReqData?.users,
+      resource_id: maintenanceReqData?.resource_id as number,
     });
   };
 
@@ -625,7 +665,6 @@ export default function MaintenanceRequests() {
       resolved_date: "",
       created_at: "",
       users: [],
-      school_id: "",
       resource_id: 0,
     });
 
@@ -1001,7 +1040,7 @@ export default function MaintenanceRequests() {
                       label={t("entities.item")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
-                      value={(formData.resource_id as string) || ""}
+                      value={(formData.resource_id as number) || ""}
                       onChange={onChange}
                     >
                       <option value="default">Choose Item</option>
@@ -1216,7 +1255,7 @@ export default function MaintenanceRequests() {
                       }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       value={
-                        (formData?.created_at as string)?.slice(0, 16) || ""
+                        dateTimeFormatter(formData?.created_at as string) || ""
                       }
                       onChange={onChange}
                     />
@@ -1232,7 +1271,8 @@ export default function MaintenanceRequests() {
                       }}
                       disabled={getMaintenanceRequestQuery.isFetching && true}
                       value={
-                        (formData?.resolved_date as string)?.slice(0, 16) || ""
+                        dateTimeFormatter(formData?.resolved_date as string) ||
+                        ""
                       }
                       onChange={onChange}
                     />
@@ -1287,15 +1327,18 @@ export default function MaintenanceRequests() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.delete.title")}
-                {/* <b>{getResourceQuery.data?.label}</b> */}
+                <b>{getMaintenanceRequestQuery.data?.title}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
                 <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("modals.delete.label")}{" "}
-                <b>{getMaintenanceRequestQuery.data?.title}</b>
+                <Trans
+                  i18nKey="modals.delete.label"
+                  values={{ item: getMaintenanceRequestQuery.data?.title }}
+                  components={{ bold: <strong /> }}
+                />
               </p>
               <Input
                 type="text"
@@ -1452,12 +1495,13 @@ export default function MaintenanceRequests() {
                         inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
-                      onChange={(e) =>
+                      onChange={(e) => (
+                        setPage(1),
                         setFilter((prev) => ({
                           ...prev,
                           title: e.target.value,
                         }))
-                      }
+                      )}
                     />
                   </Table.Cell>
                   <Table.Cell className="p-2"></Table.Cell>
@@ -1635,7 +1679,7 @@ export default function MaintenanceRequests() {
                             "-"
                           )}
                         </Table.Cell>
-                        <Table.Cell>
+                        <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                           {maintenanceReq.resolved_date ? (
                             <>
                               {handleDateTime(

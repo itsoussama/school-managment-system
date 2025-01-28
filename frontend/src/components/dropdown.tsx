@@ -143,6 +143,7 @@ function Dropdown({
         window.addEventListener("scroll", closeDropDown, true); // `true` for capturing phase
       }
       window.addEventListener("resize", closeDropDown);
+      window.addEventListener("transitionstart", closeDropDown);
 
       if (closeOnEvent === "click" || closeOnEvent === "both") {
         document.addEventListener("mousedown", handleOutsideClick);
@@ -167,7 +168,7 @@ function Dropdown({
         triggerElement?.removeEventListener("mouseleave", closeDropDown);
         dropdownElement?.removeEventListener("mouseleave", closeDropDown);
       }
-
+      window.removeEventListener("transitionstart", closeDropDown);
       document.removeEventListener("mousedown", handleOutsideClick);
       dropdownElement?.removeEventListener("mouseleave", closeDropDown);
       if (triggerEvent === "click") {

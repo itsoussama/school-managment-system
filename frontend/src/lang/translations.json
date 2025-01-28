@@ -425,7 +425,7 @@
                 "delete": {
                     "title": "Êtes-vous sûr de vouloir supprimer {{item}}",
                     "message": "Cette action est irréversible et supprime définitivement l'élément.",
-                    "label": "Veuillez retaper '{{item}}' pour confirmer",
+                    "label": "Veuillez retaper <bold>{{item}}</bold> pour confirmer",
                     "error": "Les valeurs ne correspondent pas",
                     "delete_button": "Supprimer",
                     "cancel_button": "Annuler"

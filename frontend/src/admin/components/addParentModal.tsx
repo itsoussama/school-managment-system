@@ -21,7 +21,8 @@ import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
-import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
+import { Data as AddParentFromData } from "@src/admin/pages/parents/addParent";
+import roles from "@admin/roles.json";
 
 interface AddParentModal {
   open: boolean;
@@ -30,18 +31,29 @@ interface AddParentModal {
   child_id: number;
 }
 
-export interface FormData {
-  name?: string;
-  firstName?: string;
-  lastName?: string;
-  phone: string;
+// export interface Data {
+//   name: string;
+//   phone: string;
+//   email: string;
+//   address: string;
+//   password: string;
+//   password_confirmation: string;
+//   school_id: string;
+//   childrens: number[];
+//   roles: number[];
+//   image?: File;
+// }
+
+interface FormData {
+  id?: number;
+  firstName: string;
+  lastName: string;
   email: string;
-  password: string;
-  password_confirmation: string;
-  school_id: string;
-  childrens: number[];
-  roles: number[];
-  image: File;
+  phone: string;
+  address: string;
+  image?: File;
+  password?: string;
+  password_confirmation?: string;
 }
 
 interface File {
@@ -70,11 +82,16 @@ export default function AddParentModal({
   const queryClient = useQueryClient();
 
   const { t } = useTranslation();
-  const { formData, errors, setFormData, validateForm } = useFormValidation({
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
+  const { formData, errors, setFormData, validateForm } =
+    useFormValidation<FormData>({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      address: "",
+      password: "",
+      password_confirmation: "",
+    });
 
   const [img, setImg] = useState<FileList>();
   const [openModal, setOpenModal] = useState<boolean>(open);
@@ -93,23 +110,24 @@ export default function AddParentModal({
 
   const addParentQuery = useMutation({
     mutationFn: addParent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getStudents"],
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getStudent"],
       });
 
       setOpenModal(false);
       toggleOpen(false);
+      setOption(undefined);
 
       setPreviewImg(undefined);
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
     },
@@ -118,7 +136,7 @@ export default function AddParentModal({
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -126,17 +144,19 @@ export default function AddParentModal({
 
   const assignParentQuery = useMutation({
     mutationFn: assignParent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getStudents"],
       });
 
       setOpenModal(false);
       toggleOpen(false);
+      setOption(undefined);
+
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.saved_success"),
         state: true,
       });
     },
@@ -145,7 +165,7 @@ export default function AddParentModal({
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -160,6 +180,7 @@ export default function AddParentModal({
     addParentQuery.reset();
     setOpenModal(false);
     toggleOpen(false);
+    setPreviewImg(undefined);
     setOption(undefined);
   };
 
@@ -193,7 +214,7 @@ export default function AddParentModal({
           password_confirmation: formData?.password_confirmation as string,
           phone: formData?.phone as string,
           childrens: [child_id],
-          roles: [4],
+          roles: [roles.parent],
         };
 
         if (img) {
@@ -450,7 +471,7 @@ export default function AddParentModal({
                 />
               </div>
               <div className="flex flex-col gap-y-3 overflow-y-auto">
-                {getParentsQuery.data?.data.map(
+                {getParentsQuery.data?.map(
                   (parent: Parent, key: number) =>
                     parent.name.search(new RegExp(searchValue, "i")) !== -1 && (
                       <div key={key}>

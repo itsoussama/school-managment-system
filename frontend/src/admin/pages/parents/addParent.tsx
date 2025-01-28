@@ -23,10 +23,19 @@ import { BrandColor, colorPalette } from "@src/utils/colors";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 
-export interface FormData {
-  name?: string;
-  firstName?: string;
-  lastName?: string;
+interface FormData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  childrens: number[];
+  image?: File;
+}
+
+export interface Data {
+  name: string;
   phone: string;
   email: string;
   password: string;
@@ -46,7 +55,7 @@ interface Childs {
 
 interface DataChilds {
   id: string;
-  label: string;
+  [key: string]: string;
 }
 
 interface File {
@@ -60,11 +69,16 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export default function AddParent() {
   const { t } = useTranslation();
-  const { formData, errors, setFormData, validateForm } = useFormValidation({
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
+  const { formData, errors, setFormData, validateForm } =
+    useFormValidation<FormData>({
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      password: "",
+      password_confirmation: "",
+      childrens: [],
+    });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -127,7 +141,7 @@ export default function AddParent() {
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
-        const form: FormData = {
+        const form: Data = {
           name: formData?.firstName + " " + formData?.lastName,
           email: formData?.email as string,
           school_id: admin?.school_id,
@@ -157,6 +171,7 @@ export default function AddParent() {
     // addStudentQuery.reset();
     setOpenModal(false);
     setSearchValue("");
+    setPreviewImg(undefined);
     // setFormData({
     //   name: "",
     //   firstName: "",
@@ -302,7 +317,7 @@ export default function AddParent() {
             />
           </div>
           <div className="flex flex-col gap-y-3 overflow-y-auto">
-            {getChildrensQuery.data?.data.map(
+            {getChildrensQuery.data?.map(
               (child: Childs, key: number) =>
                 child.name.search(new RegExp(searchValue, "i")) !== -1 && (
                   <div key={key}>
