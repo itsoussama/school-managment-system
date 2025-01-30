@@ -571,7 +571,7 @@ const getStages = async (schoolId: string) => {
   return response.data;
 };
 
-const getStage = async (id: string) => {
+const getStage = async (id: number) => {
   const response = await axiosApi.get("/api/stages/" + id);
   return response.data;
 };
@@ -586,8 +586,8 @@ const setStage = async (formData: UpdateStageFromData) => {
   return response.data;
 };
 
-const deleteStage = async (id: string) => {
-  const response = await axiosApi.delete("/api/events/" + id);
+const deleteStage = async (id: number) => {
+  const response = await axiosApi.delete("/api/stages/" + id);
   return response.data;
 };
 

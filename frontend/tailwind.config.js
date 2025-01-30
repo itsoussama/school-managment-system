@@ -323,9 +323,12 @@ export default {
 
       animation: {
         fill: "fill",
-        "fade-fwd": "fade-fwd 0.4s ease-in-out alternate forwards",
+        "fade-fwd": "fade-fwd 0.4s ease-in-out both",
         "slide-in": "slide-in 0.6s cubic-bezier(.65,.09,.31,1.17) both",
-        "scale-up": "scale-up 1s cubic-bezier(.65,.09,.31,1.17) both",
+        "scale-up":
+          "scale-up 0.6s .3s cubic-bezier(.65,.09,.31,1.17) alternate both", // if change made in the delay you must change the 3rd argument in the cubic-bezier for the scale-down animation
+        "scale-down":
+          "scale-down 0.6s cubic-bezier(.53,.01,.3,.99) alternate both",
       },
 
       keyframes: {
@@ -359,18 +362,18 @@ export default {
         },
         "scale-up": {
           "0%": {
-            // "-webkit-transform": "scaleY(0)",
-            // transform: "scaleY(0)",
-            // "-webkit-transform-origin": "100% 0%",
-            // "transform-origin": "100% 0%",
             "max-height": 0,
           },
           "100%": {
-            // "-webkit-transform": "scaleY(1)",
-            // transform: "scaleY(1)",
-            // "-webkit-transform-origin": "100% 0%",
-            // "transform-origin": "100% 0%",
             "max-height": "999px",
+          },
+        },
+        "scale-down": {
+          "0%": {
+            "max-height": "999px",
+          },
+          "100%": {
+            "max-height": 0,
           },
         },
       },

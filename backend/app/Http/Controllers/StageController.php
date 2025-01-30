@@ -67,6 +67,7 @@ class StageController extends Controller
      */
     public function destroy(Stage $stage)
     {
+        info($stage);
         $stage->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }
