@@ -17,7 +17,8 @@ interface Body extends Accordion {
   id: number;
   title: string;
   deleteItem?: () => void;
-  onChange?: (event: ChangeEvent) => void;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onValidateChange?: () => void;
   value?: string;
   deletable?: boolean;
   editable?: boolean;
@@ -46,6 +47,7 @@ Accordion.container = function Container({
   title,
   children,
   onChange,
+  onValidateChange,
   deleteItem,
   value,
   deletable = false,
@@ -68,7 +70,7 @@ Accordion.container = function Container({
               type="text"
               id={id.toString()}
               className="border-0 bg-transparent text-xl text-white focus:border-b focus:border-gray-300 focus:ring-0"
-              onBlur={() => setEditTitle(false)}
+              onBlur={() => (setEditTitle(false), onValidateChange?.())}
               autoFocus={editTitle}
               value={value || ""}
               placeholder={value}
@@ -80,7 +82,7 @@ Accordion.container = function Container({
                 id="accordion-title"
                 className="text-xl font-semibold text-gray-900 dark:text-white"
               >
-                {value}
+                {title}
               </h1>
 
               <FaPen

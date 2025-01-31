@@ -12,6 +12,12 @@ class Grade extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'label',
+        'stage_id',
+        'school_id'
+    ];
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class, 'school_id', 'id');

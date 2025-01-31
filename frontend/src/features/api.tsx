@@ -8,7 +8,8 @@ import { Data as UpdateClassroomFromData } from "@admin/pages/classrooms/viewCla
 import { Data as UpdateSubjectFromData } from "@admin/pages/configuration/school/subjects";
 import { Data as UpdateSchoolFromData } from "@src/admin/pages/configuration/school/generalSettings";
 import { Data as UpdateProfileFromData } from "@admin/pages/profile/profile";
-import { Data as UpdateStageFromData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { StageData as UpdateStageFromData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { GradeData as UpdateGradeFormData } from "@src/admin/pages/configuration/school/schoolLevels";
 import { Data as UpdateEventFromData } from "@src/admin/pages/configuration/school/timetable";
 
 import {
@@ -23,7 +24,8 @@ import { Data as AddResourceFromData } from "@src/admin/pages/resources/addResou
 import { Data as AddClassroomFromData } from "@src/admin/pages/classrooms/addClassroom";
 import { Data as AddSubjectFromData } from "@admin/pages/configuration/school/subjects";
 import { Data as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
-import { Data as AddStageFromData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { StageData as AddStageFromData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { GradeData as AddGradeFromData } from "@src/admin/pages/configuration/school/schoolLevels";
 import { Data as AddEventFromData } from "@src/admin/pages/configuration/school/timetable";
 const axiosApi = AxiosProvider();
 
@@ -279,8 +281,57 @@ const deleteSubject = async (id: number) => {
   return response.data;
 };
 
-const getGrades = async () => {
-  const response = await axiosApi.get("/api/grades/");
+const getGrades = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  schoolId: string,
+) => {
+  const response = await axiosApi.get(
+    "/api/grades?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&school_id=" +
+      schoolId,
+  );
+  return response.data;
+};
+
+const getGrade = async (id: number) => {
+  const response = await axiosApi.get("/api/grades/" + id);
+  return response.data;
+};
+
+const addGrade = async (formData: AddGradeFromData) => {
+  const response = await axiosApi.post("/api/grades/", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
+const setGrade = async (formData: UpdateGradeFormData) => {
+  const response = await axiosApi.post(
+    "/api/grades/" + formData?.id,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
+const deleteGrade = async (id: number) => {
+  const response = await axiosApi.delete("/api/grades/" + id);
   return response.data;
 };
 
@@ -644,6 +695,10 @@ export {
   assignSubjetTeacher,
   deleteSubject,
   getGrades,
+  getGrade,
+  addGrade,
+  setGrade,
+  deleteGrade,
   getResources,
   getResource,
   addResource,
