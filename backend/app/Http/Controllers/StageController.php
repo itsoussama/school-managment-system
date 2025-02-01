@@ -40,7 +40,6 @@ class StageController extends Controller
      */
     public function show(Stage $stage)
     {
-        $stage = Stage::find($stage->id);
         return response()->json($stage, Response::HTTP_OK);
     }
 

@@ -30,6 +30,7 @@ import {
   getStages,
   getStudents,
   getTeachers,
+  setGrade,
   setStage,
 } from "@api";
 import { useFormValidation } from "@src/hooks/useFormValidation";
@@ -146,7 +147,9 @@ export default function SchoolLevels() {
   const getGradeQuery = useQuery({
     queryKey: ["getGrade", openModal?.id],
     queryFn: () => getGrade(openModal?.id as number),
-    enabled: !!openModal?.id && openModal?.type === "deleteGrade",
+    enabled:
+      !!openModal?.id &&
+      (openModal?.type === "deleteGrade" || openModal?.type === "editGrade"),
   });
 
   const getAllTeachersQuery = useQuery({
@@ -165,6 +168,33 @@ export default function SchoolLevels() {
     mutationFn: addGrade,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["getStages"] });
+
+      setNewLevel(undefined);
+      setOpenModal(undefined);
+
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: t("notifications.created_success"),
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: t("notifications.submission_failed"),
+        state: true,
+      });
+    },
+  });
+
+  const setGradeMutation = useMutation({
+    mutationFn: setGrade,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["getStages"] });
+      await queryClient.invalidateQueries({ queryKey: ["getGrade"] });
 
       setNewLevel(undefined);
       setOpenModal(undefined);
@@ -315,6 +345,20 @@ export default function SchoolLevels() {
     });
   };
 
+  const onOpenEditGradeModal = async ({ id, type, open: isOpen }: Modal) => {
+    setOpenModal({ id: id, type: type, open: isOpen });
+    const data = (await queryClient.ensureQueryData({
+      queryKey: ["getGrade", id],
+      queryFn: () => getGrade(id),
+    })) as Grade;
+
+    setGradeData({
+      id: data?.id,
+      label: data?.label,
+      stage_id: data?.stage_id,
+    });
+  };
+
   const onSubmitNewStage = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -366,6 +410,20 @@ export default function SchoolLevels() {
     };
 
     addGradeMutation.mutate(form);
+  };
+
+  const onSubmitUpdateGradeLevel = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const form: GradeData = {
+      _method: "PUT",
+      id: gradeData?.id,
+      label: gradeData?.label,
+      stage_id: gradeData?.stage_id as number,
+      school_id: admin.school_id,
+    };
+
+    setGradeMutation.mutate(form);
   };
 
   const onSubmitDeleteGrade = (e: FormEvent<HTMLFormElement>) => {
@@ -530,7 +588,7 @@ export default function SchoolLevels() {
           },
         }}
       >
-        <form onSubmit={onSubmitNewGradeLevel}>
+        <form onSubmit={onSubmitUpdateGradeLevel}>
           <Modal.Header>
             {t("actions.edit_entity", {
               entity:
@@ -543,11 +601,12 @@ export default function SchoolLevels() {
             <div className="flex flex-col gap-x-8">
               <Input
                 type="text"
-                id="gradeLevel"
-                name="gradeLevel"
+                id="label"
+                name="label"
+                onChange={(e) => setGradeFormData(e.target.id, e.target.value)}
+                value={gradeData?.label}
                 label={t("form.fields.grade_level")}
                 placeholder={t("form.fields.grade_level")}
-                // onChange={(e) => handleChange(e.target.id, e.target.value)}
               />
             </div>
             <div className="mt-8 flex w-full flex-col">
@@ -788,10 +847,10 @@ export default function SchoolLevels() {
                           })
                         }
                         onEdit={() =>
-                          setOpenModal({
-                            id: 0,
-                            type: "editGrade",
+                          onOpenEditGradeModal({
+                            id: gradeLevel.id as number,
                             open: true,
+                            type: "editGrade",
                           })
                         }
                         index={gradeLevel.id as number}
