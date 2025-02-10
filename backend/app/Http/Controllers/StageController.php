@@ -40,7 +40,6 @@ class StageController extends Controller
      */
     public function show(Stage $stage)
     {
-        $stage = Stage::find($stage->id);
         return response()->json($stage, Response::HTTP_OK);
     }
 
@@ -67,6 +66,7 @@ class StageController extends Controller
      */
     public function destroy(Stage $stage)
     {
+        info($stage);
         $stage->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }

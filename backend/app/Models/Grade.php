@@ -12,6 +12,14 @@ class Grade extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'label',
+        'stage_id',
+        'school_id'
+    ];
+
+    protected $appends = ['teachers', 'students'];
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class, 'school_id', 'id');
@@ -36,7 +44,14 @@ class Grade extends Model
     {
         return $this->belongsTo(Stage::class);
     }
-}
 
-// ! yesterday you have changed the relationsship function from stages to stage to fix the error
-// ! you have to pay attention to the name of the functions, schools -> school,...
+    public function getTeachersAttribute()
+    {
+        return $this->users->filter(fn($user) => $user->role->contains('name', 'Teacher'))->values();
+    }
+
+    public function getStudentsAttribute()
+    {
+        return $this->users->filter(fn($user) => $user->role->contains('name', 'Student'))->values();
+    }
+}

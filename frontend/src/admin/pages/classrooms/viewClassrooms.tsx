@@ -68,7 +68,7 @@ interface Classroom {
   school_id: string;
 }
 
-export interface FormData {
+export interface Data {
   _method: string;
   id: number;
   name: string;
@@ -76,11 +76,10 @@ export interface FormData {
   school_id: string;
 }
 
-interface Data {
+interface FormData {
   id?: number;
   name: string;
   capacity: string;
-  school_id: string;
 }
 
 interface Sort {
@@ -95,11 +94,10 @@ interface Filter {
 
 export function ViewClassrooms() {
   const queryClient = useQueryClient();
-  const { formData, setData } = useFormValidation<Data>({
+  const { formData, setData } = useFormValidation<FormData>({
     id: 0,
     name: "",
     capacity: "",
-    school_id: "",
   });
   // const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // await queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
@@ -309,12 +307,12 @@ export function ViewClassrooms() {
       // const validationResult = validateForm();
       // if (validationResult.isValid) {
 
-      const form: FormData = {
+      const form: Data = {
         _method: "PUT",
         id: openModal?.id as number,
         name: formData?.name,
         capacity: formData?.capacity,
-        school_id: formData?.school_id,
+        school_id: admin.school_id,
       };
 
       classroomMutation.mutate(form);
@@ -355,7 +353,6 @@ export function ViewClassrooms() {
     setData({
       name: data?.name,
       capacity: data?.capacity,
-      school_id: data?.school_id,
     });
   };
 
@@ -367,7 +364,6 @@ export function ViewClassrooms() {
       id: 0,
       name: "",
       capacity: "",
-      school_id: "",
     });
   };
 

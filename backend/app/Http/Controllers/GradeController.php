@@ -18,8 +18,13 @@ class GradeController extends Controller
         $perPage = $request->input('per_page', 5);
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
-        $grades = Grade::with(['groups', 'stage'])->orderBy($sortColumn, $sortDirection)->paginate($perPage);
-        return response()->json($grades);
+        $school_id = $request->input('school_id');
+        $grades = Grade::with(['groups', 'stage', 'users'])->where("school_id", $school_id)->orderBy($sortColumn, $sortDirection);
+
+        if ($perPage == -1) {
+            return response()->json($grades->get(), Response::HTTP_OK);
+        }
+        return response()->json($grades->paginate($perPage), Response::HTTP_OK);
     }
 
     /**
@@ -32,6 +37,8 @@ class GradeController extends Controller
     {
         $request->validate([
             'label' => 'required|string|max:255',
+            'stage_id' => 'required|exists:stages,id',
+            "school_id" => 'required|exists:schools,id'
         ]);
 
         $grade = Grade::create($request->all());
@@ -46,7 +53,7 @@ class GradeController extends Controller
      */
     public function show(Grade $grade)
     {
-        return response()->json($grade->load(['groups', 'stage']));
+        return response()->json($grade->load(['groups', 'stage']), Response::HTTP_OK);
     }
 
     /**
@@ -60,10 +67,13 @@ class GradeController extends Controller
     {
         $request->validate([
             'label' => 'required|string|max:255',
+            'stage_id' => 'required|exists:stages,id',
+            "school_id" => 'required|exists:schools,id'
+
         ]);
 
         $grade->update($request->all());
-        return response()->json($grade);
+        return response()->json($grade, Response::HTTP_OK);
     }
 
     /**

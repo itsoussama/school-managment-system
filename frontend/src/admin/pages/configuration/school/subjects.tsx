@@ -250,7 +250,7 @@ export default function Subjects() {
   };
 
   const onChange = (property: string, value: string | unknown[]) => {
-    const exists = getSubjectsQuery.data?.data.some(
+    const exists = getSubjectsQuery.data?.some(
       (subject: Subject) => subject.name === value,
     );
     if (exists) {
@@ -342,7 +342,7 @@ export default function Subjects() {
 
     if (
       (input.verfication.value as string).toLowerCase() ===
-      getSubjectQuery.data?.data.name
+      getSubjectQuery.data?.name
     ) {
       setIsVerficationMatch(false);
       return;
@@ -491,17 +491,15 @@ export default function Subjects() {
                 name="grades"
                 onSelectItem={(items) => setFormData("grades", items)}
               >
-                {getGradesQuery.data?.data.data.map(
-                  (grade: Grades, key: number) => (
-                    <Checkbox
-                      key={key}
-                      label={grade.label}
-                      id={grade.id}
-                      name="grades"
-                      value={grade.label}
-                    />
-                  ),
-                )}
+                {getGradesQuery.data?.map((grade: Grades, key: number) => (
+                  <Checkbox
+                    key={key}
+                    label={grade.label}
+                    id={grade.id}
+                    name="grades"
+                    value={grade.label}
+                  />
+                ))}
               </MultiSelect>
 
               <MultiSelect
@@ -509,7 +507,7 @@ export default function Subjects() {
                 name="teachers"
                 onSelectItem={(items) => setFormData("teachers", items)}
               >
-                {getTeachersQuery.data?.data.map(
+                {getTeachersQuery.data?.map(
                   (teacher: TeacherSubject, key: number) => (
                     <Checkbox
                       key={key}
@@ -565,7 +563,7 @@ export default function Subjects() {
                         {t("form.fields.label")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getSubjectQuery.data?.data.name}
+                        {getSubjectQuery.data?.name}
                       </span>
                     </div>
                     <div className="flex flex-col">
@@ -573,7 +571,7 @@ export default function Subjects() {
                         {t("form.fields.grade_levels")}:
                       </span>
                       <div className="flex w-max max-w-48 flex-wrap">
-                        {getSubjectQuery.data?.data.grades.map(
+                        {getSubjectQuery.data?.grades.map(
                           (grade: Grades, index: number) => (
                             <Badge
                               key={index}
@@ -599,9 +597,9 @@ export default function Subjects() {
                         width="auto"
                         element={
                           <div className="flex items-center gap-x-2">
-                            {getSubjectQuery.data?.data.teachers.length > 2 ? (
+                            {getSubjectQuery.data?.teachers.length > 2 ? (
                               <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                                {getSubjectQuery.data?.data.teachers?.map(
+                                {getSubjectQuery.data?.teachers?.map(
                                   (teacher: TeacherSubject, key: number) =>
                                     key < 2 && (
                                       <img
@@ -618,13 +616,12 @@ export default function Subjects() {
                                     ),
                                 )}
                                 <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 border-gray-50 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 dark:border-gray-700 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500">
-                                  {`+${getSubjectQuery.data?.data.teachers.length - 2}`}
+                                  {`+${getSubjectQuery.data?.teachers.length - 2}`}
                                 </div>
                               </div>
-                            ) : getSubjectQuery.data?.data.teachers.length >
-                              1 ? (
+                            ) : getSubjectQuery.data?.teachers.length > 1 ? (
                               <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                                {getSubjectQuery.data?.data.teachers?.map(
+                                {getSubjectQuery.data?.teachers?.map(
                                   (teacher: TeacherSubject, key: number) =>
                                     key < 2 && (
                                       <img
@@ -642,26 +639,22 @@ export default function Subjects() {
                                 )}
                               </div>
                             ) : (
-                              getSubjectQuery.data?.data.teachers?.length ==
-                                1 && (
+                              getSubjectQuery.data?.teachers?.length == 1 && (
                                 <>
                                   <img
                                     className="h-10 w-10 rounded-full border-2 border-gray-50 dark:border-gray-700"
                                     src={
-                                      getSubjectQuery.data?.data.teachers[0]
+                                      getSubjectQuery.data?.teachers[0]
                                         ?.imagePath
                                         ? SERVER_STORAGE +
-                                          getSubjectQuery.data?.data.teachers[0]
+                                          getSubjectQuery.data?.teachers[0]
                                             ?.imagePath
-                                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getSubjectQuery.data?.data.teachers[0]?.name).firstName}+${getUserName(getSubjectQuery.data?.data.teachers[0]?.name).lastName}`
+                                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getSubjectQuery.data?.teachers[0]?.name).firstName}+${getUserName(getSubjectQuery.data?.teachers[0]?.name).lastName}`
                                     }
                                     alt="profile"
                                   />
                                   <span className="pointer-events-none">
-                                    {
-                                      getSubjectQuery.data?.data.teachers[0]
-                                        ?.name
-                                    }
+                                    {getSubjectQuery.data?.teachers[0]?.name}
                                   </span>
                                 </>
                               )
@@ -670,7 +663,7 @@ export default function Subjects() {
                         }
                       >
                         <Dropdown.List>
-                          {getSubjectQuery.data?.data.teachers.map(
+                          {getSubjectQuery.data?.teachers.map(
                             (teacher: TeacherSubject, key: number) => (
                               <Dropdown.Item
                                 key={key}
@@ -693,7 +686,7 @@ export default function Subjects() {
                           </p>
                         </Dropdown.Button>
                       </Dropdown>
-                      {getSubjectQuery.data?.data.teachers?.length < 1 && (
+                      {getSubjectQuery.data?.teachers?.length < 1 && (
                         <div
                           className="flex cursor-pointer items-center text-sm font-medium text-[var(--brand-color-600)] hover:underline dark:text-[var(--brand-color-500)]"
                           style={
@@ -767,7 +760,7 @@ export default function Subjects() {
                         formData?.grades as { id: string; label: string }[]
                       }
                     >
-                      {getGradesQuery.data?.data.data.map(
+                      {getGradesQuery.data?.map(
                         (grade: Grades, key: number) => (
                           <Checkbox
                             key={key}
@@ -807,7 +800,7 @@ export default function Subjects() {
                         label: teacher.name,
                       }))}
                     >
-                      {getTeachersQuery.data?.data.map(
+                      {getTeachersQuery.data?.map(
                         (teacher: TeacherSubject, key: number) => (
                           <Checkbox
                             key={key}
@@ -867,7 +860,7 @@ export default function Subjects() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.delete.title")}
-                <b>{getSubjectQuery.data?.data.name}</b>
+                <b>{getSubjectQuery.data?.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -875,7 +868,7 @@ export default function Subjects() {
               </div>
               <p className="text-gray-900 dark:text-white">
                 {t("modals.delete.label", {
-                  item: getSubjectQuery.data?.data.name,
+                  item: getSubjectQuery.data?.name,
                 })}
               </p>
               <Input
@@ -963,7 +956,7 @@ export default function Subjects() {
                 !(getSubjectsQuery.isRefetching || perPage) ? (
                   <SkeletonTable cols={5} />
                 ) : (
-                  getSubjectsQuery.data?.data.map(
+                  getSubjectsQuery.data?.map(
                     (subject: Subject, key: number) => (
                       <Table.Row
                         key={key}

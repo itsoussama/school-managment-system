@@ -11,6 +11,11 @@ class Stage extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        "name",
+        "school_id"
+    ];
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);

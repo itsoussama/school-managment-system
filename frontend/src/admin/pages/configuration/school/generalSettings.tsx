@@ -7,7 +7,7 @@ import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaHome, FaImage } from "react-icons/fa";
+import { FaHome } from "react-icons/fa";
 import { IoIosClose } from "react-icons/io";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,15 +23,15 @@ interface Socials {
   link: string;
 }
 
-interface Data {
-  id: string;
+interface FormData {
+  id: number;
   name: string;
   address: string;
   contact: string;
   image?: File;
 }
 
-export interface FormData extends Data {
+export interface Data extends FormData {
   _method: string;
 }
 
@@ -40,7 +40,10 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 export default function GeneralSettings() {
   const queryClient = useQueryClient();
   const { formData, setFormData, errors, setData, validateForm } =
-    useFormValidation({
+    useFormValidation<FormData>({
+      id: 0,
+      name: "",
+      address: "",
       contact: "",
     });
   const { t } = useTranslation();
@@ -65,19 +68,20 @@ export default function GeneralSettings() {
 
   const schoolMutation = useMutation({
     mutationFn: setSchool,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["getSchool"] });
+    onSuccess: async (data: FormData) => {
+      await queryClient.invalidateQueries({ queryKey: ["getSchool"] });
 
       setData({
         id: data.id,
         name: data.name,
         address: data.address,
+        contact: data.contact,
       });
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.updated_success"),
         state: true,
       });
     },
@@ -86,7 +90,7 @@ export default function GeneralSettings() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -127,9 +131,9 @@ export default function GeneralSettings() {
 
     if (validationResult.isValid) {
       try {
-        const form: FormData = {
+        const form: Data = {
           _method: "PUT",
-          id: formData?.id as string,
+          id: formData?.id,
           name: formData?.name as string,
           address: formData?.address as string,
           contact: formData?.contact as string,
@@ -143,7 +147,7 @@ export default function GeneralSettings() {
         toggleAlert({
           id: new Date().getTime(),
           status: "fail",
-          message: "Operation Failed",
+          message: t("notifications.submission_failed"),
           state: true,
         });
       }
@@ -186,7 +190,7 @@ export default function GeneralSettings() {
       // setPreviewImg(school.image);
       // setSocials(school.socials);
     }
-  }, [getSchoolQuery.data]);
+  }, [getSchoolQuery.data, setData]);
 
   return (
     <div className="flex flex-col">
@@ -403,7 +407,12 @@ export default function GeneralSettings() {
               </div>
 
               <Button className="btn-default m-0 mt-auto" type="submit">
-                {t("form.buttons.create", { label: t("general.account") })}
+                {t("actions.save_entity", {
+                  entity:
+                    t("determiners.definite.plural") +
+                    " " +
+                    t("general.changes"),
+                })}
               </Button>
             </form>
           </div>
