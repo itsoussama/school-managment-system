@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Exports\UsersExport;
 use App\Imports\UsersImport;
 use App\Models\Subject;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-// use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,7 +19,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin')) || auth()->user()->hasRole(config('roles.teacher'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin')) || $request->user()->hasRole(config('roles.teacher'))) {
             $perPage = $request->input('per_page', 5);
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
@@ -33,7 +33,7 @@ class UserController extends Controller
     }
     public function teachers(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
             $perPage = $request->input('per_page', 5);
             // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
@@ -86,7 +86,7 @@ class UserController extends Controller
 
     public function assignTeacherSubject(Request $request, Subject $subject)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
 
             $validation = $request->validate([
                 'teacher_id' => 'required|exists:users,id',
@@ -106,7 +106,7 @@ class UserController extends Controller
 
     public function students(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
             $perPage = $request->input('per_page', 5);
             // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
@@ -147,7 +147,7 @@ class UserController extends Controller
     }
     public function admins(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff') || auth()->user()->hasRole(config('roles.admin')))) {
+        if ($request->user()->hasRole(config('roles.admin_staff') || $request->user()->hasRole(config('roles.admin')))) {
             $perPage = $request->input('per_page', 5);
             // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
@@ -180,7 +180,7 @@ class UserController extends Controller
 
     public function parents(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
             $perPage = $request->input('per_page', 5);
             // Get sort parameters from request
             $sortColumn = $request->input('sort_column', 'id');
@@ -221,7 +221,7 @@ class UserController extends Controller
 
     public function addParent(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
             try {
                 $validation = $request->validate([
                     'childrens' => 'required|array|exists:users,id',
@@ -265,7 +265,7 @@ class UserController extends Controller
     // this function recive an array of existing children and associate to relative parent
     public function assignChilds(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
 
             $validation = $request->validate([
                 'parent_id' => 'required|exists:users,id',
@@ -289,7 +289,7 @@ class UserController extends Controller
 
     public function assignParent(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
 
             $validation = $request->validate([
                 'child_id' => 'required|exists:users,id',
@@ -311,7 +311,7 @@ class UserController extends Controller
 
     public function addAdmin(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff') || auth()->user()->hasRole(config('roles.admin')))) {
+        if ($request->user()->hasRole(config('roles.admin_staff') || $request->user()->hasRole(config('roles.admin')))) {
             try {
                 $validation = $request->validate([
                     'name' => 'required|string|max:255',
@@ -356,7 +356,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
 
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
             try {
                 $validation = $request->validate([
                     'name' => 'required|string|max:255',
@@ -427,9 +427,9 @@ class UserController extends Controller
     }
 
     // Display the specified resource
-    public function show(User $user)
+    public function show(User $user, Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
             $user->load('school', 'role', 'subjects', 'grades');
             $role = request('role');
             switch ($role) {
@@ -451,7 +451,7 @@ class UserController extends Controller
     // Update the specified resource in storage
     public function update(Request $request, User $user)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
 
             try {
 
@@ -531,7 +531,7 @@ class UserController extends Controller
     }
     public function update_admin(Request $request, User $user)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff'))) {
             try {
 
                 //! if your data not changeing
@@ -609,9 +609,9 @@ class UserController extends Controller
         }
     }
 
-    public function destroy(User $user)
+    public function destroy(User $user, Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
 
             if (!empty($user->imagePath)) {
                 if (Storage::disk('public')->exists($user->imagePath)) {
@@ -628,9 +628,9 @@ class UserController extends Controller
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
     }
-    public function destroy_admin(User $user)
+    public function destroy_admin(User $user, Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff'))) {
 
             if (!empty($user->imagePath)) {
                 if (Storage::disk('public')->exists($user->imagePath)) {
@@ -672,9 +672,9 @@ class UserController extends Controller
     }
     public function unblockUser(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
             try {
-                if (auth()->user()->hasRole(config('roles.admin'))) {
+                if ($request->user()->hasRole(config('roles.admin'))) {
                     $userStatus = User::whereId($request->user_id)
                         ->whereDoesntHave('role', function ($query) {
                             $query->whereIn('name', [
@@ -688,7 +688,7 @@ class UserController extends Controller
                     } else {
                         return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
                     }
-                } else if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+                } else if ($request->user()->hasRole(config('roles.admin_staff'))) {
                     $userStatus = User::whereId($request->user_id)->update(['blocked' => false]);
                     return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
                 }
@@ -704,9 +704,9 @@ class UserController extends Controller
     }
     public function blockUser(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
             try {
-                if (auth()->user()->hasRole(config('roles.admin'))) {
+                if ($request->user()->hasRole(config('roles.admin'))) {
                     $userStatus = User::whereId($request->user_id)
                         ->whereDoesntHave('role', function ($query) {
                             $query->whereIn('name', [
@@ -720,7 +720,7 @@ class UserController extends Controller
                     } else {
                         return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
                     }
-                } else if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+                } else if ($request->user()->hasRole(config('roles.admin_staff'))) {
                     $userStatus = User::whereId($request->user_id)->update(['blocked' => true]);
                     return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
                 }
@@ -736,7 +736,7 @@ class UserController extends Controller
     }
     public function unblockAdmin(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff'))) {
             try {
 
                 $userStatus = User::whereId($request->user_id)->update(['blocked' => false]);
@@ -754,7 +754,7 @@ class UserController extends Controller
     }
     public function blockAdmin(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff'))) {
             try {
                 $userStatus = User::whereId($request->user_id)->update(['blocked' => true]);
                 return response()->json(['success' => 'Users blocked Successfully', 'userStatus' => $userStatus]);
