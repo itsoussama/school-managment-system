@@ -3,12 +3,16 @@
 use App\Enums\TokenAbility;
 use App\Http\Controllers\Api\ClassRoomController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BudgetCategoryController;
+use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\FeeController;
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\MaintenanceRequestController;
+use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolController;
@@ -16,6 +20,8 @@ use App\Http\Controllers\StageController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\TransactionDetailController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +74,12 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::get('/parent', [UserController::class, 'parents']);
     Route::get('/export-users', [UserController::class, 'export']);
     Route::post('/import-users', [UserController::class, 'import']);
+    Route::resource('transactions', TransactionController::class);
+    Route::resource('budgets', BudgetController::class);
+    Route::resource('transaction-details', TransactionDetailController::class);
+    Route::resource('fees', FeeController::class);
+    Route::resource('budget-categories', BudgetCategoryController::class);
+    Route::resource('payrolls', PayrollController::class);
 
     Route::post('/logout', [AuthController::class, 'logout']);
 });
