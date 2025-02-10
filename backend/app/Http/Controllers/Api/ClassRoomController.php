@@ -17,9 +17,20 @@ class ClassRoomController extends Controller
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
 
-        $classRooms = ClassRoom::with('school')->orderBy($sortColumn, $sortDirection)->paginate($perPage);
+        $classRooms = ClassRoom::with('school')
+            ->when(request('name'), function ($query, $name) {
+                if (!empty($name)) {
+                    $query->where('name', 'LIKE', '%' . $name . '%');
+                }
+            })
+            ->orderBy($sortColumn, $sortDirection);
 
-        return response()->json(new ClassRoomCollection($classRooms));
+        if ($perPage == -1) {
+            return response()->json($classRooms->get());
+        }
+
+        return response()->json($classRooms->paginate($perPage));
+        // return response()->json(new ClassRoomCollection($classRooms->paginate($perPage)));
     }
 
     public function store(Request $request)
@@ -34,7 +45,6 @@ class ClassRoomController extends Controller
             $classRoom = ClassRoom::create($request->all());
 
             return response()->json(new ClassRoomResource($classRoom), 201);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json($e->errors(), 422);
         }
@@ -67,7 +77,7 @@ class ClassRoomController extends Controller
     // Remove the specified resource from storage
     public function destroy(ClassRoom $classRoom)
     {
-        try{
+        try {
             $classRoom->delete();
 
             return response()->json(null, 204);

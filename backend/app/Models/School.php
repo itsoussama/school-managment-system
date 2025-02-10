@@ -30,6 +30,10 @@ class School extends Model
     {
         return $this->hasMany(Grade::class, 'school_id', 'id');
     }
+    public function subjects(): HasMany
+    {
+        return $this->hasMany(Subject::class, 'school_id', 'id');
+    }
     public function maintenanceRequests(): HasMany
     {
         return $this->hasMany(MaintenanceRequest::class, 'school_id', 'id');
@@ -37,5 +41,9 @@ class School extends Model
     public function groups(): HasMany
     {
         return $this->hasMany(Group::class);
+    }
+    public function stages(): HasMany
+    {
+        return $this->hasMany(Stage::class);
     }
 }

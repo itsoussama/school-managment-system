@@ -2,7 +2,7 @@ import { Button, Checkbox, Input } from "@components/input";
 import { useAppDispatch, useAppSelector } from "@hooks/useReduxEvent";
 // import { UseTheme } from "@hooks/useTheme";
 import { ChangeEvent, CSSProperties, useEffect } from "react";
-import { FaCircleXmark, FaEye, FaEyeSlash } from "react-icons/fa6";
+import { FaAt, FaCircleXmark, FaEye, FaEyeSlash } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
 import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
@@ -116,6 +116,7 @@ export default function Login() {
                   label={t("form.fields.email")}
                   onChange={handleChange}
                   onBlur={() => validateForm()}
+                  leftIcon={FaAt}
                   error={errors?.email}
                 />
                 <Input

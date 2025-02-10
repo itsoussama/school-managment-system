@@ -13,12 +13,19 @@ import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { TransitionAnimation } from "@src/components/animation";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 
-export interface FormData {
+export interface Data {
   label: string;
   qty: number;
   school_id: string;
   category_id: number;
-  image: File;
+  image?: File;
+}
+
+interface FormData {
+  label: string;
+  qty: number;
+  category_id: number;
+  image?: File;
 }
 
 interface Resource {
@@ -35,7 +42,11 @@ interface File {
 
 export default function AddResources() {
   const { t } = useTranslation();
-  const { formData, setFormData } = useFormValidation({});
+  const { formData, setFormData } = useFormValidation<FormData>({
+    label: "",
+    qty: 0,
+    category_id: 0,
+  });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -56,7 +67,7 @@ export default function AddResources() {
           alert: {
             id: new Date().getTime(),
             status: "success",
-            message: "Operation Successful",
+            message: t("notifications.created_success"),
             state: true,
           },
         },
@@ -67,7 +78,7 @@ export default function AddResources() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -76,22 +87,23 @@ export default function AddResources() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
+      const form: Data = {
+        label: formData?.label as string,
+        qty: formData?.qty as number,
+        school_id: admin?.school_id as string,
+        category_id: formData?.category_id as number,
+      };
+
       if (img) {
-        addResourceQuery.mutate({
-          label: formData?.label as string,
-          qty: formData?.qty as number,
-          school_id: admin?.school_id as string,
-          category_id: formData?.category_id as number,
-          image: img[0],
-        });
-      } else {
-        throw new Error("image not found");
+        form["image"] = img[0];
       }
+
+      addResourceQuery.mutate(form);
     } catch (e) {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }

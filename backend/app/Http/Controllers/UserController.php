@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\UsersExport;
 use App\Imports\UsersImport;
-use App\Models\Teacher;
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -83,6 +83,27 @@ class UserController extends Controller
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
     }
+
+    public function assignTeacherSubject(Request $request, Subject $subject)
+    {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
+
+            $validation = $request->validate([
+                'teacher_id' => 'required|exists:users,id',
+                'subject' => 'required|exists:users,id',
+            ]);
+
+            if ($validation) {
+                $subject->teachers()->sync($request->input('teachers'));
+                info($subject);
+            } else {
+                return $request;
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
     public function students(Request $request)
     {
         if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin'))) {
@@ -480,9 +501,6 @@ class UserController extends Controller
                         $user->imagePath = $path;
                     }
 
-                    if (auth()->user()->hasRole(config('roles.admin')) && $user->hasRole(config('roles.admin'))) {
-                        return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
-                    }
                     $user->save();
 
                     // Sync roles if provided
@@ -599,9 +617,6 @@ class UserController extends Controller
                 if (Storage::disk('public')->exists($user->imagePath)) {
                     Storage::disk('public')->delete($user->imagePath);
                 }
-            }
-            if (auth()->user()->hasRole(config('roles.admin')) && $user->hasRole(config('roles.admin'))) {
-                return response()->json(['error' => "You don't have Role to delete that user"], Response::HTTP_FORBIDDEN);
             }
 
             $user->role()->detach();

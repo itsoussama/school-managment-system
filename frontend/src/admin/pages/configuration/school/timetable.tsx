@@ -2,8 +2,8 @@ import { alertIntialState } from "@src/utils/alert";
 // import { TransitionAnimation } from "@src/components/animation";
 import { Alert as AlertType } from "@src/utils/alert";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { Breadcrumb, Modal } from "flowbite-react";
-import { ChangeEvent, CSSProperties, FormEvent, useState } from "react";
+import { Breadcrumb, Modal, Spinner } from "flowbite-react";
+import { CSSProperties, FormEvent, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaHome, FaTrash } from "react-icons/fa";
 import { Link } from "react-router-dom";
@@ -26,7 +26,13 @@ import {
 import allLocales from "@fullcalendar/core/locales-all";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { options } from "@fullcalendar/core/preact.js";
+// import { options } from "@fullcalendar/core/preact.js";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { addEvent, deleteEvent, getEvents, setEvent } from "@src/features/api";
+import React from "react";
+import { IoFilter } from "react-icons/io5";
+import { FaPlus } from "react-icons/fa6";
+import ReactDOM from "react-dom";
 
 interface Modal {
   id: string;
@@ -42,7 +48,18 @@ interface Events {
   title: string;
   start: string;
   end: string;
+  description?: string;
   // editable: boolean;
+}
+
+export interface FormData {
+  _method?: string;
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  description?: string;
+  assign_to: number[];
 }
 
 type CalendarEventChange = EventClickArg | EventDropArg | EventResizeDoneArg;
@@ -57,8 +74,10 @@ type CalendarEventChange = EventClickArg | EventDropArg | EventResizeDoneArg;
 // }
 
 export default function Timetable() {
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+  const langState = useAppSelector((state) => state.preferenceSlice.language);
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [openModal, setOpenModal] = useState<Modal>();
@@ -66,22 +85,111 @@ export default function Timetable() {
     profile: "administrator",
     options: {},
   });
-  const [events, setEvents] = useState<Array<Events>>([
-    {
-      id: "1",
-      title: "event 1",
-      start: "2024-12-06T08:00",
-      end: "2024-12-06T10:00",
-      // editable: true,
+  const admin = useAppSelector((state) => state.userSlice.user);
+  const [events, setEvents] = useState<Array<Events>>([]);
+  const isLoading = useRef<boolean>(true);
+
+  const getEventsQuery = useQuery({
+    queryKey: ["getEvents"],
+    queryFn: () => getEvents(admin.school_id),
+  });
+
+  const addEventQuery = useMutation({
+    mutationFn: addEvent,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["getEvents"] });
+      setEvents((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          title: data.title,
+          start: data.start,
+          end: data.end,
+          description: data.description,
+        },
+      ]);
+
+      toggleAlert({
+        id: new Date().getTime(),
+        message: "Operation Successful",
+        status: "success",
+        state: true,
+      });
     },
-    {
-      id: "2",
-      title: "event 2",
-      start: "2024-12-07T09:00:00",
-      end: "2024-12-07T10:00:00",
-      // editable: true,
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
     },
-  ]);
+  });
+
+  const setEventQuery = useMutation({
+    mutationFn: setEvent,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+      setEvents((prev) =>
+        prev.map((event) =>
+          event.id == data.id
+            ? {
+                ...event,
+                start: data.start,
+                end: data.end,
+                title: data.title,
+                // description: info.event.description
+              }
+            : event,
+        ),
+      );
+      console.log(data);
+
+      toggleAlert({
+        id: new Date().getTime(),
+        message: "Operation Successful",
+        status: "success",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
+
+  const deleteEventQuery = useMutation({
+    mutationFn: deleteEvent,
+    onMutate: async (eventID) => {
+      const newEvents = events.filter((event) => event.id !== eventID);
+      setEvents(newEvents);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getEvents"] });
+
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: "Operation Successful",
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    },
+  });
 
   const openSelectEventModal = (eventInfo: DateSelectArg) => {
     setOpenModal({
@@ -96,8 +204,11 @@ export default function Timetable() {
   };
 
   const openEditEventModal = (eventInfo: EventClickArg) => {
+    const eventID = events.find((event) => event.id == eventInfo?.event.id)
+      ?.id as string;
+
     setOpenModal({
-      id: eventInfo.event.id,
+      id: eventID,
       open: true,
       type: "editEvent",
       startDate: eventInfo?.event.startStr.slice(0, 16),
@@ -107,24 +218,33 @@ export default function Timetable() {
   };
 
   const changeEvent = (info: CalendarEventChange) => {
-    setEvents((prev) =>
-      prev.map(
-        (event) =>
-          event.id === info?.event.id
-            ? {
-                ...event,
-                start: info?.event.startStr,
-                end: info?.event.endStr,
-                title: info.event.title || event.title,
-              }
-            : event, // Leave other events unchanged
-      ),
-    );
+    const eventID = events.find((event) => event.id == info?.event.id)
+      ?.id as string;
+
+    // console.log(eventID);
+
+    setEventQuery.mutate({
+      _method: "PUT",
+      id: eventID,
+      title: info.event.title,
+      start: info.event.startStr,
+      end: info.event.endStr,
+      // description: target.description.value,
+      assign_to: [admin.id],
+    });
   };
 
-  const deleteEvent = (id: string) => {
-    const newEvents = events.filter((event) => event.id !== id);
-    setEvents(newEvents);
+  const submitDeleteEvent = (id: string) => {
+    try {
+      deleteEventQuery.mutate(id);
+    } catch (e) {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    }
 
     onCloseModal();
   };
@@ -132,41 +252,53 @@ export default function Timetable() {
   const submitAddEvent = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const target = event.target as HTMLFormElement;
-    // const eventId =
-    //   new Date(target.start?.value).getTime() +
-    //   "" +
-    //   new Date(Date.now()).getTime();
-    // console.log(eventId);
-
-    setEvents((prev) => [
-      ...prev,
-      {
-        id: (events.length + 1).toString(),
+    try {
+      const eventID = (events.length + 1).toString();
+      addEventQuery.mutate({
+        id: eventID,
         title: target.eventTitle.value,
         start: target.start.value,
         end: target.end.value,
-      },
-    ]);
+        // description: target.description.value,
+        assign_to: [admin.id],
+      });
+    } catch (e) {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    }
 
     onCloseModal();
   };
 
-  const submitEditEvent = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const target = e.target as HTMLFormElement;
-    setEvents((prev) =>
-      prev.map(
-        (event) =>
-          event.id === openModal?.id
-            ? {
-                ...event,
-                start: target.start.value,
-                end: target.end.value,
-                title: target.eventTitle.value,
-              }
-            : event, // Leave other events unchanged
-      ),
-    );
+  const submitEditEvent = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const target = event.target as HTMLFormElement;
+
+    try {
+      const eventID = events.find((event) => event.id == openModal?.id)
+        ?.id as string;
+
+      setEventQuery.mutate({
+        _method: "PUT",
+        id: eventID,
+        title: target.eventTitle.value,
+        start: target.start.value,
+        end: target.end.value,
+        // description: target.description.value,
+        assign_to: [admin.id],
+      });
+    } catch (e) {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: "Operation Failed",
+        state: true,
+      });
+    }
 
     onCloseModal();
   };
@@ -195,8 +327,57 @@ export default function Timetable() {
     // });
   };
 
+  const addElement = (
+    element: React.ReactElement,
+    containerElement: Element | null,
+  ) => {
+    const container = containerElement;
+
+    if (container) {
+      container.setAttribute("style", "height:100%;");
+      return ReactDOM.createPortal(element, container);
+    }
+  };
+
+  useEffect(() => {
+    if (getEventsQuery?.data) {
+      const eventsCollection: Array<Events> = getEventsQuery?.data;
+      const events = eventsCollection.map((event) => ({
+        id: event.id,
+        title: event.title,
+        start: event.start,
+        end: event.end,
+        description: event.description,
+      }));
+      setEvents(events);
+      isLoading.current = false;
+    }
+  }, [getEventsQuery?.data]);
+
   return (
     <div className="flex h-full flex-col">
+      {[
+        addElement(
+          <div className="flex items-center justify-center gap-1">
+            <IoFilter className="text-white" />{" "}
+            <span>{t("general.filter")}</span>{" "}
+          </div>,
+          document.querySelector(
+            ".fc-filter-button.fc-button.fc-button-primary",
+          ),
+        ),
+        addElement(
+          <div className="flex items-center justify-center gap-1">
+            <FaPlus className="text-white" />{" "}
+            <span>
+              {t("actions.new_entity", { entity: t("general.event") })}
+            </span>{" "}
+          </div>,
+          document.querySelector(
+            ".fc-addEvent-button.fc-button.fc-button-primary",
+          ),
+        ),
+      ]}
       <Alert
         id={alert.id}
         status={alert.status}
@@ -234,7 +415,7 @@ export default function Timetable() {
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
-        <Breadcrumb.Item>{t("entities.grades_sections")}</Breadcrumb.Item>
+        <Breadcrumb.Item>{t("entities.timetable")}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
@@ -465,7 +646,7 @@ export default function Timetable() {
             </button>
             <button
               className="btn-danger !ml-auto flex !w-auto items-center gap-2"
-              onClick={() => deleteEvent(openModal?.id as string)}
+              onClick={() => submitDeleteEvent(openModal?.id as string)}
             >
               <FaTrash />
               {t("actions.delete_entity")}
@@ -476,7 +657,7 @@ export default function Timetable() {
 
       {/* <TransitionAnimation> */}
       <div
-        className="flex-1"
+        className={`relative flex-1 ${isLoading.current ? "loading" : ""}`}
         style={
           {
             "--brand-color-600": colorPalette[brandState as BrandColor][600],
@@ -485,6 +666,9 @@ export default function Timetable() {
           } as CSSProperties
         }
       >
+        {isLoading.current && (
+          <Spinner className="absolute left-1/2 top-1/2 z-10" />
+        )}
         <FullCalendar
           plugins={[
             timeGridPlugin,
@@ -503,7 +687,7 @@ export default function Timetable() {
           // droppable={true}
           customButtons={{
             addEvent: {
-              text: t("actions.new_entity", { entity: t("general.event") }),
+              // text: t("actions.new_entity", { entity: t("general.event") }),
               hint: t("actions.new_entity", { entity: t("general.event") }),
               click: () => {
                 setOpenModal({
@@ -515,7 +699,7 @@ export default function Timetable() {
               // icon: "calendar-plus-fill",
             },
             filter: {
-              text: t("general.filter"),
+              // text: t("general.filter"),
               hint: t("general.filter"),
               click: () => {
                 setOpenModal({
@@ -542,8 +726,11 @@ export default function Timetable() {
           }}
           initialView="timeGridWeek"
           locales={allLocales}
-          locale="fr"
+          locale={langState}
           events={events}
+          loading={() =>
+            (isLoading.current = getEventsQuery.isFetching ? true : false)
+          }
           select={openSelectEventModal}
           eventClick={(info) => openEditEventModal(info)}
           eventDrop={(info) => changeEvent(info)}

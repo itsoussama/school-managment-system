@@ -64,7 +64,7 @@ class User extends Authenticatable
     }
     public function subjects(): BelongsToMany
     {
-        return $this->belongsToMany(Subject::class);
+        return $this->belongsToMany(Subject::class, 'subject_user');
     }
     public function hasRole($role)
     {
@@ -108,7 +108,7 @@ class User extends Authenticatable
         return $this->belongsToMany(MaintenanceRequest::class);
     }
 
-    public function events() : belongsToMany
+    public function events(): belongsToMany
     {
         return $this->belongsToMany(Event::class);
     }

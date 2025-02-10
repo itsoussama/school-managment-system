@@ -35,6 +35,8 @@ export default function Profile() {
   const { formData, errors, setFormData, setData, validateForm } =
     useFormValidation({
       email: "",
+      password: "",
+      password_confirmation: "",
     });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
@@ -87,10 +89,6 @@ export default function Profile() {
       });
     },
   });
-
-  useEffect(() => {
-    console.log(admin);
-  }, [admin]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -12,6 +12,7 @@ use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\StageController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
@@ -39,9 +40,11 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
         Route::post('/add-adminStaff', [UserController::class, 'addAdmin']);
         Route::post('/assign-childs', [UserController::class, 'assignChilds']);
         Route::post('/assign-parent', [UserController::class, 'assignParent']);
+        Route::post('/assign-teacher-subject', [UserController::class, 'assignTeacherSubject']);
         Route::post('/block', [UserController::class, 'blockUser']);
         Route::post('/unblock', [UserController::class, 'unblockUser']);
         Route::apiResource('teachers', TeacherController::class);
+        Route::apiResource('stages', StageController::class);
     });
 
     // Roles

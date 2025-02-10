@@ -16,7 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
   FaEye,
@@ -80,8 +80,15 @@ export interface Resource {
   };
 }
 
-export interface FormData {
-  _method: string;
+interface FormData {
+  id: string;
+  label: string;
+  qty: number;
+  category_id: string;
+}
+
+export interface Data {
+  _method?: string;
   id: string;
   label: string;
   qty: number;
@@ -89,23 +96,10 @@ export interface FormData {
   image?: File;
 }
 
-// interface Data {
-//   id: number;
-//   label: string;
-//   qty: number;
-//   category_id: number;
-//   image?: File;
-// }
-
 interface Category {
   id: number;
   label: string;
 }
-
-// interface DataError {
-//   label: string;
-//   qty: number;
-// }
 
 interface Sort {
   column: string;
@@ -122,7 +116,12 @@ const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewResources() {
   const queryClient = useQueryClient();
-  const { formData, setData } = useFormValidation({});
+  const { formData, setData } = useFormValidation<FormData>({
+    id: "",
+    label: "",
+    qty: 0,
+    category_id: "",
+  });
 
   const location = useLocation();
   const [sortPosition, setSortPosition] = useState<number>(0);
@@ -215,18 +214,20 @@ export function ViewResources() {
 
   const resourceMutation = useMutation({
     mutationFn: setResource,
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({
         queryKey: ["getResource"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getResources"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllResources"],
       });
+
+      console.log(data);
 
       setData({
         id: data?.id as string,
@@ -238,7 +239,7 @@ export function ViewResources() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.created_success"),
         state: true,
       });
 
@@ -252,7 +253,7 @@ export function ViewResources() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -260,12 +261,12 @@ export function ViewResources() {
 
   const deleteResourceQuery = useMutation({
     mutationFn: deleteResource,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getResources"],
       });
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["getAllResources"],
       });
 
@@ -282,7 +283,7 @@ export function ViewResources() {
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: "Operation Successful",
+        message: t("notifications.deleted_success"),
         state: true,
       });
     },
@@ -291,7 +292,7 @@ export function ViewResources() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -310,62 +311,7 @@ export function ViewResources() {
           ? selectElem.options[selectElem.selectedIndex].value
           : inputElem.value,
     }));
-    // console.log((event.target as HTMLInputElement).value);
   };
-
-  // const handleClientError = (field: HTMLFormElement) => {
-  //   // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
-  //   const passwordValidation = /[0-9]{8}/;
-
-  //   // Error messages for empty or invalid fields
-  //   const messages = {
-  //     password:
-  //       "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
-  //     confirm_password: "Passwords do not match. Please try again.",
-  //   };
-
-  //   const isEmpty = (value: string) => value.trim() === "";
-  //   let error = false;
-
-  //   // Function to set error messages and update the error flag
-  //   const setError = (fieldName: string, message: string) => {
-  //     setFormError((prev) => ({
-  //       ...prev,
-  //       [fieldName]: message,
-  //     }));
-  //     error = true;
-  //   };
-
-  //   // Clear error messages if validation is successful
-  //   const clearError = (fieldName: string) => {
-  //     setFormError((prev) => ({
-  //       ...prev,
-  //       [fieldName]: "",
-  //     }));
-  //   };
-
-  //   // Validate password field
-  //   if (changePassword) {
-  //     if (isEmpty(field.password.value)) {
-  //       setError("password", "Password field is required.");
-  //     } else if (!passwordValidation.test(field.password.value)) {
-  //       setError("password", messages.password);
-  //     } else {
-  //       clearError("password");
-  //     }
-
-  //     // Validate confirm password field
-  //     if (isEmpty(field.confirm_password.value)) {
-  //       setError("confirm_password", "Please confirm your password.");
-  //     } else if (field.password.value !== field.confirm_password.value) {
-  //       setError("confirm_password", messages.confirm_password);
-  //     } else {
-  //       clearError("confirm_password");
-  //     }
-  //   }
-
-  //   return error;
-  // };
 
   const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
@@ -455,7 +401,7 @@ export function ViewResources() {
     event.preventDefault();
 
     try {
-      const form: FormData = {
+      const form: Data = {
         _method: "PUT",
         id: formData?.id as string,
         label: formData?.label as string,
@@ -472,7 +418,7 @@ export function ViewResources() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }
@@ -483,7 +429,10 @@ export function ViewResources() {
     setIsVerficationMatch(true);
     const input = event.target as HTMLFormElement;
 
-    if (input.verfication.value !== getResourceQuery.data?.label) {
+    if (
+      (input.verfication.value as string).toLowerCase() !==
+      getResourceQuery.data?.label.toLowerCase()
+    ) {
       setIsVerficationMatch(false);
       return;
     }
@@ -509,6 +458,7 @@ export function ViewResources() {
   const onCloseModal = () => {
     resourceMutation.reset();
     setOpenModal(undefined);
+    setPreviewImg(undefined);
 
     setData({
       id: "",
@@ -776,7 +726,7 @@ export function ViewResources() {
                       placeholder="20"
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
                       disabled={getResourceQuery.isFetching && true}
-                      value={(formData?.label as number) || 0}
+                      value={(formData?.qty as number) || 0}
                       onChange={onChange}
                     />
 
@@ -843,9 +793,11 @@ export function ViewResources() {
                 <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("modals.delete.label", {
-                  item: getResourceQuery.data?.label,
-                })}
+                <Trans
+                  i18nKey="modals.delete.label"
+                  values={{ item: getResourceQuery.data?.label }}
+                  components={{ bold: <strong /> }}
+                />
               </p>
               <Input
                 type="text"
@@ -974,12 +926,13 @@ export function ViewResources() {
                         inputStyle: "px-8 !py-1 min-w-36",
                         labelStyle: "mb-0 !inline",
                       }}
-                      onChange={(e) =>
+                      onChange={(e) => (
+                        setPage(1),
                         setFilter((prev) => ({
                           ...prev,
                           label: e.target.value,
                         }))
-                      }
+                      )}
                     />
                   </Table.Cell>
                   <Table.Cell className="p-2">

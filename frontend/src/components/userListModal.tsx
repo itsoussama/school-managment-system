@@ -4,6 +4,12 @@ import { Button, Checkbox, Input } from "./input";
 import { FaSearch } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
+interface UserData {
+  id: string;
+  name: string;
+  imagePath: string;
+}
+
 interface UserList {
   open: boolean;
   modalHeader: string;
@@ -18,12 +24,12 @@ interface UserList {
     | "5xl"
     | "6xl"
     | "7xl";
-  userList: Array<Record<string, string>>;
+  userList: Array<UserData>;
   selectedUsersList: Array<number>;
   name: string;
   options?: {
-    search: boolean;
-    img: boolean;
+    search?: boolean;
+    img?: boolean;
   };
   multipleSelection?: boolean;
   onClose: (state: boolean) => void;
@@ -139,7 +145,7 @@ export default function UserListModal({
             <Input
               id="search"
               type="text"
-              rightIcon={() => FaSearch}
+              leftIcon={FaSearch}
               label=""
               onKeyUp={(e) => handleSearch(e.target)}
               placeholder={t("general.all")}
@@ -155,12 +161,12 @@ export default function UserListModal({
           {userList?.length &&
             userList?.map(
               (user, key: number) =>
-                user.label?.search(new RegExp(searchValue, "i")) !== -1 && (
+                user.name?.search(new RegExp(searchValue, "i")) !== -1 && (
                   <div key={key}>
                     <Checkbox
                       key={key}
                       //   htmlFor={user?.id}
-                      label={user?.label}
+                      label={user?.name}
                       id={user?.id}
                       name={name}
                       image={
@@ -170,13 +176,13 @@ export default function UserListModal({
                             src={
                               user?.imagePath
                                 ? SERVER_STORAGE + user?.imagePath
-                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(user?.label).firstName}+${getUserName(user?.label).lastName}`
+                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(user?.name).firstName}+${getUserName(user?.name).lastName}`
                             }
                             alt="profile"
                           />
                         )
                       }
-                      data-name={user?.label}
+                      data-name={user?.name}
                       onChange={getSelectedUsers}
                       checked={
                         selectedUsersList?.includes(parseInt(user?.id))
@@ -186,7 +192,7 @@ export default function UserListModal({
                       custom-style={{
                         containerStyle: `${!multipleSelection && (selectedUsersList?.length >= 1 && !selectedUsersList?.includes(parseInt(user?.id)) ? "disable" : "")}`,
                       }}
-                      value={user?.label}
+                      value={user?.name}
                     />
                   </div>
                 ),

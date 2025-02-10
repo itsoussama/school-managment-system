@@ -1,4 +1,10 @@
-import { Button, Checkbox, Input, MultiSelect } from "@src/components/input";
+import {
+  Button,
+  Checkbox,
+  Input,
+  MultiSelect,
+  RSelect,
+} from "@src/components/input";
 import { addTeacher, getGrades, getSubjects } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
@@ -15,10 +21,8 @@ import roles from "@admin/roles.json";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 
-export interface FormData {
-  name?: string;
-  firstName?: string;
-  lastName?: string;
+export interface Data {
+  name: string;
   phone: string;
   email: string;
   password: string;
@@ -27,7 +31,19 @@ export interface FormData {
   roles: number[];
   subjects: number[];
   grades: number[];
-  image: File;
+  image?: File;
+}
+
+interface FormData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  subjects: number[];
+  grades: number[];
+  image?: File;
 }
 
 interface Subject {
@@ -48,11 +64,17 @@ interface File {
 
 export default function AddTeacher() {
   const { t } = useTranslation();
-  const { formData, errors, setFormData, validateForm } = useFormValidation({
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
+  const { formData, errors, setFormData, validateForm } =
+    useFormValidation<FormData>({
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      password: "",
+      password_confirmation: "",
+      subjects: [],
+      grades: [],
+    });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -82,7 +104,7 @@ export default function AddTeacher() {
         state: {
           alert: {
             status: "success",
-            message: "Operation Successful",
+            message: t("notifications.created_success"),
             state: true,
           },
         },
@@ -93,7 +115,7 @@ export default function AddTeacher() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -104,27 +126,28 @@ export default function AddTeacher() {
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
+        const form: Data = {
+          name: formData?.firstName + " " + formData?.lastName,
+          email: formData?.email as string,
+          school_id: admin?.school_id as string,
+          password: formData?.password as string,
+          password_confirmation: formData?.password_confirmation as string,
+          phone: formData?.phone as string,
+          roles: [roles.teacher],
+          subjects: formData?.subjects as number[],
+          grades: formData?.grades as number[],
+        };
+
         if (img) {
-          addTeacherQuery.mutate({
-            name: formData?.firstName + " " + formData?.lastName,
-            email: formData?.email as string,
-            school_id: admin?.school_id,
-            password: formData?.password as string,
-            password_confirmation: formData?.password_confirmation as string,
-            phone: formData?.phone as string,
-            roles: [roles.teacher],
-            subjects: formData?.subjects as number[],
-            grades: formData?.grades as number[],
-            image: img[0],
-          });
-        } else {
-          throw new Error("image not found");
+          form["image"] = img[0];
         }
+
+        addTeacherQuery.mutate(form);
       } catch (e) {
         toggleAlert({
           id: new Date().getTime(),
           status: "fail",
-          message: "Operation Failed",
+          message: t("notifications.submission_failed"),
           state: true,
         });
       }
@@ -329,18 +352,53 @@ export default function AddTeacher() {
                   )
                 }
               >
-                {getGradesQuery.data?.data.data.map(
-                  (grade: Grades, key: number) => (
-                    <Checkbox
-                      key={key}
-                      label={grade.label}
-                      id={grade.id}
-                      name="grades"
-                      value={grade.label}
-                    />
-                  ),
-                )}
+                {getGradesQuery.data?.data.map((grade: Grades, key: number) => (
+                  <Checkbox
+                    key={key}
+                    label={grade.label}
+                    id={grade.id}
+                    name="grades"
+                    value={grade.label}
+                  />
+                ))}
               </MultiSelect>
+
+              <RSelect
+                id="payroll_frequency"
+                name="payroll_frequency"
+                label={t("form.fields.payroll_frequency")}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+              >
+                <option value={"1"}>{t("form.fields.weekly")}</option>
+                <option value={"2"}>{t("form.fields.bi_weekly")}</option>
+                <option value={"3"}>{t("form.fields.semi_monthly")}</option>
+                <option value={"4"}>{t("form.fields.monthly")}</option>
+              </RSelect>
+
+              {formData.payroll_frequency !== "4" ? (
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  step={0.01}
+                  placeholder="30.55"
+                  id="hourly_rate"
+                  name="hourly_rate"
+                  addon="hr"
+                  label={t("form.fields.hourly_rate")}
+                  onChange={(e) => setFormData(e.target.id, e.target.value)}
+                />
+              ) : (
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  step={0.01}
+                  placeholder="2500.55"
+                  id="salary"
+                  name="salary"
+                  label={t("form.fields.salary")}
+                  onChange={(e) => setFormData(e.target.id, e.target.value)}
+                />
+              )}
 
               <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 

@@ -1,13 +1,19 @@
-import { Checkbox, Input, MultiSelect, Button } from "@src/components/input";
-import { addStudent, assignChilds, getGrades, getStudents } from "@api";
+import { Button, Checkbox, Input } from "@components/input";
+import {
+  addParent,
+  addTeacher,
+  assignParent,
+  assignSubjetTeacher,
+  getParents,
+  getTeachers,
+} from "@api";
 import {
   keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Card, Modal } from "flowbite-react";
-import { ChangeEvent, useCallback, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FaImage,
@@ -16,32 +22,32 @@ import {
   FaUserPlus,
   FaUserTag,
 } from "react-icons/fa";
+import { Card, Modal } from "flowbite-react";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@components/alert";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
-import roles from "@admin/roles.json";
-import { Data as AddChildFromData } from "@src/admin/pages/students/addStudent";
+// import { FormData as AddParentFromData } from "@src/admin/pages/teachers/addParent";
 
-interface AddChildModal {
+interface AddParentModal {
   open: boolean;
   toggleOpen: (isOpen: boolean) => void;
   school_id: string;
-  guardian_id: number;
+  child_id: number;
 }
 
-interface FormData {
-  guardian_id: number | null;
-  firstName: string;
-  lastName: string;
+export interface FormData {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
   phone: string;
   email: string;
   password: string;
   password_confirmation: string;
-  subjects: number[];
-  grades: number[];
-  image?: File;
+  school_id: string;
+  roles: number[];
+  image: File;
 }
 
 interface File {
@@ -51,81 +57,66 @@ interface File {
   type: string;
 }
 
-interface Grades {
-  id: string;
-  label: string;
-}
-
-interface Childs {
+interface Teacher {
   id: string;
   imagePath: string;
   name: string;
-  guardian_id: string;
 }
 
 type Options = "new" | "exist";
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
-function AddChildModal({
+export default function AddTeacherModal({
   open,
   toggleOpen,
   school_id,
-  guardian_id,
-}: AddChildModal) {
+  subject_id,
+}: AddParentModal) {
   const queryClient = useQueryClient();
 
   const { t } = useTranslation();
-  const { formData, errors, setFormData, validateForm } =
-    useFormValidation<FormData>({
-      guardian_id: guardian_id,
-      firstName: "",
-      lastName: "",
-      phone: "",
-      email: "",
-      password: "",
-      password_confirmation: "",
-      subjects: [1],
-      grades: [],
-    });
+  const { formData, errors, setFormData, validateForm } = useFormValidation({
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
 
   const [img, setImg] = useState<FileList>();
-  const [previewImg, setPreviewImg] = useState<string>();
   const [openModal, setOpenModal] = useState<boolean>(open);
   const [option, setOption] = useState<Options>();
+  const [previewImg, setPreviewImg] = useState<string>();
   const [searchValue, setSearchValue] = useState<string>("");
-  const [selectedChilds, setSelectedChilds] = useState<number[]>([]);
+  const [selectedParent, setSelectedParent] = useState<number | null>(null);
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const admin = useAppSelector((state) => state.userSlice.user);
 
-  const getChildrensQuery = useQuery({
-    queryKey: ["getAllStudents"],
-    queryFn: () => getStudents(1, -1, undefined, undefined, admin.school_id),
+  const getTeachersQuery = useQuery({
+    queryKey: ["getAllTeachers"],
+    queryFn: () => getTeachers(1, -1, undefined, undefined, admin.school_id),
     placeholderData: keepPreviousData,
   });
 
-  const getGradesQuery = useQuery({
-    queryKey: ["getGrades"],
-    queryFn: getGrades,
-  });
+  const addTeacherQuery = useMutation({
+    mutationFn: addTeacher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getSubjects"],
+      });
 
-  const addStudentQuery = useMutation({
-    mutationFn: addStudent,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getParents"],
+      queryClient.invalidateQueries({
+        queryKey: ["getSubject"],
       });
 
       setOpenModal(false);
       toggleOpen(false);
-      setOption(undefined);
 
       setPreviewImg(undefined);
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: t("notifications.created_success"),
+        message: "Operation Successful",
         state: true,
       });
     },
@@ -134,30 +125,25 @@ function AddChildModal({
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: t("notifications.submission_failed"),
+        message: "Operation Failed",
         state: true,
       });
     },
   });
 
-  const assignChildsQuery = useMutation({
-    mutationFn: assignChilds,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getParents"],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["getParent"],
+  const assignTeacherQuery = useMutation({
+    mutationFn: assignSubjetTeacher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["getSubject"],
       });
 
       setOpenModal(false);
       toggleOpen(false);
-      setOption(undefined);
-
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: t("notifications.saved_success"),
+        message: "Operation Successful",
         state: true,
       });
     },
@@ -166,7 +152,7 @@ function AddChildModal({
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: t("notifications.submission_failed"),
+        message: "Operation Failed",
         state: true,
       });
     },
@@ -178,48 +164,51 @@ function AddChildModal({
   };
 
   const onCloseModal = () => {
-    addStudentQuery.reset();
+    addParentQuery.reset();
     setOpenModal(false);
     toggleOpen(false);
     setPreviewImg(undefined);
     setOption(undefined);
   };
 
-  const getSelectedChilds = (event: ChangeEvent<HTMLInputElement>) => {
-    const ChildId: number = parseInt(event.target?.id);
+  const getSelectedParent = (event: ChangeEvent<HTMLInputElement>) => {
+    const parentId: number = parseInt(event.target?.id);
     if (event.target.checked) {
-      setSelectedChilds((prev) => [...prev, ChildId]);
+      setSelectedParent(parentId);
     } else {
-      const filtredChildList = selectedChilds.filter(
-        (childId) => childId !== ChildId,
-      );
-      setSelectedChilds(filtredChildList);
+      setSelectedParent(null);
     }
   };
 
-  const onSubmitNewChild = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const getUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
 
+    return { firstName, lastName };
+  };
+
+  const onSubmitNewParent = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const validationResult = validateForm();
     if (validationResult.isValid) {
       try {
-        const form: AddChildFromData = {
+        const form: AddParentFromData = {
           name: formData?.firstName + " " + formData?.lastName,
           email: formData?.email as string,
           school_id: school_id,
-          guardian_id: guardian_id,
           password: formData?.password as string,
           password_confirmation: formData?.password_confirmation as string,
           phone: formData?.phone as string,
-          roles: [roles.student],
-          subjects: [1],
-          grades: formData?.grades as number[],
+          childrens: [child_id],
+          roles: [4],
         };
+
         if (img) {
           form["image"] = img[0];
         }
 
-        addStudentQuery.mutate(form);
+        addParentQuery.mutate(form);
       } catch (e) {
         toggleAlert({
           id: new Date().getTime(),
@@ -231,20 +220,12 @@ function AddChildModal({
     }
   };
 
-  const onSubmitExistingChilds = (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmitExistingParent = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    assignChildsQuery.mutate({
-      parent_id: guardian_id,
-      childrens: selectedChilds,
+    assignParentQuery.mutate({
+      child_id: child_id,
+      parent: selectedParent as number,
     });
-  };
-
-  const getUserName = (fullName: string) => {
-    const nameParts = fullName?.trim().split(/\s+/);
-    const firstName = nameParts?.slice(0, -1).join(" ");
-    const lastName = nameParts?.slice(-1).join(" ");
-
-    return { firstName, lastName };
   };
 
   const readAndPreview = (file: FileList) => {
@@ -270,10 +251,6 @@ function AddChildModal({
     setOpenModal(open);
   }, [open]);
 
-  const closeAlert = useCallback((value: AlertType) => {
-    toggleAlert(value);
-  }, []);
-
   return (
     <>
       <Alert
@@ -281,8 +258,9 @@ function AddChildModal({
         status={alert.status}
         state={alert.state}
         message={alert.message}
-        close={closeAlert}
+        close={(value) => toggleAlert(value)}
       />
+
       <Modal
         show={openModal}
         size={option ? "4xl" : "xl"}
@@ -299,12 +277,14 @@ function AddChildModal({
         }}
         onClose={onCloseModal}
       >
-        <Modal.Header>{t("general.add_new_child")}</Modal.Header>
+        <Modal.Header>
+          {t("actions.add_entity", { entity: t("entities.teacher") })}
+        </Modal.Header>
         {option === "new" ? (
-          <form onSubmit={onSubmitNewChild}>
+          <form onSubmit={onSubmitNewParent}>
             <Modal.Body>
               <div className="flex flex-col gap-8 sm:flex-row">
-                <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
+                <div className="flex min-w-fit flex-col items-center gap-y-2 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                   {previewImg ? (
                     <img
                       className="h-44 w-44 rounded-full object-cover"
@@ -353,7 +333,6 @@ function AddChildModal({
                         name="firstName"
                         label={t("form.fields.first_name")}
                         placeholder={t("form.placeholders.first_name")}
-                        custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
                           setFormData(e.target.id, e.target.value)
                         }
@@ -365,7 +344,6 @@ function AddChildModal({
                         name="lastName"
                         label={t("form.fields.last_name")}
                         placeholder={t("form.placeholders.last_name")}
-                        custom-style={{ inputStyle: "disabled:opacity-50" }}
                         onChange={(e) =>
                           setFormData(e.target.id, e.target.value)
                         }
@@ -376,8 +354,10 @@ function AddChildModal({
                         id="address"
                         name="address"
                         label={t("form.fields.address")}
-                        placeholder={t("form.fields.address")}
-                        onChange={(e) => console.log(e.target.value)}
+                        placeholder={t("form.placeholders.address")}
+                        onChange={(e) =>
+                          setFormData(e.target.id, e.target.value)
+                        }
                         custom-style={{ containerStyle: "col-span-full" }}
                       />
 
@@ -387,8 +367,7 @@ function AddChildModal({
                         name="phone"
                         label={t("form.fields.phone_number")}
                         placeholder="06 00 00 00"
-                        pattern="(06|05)[0-9]{6}"
-                        custom-style={{ inputStyle: "disabled:opacity-50" }}
+                        pattern="(06|05)[0-9]{2}[0-9]{4}"
                         onChange={(e) =>
                           setFormData(e.target.id, e.target.value)
                         }
@@ -399,38 +378,13 @@ function AddChildModal({
                         id="email"
                         name="email"
                         label={t("form.fields.email")}
-                        placeholder={t("form.placeholders.email")}
-                        custom-style={{ inputStyle: "disabled:opacity-50" }}
+                        placeholder="Johndoe@example.com"
                         onChange={(e) =>
                           setFormData(e.target.id, e.target.value)
                         }
                         onBlur={() => validateForm()}
                         error={errors?.email}
                       />
-
-                      <MultiSelect
-                        label={t("form.fields.grade_levels")}
-                        name="grades"
-                        onSelectItem={(items) =>
-                          setFormData(
-                            "grades",
-                            items.map((item) => parseInt(item.id)),
-                          )
-                        }
-                      >
-                        {getGradesQuery.data?.data.map(
-                          (grade: Grades, key: number) => (
-                            <Checkbox
-                              key={key}
-                              htmlFor={grade.label}
-                              label={grade.label}
-                              id={grade.id}
-                              name="grades"
-                              value={grade.label}
-                            />
-                          ),
-                        )}
-                      </MultiSelect>
 
                       <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-600"></div>
 
@@ -476,13 +430,17 @@ function AddChildModal({
               <Button type="submit" className="btn-default !w-auto">
                 {t("general.accept")}
               </Button>
-              <button className="btn-danger !w-auto" onClick={onCloseModal}>
+              <button
+                type="button"
+                className="btn-danger !w-auto"
+                onClick={onCloseModal}
+              >
                 {t("general.decline")}
               </button>
             </Modal.Footer>
           </form>
         ) : option === "exist" ? (
-          <form onSubmit={onSubmitExistingChilds}>
+          <form onSubmit={onSubmitExistingParent}>
             <div className="flex max-h-[70vh] flex-col p-2">
               <div className="sticky z-10 h-full bg-white pb-4 pt-2 dark:bg-gray-700">
                 <Input
@@ -500,29 +458,38 @@ function AddChildModal({
                 />
               </div>
               <div className="flex flex-col gap-y-3 overflow-y-auto">
-                {getChildrensQuery.data?.map(
-                  (child: Childs, key: number) =>
-                    child.name.search(new RegExp(searchValue, "i")) !== -1 && (
-                      <div>
+                {getTeachersQuery.data?.data.map(
+                  (teacher: Teacher, key: number) =>
+                    teacher.name.search(new RegExp(searchValue, "i")) !==
+                      -1 && (
+                      <div key={key}>
                         <Checkbox
-                          key={key}
-                          htmlFor={child.name}
-                          label={child.name}
-                          id={child.id}
+                          htmlFor={teacher.name}
+                          label={teacher.name}
+                          id={teacher.id}
                           name="childrens"
                           image={
                             <img
                               className="h-7 w-7 rounded-full"
                               src={
-                                child?.imagePath
-                                  ? SERVER_STORAGE + child?.imagePath
-                                  : `https://ui-avatars.com/api/?background=random&name=${getUserName(child?.name).firstName}+${getUserName(child?.name).lastName}`
+                                teacher?.imagePath
+                                  ? SERVER_STORAGE + teacher?.imagePath
+                                  : `https://ui-avatars.com/api/?background=random&name=${getUserName(teacher?.name).firstName}+${getUserName(teacher?.name).lastName}`
                               }
                               alt="profile"
                             />
                           }
-                          onChange={getSelectedChilds}
-                          value={child.name}
+                          onChange={getSelectedParent}
+                          disabled={
+                            selectedParent &&
+                            selectedParent != parseInt(teacher.id)
+                              ? true
+                              : false
+                          }
+                          custom-style={{
+                            containerStyle: `${selectedParent && selectedParent != parseInt(teacher.id) ? "disable" : ""}`,
+                          }}
+                          value={teacher.name}
                         />
                       </div>
                     ),
@@ -552,7 +519,14 @@ function AddChildModal({
               className="font-normal text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600"
             >
               <FaUserPlus size={48} />
-              <p>{t("actions.new_entity", { entity: t("general.child") })}</p>
+              <p>
+                {t("actions.new_entity", {
+                  entity:
+                    t("determiners.indefinite.masculine") +
+                    " " +
+                    t("entities.teacher"),
+                })}
+              </p>
             </Card>
             <Card
               onClick={() => setOption("exist")}
@@ -567,7 +541,9 @@ function AddChildModal({
             >
               <FaUserTag size={48} />
               <p>
-                {t("actions.existing_entity", { entity: t("general.child") })}
+                {t("actions.existing_entity", {
+                  entity: t("entities.teacher"),
+                })}
               </p>
             </Card>
           </div>
@@ -576,5 +552,3 @@ function AddChildModal({
     </>
   );
 }
-
-export default AddChildModal;

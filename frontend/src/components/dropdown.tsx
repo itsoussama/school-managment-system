@@ -1,4 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
+import { BrandColor, colorPalette } from "@src/utils/colors";
+import React, {
+  CSSProperties,
+  HTMLAttributes,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ReactDOM from "react-dom";
 import { FaUser } from "react-icons/fa6";
 
@@ -15,7 +24,7 @@ interface DropdownProps {
     containerStyle?: string;
     dropdownStyle?: string;
   };
-  width?: string;
+  width?: "auto";
 }
 
 interface ListProps {
@@ -28,6 +37,7 @@ interface ListProps {
 interface ItemProps {
   img?: string;
   children: React.ReactNode;
+  onClick?: HTMLAttributes<HTMLLIElement>["onClick"];
 }
 
 interface ButtonProps {
@@ -53,7 +63,6 @@ function Dropdown({
     width: number;
     maxHeight: number;
   } | null>(null);
-
   const toggleDropdown = useCallback(() => {
     // const target = event.target as HTMLElement;
 
@@ -130,8 +139,11 @@ function Dropdown({
     }
 
     if (isVisible) {
-      window.addEventListener("scroll", closeDropDown, true); // `true` for capturing phase
+      if (triggerEvent === "click") {
+        window.addEventListener("scroll", closeDropDown, true); // `true` for capturing phase
+      }
       window.addEventListener("resize", closeDropDown);
+      window.addEventListener("transitionstart", closeDropDown);
 
       if (closeOnEvent === "click" || closeOnEvent === "both") {
         document.addEventListener("mousedown", handleOutsideClick);
@@ -156,10 +168,12 @@ function Dropdown({
         triggerElement?.removeEventListener("mouseleave", closeDropDown);
         dropdownElement?.removeEventListener("mouseleave", closeDropDown);
       }
-
+      window.removeEventListener("transitionstart", closeDropDown);
       document.removeEventListener("mousedown", handleOutsideClick);
       dropdownElement?.removeEventListener("mouseleave", closeDropDown);
-      window.removeEventListener("scroll", closeDropDown);
+      if (triggerEvent === "click") {
+        window.removeEventListener("scroll", closeDropDown);
+      }
       window.removeEventListener("resize", closeDropDown);
     };
   }, [
@@ -211,7 +225,7 @@ function Dropdown({
             style={{
               top: dropdownPosition?.top,
               left: dropdownPosition?.left,
-              width: width ?? dropdownPosition?.width,
+              width: width ? "max-content" : dropdownPosition?.width,
               maxHeight: dropdownPosition?.maxHeight,
             }}
           >
@@ -227,7 +241,7 @@ function Dropdown({
 function List({ children, additionalStyle }: ListProps) {
   return (
     <ul
-      className={`w-full overflow-y-auto py-2 text-gray-700 dark:text-gray-200 ${additionalStyle?.containerStyle}`}
+      className={`min-w-min overflow-y-auto whitespace-nowrap py-2 text-gray-700 dark:text-gray-200 ${additionalStyle?.containerStyle}`}
     >
       {children}
     </ul>
@@ -235,10 +249,13 @@ function List({ children, additionalStyle }: ListProps) {
 }
 
 // Item component to display each item within the List
-function Item({ img, children }: ItemProps) {
+function Item({ img, children, onClick }: ItemProps) {
   return (
-    <li>
-      <div className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+    <li
+      className={`w-full ${onClick ? "cursor-pointer" : "cursor-default"}`}
+      onClick={onClick}
+    >
+      <div className="flex w-full items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
         {img && <img className="mr-2 h-6 w-6 rounded-full" src={img} />}
         {children}
       </div>
@@ -248,8 +265,18 @@ function Item({ img, children }: ItemProps) {
 
 // Button component for any action within the dropdown
 function Button({ children }: ButtonProps) {
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+
   return (
-    <div className="flex cursor-pointer items-center rounded-b-lg border-t border-gray-200 bg-gray-50 p-3 text-sm font-medium text-blue-600 hover:bg-gray-100 hover:underline dark:border-gray-600 dark:bg-gray-700 dark:text-blue-500 dark:hover:bg-gray-600">
+    <div
+      className="flex w-full cursor-pointer items-center justify-center whitespace-nowrap rounded-b-lg border-t border-gray-200 bg-gray-50 p-3 text-sm font-medium text-[var(--brand-color-600)] hover:bg-gray-100 hover:underline dark:border-gray-600 dark:bg-gray-700 dark:text-[var(--brand-color-500)] dark:hover:bg-gray-600"
+      style={
+        {
+          "--brand-color-500": colorPalette[brandState as BrandColor][500],
+          "--brand-color-600": colorPalette[brandState as BrandColor][600],
+        } as CSSProperties
+      }
+    >
       <FaUser className="mr-2" />
       {children}
     </div>

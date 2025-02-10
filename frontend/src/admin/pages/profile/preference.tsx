@@ -52,12 +52,12 @@ export default function Preference() {
     {} as Preferences,
   );
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
-  const [theme, setTheme] = UseTheme();
+  const [, setTheme] = UseTheme();
   const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
   const langState = useAppSelector((state) => state.preferenceSlice.language);
-  const animtionState = useAppSelector(
-    (state) => state.animationSlice.animation,
-  );
+  // const animtionState = useAppSelector(
+  //   (state) => state.animationSlice.animation,
+  // );
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
 
   const dispatch = useAppDispatch();
@@ -70,11 +70,11 @@ export default function Preference() {
         .resolvedOptions()
         .locale.slice(0, 2);
       setPreferences({ ...preferences, language: systemLang });
-      changeLanguage(systemLang);
+      // changeLanguage(systemLang);
       return;
     }
     setPreferences({ ...preferences, language: target.value });
-    changeLanguage(target.value);
+    // changeLanguage(target.value);
   };
 
   const handleReduceMotionChange = (checked: boolean) => {
@@ -86,6 +86,11 @@ export default function Preference() {
     setPreferences({ ...preferences, brand: color as BrandColor });
   };
 
+  const handleThemeChange = (theme: string) => {
+    const themePref = theme as Theme;
+    setPreferences({ ...preferences, theme: themePref as Theme });
+  };
+
   const onSave = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const target = event.target as HTMLFormElement;
@@ -94,12 +99,13 @@ export default function Preference() {
       toggleAnimation(preferences.reduceMotion || target.reduceMotion.checked),
     );
     dispatch(changeBrandColor(preferences.brand || target.brand.value));
+    setTheme((preferences.theme || target.theme.value) as Theme);
 
     toggleAlert({
       id: new Date().getTime(),
       state: true,
       status: "success",
-      message: t("general.success"),
+      message: t("notifications.saved_success"),
     });
   };
 
@@ -246,8 +252,8 @@ export default function Preference() {
                 name="theme"
                 label={t("form.fields.theme")}
                 custom-style={{ containerStyle: "col-start-1 col-end-2" }}
-                onChange={(e) => setTheme(e.target.value as Theme)}
-                value={themeState}
+                onChange={(e) => handleThemeChange(e.target.value)}
+                defaultValue={themeState}
               >
                 <option value="auto">
                   {t("form.general.system_preferred")}

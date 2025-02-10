@@ -1,20 +1,32 @@
 import AxiosProvider from "@services/axiosProvider";
-import { FormData as UpdateAdministratorFromData } from "@admin/pages/administrators/viewAdministrators";
-import { FormData as UpdateTeacherFromData } from "@admin/pages/teachers/viewTeachers";
-import { FormData as UpdateStudentFromData } from "@admin/pages/students/viewStudents";
-import { FormData as UpdateParentFromData } from "@admin/pages/parents/viewParents";
-import { FormData as UpdateResourceFromData } from "@admin/pages/resources/viewResources";
+import { Data as UpdateAdministratorFromData } from "@admin/pages/administrators/viewAdministrators";
+import { Data as UpdateTeacherFromData } from "@admin/pages/teachers/viewTeachers";
+import { Data as UpdateStudentFromData } from "@admin/pages/students/viewStudents";
+import { Data as UpdateParentFromData } from "@admin/pages/parents/viewParents";
+import { Data as UpdateResourceFromData } from "@admin/pages/resources/viewResources";
+import { Data as UpdateClassroomFromData } from "@admin/pages/classrooms/viewClassrooms";
+import { Data as UpdateSubjectFromData } from "@admin/pages/configuration/school/subjects";
+import { Data as UpdateSchoolFromData } from "@src/admin/pages/configuration/school/generalSettings";
+import { Data as UpdateProfileFromData } from "@admin/pages/profile/profile";
+import { StageData as UpdateStageFromData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { GradeData as UpdateGradeFormData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { Data as UpdateEventFromData } from "@src/admin/pages/configuration/school/timetable";
+
 import {
   Status,
-  FormData as UpdateMaintenanceRequestFromData,
+  Data as UpdateMaintenanceRequestFromData,
 } from "@admin/pages/resources/maintenanceRequests";
-import { FormData as AddAdministratorFromData } from "@src/admin/pages/administrators/addAdministrators";
-import { FormData as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
-import { FormData as AddStudentFromData } from "@src/admin/pages/students/addStudent";
-import { FormData as AddParentFromData } from "@src/admin/pages/parents/addParent";
-import { FormData as AddResourceFromData } from "@src/admin/pages/resources/addResources";
-import { FormData as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
-import { FormData as UpdateSchoolFromData } from "@src/admin/pages/configuration/school/generalSettings";
+import { Data as AddAdministratorFromData } from "@src/admin/pages/administrators/addAdministrators";
+import { Data as AddTeacherFromData } from "@src/admin/pages/teachers/addTeacher";
+import { Data as AddStudentFromData } from "@src/admin/pages/students/addStudent";
+import { Data as AddParentFromData } from "@src/admin/pages/parents/addParent";
+import { Data as AddResourceFromData } from "@src/admin/pages/resources/addResources";
+import { Data as AddClassroomFromData } from "@src/admin/pages/classrooms/addClassroom";
+import { Data as AddSubjectFromData } from "@admin/pages/configuration/school/subjects";
+import { Data as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
+import { StageData as AddStageFromData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { GradeData as AddGradeFromData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { Data as AddEventFromData } from "@src/admin/pages/configuration/school/timetable";
 const axiosApi = AxiosProvider();
 
 const getAdministrators = async (
@@ -39,7 +51,7 @@ const getAdministrators = async (
       "&name=" +
       name,
   );
-  return response;
+  return response.data;
 };
 
 const getTeachers = async (
@@ -70,7 +82,7 @@ const getTeachers = async (
       "&grades=" +
       grades,
   );
-  return response;
+  return response.data;
 };
 
 const getStudents = async (
@@ -98,7 +110,7 @@ const getStudents = async (
       "&grades=" +
       grades,
   );
-  return response;
+  return response.data;
 };
 
 const getParents = async (
@@ -126,17 +138,17 @@ const getParents = async (
       "&childName=" +
       childName,
   );
-  return response;
+  return response.data;
 };
 
 const getUser = async (id: number, role?: string) => {
   const response = await axiosApi.get("/api/users/" + id + "?role=" + role);
-  return response;
+  return response.data;
 };
 
 const getRoles = async (id: number) => {
   const response = await axiosApi.get("/api/roles/" + id);
-  return response;
+  return response.data;
 };
 
 const addAdministrator = async (formData: AddAdministratorFromData) => {
@@ -145,7 +157,7 @@ const addAdministrator = async (formData: AddAdministratorFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response;
+  return response.data;
 };
 
 const addTeacher = async (formData: AddTeacherFromData) => {
@@ -154,7 +166,7 @@ const addTeacher = async (formData: AddTeacherFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response;
+  return response.data;
 };
 
 const addStudent = async (formData: AddStudentFromData) => {
@@ -163,7 +175,7 @@ const addStudent = async (formData: AddStudentFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response;
+  return response.data;
 };
 
 const addParent = async (formData: AddParentFromData) => {
@@ -172,7 +184,7 @@ const addParent = async (formData: AddParentFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response;
+  return response.data;
 };
 
 const setAdministrator = async (formData: UpdateAdministratorFromData) => {
@@ -181,7 +193,7 @@ const setAdministrator = async (formData: UpdateAdministratorFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response;
+  return response.data;
 };
 
 const setTeacher = async (formData: UpdateTeacherFromData) => {
@@ -190,7 +202,7 @@ const setTeacher = async (formData: UpdateTeacherFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response;
+  return response.data;
 };
 
 const setStudent = async (formData: UpdateStudentFromData) => {
@@ -199,7 +211,7 @@ const setStudent = async (formData: UpdateStudentFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response;
+  return response.data;
 };
 
 const setParent = async (formData: UpdateParentFromData) => {
@@ -208,12 +220,12 @@ const setParent = async (formData: UpdateParentFromData) => {
       "Content-Type": "multipart/form-data",
     },
   });
-  return response;
+  return response.data;
 };
 
 const deleteUser = async (id: number) => {
   const response = await axiosApi.delete("/api/users/" + id);
-  return response;
+  return response.data;
 };
 
 const getSubjects = async (
@@ -239,13 +251,88 @@ const getSubjects = async (
 };
 
 const getSubject = async (id: number) => {
-  const response = await axiosApi.get("/api/users/" + id);
-  return response;
+  const response = await axiosApi.get("/api/subjects/" + id);
+  return response.data;
 };
 
-const getGrades = async () => {
-  const response = await axiosApi.get("/api/grades/");
-  return response;
+const addSubject = async (formData: AddSubjectFromData) => {
+  const response = await axiosApi.post("/api/subjects/", formData);
+  return response.data;
+};
+
+const setSubject = async (formData: UpdateSubjectFromData) => {
+  const response = await axiosApi.post(
+    "/api/subjects/" + formData?.id,
+    formData,
+  );
+  return response.data;
+};
+
+const assignSubjetTeacher = async (formData: {
+  teacher_id: number;
+  subject: number[];
+}) => {
+  const response = await axiosApi.post("/api/assign-teacher-subject", formData);
+  return response.data;
+};
+
+const deleteSubject = async (id: number) => {
+  const response = await axiosApi.delete("/api/subjects/" + id);
+  return response.data;
+};
+
+const getGrades = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  schoolId: string,
+) => {
+  const response = await axiosApi.get(
+    "/api/grades?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&school_id=" +
+      schoolId,
+  );
+  return response.data;
+};
+
+const getGrade = async (id: number) => {
+  const response = await axiosApi.get("/api/grades/" + id);
+  return response.data;
+};
+
+const addGrade = async (formData: AddGradeFromData) => {
+  const response = await axiosApi.post("/api/grades/", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
+const setGrade = async (formData: UpdateGradeFormData) => {
+  const response = await axiosApi.post(
+    "/api/grades/" + formData?.id,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
+const deleteGrade = async (id: number) => {
+  const response = await axiosApi.delete("/api/grades/" + id);
+  return response.data;
 };
 
 const assignChilds = async (formData: {
@@ -253,22 +340,22 @@ const assignChilds = async (formData: {
   childrens: number[];
 }) => {
   const response = await axiosApi.post("/api/assign-childs", formData);
-  return response;
+  return response.data;
 };
 
 const assignParent = async (formData: { child_id: number; parent: number }) => {
   const response = await axiosApi.post("/api/assign-parent", formData);
-  return response;
+  return response.data;
 };
 
 const blockUser = async (formData: { user_id: number }) => {
   const response = await axiosApi.post("/api/block", formData);
-  return response;
+  return response.data;
 };
 
 const unblockUser = async (formData: { user_id: number }) => {
   const response = await axiosApi.post("/api/unblock", formData);
-  return response;
+  return response.data;
 };
 
 const exportUser = async () => {
@@ -341,6 +428,54 @@ const setResource = async (formData: UpdateResourceFromData) => {
 
 const deleteResource = async (id: number) => {
   const response = await axiosApi.delete("/api/resources/" + id);
+  return response.data;
+};
+
+const getClassrooms = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  name = "",
+  schoolId: string,
+) => {
+  const response = await axiosApi.get(
+    "/api/class_rooms?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&name=" +
+      name +
+      "&school_id=" +
+      schoolId,
+  );
+  return response.data;
+};
+
+const getClassroom = async (id: number) => {
+  const response = await axiosApi.get("/api/class_rooms/" + id);
+  return response?.data;
+};
+
+const addClassroom = async (formData: AddClassroomFromData) => {
+  const response = await axiosApi.post("/api/class_rooms", formData);
+  return response.data;
+};
+
+const setClassroom = async (formData: UpdateClassroomFromData) => {
+  const response = await axiosApi.post(
+    "/api/class_rooms/" + formData?.id,
+    formData,
+  );
+  return response.data;
+};
+
+const deleteClassroom = async (id: number) => {
+  const response = await axiosApi.delete("/api/class_rooms/" + id);
   return response.data;
 };
 
@@ -482,6 +617,56 @@ const setProfile = async (formData: UpdateProfileFromData) => {
   return response.data;
 };
 
+const getStages = async (schoolId: string) => {
+  const response = await axiosApi.get("/api/stages?school_id=" + schoolId);
+  return response.data;
+};
+
+const getStage = async (id: number) => {
+  const response = await axiosApi.get("/api/stages/" + id);
+  return response.data;
+};
+
+const addStage = async (formData: AddStageFromData) => {
+  const response = await axiosApi.post("/api/stages/", formData);
+  return response.data;
+};
+
+const setStage = async (formData: UpdateStageFromData) => {
+  const response = await axiosApi.post("/api/stages/" + formData?.id, formData);
+  return response.data;
+};
+
+const deleteStage = async (id: number) => {
+  const response = await axiosApi.delete("/api/stages/" + id);
+  return response.data;
+};
+
+const getEvents = async (schoolId: string) => {
+  const response = await axiosApi.get("/api/events?school_id=" + schoolId);
+  return response.data;
+};
+
+const getEvent = async (id: string) => {
+  const response = await axiosApi.get("/api/events/" + id);
+  return response.data;
+};
+
+const addEvent = async (formData: AddEventFromData) => {
+  const response = await axiosApi.post("/api/events/", formData);
+  return response.data;
+};
+
+const setEvent = async (formData: UpdateEventFromData) => {
+  const response = await axiosApi.post("/api/events/" + formData?.id, formData);
+  return response.data;
+};
+
+const deleteEvent = async (id: string) => {
+  const response = await axiosApi.delete("/api/events/" + id);
+  return response.data;
+};
+
 export {
   getRoles,
   getAdministrators,
@@ -505,12 +690,25 @@ export {
   exportUser,
   getSubjects,
   getSubject,
+  addSubject,
+  setSubject,
+  assignSubjetTeacher,
+  deleteSubject,
   getGrades,
+  getGrade,
+  addGrade,
+  setGrade,
+  deleteGrade,
   getResources,
   getResource,
   addResource,
   setResource,
   deleteResource,
+  getClassrooms,
+  getClassroom,
+  addClassroom,
+  setClassroom,
+  deleteClassroom,
   getCategories,
   getMaintenanceRequests,
   getMaintenanceRequest,
@@ -521,4 +719,14 @@ export {
   getSchool,
   setSchool,
   setProfile,
+  getStages,
+  getStage,
+  addStage,
+  setStage,
+  deleteStage,
+  getEvents,
+  getEvent,
+  addEvent,
+  setEvent,
+  deleteEvent,
 };

@@ -7,7 +7,6 @@ import {
   Pagination,
   Spinner,
   Table,
-  ToggleSwitch,
   Tooltip,
 } from "flowbite-react";
 import React, {
@@ -21,7 +20,6 @@ import { Trans, useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
   FaHome,
-  FaLock,
   FaPen,
   FaSearch,
   FaSortDown,
@@ -37,29 +35,19 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  deleteUser,
-  getUser,
-  getAdministrators,
-  setAdministrator,
-  unblockUser,
-  blockUser,
+  getClassrooms,
+  setClassroom,
+  deleteClassroom,
+  getClassroom,
 } from "@api";
-import {
-  SkeletonContent,
-  SkeletonProfile,
-  SkeletonTable,
-} from "@src/components/skeleton";
+import { SkeletonContent, SkeletonTable } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { FaEye, FaEyeSlash, FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
-import {
-  customTable,
-  customToggleSwitch,
-  customTooltip,
-} from "@src/utils/flowbite";
+import { customTable, customTooltip } from "@src/utils/flowbite";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 
 interface Check {
@@ -73,53 +61,25 @@ interface Modal {
   open: boolean;
 }
 
-interface Administrator {
+interface Classroom {
   id: number;
-  imagePath: string;
   name: string;
-  email: string;
-  phone: string;
+  capacity: string;
   school_id: string;
-  blocked?: boolean;
-  role: [
-    {
-      id: string;
-      name: string;
-    },
-  ];
 }
 
 export interface Data {
-  _method?: string;
+  _method: string;
   id: number;
   name: string;
-  email: string;
-  phone: string;
-  image?: File;
-  password?: string;
-  password_confirmation?: string;
+  capacity: string;
+  school_id: string;
 }
 
 interface FormData {
-  id: number;
-  firstName: string;
-  lastName: string;
-  address: string;
-  email: string;
-  phone: string;
-  password?: string;
-  password_confirmation?: string;
-}
-
-interface BlockSwitch {
-  [key: string]: boolean;
-}
-
-interface File {
-  lastModified: number;
+  id?: number;
   name: string;
-  size: number;
-  type: string;
+  capacity: string;
 }
 
 interface Sort {
@@ -132,22 +92,14 @@ interface Filter {
   childName: string;
 }
 
-const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
-
-export function ViewAdministrators() {
+export function ViewClassrooms() {
   const queryClient = useQueryClient();
-  const { formData, errors, validateForm, setData } =
-    useFormValidation<FormData>({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      address: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
-    });
-  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+  const { formData, setData } = useFormValidation<FormData>({
+    id: 0,
+    name: "",
+    capacity: "",
+  });
+  // const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // await queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
 
@@ -164,96 +116,73 @@ export function ViewAdministrators() {
   const [numChecked, setNumChecked] = useState<number>(0);
   const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [img, setImg] = useState<FileList>();
-  const [previewImg, setPreviewImg] = useState<string>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [changePassword, toggleChangePassword] = useState<boolean>(false);
   // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
-  const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
   const minSm = useBreakpoint("min", "sm");
 
-  const getAllAdministratorsQuery = useQuery({
-    queryKey: ["getAllAdministrators", filter?.name, filter?.childName],
+  const getAllClassroomsQuery = useQuery({
+    queryKey: ["getAllClassrooms", filter?.name],
     queryFn: () =>
-      getAdministrators(
-        1,
-        -1,
-        undefined,
-        undefined,
-        admin.school_id,
-        filter?.name,
-      ),
+      getClassrooms(1, -1, undefined, undefined, undefined, admin.school_id),
     placeholderData: keepPreviousData,
   });
 
-  const getAdministratorsQuery = useQuery({
+  const getClassroomsQuery = useQuery({
     queryKey: [
-      "getAdministrators",
+      "getClassrooms",
       page,
       perPage,
       sort.column,
       sort.direction,
       admin.school_id,
       filter?.name,
-      filter?.childName,
     ],
     queryFn: () =>
-      getAdministrators(
+      getClassrooms(
         page,
         perPage,
         sort.column,
         sort.direction,
-        admin.school_id,
         filter?.name,
+        admin.school_id,
       ),
     placeholderData: keepPreviousData,
   });
 
-  const getAdministratorQuery = useQuery({
-    queryKey: ["getAdministrator", openModal?.id, "administrator"],
-    queryFn: () => getUser(openModal?.id as number, "administrator"),
-    enabled: !!openModal?.open,
+  const getClassroomQuery = useQuery({
+    queryKey: ["getClassroom", openModal?.id],
+    queryFn: () => getClassroom(openModal?.id as number),
+    enabled: !!openModal?.id,
   });
 
-  const administratorMutation = useMutation({
-    mutationFn: setAdministrator,
-    onSuccess: async ({ data }) => {
+  const classroomMutation = useMutation({
+    mutationFn: setClassroom,
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
+        queryKey: ["getClassroom"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
+        queryKey: ["getClassrooms"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
-      });
-
-      setData({
-        id: data?.id,
-        firstName: getUserName(data?.name).firstName,
-        lastName: getUserName(data?.name).lastName,
-        address: data?.address,
-        email: data?.email,
-        phone: data?.phone,
+        queryKey: ["getAllClassrooms"],
       });
 
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
-        message: t("notifications.saved_success"),
+        message: t("notifications.created_success"),
         state: true,
       });
 
       setOpenModal(undefined);
       setPage(1);
-
-      setPreviewImg(undefined);
     },
     onError: () => {
       toggleAlert({
@@ -265,15 +194,15 @@ export function ViewAdministrators() {
     },
   });
 
-  const deleteUserQuery = useMutation({
-    mutationFn: deleteUser,
+  const deleteClassroomQuery = useMutation({
+    mutationFn: deleteClassroom,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
+        queryKey: ["getClassrooms"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
+        queryKey: ["getAllClassrooms"],
       });
 
       setOpenModal(undefined);
@@ -297,97 +226,6 @@ export function ViewAdministrators() {
     },
   });
 
-  const blockUserMutation = useMutation({
-    mutationFn: blockUser,
-    onSuccess: async (_, { user_id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
-      });
-
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: true,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const unBlockUserMutation = useMutation({
-    mutationFn: unblockUser,
-    onSuccess: async (_, { user_id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
-      });
-
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: false,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  // const [selectedItem, setSelectedItem] = useState()
-
   const onChange = (event: ChangeEvent) => {
     const inputElem = event.target as HTMLInputElement;
     const selectElem = event.target as HTMLSelectElement;
@@ -399,11 +237,6 @@ export function ViewAdministrators() {
           ? selectElem.options[selectElem.selectedIndex].value
           : inputElem.value,
     }));
-  };
-
-  const handleChangePassword = (isVisible: boolean) => {
-    toggleChangePassword(isVisible);
-    setData({ ...formData, password: "", password_confirmation: "" });
   };
 
   const handleCheck = async (id?: number) => {
@@ -426,32 +259,23 @@ export function ViewAdministrators() {
 
   const handleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
-      if (getAllAdministratorsQuery.isFetched) {
-        await getAllAdministratorsQuery.data?.forEach(
-          (administrator: Administrator) => {
-            setChecks((prev) => {
-              const checkedData = prev.some(
-                (item) => item.id === administrator.id,
-              );
-              if (firstCheckbox.checked && !checkedData) {
-                return [
-                  ...prev,
-                  { id: administrator.id as number, status: true },
-                ];
-              }
-              return [
-                ...prev,
-                { id: administrator.id as number, status: false },
-              ];
-            });
-          },
-        );
+      if (getAllClassroomsQuery.isFetched) {
+        await getAllClassroomsQuery?.data.forEach((classroom: Classroom) => {
+          setChecks((prev) => {
+            const checkedData = prev.some((item) => item.id === classroom.id);
+            if (firstCheckbox.checked && !checkedData) {
+              return [...prev, { id: classroom.id as number, status: true }];
+            }
+            return [...prev, { id: classroom.id as number, status: false }];
+          });
+        });
       }
     },
-    [getAllAdministratorsQuery.data, getAllAdministratorsQuery.isFetched],
+    [getAllClassroomsQuery?.data, getAllClassroomsQuery.isFetched],
   );
 
   const handleSort = (column: string) => {
+    setPage(1);
     setSortPosition((prev) => prev + 1);
     switch (sortPosition) {
       case 0:
@@ -476,41 +300,23 @@ export function ViewAdministrators() {
     setPerPage(parseInt(target.value));
   };
 
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files;
-
-      setImg(file);
-      readAndPreview(file as FileList);
-    }
-  };
-
   const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     try {
-      const validationResult = validateForm();
-      if (validationResult.isValid) {
-        const form: Data = {
-          _method: "PUT",
-          id: formData?.id as number,
-          name: formData?.firstName + " " + formData?.lastName,
-          email: formData?.email as string,
-          phone: formData?.phone as string,
-        };
+      // const validationResult = validateForm();
+      // if (validationResult.isValid) {
 
-        if (img) {
-          form["image"] = img[0];
-        }
+      const form: Data = {
+        _method: "PUT",
+        id: openModal?.id as number,
+        name: formData?.name,
+        capacity: formData?.capacity,
+        school_id: admin.school_id,
+      };
 
-        if (form?.password) {
-          form["password"] = formData?.password as string;
-          form["password_confirmation"] =
-            formData?.password_confirmation as string;
-        }
-
-        administratorMutation.mutate(form);
-      }
+      classroomMutation.mutate(form);
+      // }
     } catch (error) {
       toggleAlert({
         id: new Date().getTime(),
@@ -528,62 +334,36 @@ export function ViewAdministrators() {
 
     if (
       (input.verfication.value as string).toLowerCase() !==
-      getAdministratorQuery.data?.name.toLowerCase()
+      getClassroomQuery.data?.data.name.toLowerCase()
     ) {
       setIsVerficationMatch(false);
       return;
     }
 
-    deleteUserQuery.mutate(openModal?.id as number);
-  };
-
-  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const userId: number = openModal?.id as number;
-
-    if (!blockSwitch[userId]) {
-      blockUserMutation.mutate({ user_id: userId });
-    } else {
-      unBlockUserMutation.mutate({ user_id: userId });
-    }
-
-    setOpenModal(undefined);
+    deleteClassroomQuery.mutate(openModal?.id as number);
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
     setOpenModal({ id: id, type: type, open: isOpen });
-
     const data = (await queryClient.ensureQueryData({
-      queryKey: ["getAdministrator", id, "administrator"],
-      queryFn: () => getUser(id, "administrator"),
-    })) as Administrator;
+      queryKey: ["getClassroom", id],
+      queryFn: () => getClassroom(id),
+    })) as Classroom;
 
     setData({
-      id: data?.id,
-      firstName: getUserName(data?.name).firstName,
-      lastName: getUserName(data?.name).lastName,
-      address: "123 Rue Principale",
-      email: data?.email,
-      phone: data?.phone,
+      name: data?.name,
+      capacity: data?.capacity,
     });
   };
 
   const onCloseModal = () => {
-    administratorMutation.reset();
+    classroomMutation.reset();
     setOpenModal(undefined);
-
-    toggleChangePassword(false);
-    setPreviewImg(undefined);
 
     setData({
       id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      address: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
+      name: "",
+      capacity: "",
     });
   };
 
@@ -594,24 +374,6 @@ export function ViewAdministrators() {
 
   //   return { hour: convertToHour, minute: convertToMinute };
   // };
-
-  const getUserName = (fullName: string) => {
-    const nameParts = fullName?.trim().split(/\s+/);
-    const firstName = nameParts?.slice(0, -1).join(" ");
-    const lastName = nameParts?.slice(-1).join(" ");
-
-    return { firstName, lastName };
-  };
-
-  const readAndPreview = (file: FileList) => {
-    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
-      const fileReader = new FileReader();
-      fileReader.addEventListener("load", (event) => {
-        setPreviewImg(event.target?.result as string);
-      });
-      fileReader.readAsDataURL(file[0]);
-    }
-  };
 
   useEffect(() => {
     const alertState = location.state?.alert;
@@ -635,16 +397,6 @@ export function ViewAdministrators() {
       handleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
   }, [page, handleChecks]);
-
-  useEffect(() => {
-    if (getAdministratorsQuery.isFetched) {
-      let data = {};
-      getAdministratorsQuery.data?.data.map((administrator: Administrator) => {
-        data = { ...data, [administrator.id]: !!administrator.blocked };
-      });
-      setBlockSwitch(data);
-    }
-  }, [getAdministratorsQuery.data, getAdministratorsQuery.isFetched]);
 
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);
@@ -676,20 +428,20 @@ export function ViewAdministrators() {
         {minSm ? (
           <Breadcrumb.Item>
             <span className="text-gray-600 dark:text-gray-300">
-              {t("entities.administrators")}
+              {t("entities.classrooms")}
             </span>
           </Breadcrumb.Item>
         ) : (
           <Breadcrumb.Item>...</Breadcrumb.Item>
         )}
         <Breadcrumb.Item>
-          {t("actions.view_entity", { entity: t("entities.administrators") })}
+          {t("actions.view_entity", { entity: t("entities.classrooms") })}
         </Breadcrumb.Item>
       </Breadcrumb>
 
       <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
-        size={"3xl"}
+        size={"xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -704,86 +456,48 @@ export function ViewAdministrators() {
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {t("form.fields.id", { entity: t("entities.administrators") })}:
+          {t("form.fields.id", { entity: t("entities.classrooms") })}:
           <b> {openModal?.id}</b>
         </Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8 sm:flex-row">
-            <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-              <SkeletonProfile
-                imgSource={
-                  getAdministratorQuery.data?.imagePath
-                    ? SERVER_STORAGE + getAdministratorQuery.data?.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.name).firstName}+${getUserName(getAdministratorQuery.data?.name).lastName}`
-                }
-                className="h-40 w-40"
-              />
-              <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                  {t("status.active_deactivate")}
-                </span>
-                <ToggleSwitch
-                  theme={customToggleSwitch}
-                  checked={blockSwitch[getAdministratorQuery.data?.id] || false}
-                  color={brandState}
-                  onChange={() =>
-                    setOpenModal({
-                      id: getAdministratorQuery.data?.id,
-                      type: "block",
-                      open: true,
-                    })
-                  }
-                />
-              </div>
-            </div>
             <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
               <div className="w-full space-y-3">
                 <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.personal_information")}
+                  {t("information.classrooms_information")}
                 </h1>
-                <SkeletonContent isLoaded={getAdministratorQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
+                <SkeletonContent isLoaded={getClassroomQuery.isFetched}>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.first_name")}:
+                        {t("form.fields.name")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getUserName(getAdministratorQuery.data?.name)
-                            .firstName
-                        }
+                        {getClassroomQuery.data?.name}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.last_name")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getAdministratorQuery.data?.name).lastName}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.email")}:
+                        {t("form.fields.type")}:
                       </span>
                       <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.email}
+                        {/* {getClassroomQuery.data?.type} */}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.phone_number")}:
+                        {t("form.fields.capacity")}:
                       </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.phone}
+                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
+                        {getClassroomQuery.data?.capacity}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.address")}:
+                        {t("form.fields.location")}:
                       </span>
                       <span className="text-base text-gray-900 dark:text-white">
-                        123 Rue Principale
+                        {/* {getClassroomQuery.data?.location} */}
                       </span>
                     </div>
                   </div>
@@ -796,7 +510,7 @@ export function ViewAdministrators() {
 
       <Modal
         show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"4xl"}
+        size={"3xl"}
         theme={{
           content: {
             base: "relative h-full w-full p-4 md:h-auto",
@@ -812,172 +526,77 @@ export function ViewAdministrators() {
       >
         <form onSubmit={onSubmitUpdate}>
           <Modal.Header>
-            {t("form.fields.id", { entity: t("entities.administrators") })}:
+            {t("form.fields.id", { entity: t("entities.classrooms") })}:
             <b> {openModal?.id}</b>
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-                <SkeletonProfile
-                  imgSource={
-                    previewImg
-                      ? previewImg
-                      : getAdministratorQuery.data?.imagePath
-                        ? SERVER_STORAGE + getAdministratorQuery.data?.imagePath
-                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.name).firstName}+${getUserName(getAdministratorQuery.data?.name).lastName}`
-                  }
-                  className="h-40 w-40"
-                />
-                <button className="btn-gray relative overflow-hidden">
-                  <input
-                    type="file"
-                    className="absolute left-0 top-0 cursor-pointer opacity-0"
-                    onChange={handleImageUpload}
-                  />
-                  {t("form.buttons.upload", { label: t("general.photo") })}
-                </button>
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.accepted_format")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      jpg, jpeg, png
-                    </span>
-                  </span>
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.maximum_size")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      1024 mb
-                    </span>
-                  </span>
-                </div>
-              </div>
               <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
                 <div className="w-full space-y-3">
                   <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("information.personal_information")}
+                    {t("information.classrooms_information")}
                   </h1>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(250px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
                     <Input
                       type="text"
-                      id="firstName"
-                      name="firstName"
-                      label={t("form.fields.first_name")}
-                      placeholder={t("form.placeholders.first_name")}
+                      id="name"
+                      name="name"
+                      label={t("form.fields.name")}
+                      placeholder={t("form.placeholders.name")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getAdministratorQuery.isFetching && true}
-                      value={(formData.firstName as string) || ""}
+                      disabled={getClassroomQuery.isFetching && true}
+                      value={(formData.name as string) || ""}
+                      onChange={onChange}
+                    />
+
+                    <RSelect
+                      id="type"
+                      name="type"
+                      label={t("form.fields.type")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getClassroomQuery.isFetching && true}
+                      value={(formData.type as string) || ""}
+                      onChange={onChange}
+                    >
+                      <option value="">{t("form.placeholders.types")}</option>
+                      <option value="lecture">
+                        {t("form.fields.classroom_type_options.lecture")}
+                      </option>
+                      <option value="lab">
+                        {t("form.fields.classroom_type_options.lab")}
+                      </option>
+                      <option value="computer_Lab">
+                        {t("form.fields.classroom_type_options.computer_lab")}
+                      </option>
+                      <option value="gymnasium">
+                        {t("form.fields.classroom_type_options.gymnasium")}
+                      </option>
+                      {/* //todo: add ability for admin to add more types if needed */}
+                    </RSelect>
+
+                    <Input
+                      type="number"
+                      id="capacity"
+                      name="capacity"
+                      label={t("form.fields.capacity")}
+                      placeholder={t("form.placeholders.capacity")}
+                      custom-style={{ inputStyle: "disabled:opacity-50" }}
+                      disabled={getClassroomQuery.isFetching && true}
+                      value={(formData.capacity as string) || ""}
                       onChange={onChange}
                     />
 
                     <Input
                       type="text"
-                      id="lastName"
-                      name="lastName"
-                      label={t("form.fields.last_name")}
-                      placeholder={t("form.placeholders.last_name")}
+                      id="location"
+                      name="location"
+                      label={t("form.fields.location")}
+                      placeholder={t("form.placeholders.location")}
                       custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getAdministratorQuery.isFetching && true}
-                      value={(formData.lastName as string) || ""}
+                      disabled={getClassroomQuery.isFetching && true}
+                      value={(formData.location as string) || ""}
                       onChange={onChange}
                     />
-
-                    <Input
-                      type="text"
-                      id="address"
-                      name="address"
-                      label={t("form.fields.address")}
-                      placeholder={t("form.placeholders.address")}
-                      value={(formData.address as string) || ""}
-                      onChange={onChange}
-                      custom-style={{ containerStyle: "col-span-full" }}
-                    />
-
-                    <Input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      label={t("form.fields.phone_number")}
-                      placeholder="06 00 00 00"
-                      pattern="(06|05)[0-9]{6}"
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getAdministratorQuery.isFetching && true}
-                      value={(formData.phone as string) || ""}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="email"
-                      id="email"
-                      name="email"
-                      label={t("form.fields.email")}
-                      placeholder={t("form.placeholders.email")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getAdministratorQuery.isFetching && true}
-                      value={(formData.email as string) || ""}
-                      onChange={onChange}
-                      onBlur={() => validateForm()}
-                      error={errors?.email}
-                    />
-
-                    <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
-
-                    {changePassword ? (
-                      <>
-                        <Input
-                          type="password"
-                          id="password"
-                          name="password"
-                          label={t("form.fields.password")}
-                          placeholder="●●●●●●●"
-                          value={(formData.password as string) || ""}
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          leftIcon={FaLock}
-                          rightIcon={(isPasswordVisible) =>
-                            isPasswordVisible ? FaEyeSlash : FaEye
-                          }
-                          onChange={onChange}
-                          onBlur={() => validateForm()}
-                          error={errors?.password}
-                        />
-
-                        <Input
-                          type="password"
-                          id="password_confirmation"
-                          name="password_confirmation"
-                          label={t("form.fields.confirm_password")}
-                          placeholder="●●●●●●●"
-                          value={
-                            (formData.password_confirmation as string) || ""
-                          }
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          leftIcon={FaLock}
-                          rightIcon={(isPasswordVisible) =>
-                            isPasswordVisible ? FaEyeSlash : FaEye
-                          }
-                          onChange={onChange}
-                          onBlur={() => validateForm()}
-                          error={errors?.password_confirmation}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => handleChangePassword(true)}
-                          className="btn-default !w-auto"
-                        >
-                          {t("form.buttons.change", {
-                            label:
-                              t("determiners.definite.masculine") +
-                              " " +
-                              t("form.fields.password"),
-                          })}
-                        </Button>
-                      </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1013,14 +632,14 @@ export function ViewAdministrators() {
         <form onSubmit={onSubmitDelete}>
           <Modal.Header>
             {t("actions.delete_entity", {
-              entity: t("entities.administrators"),
+              entity: t("entities.classrooms"),
             })}
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.delete.title")}
-                <b>{getAdministratorQuery.data?.name}</b>
+                <b>{getClassroomQuery.data?.name}</b>
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
@@ -1029,7 +648,7 @@ export function ViewAdministrators() {
               <p className="text-gray-900 dark:text-white">
                 <Trans
                   i18nKey="modals.delete.label"
-                  values={{ item: getAdministratorQuery.data?.name }}
+                  values={{ item: getClassroomQuery.data?.name }}
                   components={{ bold: <strong /> }}
                 />
               </p>
@@ -1049,66 +668,6 @@ export function ViewAdministrators() {
             </button>
             <button className="btn-outline !w-auto" onClick={onCloseModal}>
               {t("modals.delete.cancel_button")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
-
-      {/* block / unblock user */}
-      <Modal
-        show={openModal?.type === "block" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitBlock}>
-          <Modal.Header>
-            {t("actions.block_entity", { entity: t("general.user") })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.block.title")}{" "}
-                <b>{getAdministratorQuery.data?.name}</b>
-              </p>
-              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("modals.block.message")}</p>
-              </div> */}
-              {/* <p className="text-gray-900 dark:text-white">
-                {t("modals.block.label")}{" "}
-                <b>{getAdministratorQuery.data?.name}</b>
-              </p> */}
-              {/* <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={
-                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
-                }
-                required
-              /> */}
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
-              {getAdministratorQuery.data?.blocked == 0
-                ? t("modals.block.block_button")
-                : t("modals.block.unblock_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("modals.block.cancel_button")}
             </button>
           </Modal.Footer>
         </form>
@@ -1145,13 +704,13 @@ export function ViewAdministrators() {
                 </Table.HeadCell>
                 <Table.HeadCell>
                   {t("form.fields.id", {
-                    entity: t("entities.administrators"),
+                    entity: t("entities.classroom"),
                   })}
                 </Table.HeadCell>
                 <Table.HeadCell>
                   <div className="flex items-center gap-x-3">
                     <span className="inline-block">
-                      {t("form.fields.full_name")}
+                      {t("form.fields.name")}
                     </span>
                     <div
                       className="flex flex-col"
@@ -1168,10 +727,9 @@ export function ViewAdministrators() {
                     </div>
                   </div>
                 </Table.HeadCell>
-                <Table.HeadCell>{t("form.fields.email")}</Table.HeadCell>
-                <Table.HeadCell>{t("form.fields.phone_number")}</Table.HeadCell>
-                <Table.HeadCell>{t("general.active_time")}</Table.HeadCell>
-                <Table.HeadCell>{t("status.active_deactivate")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.type")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.capacity")}</Table.HeadCell>
+                <Table.HeadCell>{t("form.fields.location")}</Table.HeadCell>
                 <Table.HeadCell className="w-0">
                   <span className="w-full">{t("general.actions")}</span>
                 </Table.HeadCell>
@@ -1180,8 +738,8 @@ export function ViewAdministrators() {
                 ref={tableRef}
                 className="relative border-b border-b-gray-300 dark:border-b-gray-600"
               >
-                {getAdministratorsQuery.isFetching &&
-                  (getAdministratorsQuery.isRefetching || perPage) && (
+                {getClassroomsQuery.isFetching &&
+                  (getClassroomsQuery.isRefetching || perPage) && (
                     <Table.Row>
                       <Table.Cell className="p-0">
                         <div
@@ -1235,15 +793,14 @@ export function ViewAdministrators() {
                   <Table.Cell className="p-2"></Table.Cell>
                   <Table.Cell className="p-2"></Table.Cell>
                   <Table.Cell className="p-2"></Table.Cell>
-                  <Table.Cell className="p-2"></Table.Cell>
                 </Table.Row>
 
-                {getAdministratorsQuery.isFetching &&
-                !(getAdministratorsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={7} />
+                {getClassroomsQuery.isFetching &&
+                !(getClassroomsQuery.isRefetching || perPage) ? (
+                  <SkeletonTable cols={6} />
                 ) : (
-                  getAdministratorsQuery.data?.data.map(
-                    (administrator: Administrator, key: number) => (
+                  getClassroomsQuery.data?.data.map(
+                    (classroom: Classroom, key: number) => (
                       <Table.Row
                         key={key}
                         className="w-max border-b border-b-gray-300 bg-white dark:border-b-gray-600 dark:bg-gray-800"
@@ -1251,60 +808,30 @@ export function ViewAdministrators() {
                         <Table.Cell className="sticky left-0 z-0 p-4 group-odd:bg-white group-even:bg-gray-50 dark:group-odd:bg-gray-800 dark:group-even:bg-gray-700">
                           <Checkbox
                             className="rounded-xs"
-                            id={administrator.id.toString()}
+                            id={classroom.id.toString()}
                             name="checkbox"
                             checked={
-                              checks.find(
-                                (check) => check.id == administrator.id,
-                              )?.status == true
+                              checks.find((check) => check.id == classroom.id)
+                                ?.status == true
                                 ? true
                                 : false
                             }
-                            onChange={() => handleCheck(administrator.id)}
+                            onChange={() => handleCheck(classroom.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {administrator.id}
+                          {classroom.id}
                         </Table.Cell>
-                        <Table.Cell>{administrator.name}</Table.Cell>
+                        <Table.Cell>{classroom.name}</Table.Cell>
 
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {administrator.email}
+                          {/* {classroom.type} */}
                         </Table.Cell>
-                        <Table.Cell>{administrator.phone}</Table.Cell>
+                        <Table.Cell>{classroom.capacity}</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {/* <span>
-                      {formatDuration(administrator.time_spent).hour}
-                      <span className="text-gray-500 dark:text-gray-400">
-                        {" "}
-                        h{" "}
-                      </span>
-                      {formatDuration(administrator.time_spent).minute > 0
-                        ? formatDuration(administrator.time_spent).minute
-                        : ""}
-                      <span
-                        className="text-gray-500 dark:text-gray-400"
-                        hidden={formatDuration(administrator.time_spent).minute <= 0}
-                      >
-                        {" "}
-                        min
-                      </span>
-                    </span> */}
+                          {/* {classroom.location} */}
                         </Table.Cell>
-                        <Table.Cell>
-                          <ToggleSwitch
-                            theme={customToggleSwitch}
-                            color={brandState}
-                            checked={blockSwitch[administrator.id] || false}
-                            onChange={() =>
-                              setOpenModal({
-                                id: administrator.id,
-                                type: "block",
-                                open: true,
-                              })
-                            }
-                          />
-                        </Table.Cell>
+
                         <Table.Cell className="flex w-fit gap-x-2">
                           <div className="flex w-fit gap-x-2">
                             <Tooltip
@@ -1315,7 +842,7 @@ export function ViewAdministrators() {
                               <div
                                 onClick={() =>
                                   setOpenModal({
-                                    id: administrator.id,
+                                    id: classroom.id,
                                     type: "view",
                                     open: true,
                                   })
@@ -1334,7 +861,7 @@ export function ViewAdministrators() {
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
                                   onOpenEditModal({
-                                    id: administrator.id,
+                                    id: classroom.id,
                                     type: "edit",
                                     open: true,
                                   })
@@ -1352,7 +879,7 @@ export function ViewAdministrators() {
                                 className="cursor-pointer rounded-s bg-red-100 p-2 dark:bg-red-500 dark:bg-opacity-20"
                                 onClick={() =>
                                   setOpenModal({
-                                    id: administrator.id,
+                                    id: classroom.id,
                                     type: "delete",
                                     open: true,
                                   })
@@ -1375,12 +902,11 @@ export function ViewAdministrators() {
             <span className="text-gray-500 dark:text-gray-400">
               {t("pagination.records_shown")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getAdministratorsQuery.data?.from}-
-                {getAdministratorsQuery.data?.to}
+                {getClassroomsQuery.data?.from}-{getClassroomsQuery.data?.to}
               </span>{" "}
               {t("pagination.total_records")}{" "}
               <span className="font-semibold text-gray-900 dark:text-white">
-                {getAdministratorsQuery.data?.total}
+                {getClassroomsQuery.data?.total}
               </span>
             </span>
             <div className="flex items-center gap-x-4">
@@ -1389,7 +915,7 @@ export function ViewAdministrators() {
                 name="row-num"
                 onChange={handlePerPage}
                 custom-style={{ inputStyle: "!py-2" }}
-                defaultValue={getAdministratorsQuery.data?.per_page}
+                defaultValue={getClassroomsQuery.data?.per_page}
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -1401,9 +927,9 @@ export function ViewAdministrators() {
                 showIcons
                 currentPage={page}
                 onPageChange={(page) =>
-                  !getAdministratorsQuery.isPlaceholderData && setPage(page)
+                  !getClassroomsQuery.isPlaceholderData && setPage(page)
                 }
-                totalPages={getAdministratorsQuery.data?.last_page ?? 1}
+                totalPages={getClassroomsQuery.data?.last_page ?? 1}
                 nextLabel={minSm ? t("pagination.next") : ""}
                 previousLabel={minSm ? t("pagination.previous") : ""}
                 theme={{

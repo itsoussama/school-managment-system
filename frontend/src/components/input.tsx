@@ -46,6 +46,7 @@ interface Field {
 
 interface Input extends Field, InputHTMLAttributes<HTMLInputElement> {
   type: string;
+  addon?: string;
 }
 
 interface InputDropdown extends Field {}
@@ -74,6 +75,7 @@ function Input({
   label = "",
   leftIcon,
   rightIcon,
+  addon,
   "custom-style": {
     inputStyle = "",
     labelStyle = "",
@@ -103,17 +105,26 @@ function Input({
         >
           {leftIcon && React.createElement(leftIcon, { size: "16px" })}
         </IconContext.Provider>
-        <input
-          type={isPasswordVisible ? "text" : type}
-          className={`rounded-s border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${leftIcon ? "px-10" : ""} ${inputStyle}`}
-          style={
-            {
-              "--brand-color-500": colorPalette[brandState as BrandColor][500],
-              "--brand-color-600": colorPalette[brandState as BrandColor][600],
-            } as CSSProperties
-          }
-          {...attribute}
-        />
+        <div className="flex">
+          <input
+            type={isPasswordVisible ? "text" : type}
+            className={`${addon ? "rounded-s-s" : "rounded-s"} border border-gray-300 bg-gray-50 text-gray-900 focus:border-[var(--brand-color-600)] focus:ring-[var(--brand-color-600)] disabled:opacity-40 sm:text-sm ${error && "border-red-600 dark:border-red-500"} block w-full p-2.5 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)] ${leftIcon ? "px-10" : ""} ${inputStyle}`}
+            style={
+              {
+                "--brand-color-500":
+                  colorPalette[brandState as BrandColor][500],
+                "--brand-color-600":
+                  colorPalette[brandState as BrandColor][600],
+              } as CSSProperties
+            }
+            {...attribute}
+          />
+          {addon && (
+            <p className="flex items-center justify-center rounded-e-s border border-gray-300 bg-gray-100 px-2.5 text-gray-500 first-letter:lowercase dark:border-gray-600 dark:bg-gray-600 dark:text-gray-400">
+              {addon}
+            </p>
+          )}
+        </div>
         <IconContext.Provider
           value={{
             className:
@@ -441,7 +452,7 @@ CheckboxGroup.Button = function Button({
     <>
       <label
         htmlFor={id}
-        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-[var(--brand-color-500)] has-[:checked]:hover:bg-[var(--brand-color-600)] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
+        className={`group flex h-full min-w-max cursor-pointer flex-col items-center justify-center overflow-x-auto border border-gray-300 bg-gray-50 px-2.5 py-2 text-gray-900 first-of-type:rounded-l-s last-of-type:last:rounded-r-s hover:bg-gray-100 has-[:checked]:bg-[var(--brand-color-600)] has-[:checked]:text-white has-[:checked]:hover:bg-[var(--brand-color-500)] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:hover:border-gray-500 dark:hover:bg-gray-600 ${labelStyle}`}
         style={
           {
             "--brand-color-500": colorPalette[brandState as BrandColor][500],
@@ -521,7 +532,7 @@ interface MultiSelectProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export interface SelectedData {
   id: string;
-  label: string;
+  [key: string]: string;
 }
 
 function MultiSelect({
@@ -551,11 +562,13 @@ function MultiSelect({
     let itemsCollection: SelectedData[];
 
     if (target.type === "checkbox") {
-      const hasItem = selectedItems.find((item) => item.id === target.id);
+      const hasItem = selectedItems.find(
+        (item) => item.id.toString() === target.id,
+      );
 
       if (hasItem) {
         const newItemsSet = selectedItems.filter(
-          (item) => item.id !== target.id,
+          (item) => item.id.toString() !== target.id,
         );
         itemsCollection = newItemsSet;
         setSelectedItems(newItemsSet);
@@ -566,7 +579,6 @@ function MultiSelect({
         ];
         setSelectedItems(itemsCollection);
       }
-
       onSelectItem(itemsCollection); // Notify parent
     }
   };
@@ -574,6 +586,7 @@ function MultiSelect({
   const deleteItem = (event: React.MouseEvent) => {
     event.stopPropagation();
     const target = event.target as HTMLSpanElement;
+    console.log(target);
 
     // Uncheck the corresponding checkbox in the dropdown list
     document.getElementsByName(name).forEach((item) => {
@@ -584,7 +597,7 @@ function MultiSelect({
 
     // Filter out the deleted item
     const newItemsSet = selectedItems.filter(
-      (item) => item.id !== target.parentElement?.id,
+      (item) => item.id.toString() !== target.parentElement?.id,
     );
     setSelectedItems(newItemsSet);
     onSelectItem(newItemsSet); // Notify parent
@@ -604,7 +617,9 @@ function MultiSelect({
 
     if (document.getElementById(dropdownUid)?.id == dropdownUid) {
       selectedItems.forEach((item) => {
-        (document.getElementById(item.id) as HTMLInputElement).checked = true;
+        (
+          document.getElementById(item.id.toString()) as HTMLInputElement
+        ).checked = true;
       });
     }
 
@@ -639,8 +654,6 @@ function MultiSelect({
   useEffect(() => {
     // Check if externalSelectedItems is different from selectedItems
     if (externalSelectedItems) {
-      console.log(externalSelectedItems);
-
       setSelectedItems(externalSelectedItems);
     }
   }, [externalSelectedItems]);
@@ -695,7 +708,7 @@ function MultiSelect({
           <div
             ref={dropdownList}
             id={dropdownUid}
-            className="dropdown-content absolute left-0 z-50 mt-1 flex max-h-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-300 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-700"
+            className="dropdown-content absolute left-0 z-50 mt-1 flex max-h-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-400 bg-gray-50 p-2 dark:border-gray-500 dark:bg-gray-700"
             style={{
               display: isDropdownOpen && dropdownStyles ? "flex" : "none",
               width: `${dropdownStyles?.width}px`,

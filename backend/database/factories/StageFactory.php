@@ -2,15 +2,13 @@
 
 namespace Database\Factories;
 
-use App\Models\School;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Subject>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Model>
  */
-class SubjectFactory extends Factory
+class StageFactory extends Factory
 {
-
     /**
      * Define the model's default state.
      *
@@ -19,10 +17,8 @@ class SubjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => null,
-            'coef' => fake()->numberBetween(1, 7),
-            'school_id' => 1
-            // School::factory()
+            'name' => fake()->word(),
+            'school_id' => 1,
         ];
     }
 }

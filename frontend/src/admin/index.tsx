@@ -1,6 +1,6 @@
 import Items from "@src/components/item";
 import { Layout } from "@src/layout/layout";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { hoverContext } from "@context/hoverContext";
 import {
   FaChalkboardTeacher,
@@ -12,6 +12,7 @@ import {
   FaUserTie,
 } from "react-icons/fa";
 import { FaScaleBalanced } from "react-icons/fa6";
+import { SiGoogleclassroom } from "react-icons/si";
 import { Link, Outlet, useMatch } from "react-router-dom";
 import useBreakpoint from "@hooks/useBreakpoint";
 import { useTranslation } from "react-i18next";
@@ -23,7 +24,6 @@ interface SubMenuVisible {
 
 export default function Admin() {
   const [isOnHover, setIsOnHover] = useState<boolean>(false);
-
   // const dispatch = useAppDispatch();
 
   // useEffect(() => {
@@ -59,9 +59,9 @@ function Menu() {
     }));
   };
 
-  // const isUriMatch = (uri: string) => {
-  //   const match = useMatch('');
-  //   return match;
+  // const isSubmMenuVisible = () => {
+
+  //   return {};
   // };
 
   const maxXxl = useBreakpoint("min", "2xl");
@@ -100,6 +100,7 @@ function Menu() {
 
         <Items
           itemId="item-1"
+          path="/administrators"
           itemName={t("entities.administrators")}
           icon={
             <FaUserTie
@@ -121,7 +122,7 @@ function Menu() {
           <Link to="administrators/manage" state={{ active: true }}>
             <Items
               isActive={useMatch("/administrators/manage") ? true : false}
-              itemId="subitem-1"
+              itemId="subitem-2"
               itemName={t("actions.view_entity", {
                 entity:
                   t("determiners.definite.plural") +
@@ -134,6 +135,7 @@ function Menu() {
 
         <Items
           itemId="item-2"
+          path="/teachers"
           itemName={t("entities.teachers")}
           icon={
             <FaChalkboardTeacher
@@ -155,7 +157,7 @@ function Menu() {
           <Link to="teachers/manage" state={{ active: true }}>
             <Items
               isActive={useMatch("/teachers/manage") ? true : false}
-              itemId="subitem-1"
+              itemId="subitem-2"
               itemName={t("actions.view_entity", {
                 entity:
                   t("determiners.definite.plural") +
@@ -168,6 +170,7 @@ function Menu() {
 
         <Items
           itemId="item-3"
+          path="/students"
           itemName={t("entities.students")}
           icon={
             <FaUserGraduate
@@ -189,7 +192,7 @@ function Menu() {
           <Link to="students/manage" state={{ active: true }}>
             <Items
               isActive={useMatch("/students/manage") ? true : false}
-              itemId="subitem-1"
+              itemId="subitem-2"
               itemName={t("actions.view_entity", {
                 entity:
                   t("determiners.definite.plural") +
@@ -202,6 +205,7 @@ function Menu() {
 
         <Items
           itemId="item-4"
+          path="/parents"
           itemName={t("entities.parents")}
           icon={
             <FaUserFriends
@@ -211,18 +215,18 @@ function Menu() {
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Link to="Parents/new" state={{ active: true }}>
+          <Link to="parents/new" state={{ active: true }}>
             <Items
-              isActive={useMatch("/Parents/new") ? true : false}
+              isActive={useMatch("/parents/new") ? true : false}
               itemId="subitem-1"
               itemName={t("actions.new_entity", {
                 entity: t("entities.parent"),
               })}
             />
           </Link>
-          <Link to="Parents/manage" state={{ active: true }}>
+          <Link to="parents/manage" state={{ active: true }}>
             <Items
-              isActive={useMatch("/Parents/manage") ? true : false}
+              isActive={useMatch("/parents/manage") ? true : false}
               itemId="subitem-2"
               itemName={t("actions.view_entity", {
                 entity:
@@ -236,6 +240,7 @@ function Menu() {
 
         <Items
           itemId="item-5"
+          path="/finance"
           itemName={t("entities.finance")}
           icon={
             <FaScaleBalanced
@@ -253,6 +258,7 @@ function Menu() {
 
         <Items
           itemId="item-6"
+          path="/resources"
           itemName={t("entities.resources")}
           icon={
             <FaLayerGroup
@@ -265,7 +271,7 @@ function Menu() {
         >
           <Link to="resources/new" state={{ active: true }}>
             <Items
-              isActive={useMatch("/Resources/new") ? true : false}
+              isActive={useMatch("/resources/new") ? true : false}
               itemId="subitem-1"
               itemName={t("actions.new_entity", {
                 entity: t("entities.resource"),
@@ -294,11 +300,48 @@ function Menu() {
             />
           </Link>
         </Items>
+
+        <Items
+          itemId="item-7"
+          path="/classrooms"
+          itemName={t("entities.classrooms")}
+          icon={
+            <SiGoogleclassroom
+              className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
+            />
+          }
+          // containerClass="locked"
+          subMenuVisible={subMenuVisible}
+          onToggleSubMenu={onToggleSubMenu}
+        >
+          <Link to="classrooms/new" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/classrooms/new") ? true : false}
+              itemId="subitem-1"
+              itemName={t("actions.new_entity", {
+                entity: t("entities.classroom"),
+              })}
+            />
+          </Link>
+          <Link to="classrooms/manage" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/classrooms/manage") ? true : false}
+              itemId="subitem-2"
+              itemName={t("actions.view_entity", {
+                entity:
+                  t("determiners.definite.plural") +
+                  " " +
+                  t("entities.classrooms"),
+              })}
+            />
+          </Link>
+        </Items>
       </div>
       <div className="my-4 border-t border-gray-300 dark:border-gray-700"></div>
       {/* configuration */}
       <Items
-        itemId="item-7"
+        itemId="item-8"
+        path="/configuration"
         itemName={t("entities.configurations")}
         icon={
           <FaCog
@@ -325,17 +368,15 @@ function Menu() {
           />
         </Link>
         <Link
-          to="/configuration/settings/grades-and-sections"
+          to="/configuration/settings/school-levels"
           state={{ active: true }}
         >
           <Items
             isActive={
-              useMatch("/configuration/settings/grades-and-sections")
-                ? true
-                : false
+              useMatch("/configuration/settings/school-levels") ? true : false
             }
-            itemId="subitem-2"
-            itemName={t("entities.grades_sections")}
+            itemId="subitem-3"
+            itemName={t("entities.school-levels")}
           />
         </Link>
         <Link to="/configuration/settings/subjects" state={{ active: true }}>
@@ -343,7 +384,7 @@ function Menu() {
             isActive={
               useMatch("/configuration/settings/subjects") ? true : false
             }
-            itemId="subitem-2"
+            itemId="subitem-4"
             itemName={t("form.fields.subjects")}
           />
         </Link>
@@ -352,7 +393,7 @@ function Menu() {
             isActive={
               useMatch("/configuration/settings/timetable") ? true : false
             }
-            itemId="subitem-2"
+            itemId="subitem-5"
             itemName={t("entities.timetable")}
           />
         </Link>

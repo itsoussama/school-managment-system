@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->dateTime('start');
-            $table->dateTime('end');
-            $table->text('description')->nullable();
-            $table->timestamps();
+        Schema::table('grades', function (Blueprint $table) {
+            $table->unsignedBigInteger('stage_id');
+            $table->foreign('stage_id')->references('id')->on('stages')->onDelete('cascade');
         });
     }
 
@@ -26,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('events');
+        Schema::table('grades', function (Blueprint $table) {
+            //
+        });
     }
 };

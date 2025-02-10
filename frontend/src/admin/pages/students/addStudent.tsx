@@ -1,4 +1,10 @@
-import { Button, Checkbox, Input, MultiSelect } from "@components/input";
+import {
+  Button,
+  Checkbox,
+  Input,
+  MultiSelect,
+  RSelect,
+} from "@components/input";
 import { addStudent, getGrades } from "@api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
@@ -15,11 +21,9 @@ import roles from "@admin/roles.json";
 import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 
-export interface FormData {
+export interface Data {
   guardian_id: number | null;
-  name?: string;
-  firstName?: string;
-  lastName?: string;
+  name: string;
   phone: string;
   email: string;
   password: string;
@@ -28,7 +32,20 @@ export interface FormData {
   roles: number[];
   subjects: number[];
   grades: number[];
-  image: File;
+  image?: File;
+}
+
+interface FormData {
+  guardian_id: number | null;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  subjects: number[];
+  grades: number[];
+  image?: File;
 }
 
 interface Grades {
@@ -45,11 +62,18 @@ interface File {
 
 export default function AddStudent() {
   const { t } = useTranslation();
-  const { formData, errors, setFormData, validateForm } = useFormValidation({
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
+  const { formData, errors, setFormData, validateForm } =
+    useFormValidation<FormData>({
+      guardian_id: null,
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      password: "",
+      password_confirmation: "",
+      subjects: [1],
+      grades: [],
+    });
   const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -70,7 +94,7 @@ export default function AddStudent() {
           alert: {
             id: new Date().getTime(),
             status: "success",
-            message: "Operation Successful",
+            message: t("notifications.created_success"),
             state: true,
           },
         },
@@ -81,7 +105,7 @@ export default function AddStudent() {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     },
@@ -90,28 +114,33 @@ export default function AddStudent() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
+      const form: Data = {
+        guardian_id: null,
+        name: formData?.firstName + " " + formData?.lastName,
+        email: formData?.email as string,
+        school_id: admin?.school_id as string,
+        password: formData?.password as string,
+        password_confirmation: formData?.password_confirmation as string,
+        phone: formData?.phone as string,
+        roles: [roles.student],
+        subjects: [1],
+        grades: formData?.grades as number[],
+      };
+
+      addStudentQuery.mutate(form);
+
       if (img) {
-        addStudentQuery.mutate({
-          guardian_id: null,
-          name: formData?.firstName + " " + formData?.lastName,
-          email: formData?.email as string,
-          school_id: admin?.school_id,
-          password: formData?.password as string,
-          password_confirmation: formData?.password_confirmation as string,
-          phone: formData?.phone as string,
-          roles: [roles.student],
-          subjects: [1],
-          grades: formData?.grades as number[],
-          image: img[0],
-        });
+        form["image"] = img[0];
       } else {
         throw new Error("image not found");
       }
+
+      addStudentQuery.mutate(form);
     } catch (e) {
       toggleAlert({
         id: new Date().getTime(),
         status: "fail",
-        message: "Operation Failed",
+        message: t("notifications.submission_failed"),
         state: true,
       });
     }
@@ -295,18 +324,46 @@ export default function AddStudent() {
                   )
                 }
               >
-                {getGradesQuery.data?.data.data.map(
-                  (grade: Grades, key: number) => (
-                    <Checkbox
-                      key={key}
-                      label={grade.label}
-                      id={grade.id}
-                      name="grades"
-                      value={grade.label}
-                    />
-                  ),
-                )}
+                {getGradesQuery.data?.data.map((grade: Grades, key: number) => (
+                  <Checkbox
+                    key={key}
+                    label={grade.label}
+                    id={grade.id}
+                    name="grades"
+                    value={grade.label}
+                  />
+                ))}
               </MultiSelect>
+
+              <RSelect
+                id="payment_frequency"
+                name="payment_frequency"
+                label={t("form.fields.payment_frequency")}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+              >
+                <option value={"1"}>
+                  {t("form.fields.month_count", { count: 1 })}
+                </option>
+                <option value={"2"}>
+                  {t("form.fields.month_count", { count: 3 })}
+                </option>
+                <option value={"3"}>
+                  {t("form.fields.month_count", { count: 6 })}
+                </option>
+                <option value={"4"}>
+                  {t("form.fields.year_count", { count: 1 })}
+                </option>
+              </RSelect>
+
+              <RSelect
+                id="payment_method"
+                name="payment_method"
+                label={t("form.fields.payment_method")}
+                onChange={(e) => setFormData(e.target.id, e.target.value)}
+              >
+                <option value={"1"}>{t("form.fields.cash")}</option>
+                <option value={"2"}>{t("form.fields.check")}</option>
+              </RSelect>
 
               <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 

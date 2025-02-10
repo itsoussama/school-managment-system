@@ -16,7 +16,7 @@ class UserRoleSeeder extends Seeder
     public function run()
     {
         // Create roles
-        $roles = ['Administrator Staff', 'Administrator','Teacher', 'Student', 'Parent'];
+        $roles = ['Administrator Staff', 'Administrator', 'Teacher', 'Student', 'Parent'];
         $schools = [];
 
         // Create schools
@@ -36,10 +36,13 @@ class UserRoleSeeder extends Seeder
                     'school_id' => $school->id
                 ])->each(function ($user) use ($role, $school) {
                     $user->role()->attach($role);
+                    if ($user->role()->where('name', 'Teacher')->exists()) {
 
-                    $subjects = Subject::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
+                        // Attach the subjects to the teacher
+                        $subjects = Subject::inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
+                        $user->subjects()->sync($subjects);
+                    }
                     $grades = Grade::where('school_id', $school->id)->inRandomOrder()->limit(rand(1, 5))->pluck('id')->toArray();
-                    $user->subjects()->sync($subjects);
                     $user->grades()->sync($grades);
                 });
             }

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Role;
 use App\Models\School;
+use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -42,6 +43,8 @@ class UserSeeder extends Seeder
             ->count(2)
             ->create()
             ->each(function ($user) {
+                info($user->roles()->where('name', 'Teacher')->exists());
+
                 // Attach the role 'Student' or 'Parent' after creation
                 if ($user->roles()->where('name', 'Student')->exists()) {
                     // Assign a random parent as guardian
@@ -52,6 +55,12 @@ class UserSeeder extends Seeder
                     // Set guardian_id
                     $user->guardian_id = $parent ? $parent->id : null;
                     $user->save();
+                }
+                if ($user->roles()->where('name', 'Teacher')->exists()) {
+                    $subjects = Subject::inRandomOrder()->take(3)->pluck('id');
+                    $user->subjects()->attach($subjects);
+
+                    info("Assigned subjects to teacher: {$user->id}");
                 }
             });
         User::factory(['name' => 'admin', 'email' => 'admin@example.com', 'school_id' => 1])->has(Role::factory(['name' => 'Administrator']))->createOne();
