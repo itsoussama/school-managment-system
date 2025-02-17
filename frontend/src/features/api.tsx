@@ -10,6 +10,7 @@ import { Data as UpdateSchoolFromData } from "@src/admin/pages/configuration/sch
 import { Data as UpdateProfileFromData } from "@admin/pages/profile/profile";
 import { StageData as UpdateStageFromData } from "@src/admin/pages/configuration/school/schoolLevels";
 import { GradeData as UpdateGradeFormData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { GroupData as UpdateGroupFormData } from "@src/admin/pages/configuration/school/schoolLevels";
 import { Data as UpdateEventFromData } from "@src/admin/pages/configuration/school/timetable";
 
 import {
@@ -26,6 +27,7 @@ import { Data as AddSubjectFromData } from "@admin/pages/configuration/school/su
 import { Data as AddMaintenanceRequestFromData } from "@src/admin/pages/resources/maintenanceRequests";
 import { StageData as AddStageFromData } from "@src/admin/pages/configuration/school/schoolLevels";
 import { GradeData as AddGradeFromData } from "@src/admin/pages/configuration/school/schoolLevels";
+import { GroupData as AddGroupFromData } from "@src/admin/pages/configuration/school/schoolLevels";
 import { Data as AddEventFromData } from "@src/admin/pages/configuration/school/timetable";
 const axiosApi = AxiosProvider();
 
@@ -143,6 +145,13 @@ const getParents = async (
 
 const getUser = async (id: number, role?: string) => {
   const response = await axiosApi.get("/api/users/" + id + "?role=" + role);
+  return response.data;
+};
+
+const getSchoolStaff = async (school_id: string) => {
+  const response = await axiosApi.get(
+    "/api/school-staffs?school_id=" + school_id,
+  );
   return response.data;
 };
 
@@ -331,6 +340,74 @@ const setGrade = async (formData: UpdateGradeFormData) => {
 };
 
 const deleteGrade = async (id: number) => {
+  const response = await axiosApi.delete("/api/grades/" + id);
+  return response.data;
+};
+
+const getGradeGroup = async (gradeId: number, groupId: number) => {
+  const response = await axiosApi.get(
+    "/api/gradeGroup?grade_id=" + gradeId + "&group_id=" + groupId,
+  );
+  return response.data;
+};
+
+const getGroups = async (
+  page = 1,
+  perPage = 5,
+  sortColumn = "id",
+  sortDirection = "asc",
+  schoolId: string,
+) => {
+  const response = await axiosApi.get(
+    "/api/groups?page=" +
+      page +
+      "&per_page=" +
+      perPage +
+      "&sort_column=" +
+      sortColumn +
+      "&sort_direction=" +
+      sortDirection +
+      "&school_id=" +
+      schoolId,
+  );
+  return response.data;
+};
+
+const getGroup = async (id: number) => {
+  const response = await axiosApi.get("/api/groups/" + id);
+  return response.data;
+};
+
+const getGroupWithoutGrades = async (schoolId: string) => {
+  const response = await axiosApi.get(
+    "/api/groups-no-grades?school_id=" + schoolId,
+  );
+  return response.data;
+};
+
+const addGroup = async (formData: AddGroupFromData) => {
+  const response = await axiosApi.post("/api/groups/", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
+const setGroup = async (formData: UpdateGroupFormData) => {
+  const response = await axiosApi.post(
+    "/api/groups/" + formData?.id,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
+const deleteGroup = async (id: number) => {
   const response = await axiosApi.delete("/api/grades/" + id);
   return response.data;
 };
@@ -682,6 +759,7 @@ export {
   addParent,
   setParent,
   getUser,
+  getSchoolStaff,
   deleteUser,
   assignChilds,
   assignParent,
@@ -699,6 +777,13 @@ export {
   addGrade,
   setGrade,
   deleteGrade,
+  getGradeGroup,
+  getGroups,
+  getGroup,
+  getGroupWithoutGrades,
+  addGroup,
+  setGroup,
+  deleteGroup,
   getResources,
   getResource,
   addResource,

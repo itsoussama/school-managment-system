@@ -14,7 +14,7 @@ class Student extends Model
     /**
      * Get the user that owns the student.
      */
-    public function users()
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id'); // One-to-one inverse relationship
     }
@@ -26,9 +26,9 @@ class Student extends Model
     {
         return $this->belongsTo(Grade::class, 'grade_id'); // One-to-one inverse relationship
     }
-    public function groups()
+    public function group()
     {
-        return $this->belongsToMany(Group::class, 'group_student');
+        return $this->belongsTo(Group::class);
     }
     public function calendars()
     {

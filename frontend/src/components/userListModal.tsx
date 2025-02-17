@@ -1,5 +1,5 @@
 import { Modal } from "flowbite-react";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useReducer, useState } from "react";
 import { Button, Checkbox, Input } from "./input";
 import { FaSearch } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
@@ -73,6 +73,7 @@ export default function UserListModal({
   const getSelectedUsers = (event: ChangeEvent<HTMLInputElement>) => {
     const user = event.target;
     const UserId: number = parseInt(event.target?.id);
+    // let newSelection = { userInfo: selectedUsersName, userIds: selectedUsers };
     if (event.target.checked) {
       if (multipleSelection) {
         setSelectedUsers((prev) => [...prev, UserId]);
@@ -80,22 +81,39 @@ export default function UserListModal({
           ...prev,
           { id: user.id, label: user.dataset.name as string },
         ]);
+        // newSelection = {
+        //   userInfo: [
+        //     ...selectedUsersName,
+        //     { id: user.id, label: user.dataset.name as string },
+        //   ],
+        //   userIds: [...selectedUsers, UserId],
+        // };
       } else {
         setSelectedUsers([UserId]);
         setSelectedUsersName([
           { id: user.id, label: user.dataset.name as string },
         ]);
+        // newSelection = {
+        //   userInfo: [{ id: user.id, label: user.dataset.name as string }],
+        //   userIds: [UserId],
+        // };
       }
     } else {
-      const filtredUserList = selectedUsers.filter(
-        (userId) => userId !== UserId,
+      const filtredUserList = selectedUsers?.filter(
+        (userId) => userId != UserId,
       );
+
       const filtredUserNameList = selectedUsersName.filter(
-        (data) => data.id !== user.id,
+        (data) => data.id != user.id,
       );
       setSelectedUsers(filtredUserList);
       setSelectedUsersName(filtredUserNameList);
+      // newSelection = {
+      //   userInfo: filtredUserNameList,
+      //   userIds: filtredUserList,
+      // };
     }
+    // onChange(name, newSelection.userIds, newSelection.userInfo);
   };
 
   const getUserName = (fullName: string) => {
@@ -109,17 +127,31 @@ export default function UserListModal({
   const onCloseModal = () => {
     // addStudentQuery.reset();
     setOpenModal(false);
+    onChange(name, selectedUsers, selectedUsersName);
     onClose(false);
     setSearchValue("");
   };
 
+  const onDataChange = () => {
+    onChange(name, selectedUsers, selectedUsersName);
+    onClose(false);
+  };
+
   useEffect(() => {
     setOpenModal(open);
+    console.log(open);
   }, [open]);
 
   useEffect(() => {
-    onChange(name, selectedUsers, selectedUsersName);
-  }, [selectedUsers]);
+    if (open) {
+      setSelectedUsers(selectedUsersList);
+      console.log(selectedUsersList);
+    }
+  }, [selectedUsersList, open]);
+
+  // useEffect(() => {
+  //   onChange(name, selectedUsers, selectedUsersName);
+  // }, [selectedUsers, onChange, selectedUsersName, name]);
 
   return (
     <Modal
@@ -136,7 +168,7 @@ export default function UserListModal({
           popup: "pt-0",
         },
       }}
-      onClose={onCloseModal}
+      onClose={() => onCloseModal()}
     >
       <Modal.Header>{modalHeader}</Modal.Header>
       <div className="flex max-h-[50vh] flex-col p-2">
@@ -185,12 +217,12 @@ export default function UserListModal({
                       data-name={user?.name}
                       onChange={getSelectedUsers}
                       checked={
-                        selectedUsersList?.includes(parseInt(user?.id))
+                        selectedUsers?.includes(parseInt(user?.id))
                           ? true
                           : false
                       }
                       custom-style={{
-                        containerStyle: `${!multipleSelection && (selectedUsersList?.length >= 1 && !selectedUsersList?.includes(parseInt(user?.id)) ? "disable" : "")}`,
+                        containerStyle: `${!multipleSelection && (selectedUsers?.length >= 1 && !selectedUsers?.includes(parseInt(user?.id)) ? "disable" : "")}`,
                       }}
                       value={user?.name}
                     />
@@ -203,7 +235,7 @@ export default function UserListModal({
         <Button
           type="submit"
           className="btn-default !w-auto"
-          onClick={onCloseModal}
+          onClick={onDataChange}
         >
           {t("general.accept")}
         </Button>

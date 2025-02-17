@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Group;
+use App\Models\Student;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+
 
 class GroupController extends Controller
 {
@@ -14,9 +18,12 @@ class GroupController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
-            $groups = Group::with('students', 'grade')->where('school_id', $school_id)->orderBy($sortColumn, $sortDirection)
-            ->paginate($perPage);
-            return response()->json($groups, 200);
+            $groups = Group::with('students', 'grade')->where('school_id', $school_id)->orderBy($sortColumn, $sortDirection);
+            if ($perPage == -1) {
+                return response()->json($groups->get(), Response::HTTP_OK);
+            }
+
+            return response()->json($groups->paginate($perPage), Response::HTTP_OK);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to fetch groups', 'message' => $e->getMessage()], 500);
         }
@@ -53,18 +60,61 @@ class GroupController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Group $group)
     {
         try {
-            $group = Group::findOrFail($id);
+            // $group = Group::findOrFail($id);
 
-            $validated = $request->validate([
-                'name' => 'sometimes|string|unique:groups,name,' . $group->id,
+            $request->validate([
+                // 'name' => 'sometimes|string|unique:groups,name,' . $group->id,
+                'name' => 'sometimes|string',
                 'grade_id' => 'sometimes|exists:grades,id',
                 'school_id' => 'sometimes|exists:schools,id',
+                'students' => 'nullable|array',
+                'students.*' => 'exists:students,user_id',
+                'teachers' => 'nullable|array',
+                'teachers.*' => 'exists:teachers,user_id',
             ]);
 
-            $group->update($validated);
+            $selectedStudents = $request->input('students', []); // Students from request
+            $groupId = $group->id;
+            $schoolId = auth()->user()->school_id; // Get the authenticated user's school
+
+            // Get current students in this group that belong to the same school
+            $currentStudents = Student::where('group_id', $groupId)
+                ->whereHas('users', function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId);
+                })
+                ->pluck('id')
+                ->toArray();
+
+            // Find students to remove (currently in the group but NOT in the request)
+            $studentsToRemove = array_diff($currentStudents, $selectedStudents);
+            info(["studentsToRemove " => $studentsToRemove]);
+
+            // Find students to add (those in the request but NOT currently in the group)
+            $studentsToAdd = array_diff($selectedStudents, $currentStudents);
+            info(["studentsToAdd " => $studentsToAdd]);
+
+            // Remove students from the group (set group_id to null) - Only for the same school
+            Student::whereIn('user_id', $studentsToRemove)
+                ->update(['group_id' => null]);
+
+            // Add new students to the group - Only for the same school
+            Student::whereIn('user_id', $studentsToAdd)
+                ->update(['group_id' => $groupId]);
+
+            // if ($request->input('teachers') !== null) {
+            //     $group->teachers()->detach();
+            //     $group->teachers()->attach($request->input('teachers'));
+            // }
+
+
+            // if (!empty($request->input('groups'))) {
+            //     Group::where('grade_id', $group->id)->whereNotIn('id', $request->input('groups'))->delete();
+            // }
+
+            $group->update($request->only(['name', 'grade_id', 'school_id']));
 
             return response()->json($group, 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -88,5 +138,29 @@ class GroupController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to delete group', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function groupsWithoutGrade(Request $request)
+    {
+        try {
+            $school_id = $request->input('school_id');
+            $groups = Group::whereDoesntHave('grade')->with('students')->where('school_id', $school_id)->get();
+
+            return response()->json($groups, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch groups', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function showGradeGroup(Request $request)
+    {
+        $grade_id = $request->input('grade_id');
+        $group_id = $request->input('group_id');
+
+        if (isset($grade_id, $group_id)) {
+            $group = Group::with(['grade', 'students.users', 'teachers.user'])->find($group_id);
+            return response()->json($group, Response::HTTP_OK);
+        }
+        return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }

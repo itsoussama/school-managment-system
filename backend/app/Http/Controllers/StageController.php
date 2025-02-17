@@ -13,7 +13,21 @@ class StageController extends Controller
      */
     public function index()
     {
-        $stages = Stage::with('grades')->where('school_id', auth()->user()->school_id)->get();
+        $stages = Stage::with(['grades' => function ($query) {
+            $query->withCount('groups as total_groups')->with(['groups' => function ($query) {
+                $query->withCount(['students', 'teachers']);
+            }]);
+        }])
+            ->where('school_id', auth()->user()->school_id)
+            ->get();
+
+        // Calculate total students and teachers per grade
+        $stages->each(function ($stage) {
+            $stage->grades->each(function ($grade) {
+                $grade->total_students = $grade->groups->sum('students_count');
+                $grade->total_teachers = $grade->groups->sum('teachers_count');
+            });
+        });
         return response()->json($stages, Response::HTTP_OK);
     }
 

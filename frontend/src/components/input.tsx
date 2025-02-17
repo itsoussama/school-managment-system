@@ -532,7 +532,7 @@ interface MultiSelectProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export interface SelectedData {
   id: string;
-  [key: string]: string;
+  label: string;
 }
 
 function MultiSelect({
@@ -557,50 +557,25 @@ function MultiSelect({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownList = useRef<HTMLDivElement>(null);
 
-  const handleItemsChange = (event: ChangeEvent) => {
-    const target = event.target as HTMLInputElement;
-    let itemsCollection: SelectedData[];
-
-    if (target.type === "checkbox") {
-      const hasItem = selectedItems.find(
-        (item) => item.id.toString() === target.id,
-      );
-
-      if (hasItem) {
-        const newItemsSet = selectedItems.filter(
-          (item) => item.id.toString() !== target.id,
-        );
-        itemsCollection = newItemsSet;
-        setSelectedItems(newItemsSet);
-      } else {
-        itemsCollection = [
-          ...selectedItems,
-          { id: target.id, label: target.value },
-        ];
-        setSelectedItems(itemsCollection);
-      }
-      onSelectItem(itemsCollection); // Notify parent
-    }
+  // Handles item selection via checkbox
+  const handleItemsChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { id, value, checked } = event.target;
+    setSelectedItems((prev) => {
+      const updatedItems = checked
+        ? [...prev, { id, label: value }]
+        : prev.filter((item) => item.id !== id);
+      onSelectItem(updatedItems);
+      return updatedItems;
+    });
   };
 
-  const deleteItem = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    const target = event.target as HTMLSpanElement;
-    console.log(target);
-
-    // Uncheck the corresponding checkbox in the dropdown list
-    document.getElementsByName(name).forEach((item) => {
-      if ((item as HTMLInputElement).id == target.parentElement?.id) {
-        (item as HTMLInputElement).checked = false;
-      }
+  // Removes an item from the selected list
+  const deleteItem = (id: string) => {
+    setSelectedItems((prev) => {
+      const updatedItems = prev.filter((item) => item.id !== id);
+      onSelectItem(updatedItems);
+      return updatedItems;
     });
-
-    // Filter out the deleted item
-    const newItemsSet = selectedItems.filter(
-      (item) => item.id.toString() !== target.parentElement?.id,
-    );
-    setSelectedItems(newItemsSet);
-    onSelectItem(newItemsSet); // Notify parent
   };
 
   const clonedChildren = React.Children.map(children, (child) => {
@@ -614,12 +589,17 @@ function MultiSelect({
 
   const openDropDown = () => {
     setIsDropdownOpen(true);
+    console.log(dropdownUid);
 
-    if (document.getElementById(dropdownUid)?.id == dropdownUid) {
+    const dropdownElement = document.getElementById(dropdownUid);
+    if (dropdownElement) {
       selectedItems.forEach((item) => {
-        (
-          document.getElementById(item.id.toString()) as HTMLInputElement
-        ).checked = true;
+        const checkbox = document.getElementById(
+          String(item.id),
+        ) as HTMLInputElement | null;
+        if (checkbox) {
+          checkbox.checked = true;
+        }
       });
     }
 
@@ -652,7 +632,6 @@ function MultiSelect({
   }, []);
 
   useEffect(() => {
-    // Check if externalSelectedItems is different from selectedItems
     if (externalSelectedItems) {
       setSelectedItems(externalSelectedItems);
     }
@@ -687,7 +666,7 @@ function MultiSelect({
             selectedItems?.map((item, key) => (
               <span
                 key={key}
-                id={item.id}
+                id={item.id?.toString()}
                 className="me-2 inline-flex items-center text-nowrap rounded-xs bg-gray-100 px-2 py-1 text-sm font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-300"
               >
                 {item.label}
@@ -695,7 +674,7 @@ function MultiSelect({
                   type="button"
                   className="rounded-sm ms-2 inline-flex items-center bg-transparent p-1 text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-gray-300"
                   aria-label="Remove"
-                  onClick={deleteItem}
+                  onClick={() => deleteItem(item.id)}
                 >
                   <FaXmark className="pointer-events-none h-3 w-3" />
                   <span className="sr-only">Remove badge</span>

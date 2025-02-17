@@ -31,8 +31,8 @@ class DatabaseSeeder extends Seeder
                 $this->call(MaintenanceRequestSeeder::class);
                 $this->call(EventSeeder::class,);
                 $this->call(ClassRoomSeeder::class);
-                $this->call(StudentSeeder::class);
                 $this->call(GroupSeeder::class);
+                $this->call(StudentSeeder::class);
                 $this->call(TeacherSeeder::class);
                 $this->call(CalendarSeeder::class);
         }

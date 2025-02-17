@@ -794,7 +794,7 @@ export default function Subjects() {
                         )
                       }
                       externalSelectedItems={(
-                        formData?.teachers as { id: string; name: string }[]
+                        formData?.teachers as { id: number; name: string }[]
                       )?.map((teacher) => ({
                         id: teacher.id,
                         label: teacher.name,

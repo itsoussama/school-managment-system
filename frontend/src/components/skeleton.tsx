@@ -83,4 +83,17 @@ function SkeletonTable({ rows = 5, cols = 5 }) {
     ));
 }
 
-export { SkeletonProfile, SkeletonContent, SkeletonTable };
+function SkeletonAccordion() {
+  return (
+    <div role="status" className="w-full animate-pulse">
+      <div className="mb-4 h-12 w-full rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="mb-4 h-12 w-full rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="mb-4 h-12 w-full rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="mb-4 h-12 w-full rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="mb-4 h-12 w-full rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
+}
+
+export { SkeletonProfile, SkeletonContent, SkeletonTable, SkeletonAccordion };

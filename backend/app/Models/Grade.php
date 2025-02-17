@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
 
 class Grade extends Model
 {
@@ -18,7 +19,7 @@ class Grade extends Model
         'school_id'
     ];
 
-    protected $appends = ['teachers', 'students'];
+    // protected $appends = ['teachers', 'students'];
 
     public function school(): BelongsTo
     {
@@ -45,13 +46,13 @@ class Grade extends Model
         return $this->belongsTo(Stage::class);
     }
 
-    public function getTeachersAttribute()
-    {
-        return $this->users->filter(fn($user) => $user->role->contains('name', 'Teacher'))->values();
-    }
+    // public function getTeachersAttribute()
+    // {
+    //     return $this->users->filter(fn($user) => $user->role->contains('name', 'Teacher'))->values();
+    // }
 
-    public function getStudentsAttribute()
-    {
-        return $this->users->filter(fn($user) => $user->role->contains('name', 'Student'))->values();
-    }
+    // public function getStudentsAttribute()
+    // {
+    //     return $this->users->filter(fn($user) => $user->role->contains('name', 'Student'))->values();
+    // }
 }

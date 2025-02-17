@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Grade;
+use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+
+use function PHPUnit\Framework\isNull;
 
 class GradeController extends Controller
 {
@@ -19,7 +22,14 @@ class GradeController extends Controller
         $sortColumn = $request->input('sort_column', 'id');
         $sortDirection = $request->input('sort_direction', 'asc');
         $school_id = $request->input('school_id');
-        $grades = Grade::with(['groups', 'stage', 'users'])->where("school_id", $school_id)->orderBy($sortColumn, $sortDirection);
+        $grades = Grade::with([
+            'groups' => function ($query) {
+                $query->with(['students', 'teachers'])->withCount(['students', 'teachers']);
+            },
+            'stage'
+        ])
+            ->where("school_id", $school_id)
+            ->orderBy($sortColumn, $sortDirection);
 
         if ($perPage == -1) {
             return response()->json($grades->get(), Response::HTTP_OK);
@@ -68,11 +78,27 @@ class GradeController extends Controller
         $request->validate([
             'label' => 'required|string|max:255',
             'stage_id' => 'required|exists:stages,id',
+            'groups' => 'nullable|array',
+            'groups.*' => 'exists:groups,id',
+            // 'students' => 'nullable|array',
+            // 'students.*' => 'exists:users,id',
+            // 'teachers' => 'nullable|array',
+            // 'teachers.*' => 'exists:users,id',
             "school_id" => 'required|exists:schools,id'
 
         ]);
 
-        $grade->update($request->all());
+        // info($request->input('students'), $request->input('teachers'));
+        // $grade->users()->detach();
+        // $grade->users()->attach(array_merge($request->input('students') ?? [], $request->input('teachers') ?? []));
+
+        if (!empty($request->input('groups'))) {
+            Group::where('grade_id', $grade->id)->whereNotIn('id', $request->input('groups'))->delete();
+        }
+
+        $grade->update($request->only(['label', 'stage_id', 'school_id']));
+
+
         return response()->json($grade, Response::HTTP_OK);
     }
 

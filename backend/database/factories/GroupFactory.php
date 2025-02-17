@@ -13,10 +13,11 @@ class GroupFactory extends Factory
 
     public function definition()
     {
+        $grade = Grade::inRandomOrder()->first();
         return [
             'name' => $this->faker->word(),
-            'grade_id' => Grade::inRandomOrder()->first()->id,
-            'school_id' => School::inRandomOrder()->first()->id,
+            'grade_id' => $grade->id,
+            'school_id' => $grade->school_id,
         ];
     }
 }

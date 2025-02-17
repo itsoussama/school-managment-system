@@ -3,10 +3,12 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import Dropdown from "@src/components/dropdown";
 import { colors } from "../../utils/colors";
 import { useTranslation } from "react-i18next";
+import React, { useState } from "react";
 
 interface InfoCardType {
   index: number;
   title: string;
+  children: React.ReactNode;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -14,10 +16,12 @@ interface InfoCardType {
 export default function InfoCard({
   index,
   title,
+  children,
   onEdit,
   onDelete,
 }: InfoCardType) {
   const { t } = useTranslation();
+  const [closeDropDown, setCloseDropDown] = useState(false);
   const handleColorSequence = (index: number) => {
     const styles = {
       primary: colorPalette[colors[index % colors.length]][700],
@@ -36,15 +40,29 @@ export default function InfoCard({
       >
         <h1 className="text-lg font-semibold">{title}</h1>
         {/* <FaPen /> */}
-        <Dropdown element={<BsThreeDotsVertical />} width="max-content">
+        <Dropdown
+          additionalStyle={{
+            containerStyle:
+              "cursor-pointer rounded-full p-1 hover:bg-white hover:bg-opacity-10",
+          }}
+          close={closeDropDown}
+          element={<BsThreeDotsVertical size={16} />}
+          width="auto"
+        >
           <Dropdown.List>
             <Dropdown.Item>
-              <span className="cursor-pointer" onClick={onEdit}>
+              <span
+                className="cursor-pointer"
+                onClick={() => (onEdit?.(), setCloseDropDown(true))}
+              >
                 {t("general.edit")}
               </span>
             </Dropdown.Item>
             <Dropdown.Item>
-              <span className="cursor-pointer" onClick={onDelete}>
+              <span
+                className="cursor-pointer"
+                onClick={() => (onDelete?.(), setCloseDropDown(true))}
+              >
                 {t("general.delete")}
               </span>
             </Dropdown.Item>
@@ -52,14 +70,26 @@ export default function InfoCard({
         </Dropdown>
       </div>
       <div
-        className={`flex h-full flex-row p-4`}
+        className={`flex h-full flex-row gap-3 p-4`}
         style={{ backgroundColor: handleColorSequence(index).secondary }}
       >
-        <div className="flex flex-col">
-          <span className="text-gray-100">Groups</span>
-          <span>4</span>
-        </div>
+        {children}
       </div>
     </div>
   );
 }
+
+InfoCard.Metric = function Metric({
+  title,
+  value,
+}: {
+  title: string;
+  value: unknown;
+}) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-gray-100">{title}</span>
+      <span>{`${value}`}</span>
+    </div>
+  );
+};

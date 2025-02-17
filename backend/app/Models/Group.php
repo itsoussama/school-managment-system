@@ -9,11 +9,21 @@ class Group extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'grade_id'];
+    protected $fillable = ['name', 'grade_id', 'school_id'];
+
+    // public function students()
+    // {
+    //     return $this->hasMany(Student::class, 'group_student');
+    // }
 
     public function students()
     {
-        return $this->belongsToMany(Student::class, 'group_student');
+        return $this->hasMany(Student::class);
+    }
+
+    public function teachers()
+    {
+        return $this->belongsToMany(Teacher::class);
     }
 
     public function grade()

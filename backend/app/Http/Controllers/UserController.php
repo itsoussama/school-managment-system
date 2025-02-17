@@ -6,6 +6,7 @@ use App\Exports\UsersExport;
 use App\Imports\UsersImport;
 use App\Models\Subject;
 use App\Models\User;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 // use Illuminate\Support\Facades\Auth;
@@ -213,6 +214,20 @@ class UserController extends Controller
             }
 
             return response()->json($users->paginate($perPage), Response::HTTP_OK);
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
+    public function schoolStaffs(Request $request)
+    {
+        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin')) || auth()->user()->hasRole(config('roles.teacher'))) {
+            $school_id = $request->input('school_id');
+
+            $users = User::whereHas('role', function (Builder $query) {
+                $query->whereIn('name', ['Administrator', 'Administrator Staff', 'Teacher']);
+            })->where('school_id', $school_id)->get();
+            return response()->json($users, Response::HTTP_OK);
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }

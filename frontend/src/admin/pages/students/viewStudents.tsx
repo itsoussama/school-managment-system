@@ -79,7 +79,7 @@ interface ParentModal {
   open: boolean;
 }
 
-interface Student {
+export interface Student {
   id: number;
   name: string;
   imagePath: string;

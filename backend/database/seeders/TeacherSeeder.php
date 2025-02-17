@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Group;
 use App\Models\Subject;
 use App\Models\Teacher;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -14,7 +15,7 @@ class TeacherSeeder extends Seeder
      */
     public function run()
     {
-        Teacher::factory(10)->create()->each(function ($teacher) {
+        Teacher::factory(10)->hasGroups(1)->create()->each(function ($teacher) {
             $subjects = Subject::inRandomOrder()->take(3)->pluck('id'); // Assign 3 random subjects
             $teacher->subjects()->attach($subjects);
         });

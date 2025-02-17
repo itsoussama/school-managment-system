@@ -15,6 +15,12 @@ class Teacher extends Model
     {
         return $this->belongsToMany(Subject::class, 'teacher_subject');
     }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

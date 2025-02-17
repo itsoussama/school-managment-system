@@ -17,6 +17,7 @@ import {
   getMaintenanceRequest,
   getMaintenanceRequests,
   getResources,
+  getSchoolStaff,
   setMaintenanceRequest,
   setMaintenanceRequestStatus,
 } from "@src/features/api";
@@ -383,6 +384,12 @@ export default function MaintenanceRequests() {
   const getAllResourcesQuery = useQuery({
     queryKey: ["getAllResources"],
     queryFn: () => getResources(1, -1, undefined, undefined, admin?.school_id),
+    placeholderData: keepPreviousData,
+  });
+
+  const getSchoolStaffQuery = useQuery({
+    queryKey: ["getSchoolStaff"],
+    queryFn: () => getSchoolStaff(admin?.school_id),
     placeholderData: keepPreviousData,
   });
 
@@ -1377,10 +1384,10 @@ export default function MaintenanceRequests() {
         onChange={(key, value, name) => onSelectUser(key, value, name)}
         onClose={(status) => setOpenUserListModal(status)}
         selectedUsersList={formData.users as number[]}
-        userList={getAllResourcesQuery.data?.map(
+        userList={getSchoolStaffQuery.data?.map(
           (user: Record<string, string>) => ({
             id: user.id,
-            name: user.label,
+            name: user.name,
             imagePath: user.imagePath,
           }),
         )}
