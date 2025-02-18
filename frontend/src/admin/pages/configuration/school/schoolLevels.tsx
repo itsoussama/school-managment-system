@@ -399,17 +399,6 @@ export default function SchoolLevels() {
       await queryClient.invalidateQueries({ queryKey: ["getGroups"] });
       await queryClient.invalidateQueries({ queryKey: ["getGroup"] });
 
-      setOpenModal(undefined);
-
-      setSelectedStudents([]);
-      setSelectedTeachers([]);
-
-      setGroupData({
-        id: 0,
-        name: data?.name,
-        grade_id: data?.grade_id,
-      });
-
       toggleAlert({
         id: new Date().getTime(),
         status: "success",
@@ -424,6 +413,19 @@ export default function SchoolLevels() {
         status: "fail",
         message: t("notifications.submission_failed"),
         state: true,
+      });
+    },
+
+    onSettled: () => {
+      setOpenModal(undefined);
+
+      setSelectedStudents([]);
+      setSelectedTeachers([]);
+
+      setGroupData({
+        id: 0,
+        name: "",
+        grade_id: 0,
       });
     },
   });
@@ -716,6 +718,11 @@ export default function SchoolLevels() {
 
   const onCloseModal = () => {
     setOpenModal(undefined);
+    setGroupData({
+      id: 0,
+      name: "",
+      grade_id: 0,
+    });
     setSelectedStudents([]);
     setSelectedTeachers([]);
   };

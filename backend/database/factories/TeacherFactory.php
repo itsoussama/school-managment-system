@@ -24,16 +24,30 @@ class TeacherFactory extends Factory
 
     public function definition()
     {
-        $grade = Grade::inRandomOrder()->first();
         return [
-            'user_id' => User::where('school_id', $grade->school_id)->whereHas('role', function (Builder $query) {
-                $query->where('name', 'Teacher');
-            })->inRandomOrder()->distinct()->first()->id, // Assumes a User factory exists
+            'user_id' => $this->getUniqueUserId(),
             // 'group_id' => Group::inRandomOrder()->first()->id, // Creates a user and associates the ID
             'teacher_number' => strtoupper(Str::random(10)), // Unique teacher number
             'birthdate' => $this->faker->date('Y-m-d', '-30 years'), // Adult
             'address' => $this->faker->address(),
             'phone' => $this->faker->phoneNumber(),
         ];
+    }
+
+
+    public function getUniqueUserId(): int
+    {
+        $grade = Grade::inRandomOrder()->first();
+        static $collectionIds = [];
+        $userId = User::where('school_id', $grade->school_id)
+            ->whereHas('role', function (Builder $query) {
+                $query->where('name', 'Teacher');
+            })
+            ->whereNotIn('id', $collectionIds)
+            ->inRandomOrder()
+            ->value('id');
+        array_push($collectionIds, $userId);
+        info($collectionIds);
+        return $userId;
     }
 }
