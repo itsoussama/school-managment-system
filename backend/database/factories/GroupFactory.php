@@ -13,7 +13,9 @@ class GroupFactory extends Factory
 
     public function definition()
     {
-        $grade = Grade::inRandomOrder()->first();
+        static $gradeIds = [];
+        $grade = Grade::whereNotIn('id', $gradeIds)->inRandomOrder()->first();
+        array_push($gradeIds, $grade->value('id'));
         return [
             'name' => $this->faker->word(),
             'grade_id' => $grade->id,

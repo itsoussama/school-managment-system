@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\Student;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder;
 
 
 class GroupController extends Controller
@@ -71,48 +72,56 @@ class GroupController extends Controller
                 'grade_id' => 'sometimes|exists:grades,id',
                 'school_id' => 'sometimes|exists:schools,id',
                 'students' => 'nullable|array',
-                'students.*' => 'exists:students,user_id',
+                'students.*' => 'exists:users,id',
                 'teachers' => 'nullable|array',
-                'teachers.*' => 'exists:teachers,user_id',
+                'teachers.*' => 'exists:users,id',
             ]);
 
             $selectedStudents = $request->input('students', []); // Students from request
+            $selectedTeachers = $request->input('teachers', []); // teachers from request
             $groupId = $group->id;
             $schoolId = auth()->user()->school_id; // Get the authenticated user's school
 
-            // Get current students in this group that belong to the same school
+            // Get current students and teachers in this group that belong to the same school
             $currentStudents = Student::where('group_id', $groupId)
-                ->whereHas('users', function ($query) use ($schoolId) {
+                ->whereHas('user', function ($query) use ($schoolId) {
                     $query->where('school_id', $schoolId);
                 })
-                ->pluck('id')
+                ->pluck('user_id')
+                ->toArray();
+
+            $currentTeachers = Teacher::whereHas('groups', fn(Builder $query) => $query->where('groups.id', $groupId))
+                ->whereHas('user', function ($query) use ($schoolId) {
+                    $query->where('school_id', $schoolId);
+                })
+                ->pluck('user_id')
                 ->toArray();
 
             // Find students to remove (currently in the group but NOT in the request)
-            $studentsToRemove = array_diff($currentStudents, $selectedStudents);
-            info(["studentsToRemove " => $studentsToRemove]);
+            $studentsRemoveFromGroup = array_diff($currentStudents, $selectedStudents);
 
             // Find students to add (those in the request but NOT currently in the group)
-            $studentsToAdd = array_diff($selectedStudents, $currentStudents);
-            info(["studentsToAdd " => $studentsToAdd]);
+            $studentsAddToGroup = array_diff($selectedStudents, $currentStudents);
 
             // Remove students from the group (set group_id to null) - Only for the same school
-            Student::whereIn('user_id', $studentsToRemove)
+            Student::whereIn('user_id', $studentsRemoveFromGroup)
                 ->update(['group_id' => null]);
 
             // Add new students to the group - Only for the same school
-            Student::whereIn('user_id', $studentsToAdd)
+            Student::whereIn('user_id', $studentsAddToGroup)
                 ->update(['group_id' => $groupId]);
 
-            // if ($request->input('teachers') !== null) {
-            //     $group->teachers()->detach();
-            //     $group->teachers()->attach($request->input('teachers'));
-            // }
+            $teachersAddToGroup = array_diff($selectedTeachers, $currentTeachers);
+            $teachersRemoveFromGroup = array_diff($currentTeachers, $selectedTeachers);
 
 
-            // if (!empty($request->input('groups'))) {
-            //     Group::where('grade_id', $group->id)->whereNotIn('id', $request->input('groups'))->delete();
-            // }
+            $validTeachers = Teacher::whereIn('user_id', $teachersAddToGroup)->pluck('id')->toArray();
+            $validTeachersToRemove = Teacher::whereIn('user_id', $teachersRemoveFromGroup)->pluck('id')->toArray();
+
+            info($validTeachersToRemove);
+
+            $group->teachers()->attach($validTeachers);
+            $group->teachers()->detach($validTeachersToRemove);
 
             $group->update($request->only(['name', 'grade_id', 'school_id']));
 
@@ -158,7 +167,7 @@ class GroupController extends Controller
         $group_id = $request->input('group_id');
 
         if (isset($grade_id, $group_id)) {
-            $group = Group::with(['grade', 'students.users', 'teachers.user'])->find($group_id);
+            $group = Group::with(['grade', 'students.user', 'teachers.user'])->find($group_id);
             return response()->json($group, Response::HTTP_OK);
         }
         return response()->json(null, Response::HTTP_NO_CONTENT);

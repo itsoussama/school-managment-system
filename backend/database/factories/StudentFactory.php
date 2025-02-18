@@ -24,15 +24,8 @@ class StudentFactory extends Factory
     protected $model = Student::class;
     public function definition(): array
     {
-        $grade = Grade::inRandomOrder()->first();
-        $students = Student::pluck('id')->toArray();
-        info($students);
         return [
-            'user_id' => User::where('school_id', $grade->school_id)->whereHas('role', function (Builder $query) {
-                $query->where('name', 'Student');
-            })
-                ->whereNotIn('id', $students)
-                ->value('id'),
+            'user_id' => $this->getUniqueUserId(),
             'grade_id' => Grade::inRandomOrder()->first()->id, // Creates a user and associates the ID
             'parent_id' => Parents::inRandomOrder()->first()->id, // Creates a user and associates the ID
             'group_id' => Group::inRandomOrder()->first()->id,
@@ -40,5 +33,20 @@ class StudentFactory extends Factory
             'birthdate' => $this->faker->date('Y-m-d', '-18 years'), // Random date for an adult
             'address' => $this->faker->address(),
         ];
+    }
+
+    public function getUniqueUserId(): int
+    {
+        $grade = Grade::inRandomOrder()->first();
+        static $collectionIds = [];
+        $userId = User::where('school_id', $grade->school_id)
+            ->whereHas('role', function (Builder $query) {
+                $query->where('name', 'Student');
+            })
+            ->whereNotIn('id', $collectionIds)
+            ->inRandomOrder()
+            ->value('id');
+        array_push($collectionIds, $userId);
+        return $userId;
     }
 }
