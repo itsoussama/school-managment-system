@@ -278,7 +278,7 @@ export function ViewStudents() {
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
-    queryFn: getGrades,
+    queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
   });
 
   const studentMutation = useMutation({
@@ -1488,7 +1488,7 @@ export function ViewStudents() {
                       >
                         {t("general.all")}
                       </option>
-                      {getGradesQuery.data?.data.map(
+                      {getGradesQuery.data?.map(
                         (grade: Grade, index: number) => (
                           <option key={index} value={grade.id}>
                             {grade.label}
