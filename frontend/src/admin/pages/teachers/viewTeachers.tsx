@@ -248,7 +248,7 @@ export function ViewTeachers() {
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
-    queryFn: getGrades,
+    queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
   });
 
   const teacherMutation = useMutation({
@@ -1116,15 +1116,15 @@ export function ViewTeachers() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
+            <Button type="submit" className="btn-danger !w-auto">
               {t("modals.delete.delete_button")}
-            </button>
-            <button
+            </Button>
+            <Button
               className="btn-outline !ml-0 !w-auto"
               onClick={onCloseModal}
             >
               {t("modals.delete.cancel_button")}
-            </button>
+            </Button>
           </Modal.Footer>
         </form>
       </Modal>
@@ -1389,7 +1389,7 @@ export function ViewTeachers() {
                       >
                         {t("general.all")}
                       </option>
-                      {getGradesQuery.data?.data.map(
+                      {getGradesQuery.data?.map(
                         (grade: Grade, index: number) => (
                           <option key={index} value={grade.id}>
                             {grade.label}

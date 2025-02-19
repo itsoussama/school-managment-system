@@ -31,7 +31,7 @@ import {
   Tooltip,
 } from "flowbite-react";
 import { ChangeEvent, CSSProperties, useCallback, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   FaExclamationTriangle,
   FaEye,
@@ -67,18 +67,18 @@ interface Subject {
 
 export interface FormData {
   _method?: string;
-  id: string;
+  id: number;
   name: string;
   coef: number;
-  grades: string[];
-  teachers: string[];
+  grades: number[];
+  teachers: number[];
   school_id: string;
 }
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 interface Grades {
-  id: string;
+  id: number;
   label: string;
 }
 
@@ -86,7 +86,12 @@ export default function Subjects() {
   const queryClient = useQueryClient();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const { t } = useTranslation();
-  const { formData, setFormData, setData } = useFormValidation({});
+  const { formData, setFormData, setData } = useFormValidation<Subject>({
+    id: 0,
+    name: "",
+    grades: [],
+    teachers: [],
+  });
   const [openModal, setOpenModal] = useState<Modal>();
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [page, setPage] = useState<number>(1);
@@ -119,7 +124,7 @@ export default function Subjects() {
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
-    queryFn: getGrades,
+    queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
   });
 
   const getTeachersQuery = useQuery({
@@ -179,7 +184,7 @@ export default function Subjects() {
       });
 
       setData({
-        id: data?.id as string,
+        id: data?.id as number,
         name: data?.name as string,
         grades: data.grades as [],
         teachers: data.teachers as [],
@@ -250,23 +255,22 @@ export default function Subjects() {
   };
 
   const onChange = (property: string, value: string | unknown[]) => {
-    const exists = getSubjectsQuery.data?.some(
-      (subject: Subject) => subject.name === value,
-    );
-    if (exists) {
-      setData((prev) => ({
-        ...prev,
-        [property]: prev[property] === value ? "" : value,
-      }));
+    // const exists = getSubjectsQuery.data?.some(
+    //   (subject: Subject) => subject.name === value,
+    // );
+    // if (exists) {
+    //   setData((prev) => ({
+    //     ...prev,
+    //     [property]: prev[property] === value ? "" : value,
+    //   }));
 
-      return;
-    }
+    //   return;
+    // }
     setData((prev) => ({ ...prev, [property]: value }));
   };
 
   const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-    setOpenModal({ id: id, type: type, open: isOpen });
-    const { data } = await queryClient.ensureQueryData({
+    const data = await queryClient.ensureQueryData({
       queryKey: ["getSubject", id],
       queryFn: () => getSubject(id as number),
     });
@@ -279,6 +283,8 @@ export default function Subjects() {
       grades: data?.grades,
       teachers: data?.teachers,
     });
+
+    setOpenModal({ id: id, type: type, open: isOpen });
   };
 
   const onCloseModal = () => {
@@ -310,17 +316,17 @@ export default function Subjects() {
 
     try {
       const gradesId =
-        (formData?.grades as Grades[]).map((grade) => grade.id) || [];
+        (formData?.grades as Grades[])?.map((grade) => grade.id) || [];
 
       const teachersId =
-        (formData?.teachers as Grades[]).map((teacher) => teacher.id) || [];
+        (formData?.teachers as Teacher[]).map((teacher) => teacher.id) || [];
 
       const form: FormData = {
-        id: formData?.id as string,
+        id: formData?.id,
         name: formData?.name as string,
         coef: 2,
-        grades: gradesId as string[],
-        teachers: teachersId as string[],
+        grades: gradesId as number[],
+        teachers: teachersId as number[],
         school_id: admin.school_id,
       };
 
@@ -358,15 +364,16 @@ export default function Subjects() {
         (formData?.grades as Grades[]).map((grade) => grade.id) || [];
 
       const teachersId =
-        (formData?.teachers as Grades[]).map((teacher) => teacher.id) || [];
+        (formData?.teachers as TeacherSubject[]).map((teacher) => teacher.id) ||
+        [];
 
       const form: FormData = {
         _method: "PUT",
-        id: formData?.id as string,
+        id: formData?.id,
         name: formData?.name as string,
         coef: 2,
-        grades: gradesId as string[],
-        teachers: teachersId as string[],
+        grades: gradesId as number[],
+        teachers: teachersId as number[],
         school_id: admin.school_id,
       };
 
@@ -495,7 +502,7 @@ export default function Subjects() {
                   <Checkbox
                     key={key}
                     label={grade.label}
-                    id={grade.id}
+                    id={grade.id.toString()}
                     name="grades"
                     value={grade.label}
                   />
@@ -756,16 +763,19 @@ export default function Subjects() {
                       label={t("form.fields.grade_levels")}
                       name="grades"
                       onSelectItem={(items) => setFormData("grades", items)}
-                      externalSelectedItems={
-                        formData?.grades as { id: string; label: string }[]
-                      }
+                      externalSelectedItems={formData?.grades.map(
+                        (grade: Grades) => ({
+                          id: String(grade.id),
+                          label: grade.label,
+                        }),
+                      )}
                     >
                       {getGradesQuery.data?.map(
                         (grade: Grades, key: number) => (
                           <Checkbox
                             key={key}
                             label={grade.label}
-                            id={grade.id}
+                            id={grade.id.toString()}
                             name="grades"
                             value={grade.label}
                             checked={
@@ -793,19 +803,19 @@ export default function Subjects() {
                           })),
                         )
                       }
-                      externalSelectedItems={(
-                        formData?.teachers as { id: number; name: string }[]
-                      )?.map((teacher) => ({
-                        id: teacher.id,
-                        label: teacher.name,
-                      }))}
+                      externalSelectedItems={formData?.teachers?.map(
+                        (teacher) => ({
+                          id: String(teacher.id),
+                          label: teacher.name,
+                        }),
+                      )}
                     >
                       {getTeachersQuery.data?.map(
                         (teacher: TeacherSubject, key: number) => (
                           <Checkbox
                             key={key}
                             label={teacher.name}
-                            id={teacher.id.toString()}
+                            id={String(teacher.id)}
                             name="teacher"
                             value={teacher.name}
                             checked={
@@ -860,16 +870,18 @@ export default function Subjects() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.delete.title")}
-                <b>{getSubjectQuery.data?.name}</b>
+                <b>{getSubjectQuery.data?.name}</b> ?
               </p>
               <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
                 <p className="text-white">{t("modals.delete.message")}</p>
               </div>
               <p className="text-gray-900 dark:text-white">
-                {t("modals.delete.label", {
-                  item: getSubjectQuery.data?.name,
-                })}
+                <Trans
+                  i18nKey="modals.delete.label"
+                  values={{ item: getSubjectQuery.data?.name }}
+                  components={{ bold: <strong /> }}
+                />
               </p>
               <Input
                 type="text"
@@ -882,12 +894,12 @@ export default function Subjects() {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
+            <Button type="submit" className="btn-danger !w-auto">
               {t("modals.delete.delete_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
+            </Button>
+            <Button className="btn-outline !w-auto" onClick={onCloseModal}>
               {t("modals.delete.cancel_button")}
-            </button>
+            </Button>
           </Modal.Footer>
         </form>
       </Modal>
@@ -956,7 +968,7 @@ export default function Subjects() {
                 !(getSubjectsQuery.isRefetching || perPage) ? (
                   <SkeletonTable cols={5} />
                 ) : (
-                  getSubjectsQuery.data?.map(
+                  getSubjectsQuery.data?.data.map(
                     (subject: Subject, key: number) => (
                       <Table.Row
                         key={key}
