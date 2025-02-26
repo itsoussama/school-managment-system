@@ -262,6 +262,7 @@ export default function AddResources() {
                       id={resource.id.toString()}
                       name="category_id"
                       value={resource.label}
+                      checked={formData.category_id === resource.id}
                     />
                   ),
                 )}

@@ -104,7 +104,19 @@
                 "administrators": "Administrators",
                 "administrator": "Administrator",
                 "staff_members": "Staff Members",
-                "staff_member": "Staff Member"
+                "staff_member": "Staff Member",
+                "financial": "Financial",
+                "financials": "Financials",
+                "budget": "Budget",
+                "budgets": "Budgets",
+                "expense": "Expense",
+                "expenses": "Expenses",
+                "revenue": "Revenue",
+                "revenues": "Revenues",
+                "payment": "Payment",
+                "payments": "Payments",
+                "payroll": "Payroll",
+                "payrolls": "Payrolls"
             },
             "actions": {
                 "add_entity": "Add {{entity}}",
@@ -394,7 +406,19 @@
                 "administrators": "Administrateurs",
                 "administrator": "Administrateur",
                 "staff_members": "Fonctionnaires",
-                "staff_member": "Fonctionnaire"
+                "staff_member": "Fonctionnaire",
+                "financial": "Financier",
+                "financials": "Financiers",
+                "budget": "Budget",
+                "budgets": "Budgets",
+                "expense": "Dépense",
+                "expenses": "Dépenses",
+                "revenue": "Revenu",
+                "revenues": "Revenus",
+                "payment": "Paiement",
+                "payments": "Paiements",
+                "payroll": "Paie",
+                "payrolls": "Paies"
             },
             "actions": {
                 "add_entity": "Ajouter {{entity}}",

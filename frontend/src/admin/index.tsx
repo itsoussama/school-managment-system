@@ -241,19 +241,27 @@ function Menu() {
         <Items
           itemId="item-5"
           path="/finance"
-          itemName={t("entities.finance")}
+          itemName={t("entities.financial")}
           icon={
             <FaScaleBalanced
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
             />
           }
-          containerClass="locked"
           subMenuVisible={subMenuVisible}
           onToggleSubMenu={onToggleSubMenu}
         >
-          <Items itemId="subitem-1" itemName="sub item" />
-          <Items itemId="subitem-2" itemName="sub item" />
-          <Items itemId="subitem-3" itemName="sub item" />
+          <Link to="finance/budget/manage" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/finance/budget/manage") ? true : false}
+              itemId="subitem-1"
+              itemName={t("actions.view_entity", {
+                entity:
+                  t("determiners.definite.masculine") +
+                  " " +
+                  t("entities.budget"),
+              })}
+            />
+          </Link>
         </Items>
 
         <Items

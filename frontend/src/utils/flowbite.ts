@@ -68,14 +68,14 @@ const customTooltip = {
     body: {
       "base": "group/body",
       cell: {
-        base: "px-6 py-4 group-first/body:group-first/row:first:rounded-tl-lg group-first/body:group-first/row:last:rounded-tr-lg group-last/body:group-last/row:first:rounded-bl-lg group-last/body:group-last/row:last:rounded-br-lg",
+        base: "px-6 py-4 group-first/body:group-first/row:first:rounded-tl-s group-first/body:group-first/row:last:rounded-tr-s group-last/body:group-last/row:first:rounded-bl-s group-last/body:group-last/row:last:rounded-br-s",
       },
       
     },
     head: {
       "base": "group/head text-xs uppercase text-gray-700 dark:text-gray-400",
       cell: {
-        base: "bg-gray-50 px-6 py-3 dark:bg-gray-700 group-first/head:first:rounded-tl-lg group-first/head:last:rounded-tr-lg",
+        base: "bg-gray-50 px-6 py-3 dark:bg-gray-700 group-first/head:first:rounded-tl-s group-first/head:last:rounded-tr-s",
       },
     },
     row: {
@@ -129,4 +129,30 @@ const customTooltip = {
     }
   }
 
-  export {customTooltip, customBadge, customTable, customToggleSwitch}
+  const customProgress = {
+    "base": "w-full overflow-hidden rounded-lg group-even:bg-gray-300 group-odd:bg-gray-200 group-even:dark:bg-gray-600 group-odd:dark:bg-gray-700",
+    "label": "mb-1 flex justify-between font-medium dark:text-white",
+    "bar": "space-x-2 rounded-lg text-center font-medium leading-none text-cyan-300 dark:text-cyan-100",
+    "color": {
+      "dark": "bg-gray-400 dark:bg-gray-300",
+      "blue": "bg-blue-400",
+      "red": "bg-red-400 dark:bg-red-500",
+      "green": "bg-green-400 dark:bg-green-500",
+      "yellow": "bg-yellow-300",
+      "indigo": "bg-indigo-400 dark:bg-indigo-500",
+      "purple": "bg-purple-400 dark:bg-purple-500",
+      "cyan": "bg-cyan-400",
+      "gray": "bg-gray-500",
+      "lime": "bg-lime-400",
+      "pink": "bg-pink-500",
+      "teal": "bg-teal-400"
+    },
+    "size": {
+      "sm": "h-1.5",
+      "md": "h-2.5",
+      "lg": "h-4",
+      "xl": "h-6"
+    }
+  }
+
+  export {customTooltip, customBadge, customTable, customToggleSwitch, customProgress}

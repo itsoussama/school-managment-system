@@ -51,4 +51,15 @@ class TransactionDetailController extends Controller
         TransactionDetail::destroy($id);
         return response()->json(['message' => 'Transaction Detail deleted']);
     }
+
+    public function showTransactionDetailsByType()
+    {
+        $type = request()->query('type', 'fee');
+        if ($type === 'budget') {
+            $details = TransactionDetail::with(['transaction', 'budget.category'])->has($type)->get();
+            return response()->json($details);
+        }
+        $details = TransactionDetail::with(['transaction', $type])->has($type)->get();
+        return response()->json($details);
+    }
 }

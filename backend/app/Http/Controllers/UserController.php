@@ -377,7 +377,7 @@ class UserController extends Controller
                     'name' => 'required|string|max:255',
                     'email' => 'required|string|email|max:255|unique:users',
                     'phone' => 'required|string|max:255',
-                    'password' => ['required',Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(),'confirmed'],
+                    'password' => ['required', Password::min(8)->mixedCase()->numbers()->symbols()->uncompromised(), 'confirmed'],
                     'school_id' => 'required|exists:schools,id',
                     'guardian_id' => 'nullable|integer',
                     'roles' => 'required|array',
@@ -422,6 +422,7 @@ class UserController extends Controller
                             ]);
                             $teacher->subjects()->sync($request->subjects);
                             $teacher->grades()->sync($request->grades);
+                            // $user->grades()->sync($request->grades);
                             $teacher->save();
                         }
                     }

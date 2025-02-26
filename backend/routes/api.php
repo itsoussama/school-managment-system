@@ -79,6 +79,8 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::post('/import-users', [UserController::class, 'import']);
     Route::resource('transactions', TransactionController::class);
     Route::resource('budgets', BudgetController::class);
+    Route::get('/budgets-usage', [BudgetController::class, 'getBudgetsUsage']);
+    Route::get('/transaction-type', [TransactionDetailController::class, 'showTransactionDetailsByType']);
     Route::resource('transaction-details', TransactionDetailController::class);
     Route::resource('fees', FeeController::class);
     Route::resource('budget-categories', BudgetCategoryController::class);

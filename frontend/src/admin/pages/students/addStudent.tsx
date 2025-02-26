@@ -6,7 +6,7 @@ import {
   RSelect,
 } from "@components/input";
 import { addStudent, getGrades } from "@api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
 import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -83,7 +83,8 @@ export default function AddStudent() {
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
-    queryFn: getGrades,
+    queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
+    placeholderData: keepPreviousData,
   });
 
   const addStudentQuery = useMutation({
@@ -324,13 +325,14 @@ export default function AddStudent() {
                   )
                 }
               >
-                {getGradesQuery.data?.data.map((grade: Grades, key: number) => (
+                {getGradesQuery.data?.map((grade: Grades, key: number) => (
                   <Checkbox
                     key={key}
                     label={grade.label}
                     id={grade.id}
                     name="grades"
                     value={grade.label}
+                    checked={formData.grades.includes(parseInt(grade.id))}
                   />
                 ))}
               </MultiSelect>

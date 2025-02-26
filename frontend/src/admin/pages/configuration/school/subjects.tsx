@@ -505,6 +505,9 @@ export default function Subjects() {
                     id={grade.id.toString()}
                     name="grades"
                     value={grade.label}
+                    checked={formData.grades
+                      .map((g) => g.id)
+                      .includes(grade.id)}
                   />
                 ))}
               </MultiSelect>
@@ -522,6 +525,9 @@ export default function Subjects() {
                       id={teacher.id.toString()}
                       name="teacher"
                       value={teacher.name}
+                      checked={formData.teachers
+                        .map((g) => g.id)
+                        .includes(teacher.id)}
                     />
                   ),
                 )}

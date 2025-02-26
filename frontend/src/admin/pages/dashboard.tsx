@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { FaFileExport, FaHome } from "react-icons/fa";
 import Chart from "react-apexcharts";
 import { TransitionAnimation } from "@src/components/animation";
-import { chartOptions, colorPalette } from "@src/utils/chart";
+import { barLineChartOptions } from "@src/utils/chart";
 import { CSSProperties, useEffect } from "react";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { Link } from "react-router-dom";
@@ -64,7 +64,7 @@ function Dashboard() {
             </h1>
             <Chart
               options={{
-                ...chartOptions(themeChange, brandState),
+                ...barLineChartOptions(themeChange, brandState),
                 labels: chartLabel,
               }}
               series={chartSeries}

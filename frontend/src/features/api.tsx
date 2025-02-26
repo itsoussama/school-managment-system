@@ -744,6 +744,25 @@ const deleteEvent = async (id: string) => {
   return response.data;
 };
 
+const getBudgets = async (page = 1, perPage = 5) => {
+  const response = await axiosApi.get(
+    "/api/budgets/?page=" + page + "&per_page=" + perPage + "&sort_column=",
+  );
+  return response.data;
+};
+
+type TransactionType = "fee" | "payroll" | "budget";
+
+const getTransactionsByType = async (type: TransactionType = "fee") => {
+  const response = await axiosApi.get("/api/transaction-type?type=" + type);
+  return response.data;
+};
+
+const getBudgetUsage = async () => {
+  const response = await axiosApi.get("/api/budgets-usage");
+  return response.data;
+};
+
 export {
   getRoles,
   getAdministrators,
@@ -814,4 +833,7 @@ export {
   addEvent,
   setEvent,
   deleteEvent,
+  getBudgets,
+  getTransactionsByType,
+  getBudgetUsage,
 };

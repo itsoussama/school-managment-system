@@ -21,6 +21,7 @@ import { ViewAdministrators } from "./pages/administrators/viewAdministrators";
 import SchoolLevels from "./pages/configuration/school/schoolLevels";
 import AddClassroom from "./pages/classrooms/addClassroom";
 import { ViewClassrooms } from "./pages/classrooms/viewClassrooms";
+import BudgetManagement from "./pages/finance/budgetManagement";
 
 export const AdminRouter = {
   path: "/",
@@ -88,6 +89,15 @@ export const AdminRouter = {
         {
           path: "manage",
           element: <ViewParents />,
+        },
+      ],
+    },
+    {
+      path: "finance",
+      children: [
+        {
+          path: "budget/manage",
+          element: <BudgetManagement />,
         },
       ],
     },

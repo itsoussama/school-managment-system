@@ -68,7 +68,7 @@ class StageController extends Controller
         ]);
 
         if ($validation) {
-            $stage->updateOrFail($request->all());
+            $stage->update($request->all());
             return response()->json($stage, Response::HTTP_OK);
         }
 

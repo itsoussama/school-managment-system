@@ -106,7 +106,7 @@ function AddChildModal({
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
-    queryFn: getGrades,
+    queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
   });
 
   const addStudentQuery = useMutation({
@@ -418,7 +418,7 @@ function AddChildModal({
                           )
                         }
                       >
-                        {getGradesQuery.data?.data.map(
+                        {getGradesQuery.data?.map(
                           (grade: Grades, key: number) => (
                             <Checkbox
                               key={key}
@@ -427,6 +427,9 @@ function AddChildModal({
                               id={grade.id}
                               name="grades"
                               value={grade.label}
+                              checked={formData.grades.includes(
+                                parseInt(grade.id),
+                              )}
                             />
                           ),
                         )}

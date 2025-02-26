@@ -71,7 +71,6 @@ function SkeletonTable({ rows = 5, cols = 5 }) {
     .fill(null)
     .map((_, key) => (
       <Table.Row key={key}>
-        <Table.Cell className="sr-only">empty cell</Table.Cell>
         {Array(cols)
           .fill(null)
           .map((_, key) => (

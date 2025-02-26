@@ -94,7 +94,7 @@ export default function AddTeacher() {
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
-    queryFn: getGrades,
+    queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
   });
 
   const addTeacherQuery = useMutation({
@@ -337,6 +337,7 @@ export default function AddTeacher() {
                       id={subject.id}
                       name="subjects"
                       value={subject.name}
+                      checked={formData.subjects.includes(parseInt(subject.id))}
                     />
                   ),
                 )}
@@ -352,13 +353,14 @@ export default function AddTeacher() {
                   )
                 }
               >
-                {getGradesQuery.data?.data.map((grade: Grades, key: number) => (
+                {getGradesQuery.data?.map((grade: Grades, key: number) => (
                   <Checkbox
                     key={key}
                     label={grade.label}
                     id={grade.id}
                     name="grades"
                     value={grade.label}
+                    checked={formData.grades.includes(parseInt(grade.id))}
                   />
                 ))}
               </MultiSelect>

@@ -9,8 +9,10 @@ class BudgetController extends Controller
 {
     public function index()
     {
-        $budgets = Budget::with('category')->get();
-        return response()->json($budgets);
+        $schoolId = auth()->user()->school_id;
+        $perPage = request()->query('per_page', 5);
+        $budgets = Budget::with('category')->where('school_id', $schoolId);
+        return response()->json($budgets->paginate($perPage));
     }
 
     public function show($id)
@@ -48,5 +50,30 @@ class BudgetController extends Controller
     {
         Budget::destroy($id);
         return response()->json(['message' => 'Budget deleted']);
+    }
+
+
+    public function getBudgetsUsage()
+    {
+        $schoolId = auth()->user()->school_id;
+
+        $budgets = Budget::where('school_id', $schoolId);
+        $budgetUsage = Budget::selectRaw('YEAR(created_at) as year, WEEK(created_at) as week, SUM(allocated_amount) as total_allocated, SUM(spent_amount) as total_spent')
+            ->where('school_id', $schoolId)
+            ->where('created_at', '>=', now()->subWeeks(6)->startOfWeek())
+            ->groupBy('year', 'week')
+            ->orderBy('year')
+            ->orderBy('week')
+            ->get();
+
+        $formattedData = $budgetUsage->map(function ($item, $key) {
+            return [
+                'week' => "Week " . $key + 1,
+                'total_allocated' => round($item->total_allocated, 2),
+                'total_spent' => round($item->total_spent, 2),
+            ];
+        });
+
+        return response()->json(['budget' => ['date' => $formattedData->pluck('week')->toArray(), 'budget_allocated' => $formattedData->pluck('total_allocated')->toArray(), 'budget_spent' => $formattedData->pluck('total_spent')->toArray()], 'total_allocation' => $budgets->sum('allocated_amount'), 'total_spent' => $budgets->sum('spent_amount'), 'total_remaining' => $budgets->sum('remaining_amount')]);
     }
 }
