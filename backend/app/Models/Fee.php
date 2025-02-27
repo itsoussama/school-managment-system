@@ -15,4 +15,9 @@ class Fee extends Model
     {
         return $this->hasMany(TransactionDetail::class, 'fee_id');
     }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'student_id');
+    }
 }

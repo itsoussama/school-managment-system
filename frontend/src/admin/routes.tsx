@@ -22,6 +22,8 @@ import SchoolLevels from "./pages/configuration/school/schoolLevels";
 import AddClassroom from "./pages/classrooms/addClassroom";
 import { ViewClassrooms } from "./pages/classrooms/viewClassrooms";
 import BudgetManagement from "./pages/finance/budgetManagement";
+import FeeManagement from "./pages/finance/feeManagement";
+import PayrollManagement from "./pages/finance/payrollManagement";
 
 export const AdminRouter = {
   path: "/",
@@ -98,6 +100,14 @@ export const AdminRouter = {
         {
           path: "budget/manage",
           element: <BudgetManagement />,
+        },
+        {
+          path: "fee/manage",
+          element: <FeeManagement />,
+        },
+        {
+          path: "payroll/manage",
+          element: <PayrollManagement />,
         },
       ],
     },

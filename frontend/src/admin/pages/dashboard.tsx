@@ -63,10 +63,11 @@ function Dashboard() {
               Metric Title
             </h1>
             <Chart
-              options={{
-                ...barLineChartOptions(themeChange, brandState),
-                labels: chartLabel,
-              }}
+              options={barLineChartOptions<string>(
+                themeChange,
+                brandState,
+                chartLabel,
+              )}
               series={chartSeries}
               // width={450}
               type="line"

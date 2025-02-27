@@ -241,7 +241,7 @@ function Menu() {
         <Items
           itemId="item-5"
           path="/finance"
-          itemName={t("entities.financial")}
+          itemName={t("entities.finances")}
           icon={
             <FaScaleBalanced
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -259,6 +259,28 @@ function Menu() {
                   t("determiners.definite.masculine") +
                   " " +
                   t("entities.budget"),
+              })}
+            />
+          </Link>
+          <Link to="finance/fee/manage" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/finance/fee/manage") ? true : false}
+              itemId="subitem-1"
+              itemName={t("actions.view_entity", {
+                entity:
+                  t("determiners.definite.plural") + " " + t("entities.fee"),
+              })}
+            />
+          </Link>
+          <Link to="finance/payroll/manage" state={{ active: true }}>
+            <Items
+              isActive={useMatch("/finance/payroll/manage") ? true : false}
+              itemId="subitem-1"
+              itemName={t("actions.view_entity", {
+                entity:
+                  t("determiners.definite.masculine") +
+                  " " +
+                  t("entities.payroll"),
               })}
             />
           </Link>

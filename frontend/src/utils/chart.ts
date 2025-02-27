@@ -1,4 +1,5 @@
-import { BrandColor, colorPalette, Colors, colors } from "./colors";
+import { ApexOptions } from "apexcharts";
+import { BrandColor, colorPalette} from "./colors";
 
 const borderComplementaryColor = {
   indigo: "lime",
@@ -20,7 +21,7 @@ const getColor = (mode: 'dark' | 'light' | 'auto', lightColor: string, darkColor
   return mode === 'dark' ? darkColor : lightColor;
 };
 
-const commonOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) => ({
+const commonOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) : ApexOptions => ({
   chart: {
     toolbar: {
       show: false,
@@ -53,10 +54,10 @@ const commonOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) => (
       useSeriesColors: false,
     },
     markers: {
-      size: [5, 6],
+      size: 5,
       fillColors: [colorPalette[brandColor as BrandColor][600], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500]],
-      shape: ["circle", "line"],
-      strokeWidth: [0, 2],
+      shape: "circle",
+      strokeWidth: 2,
       offsetX: -5,
     },
     itemMargin: {
@@ -64,9 +65,14 @@ const commonOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) => (
       vertical: 0,
     },
   },
+  tooltip: {
+    shared: true,
+    intersect: false,
+    theme: mode,
+}
 });
 
-const barChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string, label: Array<T>) => ({
+const barChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string, label: Array<T>) : ApexOptions => ({
   ...commonOptions(mode, brandColor),
   plotOptions: {
     bar: {
@@ -115,8 +121,8 @@ const barChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string,
     axisBorder: {
       show: true,
       color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
-      height: 1,
-      width: "100%",
+      // height: 1,
+      // width: "100%",
       offsetX: 0,
       offsetY: 0,
     },
@@ -130,7 +136,7 @@ const barChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string,
   },
 });
 
-const barAreaChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string, label: Array<T>) => ({
+const barAreaChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string, label: Array<T>) : ApexOptions => ({
   ...commonOptions(mode, brandColor),
   plotOptions: {
     bar: {
@@ -180,8 +186,8 @@ const barAreaChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
     axisBorder: {
       show: true,
       color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
-      height: 1,
-      width: "100%",
+      // height: 1,
+      // width: "100%",
       offsetX: 0,
       offsetY: 0,
     },
@@ -193,13 +199,9 @@ const barAreaChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
       offsetY: 0,
     },
   },
-  tooltip: {
-    shared: true,
-    intersect: false,
-}
 });
 
-const barLineChartOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) => ({
+const barLineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string, label: Array<T>) : ApexOptions => ({
   ...commonOptions(mode, brandColor),
   plotOptions: {
     bar: {
@@ -211,7 +213,7 @@ const barLineChartOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string
   },
   fill: {
     type: ["gradient", "solid"],
-    colors: [getColor(mode, colorPalette[brandColor as BrandColor][400], colorPalette[brandColor as BrandColor][600])],
+    colors: [getColor(mode, colorPalette[brandColor as BrandColor][400], colorPalette[brandColor as BrandColor][600]), getColor(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
     gradient: {
       shade: "dark",
       type: "vertical",
@@ -249,16 +251,17 @@ const barLineChartOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string
   ],
   xaxis: {
     type: "category",
+    categories: label,
     labels: {
       style: {
-        colors: getColor(mode, colorPalette.gray[500], colorPalette.gray[500]),
+        colors: colorPalette.gray[500],
       },
     },
     axisBorder: {
       show: true,
       color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
-      height: 1,
-      width: "100%",
+      // height: 1,
+      // width: "100%",
       offsetX: 0,
       offsetY: 0,
     },
@@ -268,7 +271,7 @@ const barLineChartOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string
   },
 });
 
-const lineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string, label: Array<T>) => ({
+const lineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string, label: Array<T>) : ApexOptions => ({
   ...commonOptions(mode, brandColor),
   stroke: {
     width: [3],
@@ -295,8 +298,8 @@ const lineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string
     axisBorder: {
       show: true,
       color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
-      height: 1,
-      width: "100%",
+      // height: 1,
+      // width: "100%",
       offsetX: 0,
       offsetY: 0,
     },

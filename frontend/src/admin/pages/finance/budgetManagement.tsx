@@ -16,17 +16,22 @@ import { Link } from "react-router-dom";
 import Chart from "react-apexcharts";
 import { barAreaChartOptions } from "@src/utils/chart";
 import { Metric } from "@src/components/metric";
-import { customBadge, customTable } from "@src/utils/flowbite";
+import { customTable } from "@src/utils/flowbite";
 import ProgressWithStatus from "@src/components/progress";
 import { Button, RSelect } from "@src/components/input";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getBudgets,
   getBudgetUsage,
   getTransactionsByType,
 } from "@src/features/api";
-import { SkeletonTable } from "@src/components/skeleton";
+import {
+  SkeletonChart,
+  SkeletonLoadTable,
+  SkeletonMetric,
+  SkeletonTable,
+} from "@src/components/skeleton";
 
 interface Modal {
   id?: number;
@@ -51,19 +56,6 @@ interface BudgetHistory {
   budget: Budget;
   created_at: string;
 }
-
-const chartSeries = [
-  {
-    name: "Allocated Budget",
-    type: "column",
-    data: [440, 505, 414, 671, 227, 413, 500],
-  },
-  {
-    name: "Spent",
-    type: "area",
-    data: [15, 23, 414, 671, 227, 413, 440],
-  },
-];
 
 export default function BudgetManagement() {
   const { t } = useTranslation();
@@ -92,12 +84,6 @@ export default function BudgetManagement() {
     queryFn: getBudgetUsage,
   });
 
-  useEffect(() => {
-    if (getBudgetTransactions.isFetched) {
-      console.log(getBudgetTransactions.data);
-    }
-  }, [getBudgetTransactions.isFetched, getBudgetTransactions.data]);
-
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("fr-MA", {
       style: "currency",
@@ -118,7 +104,14 @@ export default function BudgetManagement() {
   };
 
   const getSpentPercentage = (spent: number, allocated: number) =>
-    ((spent / allocated) * 100).toFixed(0);
+    Number(((spent / allocated) * 100).toFixed(0));
+
+  const handleDateTime = (
+    options: Intl.DateTimeFormatOptions,
+    date: number | Date,
+  ): string => {
+    return new Intl.DateTimeFormat(t("general.locales"), options).format(date);
+  };
 
   // const getLastWeekDates = () => {
   //   const date = new Date();
@@ -162,7 +155,7 @@ export default function BudgetManagement() {
           {minSm ? (
             <Breadcrumb.Item>
               <span className="text-gray-600 dark:text-gray-300">
-                {t("entities.financial")}
+                {t("entities.finance")}
               </span>
             </Breadcrumb.Item>
           ) : (
@@ -201,7 +194,7 @@ export default function BudgetManagement() {
         }}
         onClose={onCloseModal}
       >
-        <Modal.Header>{t("budget_transactions")}</Modal.Header>
+        <Modal.Header>{t("general.budget_transactions")}</Modal.Header>
         <Modal.Body>
           <Table
             theme={{
@@ -213,7 +206,7 @@ export default function BudgetManagement() {
             }}
             striped
           >
-            <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
+            <Table.Head className="sticky top-0 z-10 border-b border-b-gray-300 uppercase dark:border-b-gray-600">
               <Table.HeadCell>
                 {t("form.fields.id", { entity: t("general.transaction") })}
               </Table.HeadCell>
@@ -252,11 +245,22 @@ export default function BudgetManagement() {
                         {formatCurrency(transaction.transaction.amount)}
                       </Table.Cell>
                       <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        <Badge color={"blue"} className="rounded-xs">
+                        <Badge color={"blue"} className="!w-fit rounded-xs">
                           {transaction.transaction.type}
                         </Badge>
                       </Table.Cell>
-                      <Table.Cell>{transaction.created_at}</Table.Cell>
+                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                        {handleDateTime(
+                          { dateStyle: "short" },
+                          new Date(transaction.created_at),
+                        )}
+                        <span className="ml-2 text-gray-500 dark:text-gray-400">
+                          {handleDateTime(
+                            { timeStyle: "short" },
+                            new Date(transaction.created_at),
+                          )}
+                        </span>
+                      </Table.Cell>
                     </Table.Row>
                   ),
                 )
@@ -268,120 +272,125 @@ export default function BudgetManagement() {
       <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="flex w-full flex-col rounded-s bg-light-primary p-5 dark:bg-dark-primary">
-            <h1 className="ms-4 text-xl font-semibold text-gray-900 dark:text-white">
+            <h1 className="mb-3 ms-4 text-xl font-semibold text-gray-900 dark:text-white">
               {t("metrics.budget_usage")}
             </h1>
             <div className="flex h-96 w-full flex-row gap-x-8">
               <div className="h-full w-3/4">
-                <Chart
-                  options={barAreaChartOptions<string>(
-                    themeChange,
-                    brandState,
-                    getBudgetUsageQuery.data?.budget.date,
-                  )}
-                  series={[
-                    {
-                      name: "Allocated Budget",
-                      type: "column",
-                      data: getBudgetUsageQuery.data?.budget?.budget_allocated,
-                    },
-                    {
-                      name: "Spent",
-                      type: "area",
-                      data: getBudgetUsageQuery.data?.budget.budget_spent,
-                    },
-                  ]}
-                  width={"100%"}
-                  height={"100%"}
-                  type="bar"
-                />
+                <SkeletonChart isLoaded={!getBudgetUsageQuery.isFetching}>
+                  <Chart
+                    options={barAreaChartOptions<string>(
+                      themeChange,
+                      brandState,
+                      getBudgetUsageQuery.data?.budget.date,
+                    )}
+                    series={[
+                      {
+                        name: "Allocated Budget",
+                        type: "column",
+                        data: getBudgetUsageQuery.data?.budget
+                          ?.budget_allocated,
+                      },
+                      {
+                        name: "Spent",
+                        type: "area",
+                        data: getBudgetUsageQuery.data?.budget.budget_spent,
+                      },
+                    ]}
+                    width={"100%"}
+                    height={"100%"}
+                    type="bar"
+                  />
+                </SkeletonChart>
               </div>
-              <div className="flex flex-col gap-y-5">
-                <Metric>
-                  <Metric.Title>{t("metrics.allocated_budget")}</Metric.Title>
-                  <Metric.Value>
-                    {formatCurrency(getBudgetUsageQuery.data?.total_allocation)}
-                  </Metric.Value>
-                </Metric>
-                <Metric>
-                  <Metric.Title>{t("metrics.spent")}</Metric.Title>
-                  <Metric.Value>
-                    {formatCurrency(getBudgetUsageQuery.data?.total_spent)}
-                  </Metric.Value>
-                </Metric>
-                <Metric>
-                  <Metric.Title>{t("metrics.remaining")}</Metric.Title>
-                  <Metric.Value>
-                    {formatCurrency(getBudgetUsageQuery.data?.total_remaining)}
-                  </Metric.Value>
-                </Metric>
+              <div className="flex flex-1 flex-col gap-y-5">
+                <SkeletonMetric isLoaded={!getBudgetUsageQuery.isFetching}>
+                  <Metric>
+                    <Metric.Title>{t("metrics.allocated_budget")}</Metric.Title>
+                    <Metric.Value>
+                      {formatCurrency(
+                        getBudgetUsageQuery.data?.total_allocation,
+                      )}
+                    </Metric.Value>
+                  </Metric>
+                </SkeletonMetric>
+                <SkeletonMetric isLoaded={!getBudgetUsageQuery.isFetching}>
+                  <Metric>
+                    <Metric.Title>{t("metrics.spent")}</Metric.Title>
+                    <Metric.Value>
+                      {formatCurrency(getBudgetUsageQuery.data?.total_spent)}
+                    </Metric.Value>
+                  </Metric>
+                </SkeletonMetric>
+                <SkeletonMetric isLoaded={!getBudgetUsageQuery.isFetching}>
+                  <Metric>
+                    <Metric.Title>{t("metrics.remaining")}</Metric.Title>
+                    <Metric.Value>
+                      {formatCurrency(
+                        getBudgetUsageQuery.data?.total_remaining,
+                      )}
+                    </Metric.Value>
+                  </Metric>
+                </SkeletonMetric>
               </div>
             </div>
           </div>
           <div className="flex w-full flex-col overflow-hidden rounded-s border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
             <div className="w-full overflow-x-auto">
-              <Table theme={customTable} striped>
-                <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
-                  <Table.HeadCell>{t("form.fields.category")}</Table.HeadCell>
-
-                  <Table.HeadCell>
-                    {t("metrics.allocated_budget")}
-                  </Table.HeadCell>
-                  <Table.HeadCell>{t("metrics.spent")}</Table.HeadCell>
-                  <Table.HeadCell>{t("metrics.remaining")}</Table.HeadCell>
-                  <Table.HeadCell>
-                    {t("metrics.spent_prcentage")}
-                  </Table.HeadCell>
-                </Table.Head>
-                <Table.Body
-                  // ref={tableRef}
-                  className="relative border-b border-b-gray-300 dark:border-b-gray-600"
-                >
-                  {getBudgetsQuery.isFetching &&
-                    getBudgetsQuery.isRefetching && (
-                      <Table.Row>
-                        <Table.Cell className="p-0">
-                          <div
-                            className={`table-loader fixed left-0 top-0 z-[1] grid h-full w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 backdrop-blur-sm dark:bg-gray-900 dark:bg-opacity-60`}
-                          >
-                            <Spinner />
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
+              <SkeletonLoadTable
+                isLoaded={
+                  !(getBudgetsQuery.isFetching && getBudgetsQuery.isRefetching)
+                }
+              >
+                <Table theme={customTable} striped>
+                  <Table.Head className="border-b border-b-gray-300 uppercase dark:border-b-gray-600">
+                    <Table.HeadCell>{t("form.fields.category")}</Table.HeadCell>
+                    <Table.HeadCell>
+                      {t("metrics.allocated_budget")}
+                    </Table.HeadCell>
+                    <Table.HeadCell>{t("metrics.spent")}</Table.HeadCell>
+                    <Table.HeadCell>{t("metrics.remaining")}</Table.HeadCell>
+                    <Table.HeadCell>
+                      {t("metrics.spent_prcentage")}
+                    </Table.HeadCell>
+                  </Table.Head>
+                  <Table.Body
+                    // ref={tableRef}
+                    className="relative border-b border-b-gray-300 dark:border-b-gray-600"
+                  >
+                    {getBudgetsQuery.isFetching &&
+                    !getBudgetsQuery.isRefetching ? (
+                      <SkeletonTable cols={5} />
+                    ) : (
+                      getBudgetsQuery.data?.data.map(
+                        (budget: Budget, key: number) => (
+                          <Table.Row key={key}>
+                            <Table.Cell>{budget.category.label}</Table.Cell>
+                            <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                              {formatCurrency(budget.allocated_amount)}
+                            </Table.Cell>
+                            <Table.Cell>
+                              {formatCurrency(budget.spent_amount)}
+                            </Table.Cell>
+                            <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                              {formatCurrency(budget.remaining_amount)}
+                            </Table.Cell>
+                            <Table.Cell>
+                              <ProgressWithStatus
+                                progress={getSpentPercentage(
+                                  budget.spent_amount,
+                                  budget.allocated_amount,
+                                )}
+                                reverse
+                              />
+                            </Table.Cell>
+                          </Table.Row>
+                        ),
+                      )
                     )}
-
-                  {getBudgetsQuery.isFetching &&
-                  !getBudgetsQuery.isRefetching ? (
-                    <SkeletonTable cols={5} />
-                  ) : (
-                    getBudgetsQuery.data?.data.map(
-                      (budget: Budget, key: number) => (
-                        <Table.Row key={key}>
-                          <Table.Cell>{budget.category.label}</Table.Cell>
-                          <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                            {formatCurrency(budget.allocated_amount)}
-                          </Table.Cell>
-                          <Table.Cell>
-                            {formatCurrency(budget.spent_amount)}
-                          </Table.Cell>
-                          <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                            {formatCurrency(budget.remaining_amount)}
-                          </Table.Cell>
-                          <Table.Cell>
-                            <ProgressWithStatus
-                              progress={getSpentPercentage(
-                                budget.spent_amount,
-                                budget.allocated_amount,
-                              )}
-                              reverse
-                            />
-                          </Table.Cell>
-                        </Table.Row>
-                      ),
-                    )
-                  )}
-                </Table.Body>
-              </Table>
+                  </Table.Body>
+                </Table>
+              </SkeletonLoadTable>
             </div>
             <div className="flex w-full items-center justify-between px-5 py-4">
               <span className="text-gray-500 dark:text-gray-400">

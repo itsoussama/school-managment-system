@@ -763,6 +763,20 @@ const getBudgetUsage = async () => {
   return response.data;
 };
 
+const getFees = async (page = 1, perPage = 5) => {
+  const response = await axiosApi.get(
+    "/api/fees/?page=" + page + "&per_page=" + perPage + "&sort_column=",
+  );
+  return response.data;
+};
+
+const getPayrolls = async (page = 1, perPage = 5) => {
+  const response = await axiosApi.get(
+    "/api/payrolls/?page=" + page + "&per_page=" + perPage + "&sort_column=",
+  );
+  return response.data;
+};
+
 export {
   getRoles,
   getAdministrators,
@@ -836,4 +850,6 @@ export {
   getBudgets,
   getTransactionsByType,
   getBudgetUsage,
+  getFees,
+  getPayrolls,
 };

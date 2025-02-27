@@ -195,3 +195,24 @@ body:has(.dark) #root {
 /* .dark .fc-v-event {
   background-color: red;
 } */
+
+.apexcharts-tooltip.apexcharts-theme-dark .apexcharts-tooltip-title {
+  background-color: #111827 !important;
+}
+
+.apexcharts-tooltip.apexcharts-theme-dark {
+  background: #111928c6 !important;
+
+  box-shadow: 2px 2px 6px -4px #1f2937 !important;
+}
+
+.apexcharts-xaxistooltip.apexcharts-theme-dark {
+  background: #111928cf !important;
+  border: 1px solid #1c2531d8 !important;
+  color: #fff;
+}
+
+.apexcharts-xaxistooltip-bottom.apexcharts-theme-dark::after,
+.apexcharts-xaxistooltip-bottom.apexcharts-theme-dark::before {
+  border-bottom-color: #1c2531d8 !important;
+}

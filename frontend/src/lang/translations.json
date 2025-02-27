@@ -45,7 +45,12 @@
                 "sign_out": "Sign out",
                 "changes": "Changes",
                 "change": "Change",
-                "loading": "Loading"
+                "loading": "Loading",
+                "transaction": "Transaction",
+                "transactions": "Transactions",
+                "activity": "Activity",
+                "activities": "Activities",
+                "budget_transactions": "Budget Transaction History"
             },
             "determiners": {
                 "definite": {
@@ -107,8 +112,12 @@
                 "staff_member": "Staff Member",
                 "financial": "Financial",
                 "financials": "Financials",
+                "finance": "Finance",
+                "finances": "Finances",
                 "budget": "Budget",
                 "budgets": "Budgets",
+                "fee": "Fee",
+                "fees": "Fees",
                 "expense": "Expense",
                 "expenses": "Expenses",
                 "revenue": "Revenue",
@@ -206,6 +215,7 @@
                     "enrollement-date": "Enrollement date",
                     "resolved_date": "Resolved Date",
                     "issued_date": "Issued Date",
+                    "due_date": "Due Date",
                     "school_name": "School Name",
                     "description": "Description",
                     "website": "Website",
@@ -297,6 +307,21 @@
                     "medium": "Medium",
                     "high": "High"
                 }
+            },
+            "metrics": {
+                "amount": "Amount",
+                "budget_usage": "Budget Usage Overview",
+                "allocated_budget": "Budget allocated ",
+                "spent": "Spent",
+                "remaining": "Remaining",
+                "spent_prcentage": "Percentage Spent"
+            },
+            "roles": {
+                "administrator_staff": "Administrator staff",
+                "administrator": "Administrator",
+                "teacher": "Teacher",
+                "student": "Student",
+                "parent": "Parent"
             }
         }
     },
@@ -347,7 +372,12 @@
                 "sign_out": "Se déconnecter",
                 "changes": "Modifications",
                 "change": "Modification",
-                "loading": "Chargement"
+                "loading": "Chargement",
+                "transaction": "Transaction",
+                "transactions": "Transactions",
+                "activity": "Activité",
+                "activities": "Activités",
+                "budget_transactions": "Historique des transactions budgétaires"
             },
             "determiners": {
                 "definite": {
@@ -405,12 +435,16 @@
                 "preference": "Préférence",
                 "administrators": "Administrateurs",
                 "administrator": "Administrateur",
-                "staff_members": "Fonctionnaires",
-                "staff_member": "Fonctionnaire",
+                "staff_members": "Employés",
+                "staff_member": "Employé",
+                "finance": "Finance",
+                "finances": "Finances",
                 "financial": "Financier",
                 "financials": "Financiers",
                 "budget": "Budget",
                 "budgets": "Budgets",
+                "fee": "Frais",
+                "fees": "Frais",
                 "expense": "Dépense",
                 "expenses": "Dépenses",
                 "revenue": "Revenu",
@@ -508,6 +542,7 @@
                     "enrollement_date": "Date d'inscription",
                     "resolved_date": "Date de résolution",
                     "issued_date": "Date d'émission",
+                    "due_date": "Date d'échéance",
                     "school_name": "Nom de l'école",
                     "description": "Description",
                     "website": "Site web",
@@ -599,6 +634,21 @@
                     "medium": "Moyen",
                     "high": "Élevé"
                 }
+            },
+            "metrics": {
+                "amount": "Montant",
+                "budget_usage": "Aperçu de l'utilisation du budget",
+                "allocated_budget": "Budget alloué",
+                "spent": "Dépensé",
+                "remaining": "Restant",
+                "spent_prcentage": "Pourcentage dépensé"
+            },
+            "roles": {
+                "administrator_staff": "Employé administratif",
+                "administrator": "Administrateur",
+                "teacher": "Enseignant",
+                "student": "Étudiant",
+                "parent": "Parent"
             }
         }
     }

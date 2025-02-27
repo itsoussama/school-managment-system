@@ -9,8 +9,13 @@ class PayrollController extends Controller
 {
     public function index()
     {
-        $payrolls = Payroll::with('user')->get();
-        return response()->json($payrolls);
+        $schoolId = auth()->user()->school_id;
+        $perPage = request()->query('per_page', 5);
+        $userRoles = [config('roles.admin_staff'), config('roles.admin'), config('roles.teacher')];
+        $payrolls = Payroll::with('user.role')->whereHas('user', fn($query) =>
+        $query->where('school_id', $schoolId)->whereHas('role', fn($query) =>
+        $query->whereIn('name', $userRoles)));
+        return response()->json($payrolls->paginate($perPage));
     }
 
 

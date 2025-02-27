@@ -9,8 +9,14 @@ class FeeController extends Controller
 {
     public function index()
     {
-        $fees = Fee::with('student')->get();
-        return response()->json($fees);
+        $schoolId = auth()->user()->school_id;
+        $perPage = request()->query('per_page', 5);
+        $fees = Fee::with('student.user')->whereHas('student', function ($query) use ($schoolId) {
+            $query->whereHas('user', function ($query) use ($schoolId) {
+                $query->where('school_id', $schoolId);
+            });
+        });
+        return response()->json($fees->paginate($perPage));
     }
 
 

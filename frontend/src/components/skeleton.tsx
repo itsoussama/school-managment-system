@@ -1,4 +1,4 @@
-import { Table } from "flowbite-react";
+import { Spinner, Table } from "flowbite-react";
 import { HTMLAttributes, ReactNode, useEffect, useRef, useState } from "react";
 import { FaImage } from "react-icons/fa6";
 
@@ -75,11 +75,69 @@ function SkeletonTable({ rows = 5, cols = 5 }) {
           .fill(null)
           .map((_, key) => (
             <Table.Cell key={key}>
-              <div className="mb-2.5 h-5 animate-pulse rounded-s bg-gray-200 dark:bg-gray-600"></div>
+              <div className="mb-2.5 h-3 animate-pulse rounded-s bg-gray-200 dark:bg-gray-600"></div>
             </Table.Cell>
           ))}
       </Table.Row>
     ));
+}
+
+interface SkeletonLoadTableProps extends FCSkeletonContent {}
+
+function SkeletonLoadTable({ isLoaded, children }: SkeletonLoadTableProps) {
+  if (isLoaded) {
+    return children;
+  }
+
+  return (
+    <div role="status" className="relative h-full w-full">
+      <div
+        className={`absolute left-0 top-0 z-[50] grid h-full w-full place-items-center rounded-s bg-gray-100 bg-opacity-40 backdrop-blur-sm dark:bg-gray-900 dark:bg-opacity-60`}
+      >
+        <Spinner />
+        <span className="sr-only">Loading...</span>
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+interface SkeletonMetricProps extends FCSkeletonContent {}
+
+function SkeletonMetric({ isLoaded, children }: SkeletonMetricProps) {
+  if (isLoaded) {
+    return children;
+  }
+
+  return (
+    <div role="status" className="w-full animate-pulse">
+      <div className="mb-2 h-3 w-2/4 rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="h-7 w-3/4 rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <span className="sr-only">Loading...</span>
+    </div>
+  );
+}
+
+interface SkeletonChartProps extends FCSkeletonContent {}
+
+function SkeletonChart({ isLoaded, children }: SkeletonChartProps) {
+  if (isLoaded) {
+    return children;
+  }
+
+  return (
+    <div role="status" className="relative h-full w-full">
+      <div
+        className={`absolute left-0 top-0 z-[50] grid h-full w-full place-items-center rounded-s bg-gray-100 bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30`}
+      >
+        <Spinner />
+        <span className="sr-only">Loading...</span>
+      </div>
+
+      {children}
+    </div>
+  );
 }
 
 function SkeletonAccordion() {
@@ -95,4 +153,12 @@ function SkeletonAccordion() {
   );
 }
 
-export { SkeletonProfile, SkeletonContent, SkeletonTable, SkeletonAccordion };
+export {
+  SkeletonProfile,
+  SkeletonContent,
+  SkeletonTable,
+  SkeletonLoadTable,
+  SkeletonAccordion,
+  SkeletonMetric,
+  SkeletonChart,
+};
