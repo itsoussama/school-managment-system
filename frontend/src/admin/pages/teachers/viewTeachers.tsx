@@ -1407,7 +1407,7 @@ export function ViewTeachers() {
                 </Table.Row>
                 {getTeachersQuery.isFetching &&
                 !(getTeachersQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={9} />
+                  <SkeletonTable cols={10} />
                 ) : (
                   getTeachersQuery.data?.data.map(
                     (teacher: Teacher, key: number) => (

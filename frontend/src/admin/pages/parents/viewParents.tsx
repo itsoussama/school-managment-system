@@ -1471,7 +1471,7 @@ export function ViewParents() {
 
                 {getParentsQuery.isFetching &&
                 !(getParentsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={8} />
+                  <SkeletonTable cols={9} />
                 ) : (
                   getParentsQuery.data.data?.map(
                     (parent: Parent, key: number) => (

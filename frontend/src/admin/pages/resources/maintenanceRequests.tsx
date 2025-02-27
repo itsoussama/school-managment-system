@@ -1563,7 +1563,7 @@ export default function MaintenanceRequests() {
                 </Table.Row>
                 {getMaintenanceRequestsQuery.isFetching &&
                 !(getMaintenanceRequestsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={7} />
+                  <SkeletonTable cols={8} />
                 ) : (
                   getMaintenanceRequestsQuery?.data.data.map(
                     (maintenanceReq: MaintenanceRequests, key: number) => (

@@ -972,7 +972,7 @@ export default function Subjects() {
 
                 {getSubjectsQuery.isFetching &&
                 !(getSubjectsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={5} />
+                  <SkeletonTable cols={6} />
                 ) : (
                   getSubjectsQuery.data?.data.map(
                     (subject: Subject, key: number) => (

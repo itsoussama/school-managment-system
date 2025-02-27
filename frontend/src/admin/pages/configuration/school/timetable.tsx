@@ -227,8 +227,8 @@ export default function Timetable() {
       _method: "PUT",
       id: eventID,
       title: info.event.title,
-      start: info.event.startStr,
-      end: info.event.endStr,
+      start: info.event.startStr.slice(0, 16),
+      end: info.event.endStr.slice(0, 16),
       // description: target.description.value,
       assign_to: [admin.id],
     });

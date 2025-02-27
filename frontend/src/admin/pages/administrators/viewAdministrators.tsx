@@ -1240,7 +1240,7 @@ export function ViewAdministrators() {
 
                 {getAdministratorsQuery.isFetching &&
                 !(getAdministratorsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={7} />
+                  <SkeletonTable cols={8} />
                 ) : (
                   getAdministratorsQuery.data?.data.map(
                     (administrator: Administrator, key: number) => (

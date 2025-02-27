@@ -797,7 +797,7 @@ export function ViewClassrooms() {
 
                 {getClassroomsQuery.isFetching &&
                 !(getClassroomsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={6} />
+                  <SkeletonTable cols={7} />
                 ) : (
                   getClassroomsQuery.data?.data.map(
                     (classroom: Classroom, key: number) => (

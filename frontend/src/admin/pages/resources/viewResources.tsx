@@ -1071,7 +1071,7 @@ export function ViewResources() {
                 </Table.Row>
                 {getResourcesQuery.isFetching &&
                 !(getResourcesQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={5} />
+                  <SkeletonTable cols={6} />
                 ) : (
                   getResourcesQuery?.data.data.map(
                     (resource: Resource, key: number) => (
