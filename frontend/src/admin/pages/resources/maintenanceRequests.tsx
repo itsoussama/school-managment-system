@@ -66,6 +66,7 @@ import {
   FaDiamond,
   FaDownload,
   FaFileLines,
+  FaPlus,
   FaRegCircleXmark,
 } from "react-icons/fa6";
 import { IoFilter } from "react-icons/io5";
@@ -745,9 +746,10 @@ export default function MaintenanceRequests() {
         </Breadcrumb>
 
         <Button
-          className="btn-default m-0 w-auto"
+          className="btn-default m-0 flex w-auto items-center gap-x-2"
           onClick={() => setOpenModal({ open: true, type: "add" })}
         >
+          <FaPlus />
           {t("actions.create_entity", {
             entity:
               t("determiners.indefinite.masculine") + " " + t("general.ticket"),

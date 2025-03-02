@@ -1518,7 +1518,7 @@ export function ViewStudents() {
                 </Table.Row>
                 {getStudentsQuery.isFetching &&
                 !(getStudentsQuery.isRefetching || perPage) ? (
-                  <SkeletonTable cols={12} />
+                  <SkeletonTable cols={13} />
                 ) : (
                   getStudentsQuery.data?.data.map(
                     (student: Student, key: number) => (

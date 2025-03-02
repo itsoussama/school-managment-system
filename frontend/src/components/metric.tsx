@@ -1,18 +1,25 @@
-import React from "react";
+import { TailwindSizes } from "@src/utils/flowbite";
 
 interface MetricProps {
   children: React.ReactNode;
 }
+interface MetricElementsProps extends MetricProps {
+  size?: TailwindSizes;
+}
 
 const Metric = ({ children }: MetricProps) => (
-  <div className="flex flex-col gap-y-0.5">{children}</div>
+  <div className="flex w-full flex-col gap-y-0.5">{children}</div>
 );
 
-Metric.Title = ({ children }: { children: React.ReactNode }) => (
-  <h3 className="text-base text-gray-600 dark:text-gray-300">{children}</h3>
-);
-Metric.Value = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-3xl font-semibold text-gray-900 dark:text-white">
+Metric.Title = ({ children, size = "base" }: MetricElementsProps) => {
+  return (
+    <h3 className={`text-${size} text-gray-600 dark:text-gray-300`}>
+      {children}
+    </h3>
+  );
+};
+Metric.Value = ({ children, size = "3xl" }: MetricElementsProps) => (
+  <p className={`text-${size} font-semibold text-gray-900 dark:text-white`}>
     {children}
   </p>
 );

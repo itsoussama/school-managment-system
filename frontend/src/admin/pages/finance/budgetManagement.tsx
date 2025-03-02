@@ -9,6 +9,7 @@ import {
   Pagination,
   Spinner,
   Table,
+  Tooltip,
 } from "flowbite-react";
 import { useTranslation } from "react-i18next";
 import { FaHome } from "react-icons/fa";
@@ -16,10 +17,10 @@ import { Link } from "react-router-dom";
 import Chart from "react-apexcharts";
 import { barAreaChartOptions } from "@src/utils/chart";
 import { Metric } from "@src/components/metric";
-import { customTable } from "@src/utils/flowbite";
+import { customTable, customTooltip } from "@src/utils/flowbite";
 import ProgressWithStatus from "@src/components/progress";
-import { Button, RSelect } from "@src/components/input";
-import { ChangeEvent, useState } from "react";
+import { Button, Input, RSelect, RTextArea } from "@src/components/input";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getBudgets,
@@ -32,11 +33,14 @@ import {
   SkeletonMetric,
   SkeletonTable,
 } from "@src/components/skeleton";
+import { FaClipboardList } from "react-icons/fa";
+import { FaEye } from "react-icons/fa6";
 
 interface Modal {
   id?: number;
-  type?: "viewTransaction";
-  open: boolean;
+  type?: "viewTransaction" | "foo" | "bar";
+  open?: boolean;
+  subModal?: Modal;
 }
 
 interface Budget {
@@ -60,14 +64,15 @@ interface BudgetHistory {
 export default function BudgetManagement() {
   const { t } = useTranslation();
   // const admin = useAppSelector((state) => state.userSlice.user);
+  const [openModal, setOpenModal] = useState<Modal>();
+  const [page, setPage] = useState<number>(1);
+  const [perPage, setPerPage] = useState<number>();
   const minSm = useBreakpoint("min", "sm");
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const themeChange = useAppSelector(
     (state) => state.preferenceSlice.themeMode as "light" | "dark" | "auto",
   );
-  const [openModal, setOpenModal] = useState<Modal>();
-  const [page, setPage] = useState<number>(1);
-  const [perPage, setPerPage] = useState<number>();
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const getBudgetsQuery = useQuery({
     queryKey: ["getBudgets", page, perPage],
@@ -95,6 +100,14 @@ export default function BudgetManagement() {
 
   const onCloseModal = () => {
     setOpenModal(undefined);
+  };
+
+  const onCloseSubModal = () => {
+    setOpenModal((prev) => ({
+      ...prev,
+      subModal: undefined,
+      open: prev?.open ?? false,
+    }));
   };
 
   const handlePerPage = (ev: ChangeEvent) => {
@@ -128,6 +141,17 @@ export default function BudgetManagement() {
   //   }
   //   return weekDates;
   // };
+
+  const captureScroll = (e: Event) =>
+    (e.target as HTMLElement)?.scrollTop > 0 && console.log("Fetch Data!");
+
+  useEffect(() => {
+    const tableElement = tableRef.current;
+
+    tableElement?.addEventListener("scrollend", captureScroll);
+
+    return () => tableElement?.removeEventListener("scrollend", captureScroll);
+  }, []);
 
   return (
     <div className="flex flex-col">
@@ -171,9 +195,10 @@ export default function BudgetManagement() {
           </Breadcrumb.Item>
         </Breadcrumb>
         <Button
-          className="btn-default m-0 w-auto"
+          className="btn-default m-0 flex w-auto items-center gap-x-2"
           onClick={() => setOpenModal({ open: true, type: "viewTransaction" })}
         >
+          <FaClipboardList size={"16"} />
           {t("entities.budget") + " " + t("general.activity")}
         </Button>
       </div>
@@ -181,94 +206,269 @@ export default function BudgetManagement() {
       <Modal
         show={openModal?.type === "viewTransaction" ? openModal?.open : false}
         size={"5xl"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
+        // theme={{
+        //   content: {
+        //     base: "relative h-full w-full p-4 md:h-auto",
+        //     inner:
+        //       "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+        //   },
+        //   body: {
+        //     base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
+        //     popup: "pt-0",
+        //   },
+        // }}
         onClose={onCloseModal}
       >
         <Modal.Header>{t("general.budget_transactions")}</Modal.Header>
         <Modal.Body>
-          <Table
-            theme={{
-              ...customTable,
-              root: {
-                wrapper:
-                  "relative border rounded-t-s h-80 overflow-y-auto border-gray-200 dark:border-gray-600",
-              },
-            }}
-            striped
+          <SkeletonLoadTable
+            isLoaded={
+              !(getBudgetsQuery.isFetching && getBudgetsQuery.isRefetching)
+            }
           >
-            <Table.Head className="sticky top-0 z-10 border-b border-b-gray-300 uppercase dark:border-b-gray-600">
-              <Table.HeadCell>
-                {t("form.fields.id", { entity: t("general.transaction") })}
-              </Table.HeadCell>
+            <div
+              className="h-80 overflow-y-auto rounded-t-s border border-gray-200 dark:border-gray-600"
+              ref={tableRef}
+            >
+              <Table theme={customTable} striped>
+                <Table.Head className="sticky top-0 z-10 border-b border-b-gray-300 uppercase dark:border-b-gray-600">
+                  <Table.HeadCell>
+                    {t("form.fields.id", { entity: t("general.transaction") })}
+                  </Table.HeadCell>
 
-              <Table.HeadCell>{t("form.fields.category")}</Table.HeadCell>
-              <Table.HeadCell>{t("metrics.amount")}</Table.HeadCell>
-              <Table.HeadCell>{t("form.fields.status")}</Table.HeadCell>
-              <Table.HeadCell>{t("general.date")}</Table.HeadCell>
-            </Table.Head>
-            <Table.Body className="relative border-b border-b-gray-300 dark:border-b-gray-600">
-              {getBudgetTransactions.isFetching &&
-                getBudgetTransactions.isRefetching && (
-                  <Table.Row>
-                    <Table.Cell className="p-0">
-                      <div
-                        className={`table-loader fixed left-0 top-0 z-[1] grid h-full w-full place-items-center overflow-hidden bg-gray-100 bg-opacity-50 backdrop-blur-sm dark:bg-gray-900 dark:bg-opacity-60`}
-                      >
-                        <Spinner />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-
-              {getBudgetTransactions.isFetching &&
-              !getBudgetTransactions.isRefetching ? (
-                <SkeletonTable cols={5} />
-              ) : (
-                getBudgetTransactions.data?.map(
-                  (transaction: BudgetHistory, key: number) => (
-                    <Table.Row key={key}>
-                      <Table.Cell>{transaction.transaction_id}</Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        {transaction.budget.category.label}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {formatCurrency(transaction.transaction.amount)}
-                      </Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        <Badge color={"blue"} className="!w-fit rounded-xs">
-                          {transaction.transaction.type}
-                        </Badge>
-                      </Table.Cell>
-                      <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                        {handleDateTime(
-                          { dateStyle: "short" },
-                          new Date(transaction.created_at),
-                        )}
-                        <span className="ml-2 text-gray-500 dark:text-gray-400">
-                          {handleDateTime(
-                            { timeStyle: "short" },
-                            new Date(transaction.created_at),
-                          )}
-                        </span>
-                      </Table.Cell>
-                    </Table.Row>
-                  ),
-                )
-              )}
-            </Table.Body>
-          </Table>
+                  <Table.HeadCell>{t("form.fields.category")}</Table.HeadCell>
+                  <Table.HeadCell>{t("metrics.amount")}</Table.HeadCell>
+                  <Table.HeadCell>{t("form.fields.status")}</Table.HeadCell>
+                  <Table.HeadCell>{t("general.date")}</Table.HeadCell>
+                </Table.Head>
+                <Table.Body className="relative border-b border-b-gray-300 dark:border-b-gray-600">
+                  {getBudgetTransactions.isFetching &&
+                  !getBudgetTransactions.isRefetching ? (
+                    <SkeletonTable cols={5} />
+                  ) : (
+                    getBudgetTransactions.data?.map(
+                      (transaction: BudgetHistory, key: number) => (
+                        <Table.Row key={key}>
+                          <Table.Cell>{transaction.transaction_id}</Table.Cell>
+                          <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                            {transaction.budget.category.label}
+                          </Table.Cell>
+                          <Table.Cell>
+                            {formatCurrency(transaction.transaction.amount)}
+                          </Table.Cell>
+                          <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                            <Badge color={"blue"} className="!w-fit rounded-xs">
+                              {transaction.transaction.type}
+                            </Badge>
+                          </Table.Cell>
+                          <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                            {handleDateTime(
+                              { dateStyle: "short" },
+                              new Date(transaction.created_at),
+                            )}
+                            <span className="ml-2 text-gray-500 dark:text-gray-400">
+                              {handleDateTime(
+                                { timeStyle: "short" },
+                                new Date(transaction.created_at),
+                              )}
+                            </span>
+                          </Table.Cell>
+                        </Table.Row>
+                      ),
+                    )
+                  )}
+                </Table.Body>
+              </Table>
+            </div>
+          </SkeletonLoadTable>
         </Modal.Body>
       </Modal>
+
+      <Modal
+        show={openModal?.type === "foo" ? openModal?.open : false}
+        size={"3xl"}
+        onClose={onCloseModal}
+      >
+        <Modal.Header>category: Administrative Expenses</Modal.Header>
+        <Modal.Body>
+          <div className="flex flex-col gap-y-7">
+            <div className="flex flex-row justify-between">
+              <div className="flex gap-x-5">
+                <SkeletonMetric
+                  size="sm"
+                  isLoaded={!getBudgetUsageQuery.isFetching}
+                >
+                  <Metric>
+                    <Metric.Title size="sm">
+                      {t("metrics.allocated_budget")}
+                    </Metric.Title>
+                    <Metric.Value size="sm">
+                      {formatCurrency(
+                        getBudgetUsageQuery.data?.total_allocation,
+                      )}
+                    </Metric.Value>
+                  </Metric>
+                </SkeletonMetric>
+                <SkeletonMetric
+                  size="sm"
+                  isLoaded={!getBudgetUsageQuery.isFetching}
+                >
+                  <Metric>
+                    <Metric.Title size="sm">
+                      {t("metrics.allocated_budget")}
+                    </Metric.Title>
+                    <Metric.Value size="sm">
+                      {formatCurrency(
+                        getBudgetUsageQuery.data?.total_allocation,
+                      )}
+                    </Metric.Value>
+                  </Metric>
+                </SkeletonMetric>
+                <SkeletonMetric
+                  size="sm"
+                  isLoaded={!getBudgetUsageQuery.isFetching}
+                >
+                  <Metric>
+                    <Metric.Title size="sm">
+                      {t("metrics.allocated_budget")}
+                    </Metric.Title>
+                    <Metric.Value size="sm">
+                      {formatCurrency(
+                        getBudgetUsageQuery.data?.total_allocation,
+                      )}
+                    </Metric.Value>
+                  </Metric>
+                </SkeletonMetric>
+              </div>
+              <Button
+                className="btn-default !m-0 !w-max"
+                onClick={() =>
+                  setOpenModal((prev) => ({
+                    ...prev,
+                    subModal: {
+                      id: 1,
+                      type: "bar",
+                      open: true,
+                    },
+                  }))
+                }
+              >
+                Budget Top-Up
+              </Button>
+            </div>
+            <SkeletonLoadTable
+              isLoaded={
+                !(getBudgetsQuery.isFetching && getBudgetsQuery.isRefetching)
+              }
+            >
+              <div
+                className="h-80 overflow-y-auto rounded-t-s border border-gray-200 dark:border-gray-600"
+                ref={tableRef}
+              >
+                <Table theme={customTable} striped>
+                  <Table.Head className="sticky top-0 z-10 border-b border-b-gray-300 uppercase dark:border-b-gray-600">
+                    <Table.HeadCell>
+                      {t("form.fields.id", {
+                        entity: t("general.transaction"),
+                      })}
+                    </Table.HeadCell>
+
+                    <Table.HeadCell>{t("form.fields.category")}</Table.HeadCell>
+                    <Table.HeadCell>{t("metrics.amount")}</Table.HeadCell>
+                    <Table.HeadCell>{t("form.fields.status")}</Table.HeadCell>
+                    <Table.HeadCell>{t("general.date")}</Table.HeadCell>
+                  </Table.Head>
+                  <Table.Body className="relative border-b border-b-gray-300 dark:border-b-gray-600">
+                    {getBudgetTransactions.isFetching &&
+                    !getBudgetTransactions.isRefetching ? (
+                      <SkeletonTable cols={5} />
+                    ) : (
+                      getBudgetTransactions.data?.map(
+                        (transaction: BudgetHistory, key: number) => (
+                          <Table.Row key={key}>
+                            <Table.Cell>
+                              {transaction.transaction_id}
+                            </Table.Cell>
+                            <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                              {transaction.budget.category.label}
+                            </Table.Cell>
+                            <Table.Cell>
+                              {formatCurrency(transaction.transaction.amount)}
+                            </Table.Cell>
+                            <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                              <Badge
+                                color={"blue"}
+                                className="!w-fit rounded-xs"
+                              >
+                                {transaction.transaction.type}
+                              </Badge>
+                            </Table.Cell>
+                            <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
+                              {handleDateTime(
+                                { dateStyle: "short" },
+                                new Date(transaction.created_at),
+                              )}
+                              <span className="ml-2 text-gray-500 dark:text-gray-400">
+                                {handleDateTime(
+                                  { timeStyle: "short" },
+                                  new Date(transaction.created_at),
+                                )}
+                              </span>
+                            </Table.Cell>
+                          </Table.Row>
+                        ),
+                      )
+                    )}
+                  </Table.Body>
+                </Table>
+              </div>
+            </SkeletonLoadTable>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
+        show={
+          openModal?.subModal?.type === "bar"
+            ? openModal?.subModal?.open
+            : false
+        }
+        size={"md"}
+        onClose={onCloseSubModal}
+      >
+        <Modal.Header>Budget Top-Up</Modal.Header>
+        <Modal.Body>
+          <div className="flex flex-col gap-y-8">
+            <Input
+              type="text"
+              id="amount"
+              name="amount"
+              // onChange={(e) => setGradeFormData(e.target.id, e.target.value)}
+              // value={gradeData?.label}
+              label={t("metrics.amount")}
+              placeholder="10.000"
+            />
+            <RTextArea
+              id="justification"
+              name="justification"
+              label={t("form.fields.justification")}
+              placeholder={t("form.placeholders.justification")}
+              // disabled={getMaintenanceRequestQuery.isFetching && true}
+              // value={(formData.description as string) || ""}
+              // onChange={onChange}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type="submit" className="btn-default !w-auto">
+            {t("general.accept")}
+          </Button>
+          <button className="btn-danger !w-auto" onClick={onCloseSubModal}>
+            {t("general.decline")}
+          </button>
+        </Modal.Footer>
+      </Modal>
+
       <TransitionAnimation>
         <div className="flex flex-wrap gap-5">
           <div className="flex w-full flex-col rounded-s bg-light-primary p-5 dark:bg-dark-primary">
@@ -304,7 +504,10 @@ export default function BudgetManagement() {
                 </SkeletonChart>
               </div>
               <div className="flex flex-1 flex-col gap-y-5">
-                <SkeletonMetric isLoaded={!getBudgetUsageQuery.isFetching}>
+                <SkeletonMetric
+                  size="lg"
+                  isLoaded={!getBudgetUsageQuery.isFetching}
+                >
                   <Metric>
                     <Metric.Title>{t("metrics.allocated_budget")}</Metric.Title>
                     <Metric.Value>
@@ -314,7 +517,10 @@ export default function BudgetManagement() {
                     </Metric.Value>
                   </Metric>
                 </SkeletonMetric>
-                <SkeletonMetric isLoaded={!getBudgetUsageQuery.isFetching}>
+                <SkeletonMetric
+                  size="lg"
+                  isLoaded={!getBudgetUsageQuery.isFetching}
+                >
                   <Metric>
                     <Metric.Title>{t("metrics.spent")}</Metric.Title>
                     <Metric.Value>
@@ -322,7 +528,10 @@ export default function BudgetManagement() {
                     </Metric.Value>
                   </Metric>
                 </SkeletonMetric>
-                <SkeletonMetric isLoaded={!getBudgetUsageQuery.isFetching}>
+                <SkeletonMetric
+                  size="lg"
+                  isLoaded={!getBudgetUsageQuery.isFetching}
+                >
                   <Metric>
                     <Metric.Title>{t("metrics.remaining")}</Metric.Title>
                     <Metric.Value>
@@ -353,6 +562,7 @@ export default function BudgetManagement() {
                     <Table.HeadCell>
                       {t("metrics.spent_prcentage")}
                     </Table.HeadCell>
+                    <Table.HeadCell>{t("general.actions")}</Table.HeadCell>
                   </Table.Head>
                   <Table.Body
                     // ref={tableRef}
@@ -383,6 +593,21 @@ export default function BudgetManagement() {
                                 )}
                                 reverse
                               />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <div
+                                onClick={() =>
+                                  setOpenModal({
+                                    id: budget.id,
+                                    type: "foo",
+                                    open: true,
+                                  })
+                                }
+                                className="flex w-max cursor-pointer items-center gap-x-2 rounded-s bg-blue-100 px-2 py-1.5 text-blue-600 dark:bg-blue-500 dark:bg-opacity-20 dark:text-blue-500"
+                              >
+                                <FaEye />
+                                <p className="font-semibold">View Details</p>
+                              </div>
                             </Table.Cell>
                           </Table.Row>
                         ),

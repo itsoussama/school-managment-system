@@ -1,3 +1,4 @@
+import { TailwindSizes } from "@src/utils/flowbite";
 import { Spinner, Table } from "flowbite-react";
 import { HTMLAttributes, ReactNode, useEffect, useRef, useState } from "react";
 import { FaImage } from "react-icons/fa6";
@@ -92,7 +93,7 @@ function SkeletonLoadTable({ isLoaded, children }: SkeletonLoadTableProps) {
   return (
     <div role="status" className="relative h-full w-full">
       <div
-        className={`absolute left-0 top-0 z-[50] grid h-full w-full place-items-center rounded-s bg-gray-100 bg-opacity-40 backdrop-blur-sm dark:bg-gray-900 dark:bg-opacity-60`}
+        className={`absolute left-0 top-0 z-[50] grid h-full w-full place-items-center rounded-s bg-gray-100 bg-opacity-40 backdrop-blur-sm dark:bg-gray-800 dark:bg-opacity-60`}
       >
         <Spinner />
         <span className="sr-only">Loading...</span>
@@ -103,17 +104,33 @@ function SkeletonLoadTable({ isLoaded, children }: SkeletonLoadTableProps) {
   );
 }
 
-interface SkeletonMetricProps extends FCSkeletonContent {}
+interface SkeletonMetricProps extends FCSkeletonContent {
+  size?: "xs" | "sm" | "md" | "lg";
+}
 
-function SkeletonMetric({ isLoaded, children }: SkeletonMetricProps) {
+function SkeletonMetric({
+  isLoaded,
+  children,
+  size = "md",
+}: SkeletonMetricProps) {
   if (isLoaded) {
     return children;
   }
 
+  const sizeToPoint = {
+    xs: "5",
+    sm: "7",
+    md: "9",
+    lg: "12",
+  };
+
   return (
-    <div role="status" className="w-full animate-pulse">
-      <div className="mb-2 h-3 w-2/4 rounded-s bg-gray-200 dark:bg-gray-600"></div>
-      <div className="h-7 w-3/4 rounded-s bg-gray-200 dark:bg-gray-600"></div>
+    <div
+      role="status"
+      className={`w-full h-${sizeToPoint[size]} flex animate-pulse flex-col gap-y-2`}
+    >
+      <div className="h-1/3 w-3/4 rounded-s bg-gray-200 dark:bg-gray-600"></div>
+      <div className="h-2/3 w-full rounded-s bg-gray-200 dark:bg-gray-600"></div>
       <span className="sr-only">Loading...</span>
     </div>
   );
