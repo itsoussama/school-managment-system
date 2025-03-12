@@ -1,28 +1,44 @@
-import { TailwindSizes } from "@src/utils/flowbite";
+import twSize from "@src/utils/size";
+import { HTMLAttributes } from "react";
 
 interface MetricProps {
   children: React.ReactNode;
+  additionalStyle?: string;
 }
 interface MetricElementsProps extends MetricProps {
-  size?: TailwindSizes;
+  size?: string;
 }
 
 const Metric = ({ children }: MetricProps) => (
-  <div className="flex w-full flex-col gap-y-0.5">{children}</div>
+  <div className="flex flex-col gap-y-1">{children}</div>
 );
 
 Metric.Title = ({ children, size = "base" }: MetricElementsProps) => {
+  const getSize = () => twSize[size as keyof typeof twSize];
   return (
-    <h3 className={`text-${size} text-gray-600 dark:text-gray-300`}>
+    <h3
+      className={`text-gray-600 dark:text-gray-300`}
+      style={{ fontSize: getSize() }}
+    >
       {children}
     </h3>
   );
 };
-Metric.Value = ({ children, size = "3xl" }: MetricElementsProps) => (
-  <p className={`text-${size} font-semibold text-gray-900 dark:text-white`}>
-    {children}
-  </p>
-);
+Metric.Value = ({
+  children,
+  size = "base",
+  additionalStyle,
+}: MetricElementsProps) => {
+  const getSize = () => twSize[size as keyof typeof twSize];
+  return (
+    <p
+      className={`font-semibold text-gray-900 dark:text-white ${additionalStyle}`}
+      style={{ fontSize: getSize() }}
+    >
+      {children}
+    </p>
+  );
+};
 
 const MetricCard = ({ children }: MetricProps) => (
   <div className="metric-card">{children}</div>

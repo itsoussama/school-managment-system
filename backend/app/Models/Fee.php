@@ -11,13 +11,13 @@ class Fee extends Model
     protected $table = 'fee';
     protected $fillable = ['id', 'type', 'amount', 'status', 'due_date', 'student_id'];
 
-    public function transactionDetails()
+    public function transactions()
     {
-        return $this->hasMany(TransactionDetail::class, 'fee_id');
+        return $this->morphMany(Transaction::class, 'transactionable');
     }
 
-    public function student()
+    public function user()
     {
-        return $this->belongsTo(Student::class, 'student_id');
+        return $this->belongsTo(User::class, 'student_id');
     }
 }

@@ -367,4 +367,11 @@ const colors: Array<CardColor> = [
     // "neutral",
     // "stone",
 
-  export {colorPalette, colors}
+    const getColorByMode = (mode: 'dark' | 'light' | 'auto', lightColor: string, darkColor: string) => {
+      if (mode === 'auto') {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? darkColor : lightColor;
+      }
+      return mode === 'dark' ? darkColor : lightColor;
+    };
+
+  export {colorPalette, getColorByMode, colors}

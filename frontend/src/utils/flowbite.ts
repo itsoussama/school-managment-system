@@ -20,7 +20,7 @@ const customTooltip = {
 
   const customBadge = {
     "root": {
-      "base": "flex h-fit items-center gap-1 font-semibold",
+      "base": "flex h-fit items-center gap-1 rounded-s w-max font-semibold",
       "color": {
         "info": "bg-cyan-100 text-cyan-800 group-hover:bg-cyan-200 dark:bg-cyan-200 dark:text-cyan-800 dark:group-hover:bg-cyan-300",
         "gray": "bg-gray-100 text-gray-800 group-hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:group-hover:bg-gray-600",
@@ -48,8 +48,8 @@ const customTooltip = {
       }
     },
     "icon": {
-      "off": "rounded px-2 py-0.5",
-      "on": "rounded-full p-1.5",
+      "off": "rounded-xs px-2 py-0.5",
+      "on": "rounded-xs p-1.5",
       "size": {
         "xs": "w-1.5 h-1.5",
         "sm": "h-3.5 w-3.5"
@@ -155,19 +155,16 @@ const customTooltip = {
     }
   }
 
-  export type TailwindSizes = "xs"
-    | "sm"
-    | "md"
-    | "base"
-    | "lg"
-    | "xl"
-    | "2xl"
-    | "3xl"
-    | "4xl"
-    | "5xl"
-    | "6xl"
-    | "7xl"
-    | "8xl"
-    | "9xl";
+  const customModal = {
+    content: {
+      base: "relative h-full w-full p-4 md:h-auto",
+      inner:
+        "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+    },
+    body: {
+      base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
+      popup: "pt-0",
+    },
+  }
 
-  export {customTooltip, customBadge, customTable, customToggleSwitch, customProgress}
+  export {customTooltip, customBadge, customTable, customToggleSwitch, customProgress, customModal}

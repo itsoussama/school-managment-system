@@ -9,10 +9,11 @@ class Transaction extends Model
 {
     use HasFactory;
     protected $table = 'transactions';
-    protected $fillable = ['id', 'type', 'amount', 'source', 'destination', 'date'];
+    protected $fillable = ['id', 'type', 'amount', 'transactionable_id', 'transactionable_type', 'status', 'date'];
+    protected $hidden = ['transactionable_type'];
 
-    public function details()
+    public function transactionable()
     {
-        return $this->hasMany(TransactionDetail::class, 'transaction_id');
+        return $this->morphTo();
     }
 }

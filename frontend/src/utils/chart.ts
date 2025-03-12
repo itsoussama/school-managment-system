@@ -1,5 +1,5 @@
 import { ApexOptions } from "apexcharts";
-import { BrandColor, colorPalette} from "./colors";
+import { BrandColor, colorPalette, getColorByMode} from "./colors";
 
 const borderComplementaryColor = {
   indigo: "lime",
@@ -14,13 +14,6 @@ const borderComplementaryColor = {
   yellow: "indigo",
 }
 
-const getColor = (mode: 'dark' | 'light' | 'auto', lightColor: string, darkColor: string) => {
-  if (mode === 'auto') {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? darkColor : lightColor;
-  }
-  return mode === 'dark' ? darkColor : lightColor;
-};
-
 const commonOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) : ApexOptions => ({
   chart: {
     toolbar: {
@@ -34,7 +27,7 @@ const commonOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) : Ap
   },
   grid: {
     show: true,
-    borderColor: getColor(mode, colorPalette.gray[200], colorPalette.gray[700]),
+    borderColor: getColorByMode(mode, colorPalette.gray[200], colorPalette.gray[700]),
     strokeDashArray: 0,
     xaxis: {
       lines: {
@@ -50,7 +43,7 @@ const commonOptions = (mode: 'dark' | 'light' | 'auto', brandColor: string) : Ap
   legend: {
     show: true,
     labels: {
-      colors: getColor(mode, colorPalette.gray[600], colorPalette.gray[500]),
+      colors: getColorByMode(mode, colorPalette.gray[600], colorPalette.gray[500]),
       useSeriesColors: false,
     },
     markers: {
@@ -120,7 +113,7 @@ const barChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string,
     },
     axisBorder: {
       show: true,
-      color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
+      color: getColorByMode(mode, colorPalette.gray[300], colorPalette.gray[600]),
       // height: 1,
       // width: "100%",
       offsetX: 0,
@@ -128,7 +121,7 @@ const barChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string,
     },
     axisTicks: {
       show: true,
-      color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
+      color: getColorByMode(mode, colorPalette.gray[300], colorPalette.gray[600]),
       height: 6,
       offsetX: 0,
       offsetY: 0,
@@ -149,7 +142,7 @@ const barAreaChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
 
   fill: {
     type: ['gradient', 'gradient'],
-    colors: [getColor(mode, colorPalette[brandColor as BrandColor][400], colorPalette[brandColor as BrandColor][600]), getColor(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
+    colors: [getColorByMode(mode, colorPalette[brandColor as BrandColor][400], colorPalette[brandColor as BrandColor][600]), getColorByMode(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
     gradient: {
       shade: "dark",
       type: "vertical",
@@ -161,7 +154,7 @@ const barAreaChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
   },
   stroke: {
     width: [0, 4],
-    colors: [undefined, getColor(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
+    colors: [undefined, getColorByMode(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
     curve: "smooth",
   },
   dataLabels: {
@@ -185,7 +178,7 @@ const barAreaChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
     },
     axisBorder: {
       show: true,
-      color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
+      color: getColorByMode(mode, colorPalette.gray[300], colorPalette.gray[600]),
       // height: 1,
       // width: "100%",
       offsetX: 0,
@@ -193,7 +186,7 @@ const barAreaChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
     },
     axisTicks: {
       show: true,
-      color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
+      color: getColorByMode(mode, colorPalette.gray[300], colorPalette.gray[600]),
       height: 6,
       offsetX: 0,
       offsetY: 0,
@@ -213,7 +206,7 @@ const barLineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
   },
   fill: {
     type: ["gradient", "solid"],
-    colors: [getColor(mode, colorPalette[brandColor as BrandColor][400], colorPalette[brandColor as BrandColor][600]), getColor(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
+    colors: [getColorByMode(mode, colorPalette[brandColor as BrandColor][400], colorPalette[brandColor as BrandColor][600]), getColorByMode(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
     gradient: {
       shade: "dark",
       type: "vertical",
@@ -225,7 +218,7 @@ const barLineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
   },
   stroke: {
     width: [0, 4],
-    colors: [undefined, getColor(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
+    colors: [undefined, getColorByMode(mode, colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][400], colorPalette[borderComplementaryColor[brandColor as keyof typeof borderComplementaryColor] as BrandColor][500])],
     curve: "smooth",
   },
   dataLabels: {
@@ -259,7 +252,7 @@ const barLineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: str
     },
     axisBorder: {
       show: true,
-      color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
+      color: getColorByMode(mode, colorPalette.gray[300], colorPalette.gray[600]),
       // height: 1,
       // width: "100%",
       offsetX: 0,
@@ -297,7 +290,7 @@ const lineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string
     },
     axisBorder: {
       show: true,
-      color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
+      color: getColorByMode(mode, colorPalette.gray[300], colorPalette.gray[600]),
       // height: 1,
       // width: "100%",
       offsetX: 0,
@@ -305,7 +298,7 @@ const lineChartOptions = <T>(mode: 'dark' | 'light' | 'auto', brandColor: string
     },
     axisTicks: {
       show: true,
-      color: getColor(mode, colorPalette.gray[300], colorPalette.gray[600]),
+      color: getColorByMode(mode, colorPalette.gray[300], colorPalette.gray[600]),
       height: 6,
       offsetX: 0,
       offsetY: 0,

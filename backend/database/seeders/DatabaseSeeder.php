@@ -32,16 +32,16 @@ class DatabaseSeeder extends Seeder
                 $this->call(EventSeeder::class,);
                 $this->call(ClassRoomSeeder::class);
                 $this->call(GroupSeeder::class);
+                $this->call(AdministratorSeeder::class);
                 $this->call(StudentSeeder::class);
                 $this->call(TeacherSeeder::class);
                 $this->call(CalendarSeeder::class);
                 $this->call([
-                    BudgetCategorySeeder::class,
-                    BudgetSeeder::class,
-                    PayrollSeeder::class,
-                    FeeSeeder::class,
-                    TransactionSeeder::class,
-                    TransactionDetailSeeder::class,
+                        BudgetCategorySeeder::class,
+                        BudgetSeeder::class,
+                        PayrollSeeder::class,
+                        FeeSeeder::class,
+                        TransactionSeeder::class,
                 ]);
         }
 }

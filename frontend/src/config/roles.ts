@@ -1,0 +1,1 @@
+export const ROLES = ["Administrator", "Administration_staff", "Teacher", "Student", "Parent"]

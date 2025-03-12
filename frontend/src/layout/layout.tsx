@@ -21,11 +21,11 @@ import {
 import { FaArrowRightFromBracket, FaMessage } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useBreakpoint from "@src/hooks/useBreakpoint";
-import { hoverContext } from "@context/hoverContext";
+import { hoverContext } from "@src/context/hoverContext";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@src/hooks/useReduxEvent";
 import { Dropdown } from "flowbite-react";
-import { logout } from "@src/features/redux/userAsyncActions";
+import { logout } from "@src/store/actions/userAsyncActions";
 import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import ReactDOM from "react-dom";
@@ -168,38 +168,40 @@ export function Layout({ children, menu }: Layout) {
   }, [langState]);
   return (
     <div id="layout" className={`relative flex w-full flex-1`}>
-      <div
-        className={`z-[10] hidden h-full overflow-y-auto bg-light-primary sm:absolute sm:block sm:p-3 md:min-w-fit 2xl:relative ${isOnHover ? "sm:w-max" : "sm:w-16"} transition-all dark:bg-dark-primary`}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-      >
+      <div className="relative z-[10] h-full">
         <div
-          className={`flex ${!minXxl && !isOnHover ? "min-h-16" : "min-h-20"} items-start justify-start transition-all`}
+          className={`left-0 top-0 hidden h-full max-h-screen overflow-y-auto border-r border-gray-300 bg-light-primary transition-all duration-200 sm:sticky sm:block sm:p-3 md:min-w-fit 2xl:sticky dark:border-gray-700 ${isOnHover ? "sm:w-8" : "sm:w-16"} dark:bg-dark-primary`}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
         >
-          <img
-            className={`mx-auto mt-3 transition-all ${!minXxl && !isOnHover ? "w-7" : ""}`}
-            src={
-              minXxl || isOnHover
-                ? themeState === "dark"
-                  ? logo_dark
-                  : themeState === "light"
-                    ? logo_light
-                    : themeState === "auto" &&
-                        window.matchMedia("(prefers-color-scheme: dark)")
-                          .matches
-                      ? logo_dark
-                      : logo_light
-                : logo_minimize
-            }
-            // width={"150px"}
-            alt="logo"
-          />
+          <div
+            className={`flex ${!minXxl && !isOnHover ? "min-h-16" : "min-h-20"} items-start justify-start transition-all`}
+          >
+            <img
+              className={`mx-auto mt-3 transition-all ${!minXxl && !isOnHover ? "w-7" : ""}`}
+              src={
+                minXxl || isOnHover
+                  ? themeState === "dark"
+                    ? logo_dark
+                    : themeState === "light"
+                      ? logo_light
+                      : themeState === "auto" &&
+                          window.matchMedia("(prefers-color-scheme: dark)")
+                            .matches
+                        ? logo_dark
+                        : logo_light
+                  : logo_minimize
+              }
+              // width={"150px"}
+              alt="logo"
+            />
+          </div>
+          {/* <div className="my-4 w-full border-t border-gray-300 dark:border-gray-700"></div> */}
+          {menu}
         </div>
-        {/* <div className="my-4 w-full border-t border-gray-300 dark:border-gray-700"></div> */}
-        {menu}
       </div>
       <div
-        className={`flex w-[75%] flex-1 flex-col transition-all sm:mx-8 sm:my-6 2xl:ms-8 ${isOnHover ? "sm:ms-0" : "sm:ms-24"}`}
+        className={`flex w-[75%] flex-1 flex-col transition-all sm:my-6 sm:me-8 2xl:ms-8 ${isOnHover ? "sm:-ms-24" : "sm:ms-8"}`}
       >
         {/* //? screen size above 640px*/}
         <div className="hidden h-12 w-full justify-between border-white sm:flex">

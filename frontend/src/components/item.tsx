@@ -1,4 +1,4 @@
-import { hoverContext } from "@src/features/context/hoverContext";
+import { hoverContext } from "@src/context/hoverContext";
 import useBreakpoint from "@hooks/useBreakpoint";
 import React, { Children, CSSProperties, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ interface Item {
   icon?: React.ReactElement;
   isActive?: boolean;
   childActive?: string;
+  isHidden?: boolean;
   children?: React.ReactNode;
   subMenuVisible?: SubMenuVisible;
   onToggleSubMenu?: (param: string) => void;
@@ -38,6 +39,7 @@ export default function Items({
   onToggleSubMenu = (param) => param,
   path,
   containerClass,
+  isHidden = true,
 }: Item) {
   const min2xl = useBreakpoint("min", "2xl");
   // const max2xl = useBreakpoint("max", "2xl");
@@ -66,12 +68,14 @@ export default function Items({
   //   console.log(hasActiveChild);
   // }, [hasActiveChild]);
 
+  if (isHidden) return null;
+
   return (
     <div className="w-full">
       {/* {location.state} */}
       <div
         id={itemId}
-        className={`relative flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${(subMenuVisible.state && subMenuVisible.ref === itemId) || (matchPath ) ? "bg-gray-200 dark:bg-gray-600" : ""} ${isActive && Children.count(children) <= 0 ? (isOnHover || min2xl || !minSm ? "bg-[var(--brand-color-600)]" : "after:sm:absolute after:sm:right-0 after:sm:top-0 after:sm:h-full after:sm:w-1 after:sm:translate-x-3 after:sm:rounded-xs after:sm:bg-[var(--brand-color-600)]") : ""} ${containerClass}`}
+        className={`relative flex w-full cursor-pointer select-none items-center justify-start rounded-s px-2 py-3 ${(subMenuVisible.state && subMenuVisible.ref === itemId) || matchPath ? "bg-gray-200 dark:bg-gray-600" : ""} ${isActive && Children.count(children) <= 0 ? (isOnHover || min2xl || !minSm ? "bg-[var(--brand-color-600)]" : "after:sm:absolute after:sm:right-0 after:sm:top-0 after:sm:h-full after:sm:w-1 after:sm:translate-x-3 after:sm:rounded-xs after:sm:bg-[var(--brand-color-600)]") : ""} ${containerClass}`}
         style={
           {
             "--brand-color-600": colorPalette[brandState as BrandColor][600],
@@ -81,7 +85,7 @@ export default function Items({
       >
         {icon}
         <span
-          className={`text-s max-w-44 overflow-hidden whitespace-nowrap ${!isOnHover ? "sm:hidden 2xl:block" : ""} ${isActive ? "max-w-max text-white" : "fade-text w-44 text-gray-900 dark:text-gray-100"}`}
+          className={`text-s min-w-44 max-w-44 overflow-hidden whitespace-nowrap ${!isOnHover ? "sm:hidden 2xl:block" : ""} ${isActive ? "max-w-max text-white" : "fade-text w-44 text-gray-900 dark:text-gray-100"}`}
         >
           {itemName}
         </span>

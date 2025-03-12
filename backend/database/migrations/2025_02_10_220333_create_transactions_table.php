@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('type');
+            $table->enum('type', ['debit', 'credit']);
             $table->float('amount');
-            $table->string('source');
-            $table->string('destination');
+            $table->morphs('transactionable');
+            $table->enum('status', ['pending', 'failed', 'completed']);
             $table->date('date');
             $table->timestamps();
         });

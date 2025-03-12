@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "./useReduxEvent";
-import { toggleThemeMode } from "@src/features/redux/preferenceSlice";
+import { toggleThemeMode } from "@src/store/slices/preferenceSlice";
 
 export type Theme = "dark" | "light" | "auto";
 

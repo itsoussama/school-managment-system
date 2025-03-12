@@ -8,7 +8,7 @@ import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
 import learningLightImg from "@assets/learning_light.png";
 import learningDarkImg from "@assets/learning_dark.png";
-import { login } from "@redux/userAsyncActions";
+import { login } from "@src/store/actions/userAsyncActions";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { FaLock } from "react-icons/fa";
 import { useFormValidation } from "@src/hooks/useFormValidation";
@@ -20,6 +20,10 @@ interface Data {
   password: string;
 }
 
+interface FormData extends Data {
+  form: string;
+}
+
 // interface DataError {
 //   email?: string;
 //   password?: string;
@@ -28,7 +32,8 @@ interface Data {
 
 export default function Login() {
   const { formData, errors, setFormData, validateForm, setError } =
-    useFormValidation({
+    useFormValidation<FormData>({
+      form: "",
       email: "",
       password: "",
     });
@@ -46,7 +51,11 @@ export default function Login() {
     try {
       const validationResult = validateForm();
       if (validationResult.isValid) {
-        const response = await dispatch(login(formData as unknown as Data));
+        const form: Data = {
+          email: formData.email,
+          password: formData.password,
+        };
+        const response = await dispatch(login(form as Data));
 
         if (response.meta.requestStatus === "fulfilled") {
           return route("/");
@@ -86,7 +95,7 @@ export default function Login() {
           />
         </div>
 
-        <div className="flex flex-row-reverse gap-x-6 lg:h-full">
+        <div className="flex flex-row-reverse gap-x-20 lg:h-full">
           <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center">
             <img
               className="max-w-9/12"
@@ -95,7 +104,7 @@ export default function Login() {
             />
           </div>
           <div className="mx-6 my-12 flex h-full w-full flex-1 justify-center lg:mx-0 lg:items-center lg:justify-start">
-            <div className="h-fit items-center justify-center space-y-4 rounded-m bg-white p-12 py-10 shadow-sharp-dark lg:w-2/3 lg:min-w-max lg:space-y-6 lg:px-14 lg:py-12 dark:bg-gray-800 dark:shadow-sharp-light">
+            <div className="h-fit flex-1 items-center justify-center space-y-4 rounded-m bg-white p-12 py-10 shadow-sharp-dark lg:max-w-md lg:space-y-6 lg:px-14 lg:py-12 dark:bg-gray-800 dark:shadow-sharp-light">
               <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 lg:text-2xl dark:text-white">
                 {t("form.auth.login")}
               </h1>

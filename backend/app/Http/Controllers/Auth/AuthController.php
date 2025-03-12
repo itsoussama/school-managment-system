@@ -17,7 +17,7 @@ class AuthController extends Controller
     {
         $expiryMinutes = (int)config('token.time_expired');
         $credentials = $request->only('email', 'password');
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('email', $credentials['email'])->with('role')->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json(['error' => 'Unauthorized'], 401);
@@ -48,8 +48,8 @@ class AuthController extends Controller
         $user = $request->user();
         $user->tokens()->whereNotIn('id', function ($query) use ($user) {
             $query->select('id')
-                    ->from('personal_access_tokens')
-                    ->where('abilities', 'like', '%issue-access-token%');
+                ->from('personal_access_tokens')
+                ->where('abilities', 'like', '%issue-access-token%');
         })->delete();
 
         $accessToken = $request->user()->createToken('access_token', [TokenAbility::ACCESS_API->value], Carbon::now()->addMinutes(config('sanctum.ac_expiration')));

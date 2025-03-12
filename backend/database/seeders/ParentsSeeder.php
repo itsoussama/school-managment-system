@@ -4,7 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\Parents;
 use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Seeder;
 
 class ParentsSeeder extends Seeder
@@ -14,6 +16,9 @@ class ParentsSeeder extends Seeder
      */
     public function run(): void
     {
-        Parents::factory(10)->create();
+        $parentCount = User::whereHas('role', function (Builder $query) {
+            $query->where('name', 'Parent');
+        })->count();
+        Parents::factory($parentCount)->create();
     }
 }

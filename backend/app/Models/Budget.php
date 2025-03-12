@@ -16,8 +16,8 @@ class Budget extends Model
         return $this->belongsTo(BudgetCategory::class, 'category_id');
     }
 
-    public function transactionDetails()
+    public function transactions()
     {
-        return $this->hasMany(TransactionDetail::class, 'budget_id');
+        return $this->morphMany(Transaction::class, 'transactionable');
     }
 }

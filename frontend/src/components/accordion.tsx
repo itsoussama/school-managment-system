@@ -1,4 +1,4 @@
-import { AccordionContext, IsCollapsed } from "@context/AccordionContext";
+import { AccordionContext, IsCollapsed } from "@src/context/AccordionContext";
 import {
   ChangeEvent,
   ReactNode,

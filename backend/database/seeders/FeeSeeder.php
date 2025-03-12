@@ -5,17 +5,17 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Fee;
 use App\Models\Student;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 class FeeSeeder extends Seeder
 {
     public function run()
     {
-        $students = Student::all();
+        $studentCount = User::whereHas('role', function (Builder $query) {
+            $query->where('name', 'Student');
+        })->count();
 
-        foreach ($students as $student) {
-            Fee::factory()->create([
-                'student_id' => $student->id,
-            ]);
-        }
+        Fee::factory($studentCount)->create();
     }
 }

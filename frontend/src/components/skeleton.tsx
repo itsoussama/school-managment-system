@@ -1,4 +1,3 @@
-import { TailwindSizes } from "@src/utils/flowbite";
 import { Spinner, Table } from "flowbite-react";
 import { HTMLAttributes, ReactNode, useEffect, useRef, useState } from "react";
 import { FaImage } from "react-icons/fa6";
@@ -127,7 +126,7 @@ function SkeletonMetric({
   return (
     <div
       role="status"
-      className={`w-full h-${sizeToPoint[size]} flex animate-pulse flex-col gap-y-2`}
+      className={`w-full min-w-32 h-${sizeToPoint[size]} flex animate-pulse flex-col gap-y-2`}
     >
       <div className="h-1/3 w-3/4 rounded-s bg-gray-200 dark:bg-gray-600"></div>
       <div className="h-2/3 w-full rounded-s bg-gray-200 dark:bg-gray-600"></div>

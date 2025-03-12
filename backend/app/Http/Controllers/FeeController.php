@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fee;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class FeeController extends Controller
@@ -11,19 +12,21 @@ class FeeController extends Controller
     {
         $schoolId = auth()->user()->school_id;
         $perPage = request()->query('per_page', 5);
-        $fees = Fee::with('student.user')->whereHas('student', function ($query) use ($schoolId) {
-            $query->whereHas('user', function ($query) use ($schoolId) {
-                $query->where('school_id', $schoolId);
-            });
-        });
+        $sortColumn = request()->input('sort_column', 'status');
+        $sortDirection = request()->input('sort_direction', 'desc');
+        $fees = Fee::with('user')->whereHas('user', function ($query) use ($schoolId) {
+            $query->where('school_id', $schoolId);
+        })->orderBy($sortColumn, $sortDirection);
         return response()->json($fees->paginate($perPage));
     }
 
 
     public function show($id)
     {
-        $fee = Fee::findOrFail($id);
-        return response()->json($fee);
+        $fee = Fee::with(['user' => ['grades', 'guardian'], 'transactions'])
+            ->where("student_id", $id);
+        $outstandingBalance = $fee->whereIn("status", ['pending', 'overdue'])->sum('amount');
+        return response()->json(['fee' => $fee->first(), 'outstanding_balance' => $outstandingBalance]);
     }
 
     public function store(Request $request)

@@ -13,17 +13,12 @@ return new class extends Migration
     {
         Schema::create('payrolls', function (Blueprint $table) {
             $table->id();
-            $table->string('pay_period');
-            $table->string('salary_type');
-            $table->float('base_salary');
+            $table->string('payroll_frequency');
             $table->float('hourly_rate')->nullable();
-            $table->float('hours_worked')->nullable();
-            $table->float('total_allowances');
-            $table->float('total_deductions');
             $table->float('net_salary');
             $table->string('payment_status');
             $table->date('pay_date');
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('user_id')->unique();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

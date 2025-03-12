@@ -81,6 +81,10 @@ class User extends Authenticatable
         }
         return false;
     }
+    public function administrator()
+    {
+        return $this->hasOne(Administrator::class); // One-to-one relationship with Student
+    }
     public function student()
     {
         return $this->hasOne(Student::class); // One-to-one relationship with Student
@@ -111,5 +115,15 @@ class User extends Authenticatable
     public function events(): belongsToMany
     {
         return $this->belongsToMany(Event::class);
+    }
+
+    public function payroll()
+    {
+        return $this->hasOne(Payroll::class);
+    }
+
+    public function fee()
+    {
+        return $this->hasOne(Fee::class);
     }
 }

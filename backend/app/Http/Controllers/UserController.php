@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Exports\UsersExport;
 use App\Imports\UsersImport;
+use App\Models\Payroll;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -154,7 +156,7 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
-            $users = User::with('school', 'role', 'subjects', 'grades', 'guardian')
+            $users = User::with('school', 'role', 'subjects', 'grades', 'guardian', 'administrator')
                 ->where('school_id', $school_id)
                 ->whereHas(
                     'role',
@@ -332,10 +334,14 @@ class UserController extends Controller
                     'name' => 'required|string|max:255',
                     'email' => 'required|string|email|max:255|unique:users',
                     'phone' => 'required|string|max:255',
+                    'address' => 'required|string|max:255',
                     'password' => 'required|string|min:8|confirmed',
                     'school_id' => 'required|exists:schools,id',
                     'roles' => 'required|array',
                     'roles.*' => 'exists:roles,id',
+                    "payroll_frequency" => 'required|in:daily,weekly,bi-weekly,monthly',
+                    "hourly_rate" => 'nullable|decimal:0,2',
+                    "net_salary" => 'nullable|decimal:0,2'
                 ]);
                 if ($validation) {
                     $path = '';
@@ -350,6 +356,18 @@ class UserController extends Controller
                         'phone' => $request->phone,
                         'password' => bcrypt($request->password),
                     ]);
+
+                    $user->payroll()->create([
+                        'payroll_frequency' => $request->payroll_frequency,
+                        'net_salary' => $request->net_salary,
+                        'payment_status' => 'pending',
+                        'pay_date' => $this->getUpcomingPayDate($request->payroll_frequency)
+                    ]);
+
+                    $user->administrator()->create([
+                        "address" => $request->address
+                    ]);
+
                     $user->imagePath = $path;
                     $user->school()->associate($request->school_id);
                     $user->role()->sync($request->roles);
@@ -366,6 +384,26 @@ class UserController extends Controller
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
+    }
+
+    public function getUpcomingPayDate($payrollFrequency)
+    {
+        $payDate = null;
+        switch ($payrollFrequency) {
+            case 'daily':
+                $payDate = Carbon::now()->add('day', 1);
+                break;
+            case 'weekly':
+                $payDate = Carbon::now()->add('day', 7);
+                break;
+            case 'bi-weekly':
+                $payDate = Carbon::now()->add('day', 14);
+                break;
+            case 'monthly':
+                $payDate = Carbon::now()->add('day', 30);
+                break;
+        }
+        return $payDate;
     }
     // Show the form for creating a new resource (not typically used in APIs)
     public function store(Request $request)
@@ -446,14 +484,20 @@ class UserController extends Controller
     public function show(User $user, Request $request)
     {
         if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
-            $user->load('school', 'role', 'subjects', 'grades');
+            $user->load('school', 'role');
             $role = request('role');
             switch ($role) {
+                case 'administrator':
+                    $user->load('payroll', 'administrator');
+                    break;
+                case 'teacher':
+                    $user->load('subjects', 'grades');
+                    break;
                 case 'parent':
                     $user->load('childrens');
                     break;
                 case 'student':
-                    $user->load('guardian');
+                    $user->load('guardian', 'subjects', 'grades');
                     break;
                 default:
                     break;
@@ -482,6 +526,7 @@ class UserController extends Controller
                     'name' => 'nullable|string|max:255',
                     'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
                     'phone' => 'string|max:255',
+                    'address' => 'required|string|max:255',
                     'password' => 'nullable|string|min:8|confirmed',
                     'school_id' => 'nullable|exists:schools,id',
                     'roles' => 'nullable|array',
@@ -490,6 +535,9 @@ class UserController extends Controller
                     'subjects.*' => 'exists:subjects,id',
                     'grades' => 'nullable|array',
                     'grades.*' => 'exists:grades,id',
+                    "payroll_frequency" => 'required|in:daily,weekly,bi-weekly,monthly',
+                    "hourly_rate" => 'nullable|decimal:0,2',
+                    "net_salary" => 'nullable|decimal:0,2',
                     'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 ]);
 
@@ -518,6 +566,18 @@ class UserController extends Controller
                     }
 
                     $user->save();
+
+                    if ($user->hasRole('Administrator Staff')) {
+                        $user->administrator()->update([
+                            'address' => $request->address
+                        ]);
+                        $user->payroll()->update([
+                            'payroll_frequency' => $request->payroll_frequency,
+                            'net_salary' => $request->net_salary,
+                            'payment_status' => 'pending',
+                            'pay_date' => $this->getUpcomingPayDate($request->payroll_frequency)
+                        ]);
+                    }
 
                     // Sync roles if provided
                     if ($request->has('roles')) {

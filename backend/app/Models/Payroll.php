@@ -10,17 +10,22 @@ class Payroll extends Model
     use HasFactory;
     protected $table = 'payrolls';
     protected $fillable = [
-        'id', 'pay_period', 'salary_type', 'base_salary', 'hourly_rate', 'hours_worked',
-        'total_allowances', 'total_deductions', 'net_salary', 'payment_status', 'pay_date', 'user_id'
+        'id',
+        'payroll_frequency',
+        'hourly_rate',
+        'net_salary',
+        'payment_status',
+        'pay_date',
+        'user_id'
     ];
 
-    public function transactionDetails()
+    public function transactions()
     {
-        return $this->hasMany(TransactionDetail::class, 'payroll_id');
+        return $this->morphMany(Transaction::class, 'transactionable');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 }

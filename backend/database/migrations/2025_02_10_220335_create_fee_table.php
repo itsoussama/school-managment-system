@@ -14,12 +14,13 @@ return new class extends Migration
         Schema::create('fee', function (Blueprint $table) {
             $table->id();
             $table->string('type');
+            $table->string('frequency'); //yearly, monthly, 3 month, 6 month
             $table->float('amount');
             $table->string('status');
             $table->date('due_date');
             $table->unsignedBigInteger('student_id');
             $table->timestamps();
-            $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
+            $table->foreign('student_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
