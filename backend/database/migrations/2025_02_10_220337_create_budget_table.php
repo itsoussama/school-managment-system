@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('budget', function (Blueprint $table) {
             $table->id();
+            $table->string('ref')->unique(); // Foreign key reference to users table
             $table->float('allocated_amount');
             $table->float('spent_amount');
             $table->unsignedBigInteger('category_id');

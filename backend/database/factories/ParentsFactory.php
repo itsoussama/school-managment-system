@@ -5,6 +5,8 @@ namespace Database\Factories;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Parents>
@@ -19,6 +21,7 @@ class ParentsFactory extends Factory
     public function definition(): array
     {
         return [
+            'ref' => strtoupper(Str::random(10)),
             'user_id' => $this->getUniqueUserId(),
         ];
     }

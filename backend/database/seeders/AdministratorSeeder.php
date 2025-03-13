@@ -18,7 +18,6 @@ class AdministratorSeeder extends Seeder
         $administratorCount = User::whereHas('role', function (Builder $query) {
             $query->whereIn('name', ['Administrator', 'Administrator Staff']);
         })->count();
-        info($administratorCount);
         Administrator::factory($administratorCount)->create();
     }
 }

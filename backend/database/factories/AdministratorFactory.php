@@ -38,7 +38,6 @@ class AdministratorFactory extends Factory
             ->inRandomOrder()
             ->value('id');
         array_push($collectionIds, $userId);
-        info($collectionIds);
         return $userId;
     }
 }

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('payrolls', function (Blueprint $table) {
             $table->id();
+            $table->string('ref')->unique(); // Foreign key reference to users table
             $table->string('payroll_frequency');
             $table->float('hourly_rate')->nullable();
             $table->float('net_salary');

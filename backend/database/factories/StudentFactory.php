@@ -26,6 +26,7 @@ class StudentFactory extends Factory
     {
         return [
             'user_id' => $this->getUniqueUserId(),
+            'ref' => strtoupper(Str::random(10)),
             'grade_id' => Grade::inRandomOrder()->first()->id, // Creates a user and associates the ID
             'parent_id' => Parents::inRandomOrder()->first()->id, // Creates a user and associates the ID
             'group_id' => Group::inRandomOrder()->first()->id,

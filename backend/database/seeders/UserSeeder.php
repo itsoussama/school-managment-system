@@ -43,7 +43,6 @@ class UserSeeder extends Seeder
             ->count(2)
             ->create()
             ->each(function ($user) {
-                info($user->roles()->where('name', 'Teacher')->exists());
 
                 // Attach the role 'Student' or 'Parent' after creation
                 if ($user->roles()->where('name', 'Student')->exists()) {
@@ -59,8 +58,6 @@ class UserSeeder extends Seeder
                 if ($user->roles()->where('name', 'Teacher')->exists()) {
                     $subjects = Subject::inRandomOrder()->take(3)->pluck('id');
                     $user->subjects()->attach($subjects);
-
-                    info("Assigned subjects to teacher: {$user->id}");
                 }
             });
         User::factory(['name' => 'admin', 'email' => 'admin@example.com', 'school_id' => 1])->has(Role::factory(['name' => 'Administrator']))->createOne();

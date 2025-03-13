@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('resources', function (Blueprint $table) {
             $table->id();
+            $table->string('ref')->unique(); // Foreign key reference to users table
             $table->string('label');
             $table->integer('qty');
             $table->unsignedBigInteger('school_id');

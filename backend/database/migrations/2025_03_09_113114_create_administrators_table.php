@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('administrators', function (Blueprint $table) {
             $table->id();
+            $table->string('ref')->unique(); // Foreign key reference to users table
             $table->unsignedBigInteger('user_id')->unique(); // Foreign key reference to users table
             $table->date('birthdate')->nullable();
             $table->string('address')->nullable();

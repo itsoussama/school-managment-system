@@ -18,11 +18,11 @@ class StudentController extends Controller
             $school_id = $request->input('school_id');
 
             $users = Student::with('users', 'grade', 'parents.user')
-            ->whereHas('users', function ($query) use ($school_id) {
-                $query->where('school_id', $school_id);
-            })
-            ->orderBy($sortColumn, $sortDirection)
-            ->paginate($perPage);
+                ->whereHas('users', function ($query) use ($school_id) {
+                    $query->where('school_id', $school_id);
+                })
+                ->orderBy($sortColumn, $sortDirection)
+                ->paginate($perPage);
             return response()->json($users, Response::HTTP_OK);
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
@@ -61,7 +61,7 @@ class StudentController extends Controller
 
     public function update(Request $request, $id)
     {
-        try{
+        try {
             $student = Student::find($id);
 
             if (!$student) {

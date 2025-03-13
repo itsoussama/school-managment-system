@@ -46,4 +46,24 @@ class School extends Model
     {
         return $this->hasMany(Stage::class);
     }
+    public function budgets(): HasMany
+    {
+        return $this->hasMany(Budget::class);
+    }
+
+    public static function generateURN($name)
+    {
+        $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $name), 0, 2)); // Extract first 2 letters
+        $hash = strtoupper(substr(md5($name . microtime()), 0, 4)); // Generate short unique hash
+
+        $ref = "{$prefix}-{$hash}";
+
+        // Ensure uniqueness
+        while (School::where('ref', $ref)->exists()) {
+            $hash = strtoupper(substr(md5($name . microtime()), 0, 4)); // Regenerate if exists
+            $ref = "{$prefix}-{$hash}";
+        }
+
+        return $ref;
+    }
 }

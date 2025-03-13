@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('fee', function (Blueprint $table) {
             $table->id();
+            $table->string('ref')->unique(); // Foreign key reference to users table
             $table->string('type');
             $table->string('frequency'); //yearly, monthly, 3 month, 6 month
             $table->float('amount');

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasReferenceID;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
-    use HasFactory;
+    use HasFactory, HasReferenceID;
     // Fillable attributes
     protected $fillable = ['user_id', 'student_number', 'birthdate', 'address'];
 
@@ -33,5 +34,10 @@ class Student extends Model
     public function calendars()
     {
         return $this->hasMany(Calendar::class);
+    }
+
+    public function getSchoolID()
+    {
+        return $this->user; // define custom resolveSchool function to use in the HasReferenceID trait
     }
 }
