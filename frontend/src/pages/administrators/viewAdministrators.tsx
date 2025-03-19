@@ -1,7 +1,6 @@
-import { Button, Input, RSelect } from "@src/components/input";
+import { Input, RSelect } from "@src/components/input";
 
 import {
-  Badge,
   Breadcrumb,
   Checkbox,
   Modal,
@@ -18,11 +17,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import {
-  FaExclamationTriangle,
   FaHome,
-  FaLock,
   FaPen,
   FaSearch,
   FaSortDown,
@@ -31,46 +28,24 @@ import {
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  deleteUser,
-  getUser,
-  getAdministrators,
-  setAdministrator,
-  unblockUser,
-  blockUser,
-} from "@src/pages/shared/utils/api";
-import {
-  SkeletonContent,
-  SkeletonProfile,
-  SkeletonTable,
-} from "@src/components/skeleton";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { getAdministrators } from "@src/pages/shared/utils/api";
+import { SkeletonTable } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { FaEye, FaEyeSlash, FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
-  customBadge,
-  customModal,
   customTable,
   customToggleSwitch,
   customTooltip,
 } from "@src/utils/flowbite";
-import { useFormValidation } from "@src/hooks/useFormValidation";
-import { formatCurrency } from "../shared/utils/formatters";
-import { getColor, payementStatus } from "../shared/utils/colorIndicators";
-import AdministratorsForm, {
-  Data,
-  FormData,
-} from "./components/administratorsForm";
 import FormAdministratorModal from "./components/formAdministratorModal";
+import ViewAdministratorModal from "./components/viewAdministratorModal";
+import DeleteAdministratorModal from "./components/deleteAdministratorModal";
+import BlockAdministratorModal from "./components/blockAdministratorModal";
 
 interface Check {
   id?: number;
@@ -108,44 +83,8 @@ interface Administrator {
   ];
 }
 
-// export interface Data {
-//   _method?: string;
-//   id: number;
-//   name: string;
-//   email: string;
-//   phone: string;
-//   address: string;
-//   payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
-//   net_salary?: number;
-//   hourly_rate?: number;
-//   image?: File;
-//   password?: string;
-//   password_confirmation?: string;
-// }
-
-// interface FormData {
-//   id: number;
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   phone: string;
-//   address: string;
-//   payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
-//   net_salary?: number;
-//   hourly_rate?: number;
-//   password?: string;
-//   password_confirmation?: string;
-// }
-
 interface BlockSwitch {
   [key: string]: boolean;
-}
-
-interface File {
-  lastModified: number;
-  name: string;
-  size: number;
-  type: string;
 }
 
 interface Sort {
@@ -158,24 +97,7 @@ interface Filter {
   childName: string;
 }
 
-const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
-
-const ADMINISTRATOR_INITIALDATA: FormData = {
-  id: 0,
-  firstName: "",
-  lastName: "",
-  email: "",
-  address: "",
-  phone: "",
-  password: "",
-  password_confirmation: "",
-  payroll_frequency: "monthly",
-  hourly_rate: 0,
-  net_salary: 0,
-};
-
 export function ViewAdministrators() {
-  const queryClient = useQueryClient();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // await queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
@@ -193,11 +115,8 @@ export function ViewAdministrators() {
   const [numChecked, setNumChecked] = useState<number>(0);
   const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [previewImg, setPreviewImg] = useState<string>();
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [changePassword, toggleChangePassword] = useState<boolean>(false);
-  // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
+  // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
@@ -239,133 +158,6 @@ export function ViewAdministrators() {
         filter?.name,
       ),
     placeholderData: keepPreviousData,
-  });
-
-  const getAdministratorQuery = useQuery({
-    queryKey: ["getAdministrator", openModal?.id, "administrator"],
-    queryFn: () => getUser(openModal?.id as number, "administrator"),
-    enabled: !!openModal?.open,
-  });
-
-  const deleteUserQuery = useMutation({
-    mutationFn: deleteUser,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.deleted_success"),
-        state: true,
-      });
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const blockUserMutation = useMutation({
-    mutationFn: blockUser,
-    onSuccess: async (_, { user_id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
-      });
-
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: true,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const unBlockUserMutation = useMutation({
-    mutationFn: unblockUser,
-    onSuccess: async (_, { user_id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
-      });
-
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: false,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
   });
 
   // const [selectedItem, setSelectedItem] = useState()
@@ -440,35 +232,6 @@ export function ViewAdministrators() {
     setPerPage(parseInt(target.value));
   };
 
-  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsVerficationMatch(true);
-    const input = event.target as HTMLFormElement;
-
-    if (
-      (input.verfication.value as string).toLowerCase() !==
-      getAdministratorQuery.data?.name.toLowerCase()
-    ) {
-      setIsVerficationMatch(false);
-      return;
-    }
-
-    deleteUserQuery.mutate(openModal?.id as number);
-  };
-
-  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const userId: number = openModal?.id as number;
-
-    if (!blockSwitch[userId]) {
-      blockUserMutation.mutate({ user_id: userId });
-    } else {
-      unBlockUserMutation.mutate({ user_id: userId });
-    }
-
-    setOpenModal(undefined);
-  };
-
   // const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
   //   setOpenModal({ id: id, type: type, open: isOpen });
 
@@ -490,27 +253,6 @@ export function ViewAdministrators() {
   //   });
   // };
 
-  const onCloseModal = () => {
-    setOpenModal(undefined);
-
-    toggleChangePassword(false);
-    setPreviewImg(undefined);
-
-    setData({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      address: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
-      payroll_frequency: "monthly",
-      hourly_rate: 0,
-      net_salary: 0,
-    });
-  };
-
   // const formatDuration = (duration: number) => {
   //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
   //   const remainingMilliseconds = duration % (1000 * 60 * 60);
@@ -518,24 +260,6 @@ export function ViewAdministrators() {
 
   //   return { hour: convertToHour, minute: convertToMinute };
   // };
-
-  const getUserName = (fullName: string) => {
-    const nameParts = fullName?.trim().split(/\s+/);
-    const firstName = nameParts?.slice(0, -1).join(" ");
-    const lastName = nameParts?.slice(-1).join(" ");
-
-    return { firstName, lastName };
-  };
-
-  const readAndPreview = (file: FileList) => {
-    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
-      const fileReader = new FileReader();
-      fileReader.addEventListener("load", (event) => {
-        setPreviewImg(event.target?.result as string);
-      });
-      fileReader.readAsDataURL(file[0]);
-    }
-  };
 
   useEffect(() => {
     const alertState = location.state?.alert;
@@ -611,500 +335,27 @@ export function ViewAdministrators() {
         </Breadcrumb.Item>
       </Breadcrumb>
 
-      <Modal
-        show={openModal?.type === "view" ? openModal?.open : false}
-        size={"3xl"}
-        theme={customModal}
-        onClose={onCloseModal}
-      >
-        <Modal.Header>
-          {t("form.fields.id", { entity: t("entities.administrators") })}:
-          <b> {openModal?.id}</b>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="flex flex-col gap-8 sm:flex-row">
-            <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-              <SkeletonProfile
-                imgSource={
-                  getAdministratorQuery.data?.imagePath
-                    ? SERVER_STORAGE + getAdministratorQuery.data?.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.name).firstName}+${getUserName(getAdministratorQuery.data?.name).lastName}`
-                }
-                className="h-40 w-40"
-              />
-              <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                  {t("status.active_deactivate")}
-                </span>
-                <ToggleSwitch
-                  theme={customToggleSwitch}
-                  checked={blockSwitch[getAdministratorQuery.data?.id] || false}
-                  color={brandState}
-                  onChange={() =>
-                    setOpenModal({
-                      id: getAdministratorQuery.data?.id,
-                      type: "block",
-                      open: true,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.personal_information")}
-                </h1>
-                <SkeletonContent isLoaded={getAdministratorQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.first_name")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          getUserName(getAdministratorQuery.data?.name)
-                            .firstName
-                        }
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.last_name")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getAdministratorQuery.data?.name).lastName}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.email")}:
-                      </span>
-                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.email}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.phone_number")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.phone}
-                      </span>
-                    </div>
-                    <div className="col-span-full flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.address")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.administrator?.address}
-                      </span>
-                    </div>
-                  </div>
-                </SkeletonContent>
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.payroll_information")}
-                </h1>
-                <SkeletonContent isLoaded={getAdministratorQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.payment_frequency")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.payroll.payroll_frequency}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.net_salary")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {
-                          formatCurrency(
-                            getAdministratorQuery.data?.payroll.net_salary,
-                          ).value
-                        }
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.status")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        <Badge
-                          theme={customBadge}
-                          color={getColor(
-                            getAdministratorQuery.data?.payroll.payment_status,
-                            payementStatus,
-                          )}
-                        >
-                          {getAdministratorQuery.data?.payroll.payment_status}
-                        </Badge>
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.pay_date")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getAdministratorQuery.data?.payroll.pay_date}
-                      </span>
-                    </div>
-                  </div>
-                </SkeletonContent>
-              </div>
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
+      <ViewAdministratorModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
       <FormAdministratorModal
         action="Edit"
         modal={openModal as Modal}
         onClose={() => setOpenModal(undefined)}
-        close={openModal?.open as boolean}
       />
 
-      {/* <Modal
-        show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"5xl"}
-        theme={customModal}
-        onClose={onCloseModal}
-      >
-        <Modal.Header>
-          {t("form.fields.id", { entity: t("entities.administrators") })}:
-          <b>{openModal?.id}</b>
-        </Modal.Header>
-        <Modal.Body className="max-h-[70vh] overflow-auto">
-          <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-                <SkeletonProfile
-                  imgSource={
-                    previewImg
-                      ? previewImg
-                      : getAdministratorQuery.data?.imagePath
-                        ? SERVER_STORAGE + getAdministratorQuery.data?.imagePath
-                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getAdministratorQuery.data?.name).firstName}+${getUserName(getAdministratorQuery.data?.name).lastName}`
-                  }
-                  className="h-40 w-40"
-                />
-                <button className="btn-gray relative overflow-hidden">
-                  <input
-                    type="file"
-                    className="absolute left-0 top-0 cursor-pointer opacity-0"
-                    onChange={handleImageUpload}
-                  />
-                  {t("form.buttons.upload", { label: t("general.photo") })}
-                </button>
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.accepted_format")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      jpg, jpeg, png
-                    </span>
-                  </span>
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.maximum_size")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      1024 mb
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
-                <div className="w-full space-y-3">
-                  <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("information.personal_information")}
-                  </h1>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                    <Input
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      label={t("form.fields.first_name")}
-                      placeholder={t("form.placeholders.first_name")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getAdministratorQuery.isFetching && true}
-                      value={(formData.firstName as string) || ""}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      label={t("form.fields.last_name")}
-                      placeholder={t("form.placeholders.last_name")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getAdministratorQuery.isFetching && true}
-                      value={(formData.lastName as string) || ""}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="text"
-                      id="address"
-                      name="address"
-                      label={t("form.fields.address")}
-                      placeholder={t("form.placeholders.address")}
-                      value={(formData?.address as string) || ""}
-                      onChange={onChange}
-                      custom-style={{ containerStyle: "col-span-full" }}
-                    />
-
-                    <Input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      label={t("form.fields.phone_number")}
-                      placeholder="06 00 00 00"
-                      pattern="(06|05)[0-9]{6}"
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getAdministratorQuery.isFetching && true}
-                      value={(formData.phone as string) || ""}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="email"
-                      id="email"
-                      name="email"
-                      label={t("form.fields.email")}
-                      placeholder={t("form.placeholders.email")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getAdministratorQuery.isFetching && true}
-                      value={(formData.email as string) || ""}
-                      onChange={onChange}
-                      onBlur={() => validateForm()}
-                      error={errors?.email}
-                    />
-
-                    <RSelect
-                      id="payroll_frequency"
-                      name="payroll_frequency"
-                      label={t("form.fields.payroll_frequency")}
-                      defaultValue={"monthly"}
-                      value={(formData.payroll_frequency as string) || ""}
-                      onChange={onChange}
-                    >
-                      <option value={"daily"}>{t("form.fields.daily")}</option>
-                      <option value={"weekly"}>
-                        {t("form.fields.weekly")}
-                      </option>
-                      <option value={"bi_weekly"}>
-                        {t("form.fields.bi_weekly")}
-                      </option>
-                      <option value={"monthly"}>
-                        {t("form.fields.monthly")}
-                      </option>
-                    </RSelect>
-
-                    {formData.payroll_frequency !== "monthly" ? (
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        step={0.01}
-                        placeholder="30.55"
-                        id="hourly_rate"
-                        name="hourly_rate"
-                        addon="Hr"
-                        label={t("form.fields.hourly_rate")}
-                        value={(formData.hourly_rate as number) || ""}
-                        onChange={onChange}
-                      />
-                    ) : (
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        step={0.01}
-                        placeholder="2500"
-                        id="net_salary"
-                        name="net_salary"
-                        label={t("form.fields.salary")}
-                        addon={"Dh"}
-                        value={(formData.net_salary as number) || ""}
-                        onChange={onChange}
-                      />
-                    )}
-
-                    <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
-
-                    {changePassword ? (
-                      <>
-                        <Input
-                          type="password"
-                          id="password"
-                          name="password"
-                          label={t("form.fields.password")}
-                          placeholder="●●●●●●●"
-                          value={(formData.password as string) || ""}
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          leftIcon={FaLock}
-                          rightIcon={(isPasswordVisible) =>
-                            isPasswordVisible ? FaEyeSlash : FaEye
-                          }
-                          onChange={onChange}
-                          onBlur={() => validateForm()}
-                          error={errors?.password}
-                        />
-
-                        <Input
-                          type="password"
-                          id="password_confirmation"
-                          name="password_confirmation"
-                          label={t("form.fields.confirm_password")}
-                          placeholder="●●●●●●●"
-                          value={
-                            (formData.password_confirmation as string) || ""
-                          }
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          leftIcon={FaLock}
-                          rightIcon={(isPasswordVisible) =>
-                            isPasswordVisible ? FaEyeSlash : FaEye
-                          }
-                          onChange={onChange}
-                          onBlur={() => validateForm()}
-                          error={errors?.password_confirmation}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => handleChangePassword(true)}
-                          className="btn-default !w-auto"
-                        >
-                          {t("form.buttons.change", {
-                            label:
-                              t("determiners.definite.masculine") +
-                              " " +
-                              t("form.fields.password"),
-                          })}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            type="submit"
-            onClick={() => formRef.current?.requestSubmit()}
-            className="btn-default !w-auto"
-          >
-            {t("general.accept")}
-          </Button>
-          <button className="btn-danger !w-auto" onClick={onCloseModal}>
-            {t("general.decline")}
-          </button>
-        </Modal.Footer>
-      </Modal> */}
-
-      <Modal
-        show={openModal?.type === "delete" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={customModal}
-      >
-        <form onSubmit={onSubmitDelete}>
-          <Modal.Header>
-            {t("actions.delete_entity", {
-              entity: t("entities.administrators"),
-            })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.delete.title")}
-                <b>{getAdministratorQuery.data?.name}</b>
-              </p>
-              <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("modals.delete.message")}</p>
-              </div>
-              <p className="text-gray-900 dark:text-white">
-                <Trans
-                  i18nKey="modals.delete.label"
-                  values={{ item: getAdministratorQuery.data?.name }}
-                  components={{ bold: <strong /> }}
-                />
-              </p>
-              <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={!isVerficationMatch ? t("modals.delete.error") : null}
-                required
-              />
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
-              {t("modals.delete.delete_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("modals.delete.cancel_button")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <DeleteAdministratorModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
       {/* block / unblock user */}
-      <Modal
-        show={openModal?.type === "block" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={customModal}
-      >
-        <form onSubmit={onSubmitBlock}>
-          <Modal.Header>
-            {t("actions.block_entity", { entity: t("general.user") })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.block.title")}{" "}
-                <b>{getAdministratorQuery.data?.name}</b>
-              </p>
-              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("modals.block.message")}</p>
-              </div> */}
-              {/* <p className="text-gray-900 dark:text-white">
-                {t("modals.block.label")}{" "}
-                <b>{getAdministratorQuery.data?.name}</b>
-              </p> */}
-              {/* <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={
-                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
-                }
-                required
-              /> */}
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
-              {getAdministratorQuery.data?.blocked == 0
-                ? t("modals.block.block_button")
-                : t("modals.block.unblock_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("modals.block.cancel_button")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <BlockAdministratorModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
@@ -1256,7 +507,7 @@ export function ViewAdministrators() {
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {administrator.administrator.ref}
+                          {administrator.administrator?.ref}
                         </Table.Cell>
                         <Table.Cell>{administrator.name}</Table.Cell>
 

@@ -13,6 +13,7 @@ import { FaEye, FaEyeSlash, FaImage, FaLock } from "react-icons/fa6";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { formatUserName } from "@src/pages/shared/utils/formatters";
+import { useAppSelector } from "@src/hooks/useReduxEvent";
 
 export interface FormData {
   id?: number;
@@ -42,6 +43,8 @@ export interface Data {
   image?: File;
   password?: string;
   password_confirmation?: string;
+  roles?: number[];
+  school_id?: string;
 }
 
 interface Administrator {
@@ -72,8 +75,9 @@ interface Administrator {
 interface AdministratorsFormProps {
   action: "Create" | "Edit";
   initialData: FormData;
-  oldData: Administrator;
+  oldData?: Administrator;
   formSubmitRef?: RefObject<HTMLFormElement>;
+  additionalStyle?: string;
   onFormData: (data: Data) => void;
 }
 
@@ -85,6 +89,7 @@ export default function AdministratorsForm({
   oldData,
   formSubmitRef,
   onFormData,
+  additionalStyle = "grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))]",
 }: AdministratorsFormProps) {
   const { t } = useTranslation();
   const { formData, errors, setFormData, setData, validateForm } =
@@ -93,6 +98,7 @@ export default function AdministratorsForm({
   const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [changePassword, toggleChangePassword] = useState<boolean>(false);
+  const user = useAppSelector((state) => state.userSlice.user);
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -112,6 +118,12 @@ export default function AdministratorsForm({
         if (action === "Edit") {
           form["_method"] = "PUT";
           form["id"] = formData?.id as number;
+        } else {
+          form["school_id"] = user.school_id;
+          form["roles"] = [1];
+          form["password"] = formData?.password as string;
+          form["password_confirmation"] =
+            formData?.password_confirmation as string;
         }
 
         if (img) {
@@ -178,7 +190,11 @@ export default function AdministratorsForm({
         net_salary: oldData.payroll.net_salary,
       });
 
-      setPreviewImg(oldData.imagePath);
+      const imagePath = oldData?.imagePath
+        ? SERVER_STORAGE + oldData?.imagePath
+        : `https://ui-avatars.com/api/?background=random&name=${formatUserName(oldData.name).firstName}+${formatUserName(oldData.name).lastName}`;
+
+      setPreviewImg(imagePath);
     }
   }, [oldData, setData]);
 
@@ -199,18 +215,8 @@ export default function AdministratorsForm({
             </h1>
           </div>
           <div className="flex flex-col items-center gap-4 rounded-s bg-light-primary px-8 py-5 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
-            {/* //! fix: bad condition in image preview */}
             {previewImg ? (
-              <SkeletonProfile
-                imgSource={
-                  previewImg
-                    ? previewImg
-                    : oldData?.imagePath
-                      ? SERVER_STORAGE + oldData?.imagePath
-                      : `https://ui-avatars.com/api/?background=random&name=${formatUserName(oldData.name).firstName}+${formatUserName(oldData.name).lastName}`
-                }
-                className="h-40 w-40"
-              />
+              <SkeletonProfile imgSource={previewImg} className="h-44 w-44" />
             ) : (
               <div
                 className={`flex h-44 w-44 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700`}
@@ -254,7 +260,10 @@ export default function AdministratorsForm({
           <form
             onSubmit={onSubmit}
             ref={formSubmitRef}
-            className="relative grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light"
+            className={
+              "relative grid gap-x-11 gap-y-8 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light " +
+              additionalStyle
+            }
           >
             <Input
               type="text"

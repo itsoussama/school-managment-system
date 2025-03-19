@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Helpers\ReferenceIDHelper;
 use App\Traits\HasReferenceID;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
-    use HasFactory, HasReferenceID;
+    use HasFactory;
     // Fillable attributes
     protected $fillable = ['user_id', 'student_number', 'birthdate', 'address'];
 
@@ -36,8 +37,12 @@ class Student extends Model
         return $this->hasMany(Calendar::class);
     }
 
-    public function getSchoolID()
+    protected static function boot()
     {
-        return $this->user; // define custom resolveSchool function to use in the HasReferenceID trait
+        parent::boot();
+
+        static::creating(function ($model) {
+            ReferenceIDHelper::setReferenceID($model, $model->user);
+        });
     }
 }

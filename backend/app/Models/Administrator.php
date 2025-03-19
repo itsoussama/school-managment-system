@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Helpers\ReferenceIDHelper;
 use App\Traits\HasReferenceID;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Administrator extends Model
 {
-    use HasFactory, HasReferenceID;
+    use HasFactory;
     protected $fillable = ['ref', 'address'];
 
     public function user()
@@ -16,8 +17,12 @@ class Administrator extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function getSchoolID()
+    protected static function boot()
     {
-        return $this->user; // define custom resolveSchool function to use in the HasReferenceID trait
+        parent::boot();
+
+        static::creating(function ($model) {
+            ReferenceIDHelper::setReferenceID($model, $model->user);
+        });
     }
 }

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Exports\UsersExport;
+use App\Helpers\ModalNameHelper;
+use App\Helpers\ReferenceIDHelper;
 use App\Imports\UsersImport;
 use App\Models\Payroll;
+use App\Models\School;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\User;
@@ -357,6 +360,13 @@ class UserController extends Controller
                         'password' => bcrypt($request->password),
                     ]);
 
+
+                    $user->school()->associate($request->school_id);
+                    $user->role()->sync($request->roles);
+                    $user->imagePath = $path;
+
+                    $user->save();
+
                     $user->payroll()->create([
                         'payroll_frequency' => $request->payroll_frequency,
                         'net_salary' => $request->net_salary,
@@ -364,14 +374,10 @@ class UserController extends Controller
                         'pay_date' => $this->getUpcomingPayDate($request->payroll_frequency)
                     ]);
 
+
                     $user->administrator()->create([
                         "address" => $request->address
                     ]);
-
-                    $user->imagePath = $path;
-                    $user->school()->associate($request->school_id);
-                    $user->role()->sync($request->roles);
-                    $user->save();
                 } else {
                     return $request;
                 }

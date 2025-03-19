@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\ReferenceIDHelper;
 use App\Traits\HasReferenceID;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class resource extends Model
 {
-    use HasFactory, HasReferenceID;
+    use HasFactory;
 
     protected $fillable = ['label', 'qty', 'school_id', 'category_id'];
 
@@ -25,5 +26,14 @@ class resource extends Model
     public function maintenanceRequests(): HasMany
     {
         return $this->hasMany(MaintenanceRequest::class);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            ReferenceIDHelper::setReferenceID($model);
+        });
     }
 }

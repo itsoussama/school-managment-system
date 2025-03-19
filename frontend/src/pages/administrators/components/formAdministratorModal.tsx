@@ -19,7 +19,6 @@ interface FormAdministratorModalProps {
   modal: Modal;
   action: "Create" | "Edit";
   onClose: (isClose?: boolean) => void;
-  close?: boolean;
 }
 
 const ADMINISTRATOR_INITIALDATA: FormData = {
@@ -40,7 +39,6 @@ export default function FormAdministratorModal({
   modal,
   action,
   onClose,
-  close,
 }: FormAdministratorModalProps) {
   const queryClient = useQueryClient();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -55,7 +53,7 @@ export default function FormAdministratorModal({
 
   const administratorMutation = useMutation({
     mutationFn: setAdministrator,
-    onSuccess: async ({ data }) => {
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: ["getAdministrator"],
       });

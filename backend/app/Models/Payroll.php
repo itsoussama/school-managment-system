@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Helpers\ReferenceIDHelper;
 use App\Traits\HasReferenceID;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Payroll extends Model
 {
-    use HasFactory, HasReferenceID;
+    use HasFactory;
     protected $table = 'payrolls';
     protected $fillable = [
         'id',
@@ -30,8 +31,11 @@ class Payroll extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function getSchoolID()
+    protected static function boot()
     {
-        return $this->user; // define custom resolveSchool function to use in the HasReferenceID trait
+        parent::boot();
+        static::creating(function ($model) {
+            ReferenceIDHelper::setReferenceID($model, $model->user);
+        });
     }
 }
