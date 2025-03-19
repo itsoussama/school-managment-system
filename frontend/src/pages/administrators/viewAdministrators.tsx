@@ -66,6 +66,11 @@ import {
 import { useFormValidation } from "@src/hooks/useFormValidation";
 import { formatCurrency } from "../shared/utils/formatters";
 import { getColor, payementStatus } from "../shared/utils/colorIndicators";
+import AdministratorsForm, {
+  Data,
+  FormData,
+} from "./components/administratorsForm";
+import FormAdministratorModal from "./components/formAdministratorModal";
 
 interface Check {
   id?: number;
@@ -93,6 +98,7 @@ interface Administrator {
   };
   administrator: {
     address: string;
+    ref: string;
   };
   role: [
     {
@@ -102,34 +108,34 @@ interface Administrator {
   ];
 }
 
-export interface Data {
-  _method?: string;
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
-  net_salary?: number;
-  hourly_rate?: number;
-  image?: File;
-  password?: string;
-  password_confirmation?: string;
-}
+// export interface Data {
+//   _method?: string;
+//   id: number;
+//   name: string;
+//   email: string;
+//   phone: string;
+//   address: string;
+//   payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
+//   net_salary?: number;
+//   hourly_rate?: number;
+//   image?: File;
+//   password?: string;
+//   password_confirmation?: string;
+// }
 
-interface FormData {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
-  net_salary?: number;
-  hourly_rate?: number;
-  password?: string;
-  password_confirmation?: string;
-}
+// interface FormData {
+//   id: number;
+//   firstName: string;
+//   lastName: string;
+//   email: string;
+//   phone: string;
+//   address: string;
+//   payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
+//   net_salary?: number;
+//   hourly_rate?: number;
+//   password?: string;
+//   password_confirmation?: string;
+// }
 
 interface BlockSwitch {
   [key: string]: boolean;
@@ -154,22 +160,22 @@ interface Filter {
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
+const ADMINISTRATOR_INITIALDATA: FormData = {
+  id: 0,
+  firstName: "",
+  lastName: "",
+  email: "",
+  address: "",
+  phone: "",
+  password: "",
+  password_confirmation: "",
+  payroll_frequency: "monthly",
+  hourly_rate: 0,
+  net_salary: 0,
+};
+
 export function ViewAdministrators() {
   const queryClient = useQueryClient();
-  const { formData, errors, validateForm, setData } =
-    useFormValidation<FormData>({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      address: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
-      payroll_frequency: "monthly",
-      hourly_rate: 0,
-      net_salary: 0,
-    });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   // await queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
@@ -187,7 +193,6 @@ export function ViewAdministrators() {
   const [numChecked, setNumChecked] = useState<number>(0);
   const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [img, setImg] = useState<FileList>();
   const [previewImg, setPreviewImg] = useState<string>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const [changePassword, toggleChangePassword] = useState<boolean>(false);
@@ -240,55 +245,6 @@ export function ViewAdministrators() {
     queryKey: ["getAdministrator", openModal?.id, "administrator"],
     queryFn: () => getUser(openModal?.id as number, "administrator"),
     enabled: !!openModal?.open,
-  });
-
-  const administratorMutation = useMutation({
-    mutationFn: setAdministrator,
-    onSuccess: async ({ data }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
-      });
-
-      setData({
-        id: data?.id,
-        firstName: getUserName(data?.name).firstName,
-        lastName: getUserName(data?.name).lastName,
-        address: data?.address,
-        email: data?.email,
-        phone: data?.phone,
-        payroll_frequency: data?.payroll.payroll_frequency,
-        hourly_rate: data?.payroll.hourly_rate,
-        net_salary: data?.payroll.net_salary,
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-
-      setPreviewImg(undefined);
-    },
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
   });
 
   const deleteUserQuery = useMutation({
@@ -414,24 +370,6 @@ export function ViewAdministrators() {
 
   // const [selectedItem, setSelectedItem] = useState()
 
-  const onChange = (event: ChangeEvent) => {
-    const inputElem = event.target as HTMLInputElement;
-    const selectElem = event.target as HTMLSelectElement;
-    // if (event?.target.nodeType)
-    setData((prev) => ({
-      ...prev,
-      [event.target.id]:
-        event?.target.nodeName == "SELECT"
-          ? selectElem.options[selectElem.selectedIndex].value
-          : inputElem.value,
-    }));
-  };
-
-  const handleChangePassword = (isVisible: boolean) => {
-    toggleChangePassword(isVisible);
-    setData({ ...formData, password: "", password_confirmation: "" });
-  };
-
   const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
     // console.log(id);
@@ -502,55 +440,6 @@ export function ViewAdministrators() {
     setPerPage(parseInt(target.value));
   };
 
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files;
-
-      setImg(file);
-      readAndPreview(file as FileList);
-    }
-  };
-
-  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    try {
-      const validationResult = validateForm();
-      if (validationResult.isValid) {
-        const form: Data = {
-          _method: "PUT",
-          id: formData?.id as number,
-          name: formData?.firstName + " " + formData?.lastName,
-          email: formData?.email as string,
-          phone: formData?.phone as string,
-          address: formData?.address as string,
-          payroll_frequency: formData?.payroll_frequency,
-          hourly_rate: formData?.hourly_rate,
-          net_salary: formData?.net_salary,
-        };
-
-        if (img) {
-          form["image"] = img[0];
-        }
-
-        if (form?.password) {
-          form["password"] = formData?.password as string;
-          form["password_confirmation"] =
-            formData?.password_confirmation as string;
-        }
-
-        administratorMutation.mutate(form);
-      }
-    } catch (error) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    }
-  };
-
   const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsVerficationMatch(true);
@@ -580,29 +469,28 @@ export function ViewAdministrators() {
     setOpenModal(undefined);
   };
 
-  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-    setOpenModal({ id: id, type: type, open: isOpen });
+  // const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
+  //   setOpenModal({ id: id, type: type, open: isOpen });
 
-    const data = (await queryClient.ensureQueryData({
-      queryKey: ["getAdministrator", id, "administrator"],
-      queryFn: () => getUser(id, "administrator"),
-    })) as Administrator;
+  //   const data = (await queryClient.ensureQueryData({
+  //     queryKey: ["getAdministrator", id, "administrator"],
+  //     queryFn: () => getUser(id, "administrator"),
+  //   })) as Administrator;
 
-    setData({
-      id: data?.id,
-      firstName: getUserName(data?.name).firstName,
-      lastName: getUserName(data?.name).lastName,
-      email: data?.email,
-      phone: data?.phone,
-      address: data?.administrator.address,
-      payroll_frequency: data?.payroll.payroll_frequency,
-      net_salary: data?.payroll.net_salary,
-      hourly_rate: data?.payroll.hourly_rate,
-    });
-  };
+  //   setData({
+  //     id: data?.id,
+  //     firstName: getUserName(data?.name).firstName,
+  //     lastName: getUserName(data?.name).lastName,
+  //     email: data?.email,
+  //     phone: data?.phone,
+  //     address: data?.administrator.address,
+  //     payroll_frequency: data?.payroll.payroll_frequency,
+  //     net_salary: data?.payroll.net_salary,
+  //     hourly_rate: data?.payroll.hourly_rate,
+  //   });
+  // };
 
   const onCloseModal = () => {
-    administratorMutation.reset();
     setOpenModal(undefined);
 
     toggleChangePassword(false);
@@ -871,19 +759,25 @@ export function ViewAdministrators() {
         </Modal.Body>
       </Modal>
 
-      <Modal
+      <FormAdministratorModal
+        action="Edit"
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+        close={openModal?.open as boolean}
+      />
+
+      {/* <Modal
         show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"4xl"}
+        size={"5xl"}
         theme={customModal}
         onClose={onCloseModal}
       >
-        <form onSubmit={onSubmitUpdate}>
-          <Modal.Header>
-            {t("form.fields.id", { entity: t("entities.administrators") })}:
-            <b> {openModal?.id}</b>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-8 sm:flex-row">
+        <Modal.Header>
+          {t("form.fields.id", { entity: t("entities.administrators") })}:
+          <b>{openModal?.id}</b>
+        </Modal.Header>
+        <Modal.Body className="max-h-[70vh] overflow-auto">
+          <div className="flex flex-col gap-8 sm:flex-row">
               <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
                 <SkeletonProfile
                   imgSource={
@@ -1097,17 +991,20 @@ export function ViewAdministrators() {
                 </div>
               </div>
             </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-default !w-auto">
-              {t("general.accept")}
-            </Button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {t("general.decline")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            type="submit"
+            onClick={() => formRef.current?.requestSubmit()}
+            className="btn-default !w-auto"
+          >
+            {t("general.accept")}
+          </Button>
+          <button className="btn-danger !w-auto" onClick={onCloseModal}>
+            {t("general.decline")}
+          </button>
+        </Modal.Footer>
+      </Modal> */}
 
       <Modal
         show={openModal?.type === "delete" ? openModal?.open : false}
@@ -1359,7 +1256,7 @@ export function ViewAdministrators() {
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {administrator.id}
+                          {administrator.administrator.ref}
                         </Table.Cell>
                         <Table.Cell>{administrator.name}</Table.Cell>
 
@@ -1428,7 +1325,7 @@ export function ViewAdministrators() {
                               <div
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
-                                  onOpenEditModal({
+                                  setOpenModal({
                                     id: administrator.id,
                                     type: "edit",
                                     open: true,

@@ -104,7 +104,7 @@ function Menu() {
           itemId="item-1"
           path="/administrators"
           itemName={t("entities.administrators")}
-          isHidden={!usePermission("administrator")}
+          isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           icon={
             <FaUserTie
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -120,7 +120,9 @@ function Menu() {
                 entity: t("entities.administrators"),
               })}
               isActive={useMatch("/administrators/new") ? true : false}
-              isHidden={!usePermission("add_administrator")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="administrators/manage" state={{ active: true }}>
@@ -133,7 +135,9 @@ function Menu() {
                   t("entities.administrators"),
               })}
               isActive={useMatch("/administrators/manage") ? true : false}
-              isHidden={!usePermission("view_administrators")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
         </Items>
@@ -142,7 +146,7 @@ function Menu() {
           itemId="item-2"
           path="/teachers"
           itemName={t("entities.teachers")}
-          isHidden={!usePermission("teacher")}
+          isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           icon={
             <FaChalkboardTeacher
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -158,7 +162,9 @@ function Menu() {
                 entity: t("entities.teacher"),
               })}
               isActive={useMatch("/teachers/new") ? true : false}
-              isHidden={!usePermission("add_teacher")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="teachers/manage" state={{ active: true }}>
@@ -171,7 +177,9 @@ function Menu() {
                   t("entities.teachers"),
               })}
               isActive={useMatch("/teachers/manage") ? true : false}
-              isHidden={!usePermission("view_teachers")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
         </Items>
@@ -180,7 +188,7 @@ function Menu() {
           itemId="item-3"
           path="/students"
           itemName={t("entities.students")}
-          isHidden={!usePermission("student")}
+          isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           icon={
             <FaUserGraduate
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -196,7 +204,9 @@ function Menu() {
                 entity: t("entities.student"),
               })}
               isActive={useMatch("/students/new") ? true : false}
-              isHidden={!usePermission("add_student")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="students/manage" state={{ active: true }}>
@@ -209,7 +219,9 @@ function Menu() {
                   t("entities.students"),
               })}
               isActive={useMatch("/students/manage") ? true : false}
-              isHidden={!usePermission("view_students")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
         </Items>
@@ -218,7 +230,7 @@ function Menu() {
           itemId="item-4"
           path="/parents"
           itemName={t("entities.parents")}
-          isHidden={!usePermission("parent")}
+          isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           icon={
             <FaUserFriends
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -234,7 +246,9 @@ function Menu() {
                 entity: t("entities.parent"),
               })}
               isActive={useMatch("/parents/new") ? true : false}
-              isHidden={!usePermission("add_parent")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="parents/manage" state={{ active: true }}>
@@ -247,7 +261,9 @@ function Menu() {
                   t("entities.parents"),
               })}
               isActive={useMatch("/parents/manage") ? true : false}
-              isHidden={!usePermission("view_parents")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
         </Items>
@@ -256,7 +272,7 @@ function Menu() {
           itemId="item-5"
           path="/finance"
           itemName={t("entities.finances")}
-          isHidden={!usePermission("finance")}
+          isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           icon={
             <FaScaleBalanced
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -275,7 +291,9 @@ function Menu() {
                   t("entities.budget"),
               })}
               isActive={useMatch("/finance/budget/manage") ? true : false}
-              isHidden={!usePermission("budget_management")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="finance/fee/manage" state={{ active: true }}>
@@ -286,7 +304,9 @@ function Menu() {
                   t("determiners.definite.plural") + " " + t("entities.fee"),
               })}
               isActive={useMatch("/finance/fee/manage") ? true : false}
-              isHidden={!usePermission("fee_management")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="finance/payroll/manage" state={{ active: true }}>
@@ -299,7 +319,9 @@ function Menu() {
                   t("entities.payroll"),
               })}
               isActive={useMatch("/finance/payroll/manage") ? true : false}
-              isHidden={!usePermission("payroll_management")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
         </Items>
@@ -308,7 +330,7 @@ function Menu() {
           itemId="item-6"
           path="/resources"
           itemName={t("entities.resources")}
-          isHidden={!usePermission("resource")}
+          isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           icon={
             <FaLayerGroup
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -325,7 +347,9 @@ function Menu() {
                 entity: t("entities.resource"),
               })}
               isActive={useMatch("/resources/new") ? true : false}
-              isHidden={!usePermission("add_resource")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="resources/manage" state={{ active: true }}>
@@ -338,7 +362,9 @@ function Menu() {
                   t("entities.resource"),
               })}
               isActive={useMatch("/resources/manage") ? true : false}
-              isHidden={!usePermission("view_resources")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="resources/maintenance-requests" state={{ active: true }}>
@@ -348,7 +374,9 @@ function Menu() {
               isActive={
                 useMatch("/resources/maintenance-requests") ? true : false
               }
-              isHidden={!usePermission("manage_resources_requests")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
         </Items>
@@ -357,7 +385,7 @@ function Menu() {
           itemId="item-7"
           path="/classrooms"
           itemName={t("entities.classrooms")}
-          isHidden={!usePermission("classroom")}
+          isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           icon={
             <SiGoogleclassroom
               className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -374,7 +402,9 @@ function Menu() {
                 entity: t("entities.classroom"),
               })}
               isActive={useMatch("/classrooms/new") ? true : false}
-              isHidden={!usePermission("add_classroom")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
           <Link to="classrooms/manage" state={{ active: true }}>
@@ -387,7 +417,9 @@ function Menu() {
                   t("entities.classrooms"),
               })}
               isActive={useMatch("/classrooms/manage") ? true : false}
-              isHidden={!usePermission("view_classrooms")}
+              isHidden={
+                !usePermission(["Administrator", "Administrator Staff"])
+              }
             />
           </Link>
         </Items>
@@ -398,7 +430,7 @@ function Menu() {
         itemId="item-8"
         path="/configuration"
         itemName={t("entities.configurations")}
-        isHidden={!usePermission("configuration")}
+        isHidden={!usePermission(["Administrator", "Administrator Staff"])}
         icon={
           <FaCog
             className={`mr-3 flex-shrink-0 text-lg text-gray-500 ${!isOnHover ? "sm:mx-auto 2xl:mx-0 2xl:mr-3" : ""} dark:text-gray-100`}
@@ -412,7 +444,7 @@ function Menu() {
             itemId="subitem-1"
             itemName={t("entities.data_management")}
             isActive={useMatch("/configuration/data-management") ? true : false}
-            isHidden={!usePermission("data_export")}
+            isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           />
         </Link>
         <Link to="/configuration/settings/general" state={{ active: true }}>
@@ -422,7 +454,7 @@ function Menu() {
             isActive={
               useMatch("/configuration/settings/general") ? true : false
             }
-            isHidden={!usePermission("general_settings")}
+            isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           />
         </Link>
         <Link
@@ -435,7 +467,7 @@ function Menu() {
             isActive={
               useMatch("/configuration/settings/school-levels") ? true : false
             }
-            isHidden={!usePermission("school_levels_config")}
+            isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           />
         </Link>
         <Link to="/configuration/settings/subjects" state={{ active: true }}>
@@ -445,7 +477,7 @@ function Menu() {
             isActive={
               useMatch("/configuration/settings/subjects") ? true : false
             }
-            isHidden={!usePermission("subjects_config")}
+            isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           />
         </Link>
         <Link to="/configuration/settings/timetable" state={{ active: true }}>
@@ -455,7 +487,7 @@ function Menu() {
             isActive={
               useMatch("/configuration/settings/timetable") ? true : false
             }
-            isHidden={!usePermission("timetable_config")}
+            isHidden={!usePermission(["Administrator", "Administrator Staff"])}
           />
         </Link>
       </Items>

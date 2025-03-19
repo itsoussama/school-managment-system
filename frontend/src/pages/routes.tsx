@@ -49,7 +49,7 @@ export const MainRouter = {
         {
           path: "new",
           element: (
-            <WithPermission action="add_administrator">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <AddAdministrators />
             </WithPermission>
           ),
@@ -57,7 +57,7 @@ export const MainRouter = {
         {
           path: "manage",
           element: (
-            <WithPermission action="view_administrators">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <ViewAdministrators />
             </WithPermission>
           ),
@@ -70,7 +70,7 @@ export const MainRouter = {
         {
           path: "new",
           element: (
-            <WithPermission action="add_teacher">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <AddTeacher />
             </WithPermission>
           ),
@@ -78,7 +78,7 @@ export const MainRouter = {
         {
           path: "manage",
           element: (
-            <WithPermission action="view_teachers">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <ViewTeachers />
             </WithPermission>
           ),
@@ -91,7 +91,7 @@ export const MainRouter = {
         {
           path: "new",
           element: (
-            <WithPermission action="add_student">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <AddStudent />
             </WithPermission>
           ),
@@ -99,7 +99,7 @@ export const MainRouter = {
         {
           path: "manage",
           element: (
-            <WithPermission action="view_students">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <ViewStudents />
             </WithPermission>
           ),
@@ -112,7 +112,7 @@ export const MainRouter = {
         {
           path: "new",
           element: (
-            <WithPermission action="add_parent">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <AddParent />
             </WithPermission>
           ),
@@ -120,7 +120,7 @@ export const MainRouter = {
         {
           path: "manage",
           element: (
-            <WithPermission action="view_parents">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <ViewParents />
             </WithPermission>
           ),
@@ -133,7 +133,7 @@ export const MainRouter = {
         {
           path: "budget/manage",
           element: (
-            <WithPermission action="budget_management">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <BudgetManagement />
             </WithPermission>
           ),
@@ -141,7 +141,7 @@ export const MainRouter = {
         {
           path: "fee/manage",
           element: (
-            <WithPermission action="fee_management">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <FeeManagement />
             </WithPermission>
           ),
@@ -149,7 +149,7 @@ export const MainRouter = {
         {
           path: "payroll/manage",
           element: (
-            <WithPermission action="payroll_management">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <PayrollManagement />
             </WithPermission>
           ),
@@ -162,7 +162,7 @@ export const MainRouter = {
         {
           path: "new",
           element: (
-            <WithPermission action="add_resource">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <AddResources />
             </WithPermission>
           ),
@@ -170,7 +170,7 @@ export const MainRouter = {
         {
           path: "manage",
           element: (
-            <WithPermission action="view_resources">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <ViewResources />
             </WithPermission>
           ),
@@ -178,7 +178,7 @@ export const MainRouter = {
         {
           path: "maintenance-requests",
           element: (
-            <WithPermission action="manage_resources_requests">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <MaintenanceRequests />
             </WithPermission>
           ),
@@ -191,7 +191,7 @@ export const MainRouter = {
         {
           path: "new",
           element: (
-            <WithPermission action="add_classroom">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <AddClassroom />
             </WithPermission>
           ),
@@ -199,7 +199,7 @@ export const MainRouter = {
         {
           path: "manage",
           element: (
-            <WithPermission action="view_classrooms">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <ViewClassrooms />
             </WithPermission>
           ),
@@ -212,7 +212,7 @@ export const MainRouter = {
         {
           path: "data-management",
           element: (
-            <WithPermission action="data_export">
+            <WithPermission role={["Administrator", "Administrator Staff"]}>
               <DataManagement />
             </WithPermission>
           ),
@@ -223,7 +223,7 @@ export const MainRouter = {
             {
               path: "general",
               element: (
-                <WithPermission action="general_settings">
+                <WithPermission role={["Administrator", "Administrator Staff"]}>
                   <GeneralSettings />
                 </WithPermission>
               ),
@@ -231,7 +231,7 @@ export const MainRouter = {
             {
               path: "school-levels",
               element: (
-                <WithPermission action="school_levels_config">
+                <WithPermission role={["Administrator", "Administrator Staff"]}>
                   <SchoolLevels />
                 </WithPermission>
               ),
@@ -239,7 +239,7 @@ export const MainRouter = {
             {
               path: "subjects",
               element: (
-                <WithPermission action="subjects_config">
+                <WithPermission role={["Administrator", "Administrator Staff"]}>
                   <Subjects />
                 </WithPermission>
               ),
@@ -247,7 +247,7 @@ export const MainRouter = {
             {
               path: "timetable",
               element: (
-                <WithPermission action="timetable_config">
+                <WithPermission role={["Administrator", "Administrator Staff"]}>
                   <Timetable />
                 </WithPermission>
               ),

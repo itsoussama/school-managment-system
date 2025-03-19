@@ -104,6 +104,9 @@ interface Parent {
       name: string;
     },
   ];
+  parent: {
+    ref: string;
+  };
   childrens: Childrens[];
 }
 
@@ -1494,7 +1497,7 @@ export function ViewParents() {
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {parent.id}
+                          {parent.parent.ref}
                         </Table.Cell>
                         <Table.Cell>{parent.name}</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">

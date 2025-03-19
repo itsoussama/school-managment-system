@@ -43,7 +43,7 @@ class UserController extends Controller
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
 
-            $users = User::with('school', 'role', 'subjects', 'grades')
+            $users = User::with('teacher', 'school', 'role', 'subjects', 'grades')
                 ->where('school_id', $school_id)
                 ->whereHas(
                     'role',
@@ -115,7 +115,7 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
-            $users = User::with('school', 'role', 'subjects', 'grades', 'guardian')
+            $users = User::with('student', 'school', 'role', 'subjects', 'grades', 'guardian')
                 ->where('school_id', $school_id)
                 ->whereHas(
                     'role',
@@ -189,7 +189,7 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
-            $users = User::with('school', 'role', 'childrens')
+            $users = User::with('parent', 'school', 'role', 'childrens')
                 ->where('school_id', $school_id)
                 ->whereHas(
                     'role',

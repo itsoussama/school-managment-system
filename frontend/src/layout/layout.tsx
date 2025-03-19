@@ -60,7 +60,7 @@ export function Layout({ children, menu }: Layout) {
   const authUser = useAppSelector((state) => state.userSlice.user);
   const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
   const dispatch = useAppDispatch();
-  const route = useNavigate();
+  const navigate = useNavigate();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
@@ -105,7 +105,7 @@ export function Layout({ children, menu }: Layout) {
 
   const handleLogout = () => {
     dispatch(logout()).then(
-      (res) => res.meta.requestStatus == "fulfilled" && route("/login"),
+      (res) => res.meta.requestStatus == "fulfilled" && navigate("/login"),
     );
   };
 

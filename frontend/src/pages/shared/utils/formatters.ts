@@ -34,5 +34,13 @@ const dateTimeFormatter = (date: string | null) => {
     return "";
   };
 
-export { formatCurrency, dateTimeFormatter}
+  const formatUserName = (fullName: string) => {
+    const nameParts = fullName?.trim().split(/\s+/);
+    const firstName = nameParts?.slice(0, -1).join(" ");
+    const lastName = nameParts?.slice(-1).join(" ");
+
+    return { firstName, lastName };
+  };
+
+export { formatCurrency, dateTimeFormatter, formatUserName}
 

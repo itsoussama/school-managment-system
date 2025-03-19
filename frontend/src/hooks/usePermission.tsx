@@ -1,10 +1,18 @@
-import { PERMISSIONS } from "@config/permissions";
 import { useAppSelector } from "./useReduxEvent";
+import { Roles } from "@src/middleware/withPermission";
 
-export function usePermission(action: string) {
+export function usePermission(role: Roles | Roles[]): boolean {
   const user = useAppSelector((state) => state.userSlice.user);
-  return (
-    user &&
-    PERMISSIONS[user.role[0].name as keyof typeof PERMISSIONS]?.includes(action)
-  );
+
+  if (user) {
+    if (Array.isArray(role)) {
+      return user.role?.some((userRole) =>
+        role.includes(userRole.name as Roles),
+      );
+    } else {
+      return user.role[0].name?.includes(role);
+    }
+  }
+
+  return false;
 }

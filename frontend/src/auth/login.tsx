@@ -3,7 +3,12 @@ import { useAppDispatch, useAppSelector } from "@hooks/useReduxEvent";
 // import { UseTheme } from "@hooks/useTheme";
 import { ChangeEvent, CSSProperties, useEffect } from "react";
 import { FaAt, FaCircleXmark, FaEye, FaEyeSlash } from "react-icons/fa6";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useNavigation,
+} from "react-router-dom";
 import logo_dark from "@assets/logo_dark.png";
 import logo_light from "@assets/logo_light.png";
 import learningLightImg from "@assets/learning_light.png";
@@ -44,7 +49,7 @@ export default function Login() {
   const auth = useAppSelector((state) => state.userSlice);
   const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
   const dispatch = useAppDispatch();
-  const route = useNavigate();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +63,7 @@ export default function Login() {
         const response = await dispatch(login(form as Data));
 
         if (response.meta.requestStatus === "fulfilled") {
-          return route("/");
+          return navigate(-1);
         }
 
         throw Error("You have entered an invalid username or password");

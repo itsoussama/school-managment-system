@@ -114,6 +114,11 @@ export interface Student {
     school_id: number;
     phone: string;
   };
+  student: {
+    ref: string;
+    birthdate: string;
+    address: string;
+  };
 }
 
 interface Grade {
@@ -1541,7 +1546,7 @@ export function ViewStudents() {
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {student.id}
+                          {student.student.ref}
                         </Table.Cell>
                         <Table.Cell>{student.name}</Table.Cell>
 

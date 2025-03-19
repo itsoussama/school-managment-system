@@ -78,6 +78,10 @@ export interface Teacher {
   email: string;
   phone: string;
   blocked?: boolean;
+  teacher: {
+    ref: string;
+    address: string;
+  };
   role: [
     {
       id: string;
@@ -1430,7 +1434,7 @@ export function ViewTeachers() {
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          T00{teacher.id}
+                          {teacher.teacher.ref}
                         </Table.Cell>
                         <Table.Cell>{teacher.name}</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">

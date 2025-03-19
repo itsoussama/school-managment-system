@@ -175,9 +175,9 @@ export default function FeeManagement() {
         <Modal.Body>
           <div className="flex flex-col gap-y-7">
             <div className="flex flex-row justify-between gap-x-8">
-              <div className="flex w-max flex-1 flex-wrap items-start gap-x-8 gap-y-6">
-                <SkeletonMetric size="md" isLoaded={true}>
-                  <div className="flex flex-col gap-y-1">
+              <div className="flex w-max flex-1 flex-row flex-wrap items-start gap-x-8 gap-y-6">
+                <div className="flex flex-col gap-y-1">
+                  <SkeletonMetric size="lg" isLoaded={!getFeeQuery?.isFetching}>
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                       {t("form.fields.grade_level")}
                     </span>
@@ -190,10 +190,10 @@ export default function FeeManagement() {
                         {getFeeQuery.data?.fee?.user?.grades[0].label}
                       </Badge>
                     </span>
-                  </div>
-                </SkeletonMetric>
-                <SkeletonMetric size="md" isLoaded={true}>
-                  <div className="flex flex-col gap-y-1">
+                  </SkeletonMetric>
+                </div>
+                <div className="flex flex-col gap-y-1">
+                  <SkeletonMetric size="lg" isLoaded={!getFeeQuery?.isFetching}>
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                       {t("form.fields.parent_guardian")}
                     </span>
@@ -221,13 +221,18 @@ export default function FeeManagement() {
                       />
                       <span className="text-sm text-dark-primary dark:text-white">
                         {/* {getStudentQuery.data?.guardian?.name} */}
-                        {getFeeQuery.data?.fee?.user?.guardian.name}
+                        <SkeletonMetric
+                          size="lg"
+                          isLoaded={!getFeeQuery?.isFetching}
+                        >
+                          {getFeeQuery.data?.fee?.user?.guardian.name}
+                        </SkeletonMetric>
                       </span>
                     </div>
-                  </div>
-                </SkeletonMetric>
-                <SkeletonMetric size="md" isLoaded={true}>
-                  <Metric>
+                  </SkeletonMetric>
+                </div>
+                <Metric>
+                  <SkeletonMetric size="lg" isLoaded={!getFeeQuery?.isFetching}>
                     <Metric.Title size="sm">
                       {t("metrics.outstanding_balance")}
                     </Metric.Title>
@@ -241,10 +246,10 @@ export default function FeeManagement() {
                           .value
                       }
                     </Metric.Value>
-                  </Metric>
-                </SkeletonMetric>
-                <SkeletonMetric size="md" isLoaded={true}>
-                  <div className="flex flex-col gap-y-1">
+                  </SkeletonMetric>
+                </Metric>
+                <div className="flex flex-col gap-y-1">
+                  <SkeletonMetric size="lg" isLoaded={!getFeeQuery?.isFetching}>
                     <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
                       {t("form.fields.next_due_date")}
                     </span>
@@ -258,8 +263,8 @@ export default function FeeManagement() {
                         getFeeQuery.data?.fee?.due_date,
                       )}
                     </span>
-                  </div>
-                </SkeletonMetric>
+                  </SkeletonMetric>
+                </div>
               </div>
               <Button
                 className="btn-default !m-0 flex !w-max items-center gap-x-2 whitespace-nowrap"
@@ -400,7 +405,7 @@ export default function FeeManagement() {
                       getFeesQuery.data?.data.map((fee: Fee, key: number) => (
                         <Table.Row key={key}>
                           <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                            {fee.id}
+                            #00{fee.id}
                           </Table.Cell>
                           <Table.Cell>
                             <div
