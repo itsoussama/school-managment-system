@@ -58,7 +58,7 @@ interface Modal {
   open: boolean;
 }
 
-interface Administrator {
+export interface Administrator {
   id: number;
   imagePath: string;
   name: string;
@@ -83,10 +83,6 @@ interface Administrator {
   ];
 }
 
-interface BlockSwitch {
-  [key: string]: boolean;
-}
-
 interface Sort {
   column: string;
   direction: "asc" | "desc";
@@ -98,10 +94,6 @@ interface Filter {
 }
 
 export function ViewAdministrators() {
-  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  // await queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
-  const location = useLocation();
-
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
@@ -115,13 +107,13 @@ export function ViewAdministrators() {
   const [numChecked, setNumChecked] = useState<number>(0);
   const [checks, setChecks] = useState<Array<Check>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
-  // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
   const minSm = useBreakpoint("min", "sm");
+  const location = useLocation();
 
   const getAllAdministratorsQuery = useQuery({
     queryKey: ["getAllAdministrators", filter?.name, filter?.childName],
@@ -232,27 +224,6 @@ export function ViewAdministrators() {
     setPerPage(parseInt(target.value));
   };
 
-  // const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-  //   setOpenModal({ id: id, type: type, open: isOpen });
-
-  //   const data = (await queryClient.ensureQueryData({
-  //     queryKey: ["getAdministrator", id, "administrator"],
-  //     queryFn: () => getUser(id, "administrator"),
-  //   })) as Administrator;
-
-  //   setData({
-  //     id: data?.id,
-  //     firstName: getUserName(data?.name).firstName,
-  //     lastName: getUserName(data?.name).lastName,
-  //     email: data?.email,
-  //     phone: data?.phone,
-  //     address: data?.administrator.address,
-  //     payroll_frequency: data?.payroll.payroll_frequency,
-  //     net_salary: data?.payroll.net_salary,
-  //     hourly_rate: data?.payroll.hourly_rate,
-  //   });
-  // };
-
   // const formatDuration = (duration: number) => {
   //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
   //   const remainingMilliseconds = duration % (1000 * 60 * 60);
@@ -283,16 +254,6 @@ export function ViewAdministrators() {
       handleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
   }, [page, handleChecks]);
-
-  useEffect(() => {
-    if (getAdministratorsQuery.isFetched) {
-      let data = {};
-      getAdministratorsQuery.data?.data.map((administrator: Administrator) => {
-        data = { ...data, [administrator.id]: !!administrator.blocked };
-      });
-      setBlockSwitch(data);
-    }
-  }, [getAdministratorsQuery.data, getAdministratorsQuery.isFetched]);
 
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);
@@ -351,7 +312,6 @@ export function ViewAdministrators() {
         onClose={() => setOpenModal(undefined)}
       />
 
-      {/* block / unblock user */}
       <BlockAdministratorModal
         modal={openModal as Modal}
         onClose={() => setOpenModal(undefined)}
@@ -538,7 +498,7 @@ export function ViewAdministrators() {
                           <ToggleSwitch
                             theme={customToggleSwitch}
                             color={brandState}
-                            checked={blockSwitch[administrator.id] || false}
+                            checked={Boolean(administrator.blocked)}
                             onChange={() =>
                               setOpenModal({
                                 id: administrator.id,

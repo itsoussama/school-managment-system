@@ -374,4 +374,6 @@ const colors: Array<CardColor> = [
       return mode === 'dark' ? darkColor : lightColor;
     };
 
-  export {colorPalette, getColorByMode, colors}
+  const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
+
+  export {colorPalette, getColorByMode, colors, badgeColor}

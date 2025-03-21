@@ -14,27 +14,22 @@ interface Modal {
   open: boolean;
 }
 
-// interface BlockSwitch {
-//   [key: string]: boolean;
-// }
-
-interface BlockAdministratorModalProps {
+interface BlockTeacherModalProps {
   modal: Modal;
-  // onBlock?: (isBlock: BlockSwitch) => void;
   onClose: (isClose?: boolean) => void;
 }
 
-export default function BlockAdministratorModal({
+export default function BlockTeacherModal({
   modal,
   onClose,
-}: BlockAdministratorModalProps) {
+}: BlockTeacherModalProps) {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
 
-  const getAdministratorQuery = useQuery({
-    queryKey: ["getAdministrator", modal?.id, "administrator"],
-    queryFn: () => getUser(modal?.id as number, "administrator"),
+  const getTeacherQuery = useQuery({
+    queryKey: ["getTeacher", modal?.id, "teacher"],
+    queryFn: () => getUser(modal?.id as number, "teacher"),
     enabled: !!modal?.open,
   });
 
@@ -42,15 +37,15 @@ export default function BlockAdministratorModal({
     mutationFn: blockUser,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
+        queryKey: ["getTeacher"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
+        queryKey: ["getTeachers"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
+        queryKey: ["getAllTeachers"],
       });
 
       onCloseModal();
@@ -77,15 +72,15 @@ export default function BlockAdministratorModal({
     mutationFn: unblockUser,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
+        queryKey: ["getTeacher"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
+        queryKey: ["getTeachers"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
+        queryKey: ["getAllTeachers"],
       });
 
       onCloseModal();
@@ -112,7 +107,7 @@ export default function BlockAdministratorModal({
     event.preventDefault();
     const userId: number = modal?.id as number;
 
-    if (!getAdministratorQuery.data?.blocked) {
+    if (!getTeacherQuery.data?.blocked) {
       blockUserMutation.mutate({ user_id: userId });
     } else {
       unBlockUserMutation.mutate({ user_id: userId });
@@ -151,7 +146,7 @@ export default function BlockAdministratorModal({
               <p className="text-gray-900 dark:text-white">
                 <Trans
                   i18nKey="modals.block.title"
-                  values={{ item: getAdministratorQuery.data?.name }}
+                  values={{ item: getTeacherQuery.data?.name }}
                   components={{ bold: <strong /> }}
                 />
               </p>
@@ -159,7 +154,7 @@ export default function BlockAdministratorModal({
           </Modal.Body>
           <Modal.Footer>
             <Button type="submit" className="btn-danger !w-auto">
-              {getAdministratorQuery.data?.blocked == 0
+              {getTeacherQuery.data?.blocked == 0
                 ? t("modals.block.block_button")
                 : t("modals.block.unblock_button")}
             </Button>

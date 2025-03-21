@@ -18,8 +18,10 @@ import {
   payementStatus,
 } from "@src/pages/shared/utils/colorIndicators";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import BlockAdministratorModal from "./blockAdministratorModal";
+import BlockAdministratorModal from "./blockTeacherModal";
 import { InfoField } from "@src/pages/shared/components/info";
+import { badgeColor } from "@src/utils/colors";
+import { Grade, Subject } from "../viewTeachers";
 
 interface Modal {
   id: number;
@@ -27,31 +29,32 @@ interface Modal {
   open: boolean;
 }
 
-interface ViewAdministratorModalProps {
+interface ViewTeacherModalProps {
   modal: Modal;
   onClose: (isClose?: boolean) => void;
 }
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
-export default function ViewAdministratorModal({
+export default function ViewTeacherModal({
   modal,
   onClose,
-}: ViewAdministratorModalProps) {
+}: ViewTeacherModalProps) {
   // const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>();
   const [openModal, setOpenModal] = useState<Modal>();
   const { t } = useTranslation();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
 
-  const getAdministratorQuery = useQuery({
-    queryKey: ["getAdministrator", modal?.id, "administrator"],
-    queryFn: () => getUser(modal?.id as number, "administrator"),
-    enabled: !!modal?.open,
+  const getTeacherQuery = useQuery({
+    queryKey: ["getTeacher", modal?.id, "teacher"],
+    queryFn: () => getUser(modal?.id as number, "teacher"),
+    enabled: !!modal?.id,
   });
 
   const onCloseModal = () => {
     onClose(true);
   };
+
   return (
     <>
       <BlockAdministratorModal
@@ -66,17 +69,17 @@ export default function ViewAdministratorModal({
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {/* {t("form.fields.id", { entity: t("entities.administrators") })}: */}
-          <b> {getAdministratorQuery.data?.administrator.ref}</b>
+          {/* {t("form.fields.id", { entity: t("entities.teachers") })}: */}
+          <b> {getTeacherQuery.data?.teacher?.ref}</b>
         </Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8 sm:flex-row">
             <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
               <SkeletonProfile
                 imgSource={
-                  getAdministratorQuery.data?.imagePath
-                    ? SERVER_STORAGE + getAdministratorQuery.data?.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${formatUserName(getAdministratorQuery.data?.name).firstName}+${formatUserName(getAdministratorQuery.data?.name).lastName}`
+                  getTeacherQuery.data?.imagePath
+                    ? SERVER_STORAGE + getTeacherQuery.data?.imagePath
+                    : `https://ui-avatars.com/api/?background=random&name=${formatUserName(getTeacherQuery.data?.name).firstName}+${formatUserName(getTeacherQuery.data?.name).lastName}`
                 }
                 className="h-40 w-40"
               />
@@ -86,11 +89,11 @@ export default function ViewAdministratorModal({
                 </span>
                 <ToggleSwitch
                   theme={customToggleSwitch}
-                  checked={Boolean(getAdministratorQuery.data?.blocked)}
+                  checked={Boolean(getTeacherQuery.data?.blocked)}
                   color={brandState}
                   onChange={() =>
                     setOpenModal({
-                      id: getAdministratorQuery.data?.id,
+                      id: getTeacherQuery.data?.id,
                       type: "block",
                       open: true,
                     })
@@ -103,57 +106,94 @@ export default function ViewAdministratorModal({
                 <h1 className="mb-2 rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   {t("information.personal_information")}
                 </h1>
-                <SkeletonContent isLoaded={getAdministratorQuery.isFetched}>
+                <SkeletonContent isLoaded={getTeacherQuery.isFetched}>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-6">
                     <InfoField
                       label={t("form.fields.first_name")}
                       value={
-                        formatUserName(getAdministratorQuery.data?.name)
-                          .firstName
+                        formatUserName(getTeacherQuery.data?.name).firstName
                       }
                     />
 
                     <InfoField
                       label={t("form.fields.last_name")}
                       value={
-                        formatUserName(getAdministratorQuery.data?.name)
-                          .lastName
+                        formatUserName(getTeacherQuery.data?.name).lastName
                       }
                     />
 
                     <InfoField
                       label={t("form.fields.email")}
-                      value={getAdministratorQuery.data?.email}
+                      value={getTeacherQuery.data?.email}
                     />
 
                     <InfoField
                       label={t("form.fields.phone_number")}
-                      value={getAdministratorQuery.data?.phone}
+                      value={getTeacherQuery.data?.phone}
                     />
 
                     <InfoField
                       label={t("form.fields.address")}
-                      value={getAdministratorQuery.data?.administrator?.address}
+                      value={getTeacherQuery.data?.teacher?.address}
                       fullSpan
+                    />
+                  </div>
+                </SkeletonContent>
+                <h1 className="mb-2 mt-6 rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
+                  {t("information.academic_information")}
+                </h1>
+                <SkeletonContent isLoaded={getTeacherQuery.isFetched}>
+                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-6">
+                    <InfoField
+                      label={t("form.fields.subjects")}
+                      valueStyle="flex flex-row w-max max-w-48 flex-wrap"
+                      value={getTeacherQuery.data?.subjects.map(
+                        (subject: Subject, index: number) => (
+                          <Badge
+                            key={index}
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {subject.name}
+                          </Badge>
+                        ),
+                      )}
+                    />
+                    <InfoField
+                      label={t("form.fields.grade_levels")}
+                      valueStyle="flex flex-row w-max max-w-48 flex-wrap"
+                      value={getTeacherQuery.data?.grades.map(
+                        (grade: Grade, index: number) => (
+                          <Badge
+                            key={index}
+                            color={badgeColor[index % badgeColor.length]}
+                            className="mb-1 me-1 rounded-xs"
+                          >
+                            {grade.label}
+                          </Badge>
+                        ),
+                      )}
+                    />
+                    <InfoField
+                      label={t("form.fields.start_date")}
+                      value="2024/01/01"
                     />
                   </div>
                 </SkeletonContent>
                 <h1 className="mb-2 mt-6 rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   {t("information.payroll_information")}
                 </h1>
-                <SkeletonContent isLoaded={getAdministratorQuery.isFetched}>
+                <SkeletonContent isLoaded={getTeacherQuery.isFetched}>
                   <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-6">
                     <InfoField
                       label={t("form.fields.payment_frequency")}
-                      value={
-                        getAdministratorQuery.data?.payroll.payroll_frequency
-                      }
+                      value={getTeacherQuery.data?.payroll?.payroll_frequency}
                     />
                     <InfoField
                       label={t("form.fields.net_salary")}
                       value={
                         formatCurrency(
-                          getAdministratorQuery.data?.payroll.net_salary,
+                          getTeacherQuery.data?.payroll?.net_salary,
                         ).value
                       }
                     />
@@ -163,17 +203,17 @@ export default function ViewAdministratorModal({
                         <Badge
                           theme={customBadge}
                           color={getColor(
-                            getAdministratorQuery.data?.payroll.payment_status,
+                            getTeacherQuery.data?.payroll?.payment_status,
                             payementStatus,
                           )}
                         >
-                          {getAdministratorQuery.data?.payroll.payment_status}
+                          {getTeacherQuery.data?.payroll?.payment_status}
                         </Badge>
                       }
                     />
                     <InfoField
                       label={t("form.fields.pay_date")}
-                      value={getAdministratorQuery.data?.payroll.pay_date}
+                      value={getTeacherQuery.data?.payroll?.pay_date}
                     />
                   </div>
                 </SkeletonContent>

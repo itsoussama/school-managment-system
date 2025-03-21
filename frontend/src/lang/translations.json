@@ -154,15 +154,15 @@
             },
             "modals": {
                 "delete": {
-                    "title": "Are you sure you want to delete {{item}}?",
+                    "title": "Are you sure you want to delete <bold>{{item}}</bold>?",
                     "message": "This action is irreversible and will permanently delete the item.",
-                    "label": "Please retype '{{item}}' to confirm",
+                    "label": "Please retype <bold>{{item}}</bold> to confirm",
                     "error": "Values do not match",
                     "delete_button": "Delete",
                     "cancel_button": "Cancel"
                 },
                 "block": {
-                    "title": "Are you sure you want to block {{item}}?",
+                    "title": "Are you sure you want to block <bold>{{item}}</bold>?",
                     "block_button": "Block",
                     "unblock_button": "Unblock",
                     "cancel_button": "Cancel"
@@ -481,7 +481,7 @@
             },
             "modals": {
                 "delete": {
-                    "title": "Êtes-vous sûr de vouloir supprimer {{item}}",
+                    "title": "Êtes-vous sûr de vouloir supprimer <bold>{{item}}</bold>",
                     "message": "Cette action est irréversible et supprime définitivement l'élément.",
                     "label": "Veuillez retaper <bold>{{item}}</bold> pour confirmer",
                     "error": "Les valeurs ne correspondent pas",
@@ -489,7 +489,7 @@
                     "cancel_button": "Annuler"
                 },
                 "block": {
-                    "title": "Êtes-vous sûr de vouloir bloquer {{item}}",
+                    "title": "Êtes-vous sûr de vouloir bloquer <bold>{{item}}</bold>",
                     "block_button": "Bloquer",
                     "unblock_button": "Débloquer",
                     "cancel_button": "Annuler"

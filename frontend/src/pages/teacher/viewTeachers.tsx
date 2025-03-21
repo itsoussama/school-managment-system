@@ -60,6 +60,10 @@ import {
 } from "@src/utils/flowbite";
 import React from "react";
 import { useFormValidation } from "@src/hooks/useFormValidation";
+import ViewTeacherModal from "./components/viewTeacherModal";
+import FormTeacherModal from "./components/formTeacherModal";
+import DeleteTeacherModal from "./components/deleteTeacherModal";
+import BlockTeacherModal from "./components/blockTeacherModal";
 
 interface Check {
   id?: number;
@@ -75,6 +79,7 @@ interface Modal {
 export interface Teacher {
   id: number;
   name: string;
+  imagePath: string;
   email: string;
   phone: string;
   blocked?: boolean;
@@ -82,54 +87,37 @@ export interface Teacher {
     ref: string;
     address: string;
   };
+  payroll: {
+    payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
+    net_salary?: number;
+    hourly_rate?: number;
+  };
   role: [
     {
-      id: string;
+      id: number;
       name: string;
     },
   ];
   subjects: [
     {
-      id: string;
+      id: number;
       name: string;
     },
   ];
   grades: [
     {
-      id: string;
+      id: number;
       label: string;
     },
   ];
 }
-interface Grade {
+export interface Grade {
   id: number;
   label: string;
 }
-interface Subject {
+export interface Subject {
   id: number;
   name: string;
-}
-export interface Data {
-  _method?: string;
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  image?: File;
-  password?: string;
-  password_confirmation?: string;
-}
-
-interface FormData {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  address: string;
-  password?: string;
-  password_confirmation?: string;
-  phone: string;
-  image?: File;
 }
 
 interface BlockSwitch {
@@ -146,20 +134,7 @@ interface Filter {
   gradelevel: string;
 }
 
-const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
-
 export function ViewTeachers() {
-  const { formData, errors, setData, validateForm } =
-    useFormValidation<FormData>({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      address: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
-    });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const queryClient = useQueryClient();
   // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
@@ -239,11 +214,11 @@ export function ViewTeachers() {
     placeholderData: keepPreviousData,
   });
 
-  const getTeacherQuery = useQuery({
-    queryKey: ["getTeacher", openModal?.id],
-    queryFn: () => getUser(openModal?.id as number),
-    enabled: !!openModal?.id,
-  });
+  // const getTeacherQuery = useQuery({
+  //   queryKey: ["getTeacher", openModal?.id],
+  //   queryFn: () => getUser(openModal?.id as number),
+  //   enabled: !!openModal?.id,
+  // });
 
   const getAllSubjectsQuery = useQuery({
     queryKey: ["getAllSubjects"],
@@ -255,194 +230,7 @@ export function ViewTeachers() {
     queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
   });
 
-  const teacherMutation = useMutation({
-    mutationFn: setTeacher,
-    onSuccess: async ({ data }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getTeacher"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getTeachers"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
-      });
-
-      setData({
-        id: data?.id,
-        firstName: getUserName(data?.name).firstName,
-        lastName: getUserName(data?.name).lastName,
-        email: data?.email,
-        address: data?.address,
-        phone: data?.phone,
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.updated_success"),
-        state: true,
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-
-      setPreviewImg(undefined);
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const deleteUserQuery = useMutation({
-    mutationFn: deleteUser,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getTeachers"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
-      });
-      // setOpenDeleteModal(undefined);
-      setOpenModal(undefined);
-      setPage(1);
-
-      setData({
-        id: 0,
-        firstName: "",
-        lastName: "",
-        email: "",
-        address: "",
-        phone: "",
-        password: "",
-        password_confirmation: "",
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.deleted_success"),
-        state: true,
-      });
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const blockUserMutation = useMutation({
-    mutationFn: blockUser,
-    onSuccess: async (_, { user_id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getTeacher"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getTeachers"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
-      });
-
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: true,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const unBlockUserMutation = useMutation({
-    mutationFn: unblockUser,
-    onSuccess: async (_, { user_id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getTeacher"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getTeachers"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
-      });
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: false,
-      }));
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
   // const [selectedItem, setSelectedItem] = useState()
-
-  const onChange = (event: ChangeEvent) => {
-    const inputElem = event.target as HTMLInputElement;
-    const selectElem = event.target as HTMLSelectElement;
-    setData((prev) => ({
-      ...prev,
-      [event.target.id]:
-        event?.target.nodeName == "SELECT"
-          ? selectElem.options[selectElem.selectedIndex].value
-          : inputElem.value,
-    }));
-  };
 
   const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
@@ -497,124 +285,10 @@ export function ViewTeachers() {
     }
   };
 
-  const handleChangePassword = (isVisible: boolean) => {
-    toggleChangePassword(isVisible);
-    setData({ ...formData, password: "", password_confirmation: "" });
-  };
-
   const handlePerPage = (ev: ChangeEvent) => {
     const target = ev.target as HTMLSelectElement;
     setPage(1);
     setPerPage(parseInt(target.value));
-  };
-
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files;
-
-      setImg(file);
-      readAndPreview(file as FileList);
-    }
-  };
-
-  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const userId: number = openModal?.id as number;
-
-    if (!blockSwitch[userId]) {
-      blockUserMutation.mutate({ user_id: userId });
-    } else {
-      unBlockUserMutation.mutate({ user_id: userId });
-    }
-
-    setOpenModal(undefined);
-  };
-
-  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // const input = event.target as HTMLFormElement;
-
-    try {
-      const validationResult = validateForm();
-      if (validationResult.isValid) {
-        const form: Data = {
-          _method: "PUT",
-          id: formData?.id as number,
-          name: formData?.firstName + " " + formData?.lastName,
-          email: formData?.email as string,
-          phone: formData?.phone as string,
-        };
-
-        if (img) {
-          form["image"] = img[0];
-        }
-
-        if (form?.password) {
-          form["password"] = formData?.password as string;
-          form["password_confirmation"] =
-            formData?.password_confirmation as string;
-        }
-
-        teacherMutation.mutate(form);
-      }
-    } catch (error) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    }
-  };
-
-  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsVerficationMatch(true);
-    const input = event.target as HTMLFormElement;
-
-    if (
-      (input.verfication.value as string).toLowerCase() !==
-      getTeacherQuery.data?.name.toLowerCase()
-    ) {
-      setIsVerficationMatch(false);
-      return;
-    }
-
-    deleteUserQuery.mutate(openModal?.id as number);
-  };
-
-  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-    setOpenModal({ id: id, type: type, open: isOpen });
-    const teacherData: Data = await queryClient.ensureQueryData({
-      queryKey: ["getTeacher", id],
-      queryFn: () => getUser(id),
-    });
-
-    setData({
-      id: teacherData?.id,
-      firstName: getUserName(teacherData?.name).firstName,
-      lastName: getUserName(teacherData?.name).lastName,
-      email: teacherData?.email,
-      address: "address", //teacherData?.address,
-      phone: teacherData?.phone,
-    });
-  };
-
-  const onCloseModal = () => {
-    teacherMutation.reset();
-    setOpenModal(undefined);
-    setPreviewImg(undefined);
-    toggleChangePassword(false);
-    setData({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      address: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
-    });
   };
 
   // const formatDuration = (duration: number) => {
@@ -624,24 +298,6 @@ export function ViewTeachers() {
 
   //   return { hour: convertToHour, minute: convertToMinute };
   // };
-
-  const getUserName = (fullName: string) => {
-    const nameParts = fullName?.trim().split(/\s+/);
-    const firstName = nameParts?.slice(0, -1).join(" ");
-    const lastName = nameParts?.slice(-1).join(" ");
-
-    return { firstName, lastName };
-  };
-
-  const readAndPreview = (file: FileList) => {
-    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
-      const fileReader = new FileReader();
-      fileReader.addEventListener("load", (event) => {
-        setPreviewImg(event.target?.result as string);
-      });
-      fileReader.readAsDataURL(file[0]);
-    }
-  };
 
   useEffect(() => {
     const alertState = location.state?.alert;
@@ -666,15 +322,15 @@ export function ViewTeachers() {
     }
   }, [page, handleChecks]);
 
-  useEffect(() => {
-    if (getTeachersQuery.isFetched) {
-      let data = {};
-      getTeachersQuery.data?.data.map((teacher: Teacher) => {
-        data = { ...data, [teacher.id]: !!teacher.blocked };
-      });
-      setBlockSwitch(data);
-    }
-  }, [getTeachersQuery.data, getTeachersQuery.isFetched]);
+  // useEffect(() => {
+  //   if (getTeachersQuery.isFetched) {
+  //     let data = {};
+  //     getTeachersQuery.data?.data.map((teacher: Teacher) => {
+  //       data = { ...data, [teacher.id]: !!teacher.blocked };
+  //     });
+  //     setBlockSwitch(data);
+  //   }
+  // }, [getTeachersQuery.data, getTeachersQuery.isFetched]);
 
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);
@@ -716,481 +372,27 @@ export function ViewTeachers() {
         </Breadcrumb.Item>
       </Breadcrumb>
 
-      <Modal
-        show={openModal?.type === "view" ? openModal?.open : false}
-        size={"4xl"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
-        onClose={onCloseModal}
-      >
-        <Modal.Header>
-          {t("form.fields.id", { entity: t("entities.parent") })}:
-          <b> {openModal?.id}</b>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="flex flex-col gap-8 sm:flex-row">
-            <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-              <SkeletonProfile
-                imgSource={
-                  getTeacherQuery.data?.imagePath
-                    ? SERVER_STORAGE + getTeacherQuery.data?.imagePath
-                    : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.name).firstName}+${getUserName(getTeacherQuery.data?.name).lastName}`
-                }
-                className="h-40 w-40"
-              />
-              <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                  {t("status.active_deactivate")}
-                </span>
-                <ToggleSwitch
-                  theme={customToggleSwitch}
-                  checked={blockSwitch[getTeacherQuery.data?.id] || false}
-                  color={brandState}
-                  onChange={() =>
-                    setOpenModal({
-                      id: getTeacherQuery.data?.id,
-                      type: "block",
-                      open: true,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.personal_information")}
-                </h1>
-                <SkeletonContent isLoaded={getTeacherQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.first_name")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getTeacherQuery.data?.name).firstName}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.last_name")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getTeacherQuery.data?.name).lastName}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.email")}:
-                      </span>
-                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getTeacherQuery.data?.email}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.phone_number")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getTeacherQuery.data?.phone}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.address")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        123 Rue Principale
-                      </span>
-                    </div>
-                  </div>
-                </SkeletonContent>
-              </div>
+      <ViewTeacherModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.academic_information")}
-                </h1>
-                <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {t("form.fields.subjects")}:
-                    </span>
-                    <div className="flex w-max max-w-48 flex-wrap">
-                      {getTeacherQuery.data?.subjects.map(
-                        (subject: Subject, index: number) => (
-                          <Badge
-                            key={index}
-                            color={badgeColor[index % badgeColor.length]}
-                            className="mb-1 me-1 rounded-xs"
-                          >
-                            {subject.name}
-                          </Badge>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {t("form.fields.grade_levels")}:
-                    </span>
-                    <div className="flex w-max max-w-48 flex-wrap">
-                      {getTeacherQuery.data?.grades.map(
-                        (grade: Grade, index: number) => (
-                          <Badge
-                            key={index}
-                            color={badgeColor[index % badgeColor.length]}
-                            className="mb-1 me-1 rounded-xs"
-                          >
-                            {grade.label}
-                          </Badge>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {t("form.fields.start_date")}:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      2024/01/01
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
+      <FormTeacherModal
+        action="Edit"
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
-      <Modal
-        show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"4xl"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
-        onClose={onCloseModal}
-      >
-        <form onSubmit={onSubmitUpdate}>
-          <Modal.Header>
-            {t("form.fields.id", { entity: t("entities.parent") })}:
-            <b> {openModal?.id}</b>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-                <SkeletonProfile
-                  imgSource={
-                    previewImg
-                      ? previewImg
-                      : getTeacherQuery.data?.imagePath
-                        ? SERVER_STORAGE + getTeacherQuery.data?.imagePath
-                        : `https://avatar.iran.liara.run/username?username=${getUserName(getTeacherQuery.data?.name).firstName}+${getUserName(getTeacherQuery.data?.name).lastName}`
-                  }
-                  className="h-40 w-40"
-                />
+      <DeleteTeacherModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
-                <button className="btn-gray relative overflow-hidden">
-                  <input
-                    type="file"
-                    className="absolute left-0 top-0 cursor-pointer opacity-0"
-                    onChange={handleImageUpload}
-                  />
-                  {t("form.buttons.upload", { label: t("general.photo") })}
-                </button>
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.accepted_format")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      jpg, jpeg, png
-                    </span>
-                  </span>
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.maximum_size")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      1024 mb
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
-                <div className="w-full space-y-3">
-                  <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("information.personal_information")}
-                  </h1>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                    <Input
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      label={t("form.fields.first_name")}
-                      placeholder={t("form.placeholders.first_name")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getTeacherQuery.isFetching && true}
-                      value={formData?.firstName}
-                      onChange={onChange}
-                    />
+      <BlockTeacherModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
-                    <Input
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      label={t("form.fields.last_name")}
-                      placeholder={t("form.placeholders.last_name")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getTeacherQuery.isFetching && true}
-                      value={formData?.lastName}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="text"
-                      id="address"
-                      name="address"
-                      label={t("form.fields.address")}
-                      placeholder={t("form.placeholders.address")}
-                      value="123 Rue Principale"
-                      onChange={(e) => console.log(e.target.value)}
-                      custom-style={{ containerStyle: "col-span-full" }}
-                    />
-
-                    <Input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      label={t("form.fields.phone_number")}
-                      placeholder="06 00 00 00"
-                      pattern="(06|05)[0-9]{6}"
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getTeacherQuery.isFetching && true}
-                      value={formData?.phone}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="email"
-                      id="email"
-                      name="email"
-                      label={t("form.fields.email")}
-                      placeholder={t("form.placeholders.email")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getTeacherQuery.isFetching && true}
-                      value={formData?.email}
-                      onChange={onChange}
-                      onBlur={() => validateForm()}
-                    />
-
-                    <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
-
-                    {changePassword ? (
-                      <>
-                        <Input
-                          type="password"
-                          id="password"
-                          name="password"
-                          label={t("form.fields.password")}
-                          placeholder="●●●●●●●"
-                          error={errors?.password}
-                          value={formData?.password}
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          leftIcon={FaLock}
-                          rightIcon={(isPasswordVisible) =>
-                            isPasswordVisible ? FaEyeSlash : FaEye
-                          }
-                          onChange={onChange}
-                          onBlur={() => validateForm()}
-                        />
-
-                        <Input
-                          type="password"
-                          id="password_confirmation"
-                          name="password_confirmation"
-                          label={t("form.fields.confirm_password")}
-                          placeholder="●●●●●●●"
-                          error={errors?.password_confirmation}
-                          value={formData?.password_confirmation}
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          leftIcon={FaLock}
-                          rightIcon={(isPasswordVisible) =>
-                            isPasswordVisible ? FaEyeSlash : FaEye
-                          }
-                          onChange={onChange}
-                          onBlur={() => validateForm()}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => handleChangePassword(true)}
-                          className="btn-default !w-auto"
-                        >
-                          {t("form.buttons.change", {
-                            label:
-                              t("determiners.definite.masculine") +
-                              " " +
-                              t("form.fields.password"),
-                          })}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-default !w-auto">
-              {t("general.accept")}
-            </Button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {t("general.decline")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
-
-      <Modal
-        show={openModal?.type === "delete" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitDelete}>
-          <Modal.Header>
-            {t("actions.delete_entity", { entity: t("entities.parent") })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.delete.title")} <b>{getTeacherQuery.data?.name} ?</b>
-              </p>
-              <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">
-                  {t("modals.delete.message")}{" "}
-                  <b>{getTeacherQuery.data?.name}</b>
-                </p>
-              </div>
-              <p className="text-gray-900 dark:text-white">
-                <Trans
-                  i18nKey="modals.delete.label"
-                  values={{ item: getTeacherQuery.data?.name }}
-                  components={{ bold: <strong /> }}
-                />
-              </p>
-              <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={!isVerficationMatch ? t("modals.delete.error") : null}
-                required
-              />
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-danger !w-auto">
-              {t("modals.delete.delete_button")}
-            </Button>
-            <Button
-              className="btn-outline !ml-0 !w-auto"
-              onClick={onCloseModal}
-            >
-              {t("modals.delete.cancel_button")}
-            </Button>
-          </Modal.Footer>
-        </form>
-      </Modal>
-
-      {/* block / unblock user */}
-      <Modal
-        show={openModal?.type === "block" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitBlock}>
-          <Modal.Header>
-            {t("actions.block_entity", { entity: t("general.user") })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.block.title")} <b>{getTeacherQuery.data?.name} ?</b>
-              </p>
-              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("delete-modal-message")}</p>
-              </div> */}
-              {/* <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")}{" "}
-                <b>{getParentQuery.data?.name}</b>
-              </p> */}
-              {/* <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={
-                  !isVerficationMatch ? t("delete-modal-error") : null
-                }
-                required
-              /> */}
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
-              {getTeacherQuery.data?.blocked == 0
-                ? t("modals.block.block_button")
-                : t("modals.block.unblock_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("modals.block.cancel_button")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
           {checks.find((val) => val.status === true) ? (
@@ -1434,7 +636,7 @@ export function ViewTeachers() {
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {teacher.teacher.ref}
+                          {teacher.teacher?.ref}
                         </Table.Cell>
                         <Table.Cell>{teacher.name}</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
@@ -1491,7 +693,7 @@ export function ViewTeachers() {
                           <ToggleSwitch
                             theme={customToggleSwitch}
                             color={brandState}
-                            checked={blockSwitch[teacher.id] || false}
+                            checked={Boolean(teacher.blocked)}
                             onChange={() =>
                               setOpenModal({
                                 id: teacher.id,
@@ -1529,7 +731,7 @@ export function ViewTeachers() {
                               <div
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
-                                  onOpenEditModal({
+                                  setOpenModal({
                                     id: teacher.id,
                                     type: "edit",
                                     open: true,

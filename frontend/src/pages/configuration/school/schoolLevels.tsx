@@ -9,7 +9,7 @@ import { FaExclamationTriangle, FaHome, FaPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import Alert from "@src/components/alert";
 import Accordion from "@src/components/accordion";
-import InfoCard from "@pages/shared/components/infoCard";
+import { InfoCard } from "@src/pages/shared/components/info";
 import {
   Button,
   Input,

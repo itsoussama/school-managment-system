@@ -15,23 +15,23 @@ interface Modal {
   open: boolean;
 }
 
-interface DeleteAdministratorModalProps {
+interface DeleteTeacherModalProps {
   modal: Modal;
   onClose: (isClose?: boolean) => void;
 }
 
-export default function DeleteAdministratorModal({
+export default function DeleteTeacherModal({
   modal,
   onClose,
-}: DeleteAdministratorModalProps) {
+}: DeleteTeacherModalProps) {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
 
-  const getAdministratorQuery = useQuery({
-    queryKey: ["getAdministrator", modal?.id, "administrator"],
-    queryFn: () => getUser(modal?.id as number, "administrator"),
+  const getTeacherQuery = useQuery({
+    queryKey: ["getTeacher", modal?.id, "teacher"],
+    queryFn: () => getUser(modal?.id as number, "teacher"),
     enabled: !!modal?.open,
   });
 
@@ -39,11 +39,11 @@ export default function DeleteAdministratorModal({
     mutationFn: deleteUser,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
+        queryKey: ["getTeachers"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
+        queryKey: ["getAllTeachers"],
       });
 
       onCloseModal();
@@ -73,7 +73,7 @@ export default function DeleteAdministratorModal({
 
     if (
       (input.verfication.value as string).toLowerCase() !==
-      getAdministratorQuery.data?.name.toLowerCase()
+      getTeacherQuery.data?.name.toLowerCase()
     ) {
       setIsVerficationMatch(false);
       return;
@@ -108,7 +108,7 @@ export default function DeleteAdministratorModal({
         <form onSubmit={onSubmitDelete}>
           <Modal.Header>
             {t("actions.delete_entity", {
-              entity: t("entities.administrators"),
+              entity: t("entities.teachers"),
             })}
           </Modal.Header>
           <Modal.Body>
@@ -116,7 +116,7 @@ export default function DeleteAdministratorModal({
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 <Trans
                   i18nKey="modals.delete.title"
-                  values={{ item: getAdministratorQuery.data?.name }}
+                  values={{ item: getTeacherQuery.data?.name }}
                   components={{ bold: <strong /> }}
                 />
               </p>
@@ -127,7 +127,7 @@ export default function DeleteAdministratorModal({
               <p className="text-gray-900 dark:text-white">
                 <Trans
                   i18nKey="modals.delete.label"
-                  values={{ item: getAdministratorQuery.data?.name }}
+                  values={{ item: getTeacherQuery.data?.name }}
                   components={{ bold: <strong /> }}
                 />
               </p>

@@ -1,10 +1,10 @@
 import { customModal } from "@src/utils/flowbite";
 import { Modal } from "flowbite-react";
-import AdministratorsForm, { FormData } from "./administratorsForm";
+import TeachersForm, { FormData } from "./teacherForm";
 import { Button } from "@src/components/input";
 import { useCallback, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getUser, setAdministrator } from "@src/pages/shared/utils/api";
+import { getUser, setTeacher } from "@src/pages/shared/utils/api";
 import Alert from "@src/components/alert";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import { useTranslation } from "react-i18next";
@@ -15,13 +15,13 @@ interface Modal {
   open: boolean;
 }
 
-interface FormAdministratorModalProps {
+interface FormTeacherModalProps {
   modal: Modal;
   action: "Create" | "Edit";
   onClose: (isClose?: boolean) => void;
 }
 
-const ADMINISTRATOR_INITIALDATA: FormData = {
+const TEACHER_INITIALDATA: FormData = {
   id: 0,
   firstName: "",
   lastName: "",
@@ -33,37 +33,39 @@ const ADMINISTRATOR_INITIALDATA: FormData = {
   payroll_frequency: "monthly",
   hourly_rate: 0,
   net_salary: 0,
+  grades: [],
+  subjects: [],
 };
 
-export default function FormAdministratorModal({
+export default function FormTeacherModal({
   modal,
   action,
   onClose,
-}: FormAdministratorModalProps) {
+}: FormTeacherModalProps) {
   const queryClient = useQueryClient();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const formRef = useRef<HTMLFormElement>(null);
   const { t } = useTranslation();
 
-  const getAdministratorQuery = useQuery({
-    queryKey: ["getAdministrator", modal?.id, "administrator"],
-    queryFn: () => getUser(modal?.id as number, "administrator"),
+  const getTeacherQuery = useQuery({
+    queryKey: ["getTeacher", modal?.id, "teacher"],
+    queryFn: () => getUser(modal?.id as number, "teacher"),
     enabled: !!modal?.open,
   });
 
-  const administratorMutation = useMutation({
-    mutationFn: setAdministrator,
+  const teacherMutation = useMutation({
+    mutationFn: setTeacher,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrator"],
+        queryKey: ["getTeacher"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAdministrators"],
+        queryKey: ["getTeachers"],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: ["getAllAdministrators"],
+        queryKey: ["getAllTeachers"],
       });
 
       toggleAlert({
@@ -109,15 +111,14 @@ export default function FormAdministratorModal({
         onClose={onCloseModal}
       >
         <Modal.Header>
-          {/* {t("form.fields.id", { entity: t("entities.administrators") })}: */}
-          <b>{getAdministratorQuery.data?.administrator.ref}</b>
+          <b>{getTeacherQuery.data?.teacher?.ref}</b>
         </Modal.Header>
         <Modal.Body className="max-h-[70vh] overflow-auto">
-          <AdministratorsForm
+          <TeachersForm
             action={action}
-            initialData={ADMINISTRATOR_INITIALDATA}
-            oldData={getAdministratorQuery.data}
-            onFormData={(data) => administratorMutation.mutate(data)}
+            initialData={TEACHER_INITIALDATA}
+            oldData={getTeacherQuery.data}
+            onFormData={(data) => teacherMutation.mutate(data)}
             formSubmitRef={formRef}
           />
         </Modal.Body>

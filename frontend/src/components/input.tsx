@@ -535,17 +535,15 @@ export interface SelectedData {
   label: string;
 }
 
-function MultiSelect({
+function MultiSelect<T>({
   label,
   name,
   onSelectItem,
   children,
-  externalSelectedItems = null,
-}: MultiSelectProps & { externalSelectedItems?: SelectedData[] | null }) {
+  externalSelectedItems,
+}: MultiSelectProps & { externalSelectedItems?: T }) {
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>(
-    externalSelectedItems ?? [],
-  );
+  const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [dropdownStyles, setDropdownStyles] = useState<{
     width: number;
@@ -560,10 +558,12 @@ function MultiSelect({
   // Handles item selection via checkbox
   const handleItemsChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { id, value, checked } = event.target;
+
     setSelectedItems((prev) => {
       const updatedItems = checked
         ? [...prev, { id, label: value }]
-        : prev.filter((item) => item.id !== id);
+        : prev.filter((item) => item.id != id);
+
       onSelectItem(updatedItems);
       return updatedItems;
     });
@@ -632,10 +632,32 @@ function MultiSelect({
   }, []);
 
   useEffect(() => {
-    if (externalSelectedItems) {
-      setSelectedItems(externalSelectedItems);
+    if (Array.isArray(externalSelectedItems)) {
+      const selectedItemsWithLabels = externalSelectedItems.map((item) => {
+        // const element = document.getElementById(
+        //   String(item.id),
+        // ) as HTMLInputElement | null;
+        return { id: item.id, label: item.label || item.name };
+      });
+      setSelectedItems(selectedItemsWithLabels);
     }
   }, [externalSelectedItems]);
+
+  useEffect(() => {
+    if (isDropdownOpen) {
+      const dropdownElement = document.getElementById(dropdownUid);
+      if (dropdownElement) {
+        selectedItems.forEach((item) => {
+          const checkbox = document.getElementById(
+            String(item.id),
+          ) as HTMLInputElement | null;
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+      }
+    }
+  }, [isDropdownOpen, selectedItems, dropdownUid]);
 
   return (
     <div className="relative">

@@ -5,7 +5,7 @@ import { colors } from "@utils/colors";
 import { useTranslation } from "react-i18next";
 import React, { useState } from "react";
 
-interface InfoCardType {
+interface InfoCardProps {
   index: number;
   title: string;
   children: React.ReactNode;
@@ -13,13 +13,7 @@ interface InfoCardType {
   onDelete?: () => void;
 }
 
-export default function InfoCard({
-  index,
-  title,
-  children,
-  onEdit,
-  onDelete,
-}: InfoCardType) {
+function InfoCard({ index, title, children, onEdit, onDelete }: InfoCardProps) {
   const { t } = useTranslation();
   const [closeDropDown, setCloseDropDown] = useState(false);
   const handleColorSequence = (index: number) => {
@@ -93,3 +87,38 @@ InfoCard.Metric = function Metric({
     </div>
   );
 };
+
+interface InfoFieldProps {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  containerStyle?: string;
+  labelStyle?: string;
+  valueStyle?: string;
+  fullSpan?: boolean;
+}
+
+function InfoField({
+  label,
+  value,
+  fullSpan,
+  containerStyle,
+  labelStyle,
+  valueStyle,
+}: InfoFieldProps) {
+  return (
+    <div
+      className={`flex flex-col gap-y-1 ${fullSpan ? "col-span-full w-full" : ""} ${containerStyle}`}
+    >
+      <span
+        className={`text-sm font-semibold text-gray-800 dark:text-gray-400 ${labelStyle}`}
+      >
+        {label}:
+      </span>
+      <span className={`text-base text-gray-900 dark:text-white ${valueStyle}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+export { InfoField, InfoCard };

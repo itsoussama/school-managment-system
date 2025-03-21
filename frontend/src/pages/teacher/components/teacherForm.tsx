@@ -1,4 +1,10 @@
-import { Button, Input, RSelect } from "@src/components/input";
+import {
+  Button,
+  Input,
+  MultiSelect,
+  Checkbox,
+  RSelect,
+} from "@src/components/input";
 import { SkeletonProfile } from "@src/components/skeleton";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 import {
@@ -14,7 +20,10 @@ import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { formatUserName } from "@src/pages/shared/utils/formatters";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { Administrator } from "../viewAdministrators";
+import { getGrades, getSubjects } from "@src/pages/shared/utils/api";
+import { useQuery } from "@tanstack/react-query";
+import { Grade, Subject, Teacher } from "../viewTeachers";
+import { pluck } from "@src/utils/arrayMethod";
 
 export interface FormData {
   id?: number;
@@ -28,6 +37,8 @@ export interface FormData {
   payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
   net_salary?: number;
   hourly_rate?: number;
+  subjects: number[];
+  grades: number[];
   image?: File;
 }
 
@@ -41,6 +52,8 @@ export interface Data {
   payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
   net_salary?: number;
   hourly_rate?: number;
+  subjects: number[];
+  grades: number[];
   image?: File;
   password?: string;
   password_confirmation?: string;
@@ -48,10 +61,10 @@ export interface Data {
   school_id?: string;
 }
 
-interface AdministratorsFormProps {
+interface TeacherFormProps {
   action: "Create" | "Edit";
   initialData: FormData;
-  oldData?: Administrator;
+  oldData?: Teacher;
   formSubmitRef?: RefObject<HTMLFormElement>;
   additionalStyle?: string;
   onFormData: (data: Data) => void;
@@ -59,14 +72,14 @@ interface AdministratorsFormProps {
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
-export default function AdministratorsForm({
+export default function TeacherForm({
   action,
   initialData,
   oldData,
   formSubmitRef,
   onFormData,
   additionalStyle = "grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))]",
-}: AdministratorsFormProps) {
+}: TeacherFormProps) {
   const { t } = useTranslation();
   const { formData, errors, setFormData, setData, validateForm } =
     useFormValidation<FormData>(initialData);
@@ -75,6 +88,16 @@ export default function AdministratorsForm({
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [changePassword, toggleChangePassword] = useState<boolean>(false);
   const user = useAppSelector((state) => state.userSlice.user);
+
+  const getAllSubjectsQuery = useQuery({
+    queryKey: ["getAllSubjects"],
+    queryFn: () => getSubjects(1, -1, undefined, undefined, user.school_id),
+  });
+
+  const getGradesQuery = useQuery({
+    queryKey: ["getGrades"],
+    queryFn: () => getGrades(1, -1, undefined, undefined, user.school_id),
+  });
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -89,6 +112,8 @@ export default function AdministratorsForm({
           payroll_frequency: formData?.payroll_frequency,
           hourly_rate: formData?.hourly_rate,
           net_salary: formData?.net_salary,
+          subjects: formData?.subjects,
+          grades: formData?.grades,
         };
 
         if (action === "Edit") {
@@ -96,7 +121,7 @@ export default function AdministratorsForm({
           form["id"] = formData?.id as number;
         } else {
           form["school_id"] = user.school_id;
-          form["roles"] = [1];
+          form["roles"] = [3];
           form["password"] = formData?.password as string;
           form["password_confirmation"] =
             formData?.password_confirmation as string;
@@ -158,12 +183,14 @@ export default function AdministratorsForm({
         id: oldData.id,
         firstName: formatUserName(oldData.name).firstName,
         lastName: formatUserName(oldData.name).lastName,
-        address: oldData.administrator.address,
+        address: oldData.teacher.address,
         email: oldData.email,
         phone: oldData.phone,
         payroll_frequency: oldData.payroll.payroll_frequency,
         hourly_rate: oldData.payroll.hourly_rate,
         net_salary: oldData.payroll.net_salary,
+        subjects: oldData.subjects.map(pluck("id")),
+        grades: oldData.grades.map(pluck("id")),
       });
 
       const imagePath = oldData?.imagePath
@@ -230,7 +257,7 @@ export default function AdministratorsForm({
         <div className="flex flex-[3] flex-col gap-4">
           <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {t("information.administrator_information")}
+              {t("information.teacher_information")}
             </h1>
           </div>
           <form
@@ -294,6 +321,54 @@ export default function AdministratorsForm({
               onChange={(e) => setFormData(e.target.id, e.target.value)}
               onBlur={() => validateForm()}
             />
+
+            <MultiSelect
+              label={t("form.fields.subjects")}
+              name="subjects"
+              onSelectItem={(items) =>
+                setFormData(
+                  "subjects",
+                  items.map((item) => Number(item.id)),
+                )
+              }
+              externalSelectedItems={oldData?.subjects}
+            >
+              {getAllSubjectsQuery.data?.map(
+                (subject: Subject, key: number) => (
+                  <Checkbox
+                    key={key}
+                    label={subject.name}
+                    id={String(subject.id)}
+                    name="subjects"
+                    value={subject.name}
+                    checked={formData.subjects.includes(subject.id)}
+                  />
+                ),
+              )}
+            </MultiSelect>
+
+            <MultiSelect
+              label={t("form.fields.grade_levels")}
+              name="grades"
+              onSelectItem={(items) =>
+                setFormData(
+                  "grades",
+                  items.map((item) => Number(item.id)),
+                )
+              }
+              externalSelectedItems={oldData?.grades}
+            >
+              {getGradesQuery.data?.map((grade: Grade, key: number) => (
+                <Checkbox
+                  key={key}
+                  label={grade.label}
+                  id={String(grade.id)}
+                  name="grades"
+                  value={grade.label}
+                  checked={formData.grades.includes(grade.id)}
+                />
+              ))}
+            </MultiSelect>
 
             <RSelect
               id="payroll_frequency"

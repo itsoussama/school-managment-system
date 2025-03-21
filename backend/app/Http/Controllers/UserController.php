@@ -458,14 +458,14 @@ class UserController extends Controller
                         if ($user->hasRole($role->name) == config('roles.teacher')) {
                             $teacher = Teacher::create([
                                 'user_id' => $user->id,
-                                'teacher_number' => 'XBDKOO99',
+                                'teacher_number' => str::uuid(),
                                 'address' => $user->address,
                                 'birthdate' => '2024-01-01',
                                 'phone' => $user->phone,
 
                             ]);
                             $teacher->subjects()->sync($request->subjects);
-                            $teacher->grades()->sync($request->grades);
+                            // $teacher->grades()->sync($request->grades);
                             // $user->grades()->sync($request->grades);
                             $teacher->save();
                         }
@@ -497,13 +497,13 @@ class UserController extends Controller
                     $user->load('payroll', 'administrator');
                     break;
                 case 'teacher':
-                    $user->load('subjects', 'grades');
+                    $user->load('subjects', 'grades', 'payroll', 'teacher');
                     break;
                 case 'parent':
-                    $user->load('childrens');
+                    $user->load('childrens', 'parent');
                     break;
                 case 'student':
-                    $user->load('guardian', 'subjects', 'grades');
+                    $user->load('guardian', 'subjects', 'grades', 'student');
                     break;
                 default:
                     break;
