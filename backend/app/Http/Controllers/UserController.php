@@ -227,7 +227,7 @@ class UserController extends Controller
 
     public function schoolStaffs(Request $request)
     {
-        if (auth()->user()->hasRole(config('roles.admin_staff')) || auth()->user()->hasRole(config('roles.admin')) || auth()->user()->hasRole(config('roles.teacher'))) {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin')) || $request->user()->hasRole(config('roles.teacher'))) {
             $school_id = $request->input('school_id');
 
             $users = User::whereHas('role', function (Builder $query) {
