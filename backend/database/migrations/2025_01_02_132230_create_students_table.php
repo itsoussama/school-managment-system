@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('ref')->unique(); // Foreign key reference to users table
             $table->unsignedBigInteger('user_id')->unique(); // Foreign key reference to users table
-            $table->unsignedBigInteger('grade_id'); // Foreign key reference to users table
-            $table->unsignedBigInteger('parent_id');
+            $table->unsignedBigInteger('grade_id')->nullable(); // Foreign key reference to users table
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->string('student_number')->unique();
             $table->date('birthdate');
             $table->string('address')->nullable();

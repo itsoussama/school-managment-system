@@ -18,11 +18,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import {
-  FaExclamationTriangle,
   FaHome,
-  FaLock,
   FaPen,
   FaSearch,
   FaSortDown,
@@ -32,32 +30,16 @@ import {
 } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  deleteUser,
-  getUser,
-  getParents,
-  setParent,
-  unblockUser,
-  blockUser,
-} from "@pages/shared/utils/api";
-import {
-  SkeletonContent,
-  SkeletonProfile,
-  SkeletonTable,
-} from "@src/components/skeleton";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { getParents } from "@pages/shared/utils/api";
+import { SkeletonTable } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import Dropdown from "@src/components/dropdown";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddChildModal from "@pages/shared/components/addChildModal";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { FaEye, FaEyeSlash, FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
@@ -65,7 +47,10 @@ import {
   customTooltip,
 } from "@src/utils/flowbite";
 import { BrandColor, colorPalette } from "@src/utils/colors";
-import { useFormValidation } from "@src/hooks/useFormValidation";
+import FormParentModal from "./components/formParentModal";
+import ViewParentModal from "./components/viewParentModal";
+import DeleteParentModal from "./components/deleteParentModal";
+import BlockParentModal from "./components/blockParentModal";
 
 interface Check {
   id?: number;
@@ -84,18 +69,19 @@ interface ChildModal {
   open: boolean;
 }
 
-interface Childrens {
-  id: string;
+export interface Childrens {
+  id: number;
   imagePath: string;
   name: string;
 }
 
-interface Parent {
+export interface Parent {
   id: number;
   imagePath: string;
   name: string;
   email: string;
   phone: string;
+  address: string;
   school_id: string;
   blocked?: boolean;
   role: [
@@ -110,49 +96,8 @@ interface Parent {
   childrens: Childrens[];
 }
 
-export interface Data {
-  _method: string;
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  image?: File;
-  password?: string;
-  password_confirmation?: string;
-}
-
-interface FormData {
-  id?: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  image?: File;
-  password?: string;
-  password_confirmation?: string;
-}
-
-// export interface Data {
-//   id: number;
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   password: string;
-//   confirm_password: string;
-//   phone: string;
-//   image?: File;
-// }
-
 interface BlockSwitch {
   [key: string]: boolean;
-}
-
-interface File {
-  lastModified: number;
-  name: string;
-  size: number;
-  type: string;
 }
 
 interface Sort {
@@ -168,20 +113,7 @@ interface Filter {
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewParents() {
-  const queryClient = useQueryClient();
-  const { formData, errors, validateForm, setData } =
-    useFormValidation<FormData>({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      address: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
-    });
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
   const location = useLocation();
 
   const [sortPosition, setSortPosition] = useState<number>(0);
@@ -202,10 +134,6 @@ export function ViewParents() {
     school_id: "",
     open: false,
   });
-  const [img, setImg] = useState<FileList>();
-  const [previewImg, setPreviewImg] = useState<string>();
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [changePassword, toggleChangePassword] = useState<boolean>(false);
   // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -253,200 +181,6 @@ export function ViewParents() {
       ),
     placeholderData: keepPreviousData,
   });
-
-  const getParentQuery = useQuery({
-    queryKey: ["getParent", openModal?.id, "parent"],
-    queryFn: () => getUser(openModal?.id as number, "parent"),
-    enabled: !!openModal?.id,
-  });
-
-  const parentMutation = useMutation({
-    mutationFn: setParent,
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getParent"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getParents"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllParents"],
-      });
-
-      setData({
-        id: data?.id as number,
-        firstName: getUserName(data?.name).firstName,
-        lastName: getUserName(data?.name).lastName,
-        address: data?.address,
-        email: data?.email,
-        phone: data?.phone,
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-
-      setPreviewImg(undefined);
-    },
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const deleteUserQuery = useMutation({
-    mutationFn: deleteUser,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getParents"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllParents"],
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.deleted_success"),
-        state: true,
-      });
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const blockUserMutation = useMutation({
-    mutationFn: blockUser,
-    onSuccess: async (_, { user_id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getParent"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getParents"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllParents"],
-      });
-
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: true,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const unBlockUserMutation = useMutation({
-    mutationFn: unblockUser,
-    onSuccess: async (_, { user_id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getParent"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getParents"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllParents"],
-      });
-
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: false,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  // const [selectedItem, setSelectedItem] = useState()
-
-  const onChange = (event: ChangeEvent) => {
-    const inputElem = event.target as HTMLInputElement;
-    const selectElem = event.target as HTMLSelectElement;
-    // if (event?.target.nodeType)
-    setData((prev) => ({
-      ...prev,
-      [event.target.id]:
-        event?.target.nodeName == "SELECT"
-          ? selectElem.options[selectElem.selectedIndex].value
-          : inputElem.value,
-    }));
-  };
-
-  const handleChangePassword = (isVisible: boolean) => {
-    toggleChangePassword(isVisible);
-    setData({ ...formData, password: "", password_confirmation: "" });
-  };
 
   const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
@@ -508,115 +242,6 @@ export function ViewParents() {
     setPerPage(parseInt(target.value));
   };
 
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files;
-
-      setImg(file);
-      readAndPreview(file as FileList);
-    }
-  };
-
-  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    try {
-      const validationResult = validateForm();
-      if (validationResult.isValid) {
-        const form: Data = {
-          _method: "PUT",
-          id: formData?.id as number,
-          name: formData?.firstName + " " + formData?.lastName,
-          email: formData?.email,
-          phone: formData?.phone,
-        };
-
-        if (img) {
-          form["image"] = img[0];
-        }
-
-        if (form?.password) {
-          form["password"] = formData?.password;
-          form["password_confirmation"] = formData?.password_confirmation;
-        }
-
-        parentMutation.mutate(form);
-      }
-    } catch (error) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    }
-  };
-
-  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsVerficationMatch(true);
-    const input = event.target as HTMLFormElement;
-
-    if (
-      (input.verfication.value as string).toLowerCase() !==
-      getParentQuery.data?.name.toLowerCase()
-    ) {
-      setIsVerficationMatch(false);
-      return;
-    }
-
-    deleteUserQuery.mutate(openModal?.id as number);
-  };
-
-  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const userId: number = openModal?.id as number;
-
-    if (!blockSwitch[userId]) {
-      blockUserMutation.mutate({ user_id: userId });
-    } else {
-      unBlockUserMutation.mutate({ user_id: userId });
-    }
-
-    setOpenModal(undefined);
-  };
-
-  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-    setOpenModal({ id: id, type: type, open: isOpen });
-    const data = (await queryClient.ensureQueryData({
-      queryKey: ["getParent", id],
-      queryFn: () => getUser(id),
-    })) as Parent;
-
-    setData({
-      id: data?.id,
-      firstName: getUserName(data?.name).firstName,
-      lastName: getUserName(data?.name).lastName,
-      address: "address",
-      email: data?.email,
-      phone: data?.phone,
-    });
-  };
-
-  const onCloseModal = () => {
-    parentMutation.reset();
-    setOpenModal(undefined);
-
-    toggleChangePassword(false);
-    setPreviewImg(undefined);
-
-    setData({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      address: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
-    });
-  };
-
   // const formatDuration = (duration: number) => {
   //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
   //   const remainingMilliseconds = duration % (1000 * 60 * 60);
@@ -631,16 +256,6 @@ export function ViewParents() {
     const lastName = nameParts?.slice(-1).join(" ");
 
     return { firstName, lastName };
-  };
-
-  const readAndPreview = (file: FileList) => {
-    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
-      const fileReader = new FileReader();
-      fileReader.addEventListener("load", (event) => {
-        setPreviewImg(event.target?.result as string);
-      });
-      fileReader.readAsDataURL(file[0]);
-    }
   };
 
   useEffect(() => {
@@ -729,7 +344,7 @@ export function ViewParents() {
         </Breadcrumb.Item>
       </Breadcrumb>
 
-      <Modal
+      {/* <Modal
         show={openModal?.type === "view" ? openModal?.open : false}
         size={"3xl"}
         theme={{
@@ -1179,9 +794,9 @@ export function ViewParents() {
             </Button>
           </Modal.Footer>
         </form>
-      </Modal>
+      </Modal> */}
 
-      <Modal
+      {/* <Modal
         show={openModal?.type === "delete" ? openModal?.open : false}
         onClose={onCloseModal}
         size={"md"}
@@ -1240,10 +855,10 @@ export function ViewParents() {
             </Button>
           </Modal.Footer>
         </form>
-      </Modal>
+      </Modal> */}
 
       {/* block / unblock user */}
-      <Modal
+      {/* <Modal
         show={openModal?.type === "block" ? openModal?.open : false}
         onClose={onCloseModal}
         size={"md"}
@@ -1267,16 +882,16 @@ export function ViewParents() {
             <div className="flex flex-col gap-x-8">
               <p className="mb-3 text-gray-600 dark:text-gray-300">
                 {t("modals.block.title")} <b>{getParentQuery.data?.name}</b>
-              </p>
-              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
+              </p> */}
+      {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
                 <FaExclamationTriangle className="text-white" size={53} />
                 <p className="text-white">{t("modals.block.message")}</p>
               </div> */}
-              {/* <p className="text-gray-900 dark:text-white">
+      {/* <p className="text-gray-900 dark:text-white">
                 {t("modals.block.label")}{" "}
                 <b>{getParentQuery.data?.name}</b>
               </p> */}
-              {/* <Input
+      {/* <Input
                 type="text"
                 id="verfication"
                 name="verfication"
@@ -1286,7 +901,7 @@ export function ViewParents() {
                 }
                 required
               /> */}
-            </div>
+      {/* </div>
           </Modal.Body>
           <Modal.Footer>
             <Button type="submit" className="btn-danger !w-auto">
@@ -1299,7 +914,29 @@ export function ViewParents() {
             </Button>
           </Modal.Footer>
         </form>
-      </Modal>
+      </Modal> */}
+
+      <ViewParentModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
+
+      <FormParentModal
+        action="Edit"
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
+
+      <DeleteParentModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
+
+      {/* block / unblock user */}
+      <BlockParentModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
       <AddChildModal
         open={openChildModal?.open as boolean}
@@ -1497,7 +1134,7 @@ export function ViewParents() {
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {parent.parent.ref}
+                          {parent.parent?.ref}
                         </Table.Cell>
                         <Table.Cell>{parent.name}</Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
@@ -1699,7 +1336,7 @@ export function ViewParents() {
                               <div
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
-                                  onOpenEditModal({
+                                  setOpenModal({
                                     id: parent.id,
                                     type: "edit",
                                     open: true,

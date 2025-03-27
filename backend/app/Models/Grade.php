@@ -46,6 +46,11 @@ class Grade extends Model
         return $this->belongsTo(Stage::class);
     }
 
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class);
+    }
+
     // public function getTeachersAttribute()
     // {
     //     return $this->users->filter(fn($user) => $user->role->contains('name', 'Teacher'))->values();

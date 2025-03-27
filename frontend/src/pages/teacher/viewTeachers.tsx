@@ -1,4 +1,4 @@
-import { Button, Input, RSelect } from "@src/components/input";
+import { Input, RSelect } from "@src/components/input";
 
 import {
   Badge,
@@ -12,11 +12,9 @@ import {
   Tooltip,
 } from "flowbite-react";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import {
-  FaExclamationTriangle,
   FaHome,
-  FaLock,
   FaPen,
   FaSearch,
   FaSortDown,
@@ -26,32 +24,18 @@ import {
 import { IoFilter } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  deleteUser,
-  getUser,
   getTeachers,
-  setTeacher,
   getSubjects,
   getGrades,
-  blockUser,
-  unblockUser,
 } from "@src/pages/shared/utils/api";
-import {
-  SkeletonContent,
-  SkeletonProfile,
-  SkeletonTable,
-} from "@src/components/skeleton";
+import { SkeletonTable } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@src/components/alert";
-import { FaEye, FaEyeSlash, FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
@@ -59,7 +43,6 @@ import {
   customTooltip,
 } from "@src/utils/flowbite";
 import React from "react";
-import { useFormValidation } from "@src/hooks/useFormValidation";
 import ViewTeacherModal from "./components/viewTeacherModal";
 import FormTeacherModal from "./components/formTeacherModal";
 import DeleteTeacherModal from "./components/deleteTeacherModal";
@@ -120,10 +103,6 @@ export interface Subject {
   name: string;
 }
 
-interface BlockSwitch {
-  [key: string]: boolean;
-}
-
 interface Sort {
   column: string;
   direction: "asc" | "desc";
@@ -135,10 +114,6 @@ interface Filter {
 }
 
 export function ViewTeachers() {
-  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  const queryClient = useQueryClient();
-  // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
-
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
@@ -153,14 +128,10 @@ export function ViewTeachers() {
   const [checks, setChecks] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [img, setImg] = useState<FileList>();
-  const [previewImg, setPreviewImg] = useState<string>();
-  const [changePassword, toggleChangePassword] = useState<boolean>(false);
-  const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
-  const admin = useAppSelector((state) => state.userSlice.user);
+  const user = useAppSelector((state) => state.userSlice.user);
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const { t } = useTranslation();
   const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   const minSm = useBreakpoint("min", "sm");
@@ -180,7 +151,7 @@ export function ViewTeachers() {
         -1,
         undefined,
         undefined,
-        admin.school_id,
+        user.school_id,
         filter?.name,
         filter?.subject,
         filter?.gradelevel,
@@ -195,7 +166,7 @@ export function ViewTeachers() {
       perPage,
       sort.column,
       sort.direction,
-      admin.school_id,
+      user.school_id,
       filter?.name,
       filter?.subject,
       filter?.gradelevel,
@@ -206,7 +177,7 @@ export function ViewTeachers() {
         perPage,
         sort.column,
         sort.direction,
-        admin.school_id,
+        user.school_id,
         filter?.name,
         filter?.subject,
         filter?.gradelevel,
@@ -214,20 +185,14 @@ export function ViewTeachers() {
     placeholderData: keepPreviousData,
   });
 
-  // const getTeacherQuery = useQuery({
-  //   queryKey: ["getTeacher", openModal?.id],
-  //   queryFn: () => getUser(openModal?.id as number),
-  //   enabled: !!openModal?.id,
-  // });
-
   const getAllSubjectsQuery = useQuery({
     queryKey: ["getAllSubjects"],
-    queryFn: () => getSubjects(1, -1, undefined, undefined, admin.school_id),
+    queryFn: () => getSubjects(1, -1, undefined, undefined, user.school_id),
   });
 
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
-    queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
+    queryFn: () => getGrades(1, -1, undefined, undefined, user.school_id),
   });
 
   // const [selectedItem, setSelectedItem] = useState()
@@ -321,16 +286,6 @@ export function ViewTeachers() {
       handleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
   }, [page, handleChecks]);
-
-  // useEffect(() => {
-  //   if (getTeachersQuery.isFetched) {
-  //     let data = {};
-  //     getTeachersQuery.data?.data.map((teacher: Teacher) => {
-  //       data = { ...data, [teacher.id]: !!teacher.blocked };
-  //     });
-  //     setBlockSwitch(data);
-  //   }
-  // }, [getTeachersQuery.data, getTeachersQuery.isFetched]);
 
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);

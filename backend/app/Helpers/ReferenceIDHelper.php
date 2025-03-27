@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use Carbon\Carbon;
+
 class ReferenceIDHelper
 {
     /**
@@ -24,20 +26,19 @@ class ReferenceIDHelper
         $relationName = $relationModel ? lcfirst(class_basename($relationModel)) : null;
 
         // Count existing records based on relationship
-        $countModel = $relationModel
-            ? $model::whereHas($relationName, fn($query) => $query->where('school_id', $school->id))->count() + 1
-            : $model::where('school_id', $school->id)->count() + 1;
+        // $countModel = $relationModel
+        //     ? $model::whereHas($relationName, fn($query) => $query->where('school_id', $school->id))->count() + 1
+        //     : $model::where('school_id', $school->id)->count() + 1;
 
         // Generate the unique number for the school and model type
-        $uniqueNum = str_pad($countModel, 5, '0', STR_PAD_LEFT);
+        $uniqueNum = strtoupper(substr(md5(microtime()), 0, 4));
+        // str_pad($countModel, 5, '0', STR_PAD_LEFT);
 
         // Ensure required values exist before formatting reference
         if (empty($school->ref) || empty($type)) {
             throw new \Exception("Missing required reference components.");
         }
         // Return the formatted reference ID
-        class_basename($model) === "Administrator" && info($school->id . " " . $school->ref);
-
         return "{$school->ref}-{$type}{$uniqueNum}";
     }
 

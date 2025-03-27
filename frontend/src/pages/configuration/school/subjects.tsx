@@ -1,102 +1,66 @@
 import { BrandColor, colorPalette, colors } from "@src/utils/colors";
 import { customBadge, customTable, customTooltip } from "@src/utils/flowbite";
 import { TransitionAnimation } from "@src/components/animation";
+import { Button, RSelect } from "@src/components/input";
+import { SkeletonTable } from "@src/components/skeleton";
 import {
-  Button,
-  Checkbox,
-  Input,
-  MultiSelect,
-  RSelect,
-} from "@src/components/input";
-import { SkeletonContent, SkeletonTable } from "@src/components/skeleton";
-import {
-  addSubject,
-  deleteSubject,
   getGrades,
-  getSubject,
   getSubjects,
   getTeachers,
-  setSubject,
 } from "@src/pages/shared/utils/api";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Badge,
   Breadcrumb,
-  Modal,
   Pagination,
   Spinner,
   Table,
   Tooltip,
 } from "flowbite-react";
 import { ChangeEvent, CSSProperties, useCallback, useState } from "react";
-import { Trans, useTranslation } from "react-i18next";
-import {
-  FaExclamationTriangle,
-  FaEye,
-  FaHome,
-  FaPen,
-  FaTrash,
-  FaUser,
-} from "react-icons/fa";
+import { useTranslation } from "react-i18next";
+import { FaEye, FaHome, FaPen, FaTrash, FaUser } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import React from "react";
-import { useFormValidation } from "@src/hooks/useFormValidation";
+// import { useFormValidation } from "@src/hooks/useFormValidation";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import Dropdown from "@src/components/dropdown";
 import { Teacher } from "@pages/teacher/viewTeachers";
+import EditSubjectModal from "../components/editSubjectModal";
+import ViewSubjectModal from "../components/viewSubjectModal";
+import DeleteSubjectModal from "../components/deleteSubjectModal";
+import AddSubjectModal from "../components/addSubjectModal";
+import { formatUserName } from "@src/pages/shared/utils/formatters";
 
-interface Modal {
+export interface ModalProps {
   id?: number;
   type?: "view" | "addSubject" | "edit" | "delete";
   open: boolean;
 }
-
-interface TeacherSubject extends Teacher {
-  imagePath: File;
-}
-
-interface Subject {
+export interface Subject {
   id: number;
   name: string;
   grades: Grades[];
-  teachers: TeacherSubject[];
-}
-
-export interface Data {
-  _method?: string;
-  id: number;
-  name: string;
-  coef: number;
-  grades: number[];
-  teachers: number[];
-  school_id: string;
+  teachers: Teacher[];
 }
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
-interface Grades {
+export interface Grades {
   id: number;
   label: string;
 }
 
 export default function Subjects() {
-  const queryClient = useQueryClient();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const { t } = useTranslation();
-  const { formData, setFormData, setData } = useFormValidation<Subject>({
-    id: 0,
-    name: "",
-    grades: [],
-    teachers: [],
-  });
-  const [openModal, setOpenModal] = useState<Modal>();
+  const [openModal, setOpenModal] = useState<ModalProps>();
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>();
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const admin = useAppSelector((state) => state.userSlice.user);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
@@ -116,12 +80,6 @@ export default function Subjects() {
       getSubjects(page, perPage, sort.column, sort.direction, admin.school_id),
   });
 
-  const getSubjectQuery = useQuery({
-    queryKey: ["getSubject", openModal?.id],
-    queryFn: () => getSubject(openModal?.id as number),
-    enabled: !!openModal?.id,
-  });
-
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
     queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
@@ -132,268 +90,10 @@ export default function Subjects() {
     queryFn: () => getTeachers(1, -1, undefined, undefined, admin.school_id),
   });
 
-  const addSubjectQuery = useMutation({
-    mutationFn: addSubject,
-
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: ["getSubject"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getSubjects"],
-      });
-
-      console.log(data);
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: "Operation Successful",
-        state: true,
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
-    },
-  });
-
-  const setSubjectQuery = useMutation({
-    mutationFn: setSubject,
-
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: ["getSubject"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getSubjects"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
-      });
-
-      setData({
-        id: data?.id as number,
-        name: data?.name as string,
-        grades: data.grades as [],
-        teachers: data.teachers as [],
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: "Operation Successful",
-        state: true,
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
-    },
-  });
-
-  const deleteSubjectQuery = useMutation({
-    mutationFn: deleteSubject,
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["getSubject"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getSubjects"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getAllTeachers"],
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: "Operation Successful",
-        state: true,
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
-    },
-  });
-
   const handlePerPage = (ev: ChangeEvent) => {
     const target = ev.target as HTMLSelectElement;
     setPage(1);
     setPerPage(parseInt(target.value));
-  };
-
-  const onChange = (property: string, value: string | unknown[]) => {
-    // const exists = getSubjectsQuery.data?.some(
-    //   (subject: Subject) => subject.name === value,
-    // );
-    // if (exists) {
-    //   setData((prev) => ({
-    //     ...prev,
-    //     [property]: prev[property] === value ? "" : value,
-    //   }));
-
-    //   return;
-    // }
-    setData((prev) => ({ ...prev, [property]: value }));
-  };
-
-  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-    const data = await queryClient.ensureQueryData({
-      queryKey: ["getSubject", id],
-      queryFn: () => getSubject(id as number),
-    });
-
-    console.log(data);
-
-    setData({
-      id: data?.id,
-      name: data?.name,
-      grades: data?.grades,
-      teachers: data?.teachers,
-    });
-
-    setOpenModal({ id: id, type: type, open: isOpen });
-  };
-
-  const onCloseModal = () => {
-    // setSubjectQuery.reset();
-    setOpenModal(undefined);
-
-    // setData({
-    //   id: 0,
-    //   firstName: "",
-    //   lastName: "",
-    //   email: "",
-    //   phone: "",
-    //   password: "",
-    //   confirm_password: "",
-    // });
-
-    // setFormError({
-    //   firstName: "",
-    //   lastName: "",
-    //   email: "",
-    //   password: "",
-    //   confirm_password: "",
-    //   phone: "",
-    // });
-  };
-
-  const onSubmitAdd = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    try {
-      const gradesId =
-        (formData?.grades as Grades[])?.map((grade) => grade.id) || [];
-
-      const teachersId =
-        (formData?.teachers as Teacher[]).map((teacher) => teacher.id) || [];
-
-      const form: Data = {
-        id: formData?.id,
-        name: formData?.name as string,
-        coef: 2,
-        grades: gradesId as number[],
-        teachers: teachersId as number[],
-        school_id: admin.school_id,
-      };
-
-      addSubjectQuery.mutate(form);
-    } catch (error) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
-    }
-  };
-
-  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsVerficationMatch(true);
-    const input = event.target as HTMLFormElement;
-
-    if (
-      (input.verfication.value as string).toLowerCase() ===
-      getSubjectQuery.data?.name
-    ) {
-      setIsVerficationMatch(false);
-      return;
-    }
-
-    deleteSubjectQuery.mutate(openModal?.id as number);
-  };
-  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    try {
-      const gradesId =
-        (formData?.grades as Grades[]).map((grade) => grade.id) || [];
-
-      const teachersId =
-        (formData?.teachers as TeacherSubject[]).map((teacher) => teacher.id) ||
-        [];
-
-      const form: Data = {
-        _method: "PUT",
-        id: formData?.id,
-        name: formData?.name as string,
-        coef: 2,
-        grades: gradesId as number[],
-        teachers: teachersId as number[],
-        school_id: admin.school_id,
-      };
-
-      setSubjectQuery.mutate(form);
-    } catch (error) {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: "Operation Failed",
-        state: true,
-      });
-    }
-  };
-
-  const getUserName = (fullName: string) => {
-    const nameParts = fullName?.trim().split(/\s+/);
-    const firstName = nameParts?.slice(0, -1).join(" ");
-    const lastName = nameParts?.slice(-1).join(" ");
-
-    return { firstName, lastName };
   };
 
   const closeAlert = useCallback((value: AlertType) => {
@@ -458,457 +158,29 @@ export default function Subjects() {
         </Button>
       </div>
 
-      <Modal
-        show={openModal?.type === "addSubject" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitAdd}>
-          <Modal.Header>
-            {t("actions.add_entity", {
-              entity:
-                t("determiners.indefinite.masculine") +
-                " " +
-                t("form.fields.grade_level"),
-            })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-8">
-              <Input
-                type="text"
-                id="name"
-                name="name"
-                label={t("form.fields.subject")}
-                placeholder={t("form.fields.subject")}
-                onChange={(e) => onChange(e.target.id, e.target.value)}
-              />
-              <MultiSelect
-                label={t("form.fields.grade_levels")}
-                name="grades"
-                onSelectItem={(items) => setFormData("grades", items)}
-              >
-                {getGradesQuery.data?.map((grade: Grades, key: number) => (
-                  <Checkbox
-                    key={key}
-                    label={grade.label}
-                    id={grade.id.toString()}
-                    name="grades"
-                    value={grade.label}
-                    checked={formData.grades
-                      .map((g) => g.id)
-                      .includes(grade.id)}
-                  />
-                ))}
-              </MultiSelect>
+      <ViewSubjectModal
+        modal={openModal as ModalProps}
+        onClose={() => setOpenModal(undefined)}
+      />
 
-              <MultiSelect
-                label={t("entities.teacher")}
-                name="teachers"
-                onSelectItem={(items) => setFormData("teachers", items)}
-              >
-                {getTeachersQuery.data?.map(
-                  (teacher: TeacherSubject, key: number) => (
-                    <Checkbox
-                      key={key}
-                      label={teacher.name}
-                      id={teacher.id.toString()}
-                      name="teacher"
-                      value={teacher.name}
-                      checked={formData.teachers
-                        .map((g) => g.id)
-                        .includes(teacher.id)}
-                    />
-                  ),
-                )}
-              </MultiSelect>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-default !w-auto">
-              {t("general.accept")}
-            </Button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {t("general.decline")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <AddSubjectModal
+        modal={openModal as ModalProps}
+        onClose={() => setOpenModal(undefined)}
+        grades={getGradesQuery.data}
+        teachers={getTeachersQuery.data}
+      />
 
-      <Modal
-        show={openModal?.type === "view" ? openModal?.open : false}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
-        onClose={onCloseModal}
-      >
-        <Modal.Header>
-          {t("form.fields.id", { entity: t("form.fields.subject") })}:
-          <b> {openModal?.id}</b>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="flex flex-col gap-8 sm:flex-row">
-            <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
-              <div className="w-full space-y-3">
-                <SkeletonContent isLoaded={getSubjectQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.label")}:
-                      </span>
-                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getSubjectQuery.data?.name}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.grade_levels")}:
-                      </span>
-                      <div className="flex w-max max-w-48 flex-wrap">
-                        {getSubjectQuery.data?.grades.map(
-                          (grade: Grades, index: number) => (
-                            <Badge
-                              key={index}
-                              color={colors[index % colors.length]}
-                              className="mb-1 me-1 rounded-xs"
-                            >
-                              {grade.label}
-                            </Badge>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("entities.teachers")}:
-                      </span>
-                      <Dropdown
-                        triggerEvent="hover"
-                        additionalStyle={{
-                          containerStyle: "!w-auto",
-                          dropdownStyle: "z-50",
-                        }}
-                        width="auto"
-                        element={
-                          <div className="flex items-center gap-x-2">
-                            {getSubjectQuery.data?.teachers.length > 2 ? (
-                              <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                                {getSubjectQuery.data?.teachers?.map(
-                                  (teacher: TeacherSubject, key: number) =>
-                                    key < 2 && (
-                                      <img
-                                        key={key}
-                                        className="h-10 w-10 rounded-full border-2 border-gray-50 dark:border-gray-700"
-                                        src={
-                                          teacher?.imagePath
-                                            ? SERVER_STORAGE +
-                                              teacher?.imagePath
-                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(teacher?.name).firstName}+${getUserName(teacher?.name).lastName}`
-                                        }
-                                        alt="profile"
-                                      />
-                                    ),
-                                )}
-                                <div className="flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-full border-2 border-gray-50 bg-gray-500 text-xs font-semibold text-white hover:bg-gray-600 dark:border-gray-700 dark:bg-gray-400 dark:text-gray-900 dark:hover:bg-gray-500">
-                                  {`+${getSubjectQuery.data?.teachers.length - 2}`}
-                                </div>
-                              </div>
-                            ) : getSubjectQuery.data?.teachers.length > 1 ? (
-                              <div className="pointer-events-none flex -space-x-4 rtl:space-x-reverse">
-                                {getSubjectQuery.data?.teachers?.map(
-                                  (teacher: TeacherSubject, key: number) =>
-                                    key < 2 && (
-                                      <img
-                                        key={key}
-                                        className="h-10 w-10 rounded-full border-2 border-gray-50 dark:border-gray-700"
-                                        src={
-                                          teacher?.imagePath
-                                            ? SERVER_STORAGE +
-                                              teacher?.imagePath
-                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(teacher?.name).firstName}+${getUserName(teacher?.name).lastName}`
-                                        }
-                                        alt="profile"
-                                      />
-                                    ),
-                                )}
-                              </div>
-                            ) : (
-                              getSubjectQuery.data?.teachers?.length == 1 && (
-                                <>
-                                  <img
-                                    className="h-10 w-10 rounded-full border-2 border-gray-50 dark:border-gray-700"
-                                    src={
-                                      getSubjectQuery.data?.teachers[0]
-                                        ?.imagePath
-                                        ? SERVER_STORAGE +
-                                          getSubjectQuery.data?.teachers[0]
-                                            ?.imagePath
-                                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getSubjectQuery.data?.teachers[0]?.name).firstName}+${getUserName(getSubjectQuery.data?.teachers[0]?.name).lastName}`
-                                    }
-                                    alt="profile"
-                                  />
-                                  <span className="pointer-events-none">
-                                    {getSubjectQuery.data?.teachers[0]?.name}
-                                  </span>
-                                </>
-                              )
-                            )}
-                          </div>
-                        }
-                      >
-                        <Dropdown.List>
-                          {getSubjectQuery.data?.teachers.map(
-                            (teacher: TeacherSubject, key: number) => (
-                              <Dropdown.Item
-                                key={key}
-                                img={
-                                  teacher.imagePath
-                                    ? SERVER_STORAGE + teacher.imagePath
-                                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(teacher.name).firstName}+${getUserName(teacher.name).lastName}`
-                                }
-                              >
-                                {teacher.name}
-                              </Dropdown.Item>
-                            ),
-                          )}
-                        </Dropdown.List>
-                        <Dropdown.Button>
-                          <p onClick={() => navigate("/teachers/new")}>
-                            {t("actions.add_entity", {
-                              entity: t("entities.teacher"),
-                            })}
-                          </p>
-                        </Dropdown.Button>
-                      </Dropdown>
-                      {getSubjectQuery.data?.teachers?.length < 1 && (
-                        <div
-                          className="flex cursor-pointer items-center text-sm font-medium text-[var(--brand-color-600)] hover:underline dark:text-[var(--brand-color-500)]"
-                          style={
-                            {
-                              "--brand-color-500":
-                                colorPalette[brandState as BrandColor][500],
-                              "--brand-color-600":
-                                colorPalette[brandState as BrandColor][600],
-                            } as CSSProperties
-                          }
-                          onClick={() => navigate("/teachers/new")}
-                        >
-                          <FaUser className="me-2" />
-                          {t("actions.add_entity", {
-                            entity: t("entities.teacher"),
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </SkeletonContent>
-              </div>
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
+      <EditSubjectModal
+        modal={openModal as ModalProps}
+        onClose={() => setOpenModal(undefined)}
+        grades={getGradesQuery.data}
+        teachers={getTeachersQuery.data}
+      />
 
-      <Modal
-        show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"lg"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
-        onClose={onCloseModal}
-      >
-        <form onSubmit={onSubmitUpdate}>
-          <Modal.Header>
-            {t("form.fields.id", { entity: t("form.fields.subject") })}:
-            <b> {openModal?.id}</b>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="box-border flex w-full flex-col gap-6 sm:max-h-[60vh] sm:overflow-y-auto">
-                <div className="w-full space-y-3">
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                    <Input
-                      type="text"
-                      id="name"
-                      name="name"
-                      label={t("form.fields.label")}
-                      placeholder={t("form.fields.label")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getSubjectQuery.isFetching && true}
-                      value={(formData?.name as string) || ""}
-                      onChange={(e) => onChange(e.target.id, e.target.value)}
-                    />
-
-                    <MultiSelect
-                      label={t("form.fields.grade_levels")}
-                      name="grades"
-                      onSelectItem={(items) => setFormData("grades", items)}
-                      externalSelectedItems={formData?.grades.map(
-                        (grade: Grades) => ({
-                          id: String(grade.id),
-                          label: grade.label,
-                        }),
-                      )}
-                    >
-                      {getGradesQuery.data?.map(
-                        (grade: Grades, key: number) => (
-                          <Checkbox
-                            key={key}
-                            label={grade.label}
-                            id={grade.id.toString()}
-                            name="grades"
-                            value={grade.label}
-                            checked={
-                              (formData?.grades as Grades[])?.find(
-                                (value) =>
-                                  value.id.toString() === grade.id.toString(),
-                              )
-                                ? true
-                                : false
-                            }
-                          />
-                        ),
-                      )}
-                    </MultiSelect>
-
-                    <MultiSelect
-                      label={t("entities.teacher")}
-                      name="teachers"
-                      onSelectItem={(items) =>
-                        setFormData(
-                          "teachers",
-                          items?.map((value) => ({
-                            id: value.id,
-                            name: value.label,
-                          })),
-                        )
-                      }
-                      externalSelectedItems={formData?.teachers?.map(
-                        (teacher) => ({
-                          id: String(teacher.id),
-                          label: teacher.name,
-                        }),
-                      )}
-                    >
-                      {getTeachersQuery.data?.map(
-                        (teacher: TeacherSubject, key: number) => (
-                          <Checkbox
-                            key={key}
-                            label={teacher.name}
-                            id={String(teacher.id)}
-                            name="teacher"
-                            value={teacher.name}
-                            checked={
-                              (formData?.teachers as TeacherSubject[])?.find(
-                                (value) =>
-                                  value.id.toString() === teacher.id.toString(),
-                              )
-                                ? true
-                                : false
-                            }
-                          />
-                        ),
-                      )}
-                    </MultiSelect>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-default !w-auto">
-              {t("general.accept")}
-            </Button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {t("general.decline")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
-
-      <Modal
-        show={openModal?.type === "delete" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitDelete}>
-          <Modal.Header>
-            {t("actions.delete_entity", { entity: t("form.fields.subject") })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.delete.title")}
-                <b>{getSubjectQuery.data?.name}</b> ?
-              </p>
-              <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("modals.delete.message")}</p>
-              </div>
-              <p className="text-gray-900 dark:text-white">
-                <Trans
-                  i18nKey="modals.delete.label"
-                  values={{ item: getSubjectQuery.data?.name }}
-                  components={{ bold: <strong /> }}
-                />
-              </p>
-              <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={!isVerficationMatch ? t("modals.delete.error") : null}
-                required
-              />
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-danger !w-auto">
-              {t("modals.delete.delete_button")}
-            </Button>
-            <Button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("modals.delete.cancel_button")}
-            </Button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <DeleteSubjectModal
+        modal={openModal as ModalProps}
+        onClose={() => setOpenModal(undefined)}
+      />
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
@@ -1090,7 +362,7 @@ export default function Subjects() {
                                               teacher?.imagePath
                                                 ? SERVER_STORAGE +
                                                   teacher?.imagePath
-                                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(teacher?.name).firstName}+${getUserName(teacher?.name).lastName}`
+                                                : `https://ui-avatars.com/api/?background=random&name=${formatUserName(teacher?.name).firstName}+${formatUserName(teacher?.name).lastName}`
                                             }
                                             alt="profile"
                                           />
@@ -1112,7 +384,7 @@ export default function Subjects() {
                                               teacher?.imagePath
                                                 ? SERVER_STORAGE +
                                                   teacher?.imagePath
-                                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(teacher?.name).firstName}+${getUserName(teacher?.name).lastName}`
+                                                : `https://ui-avatars.com/api/?background=random&name=${formatUserName(teacher?.name).firstName}+${formatUserName(teacher?.name).lastName}`
                                             }
                                             alt="profile"
                                           />
@@ -1128,7 +400,7 @@ export default function Subjects() {
                                           subject.teachers[0]?.imagePath
                                             ? SERVER_STORAGE +
                                               subject.teachers[0]?.imagePath
-                                            : `https://ui-avatars.com/api/?background=random&name=${getUserName(subject.teachers[0]?.name).firstName}+${getUserName(subject.teachers[0]?.name).lastName}`
+                                            : `https://ui-avatars.com/api/?background=random&name=${formatUserName(subject.teachers[0]?.name).firstName}+${formatUserName(subject.teachers[0]?.name).lastName}`
                                         }
                                         alt="profile"
                                       />
@@ -1148,7 +420,7 @@ export default function Subjects() {
                                   img={
                                     teacher.imagePath
                                       ? SERVER_STORAGE + teacher.imagePath
-                                      : `https://ui-avatars.com/api/?background=random&name=${getUserName(teacher.name).firstName}+${getUserName(teacher.name).lastName}`
+                                      : `https://ui-avatars.com/api/?background=random&name=${formatUserName(teacher.name).firstName}+${formatUserName(teacher.name).lastName}`
                                   }
                                 >
                                   {teacher.name}
@@ -1212,7 +484,7 @@ export default function Subjects() {
                               <div
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
-                                  onOpenEditModal({
+                                  setOpenModal({
                                     id: subject.id,
                                     type: "edit",
                                     open: true,

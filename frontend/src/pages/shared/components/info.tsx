@@ -44,21 +44,15 @@ function InfoCard({ index, title, children, onEdit, onDelete }: InfoCardProps) {
           width="auto"
         >
           <Dropdown.List>
-            <Dropdown.Item>
-              <span
-                className="cursor-pointer"
-                onClick={() => (onEdit?.(), setCloseDropDown(true))}
-              >
-                {t("general.edit")}
-              </span>
+            <Dropdown.Item onClick={() => (onEdit?.(), setCloseDropDown(true))}>
+              {t("general.edit")}
             </Dropdown.Item>
-            <Dropdown.Item>
-              <span
-                className="cursor-pointer"
-                onClick={() => (onDelete?.(), setCloseDropDown(true))}
-              >
-                {t("general.delete")}
-              </span>
+
+            <Dropdown.Divider />
+            <Dropdown.Item
+              onClick={() => (onDelete?.(), setCloseDropDown(true))}
+            >
+              {t("general.delete")}
             </Dropdown.Item>
           </Dropdown.List>
         </Dropdown>

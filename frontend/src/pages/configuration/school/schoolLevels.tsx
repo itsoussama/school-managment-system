@@ -10,13 +10,7 @@ import { Link } from "react-router-dom";
 import Alert from "@src/components/alert";
 import Accordion from "@src/components/accordion";
 import { InfoCard } from "@src/pages/shared/components/info";
-import {
-  Button,
-  Input,
-  MultiSelect,
-  RSelect,
-  Checkbox,
-} from "@src/components/input";
+import { Button, Input, MultiSelect, RSelect } from "@src/components/input";
 import UserListModal from "@src/components/userListModal";
 import {
   keepPreviousData,
@@ -96,6 +90,7 @@ interface Grade {
   students?: Student[];
   teachers?: Teacher[];
   groups?: Group[];
+  group_ids?: number[];
   total_groups?: number;
   total_teachers?: number;
   total_students?: number;
@@ -140,6 +135,7 @@ export default function SchoolLevels() {
     name: "",
     grades: [],
   });
+
   const {
     formData: gradeData,
     setFormData: setGradeFormData,
@@ -517,29 +513,45 @@ export default function SchoolLevels() {
     });
   };
 
-  const onOpenEditGradeModal = async ({ id, type, open: isOpen }: Modal) => {
-    setOpenModal({ id: id, type: type, open: isOpen });
+  // const onOpenEditGradeModal = async ({ id, type, open: isOpen }: Modal) => {
+  //   setOpenModal({ id: id, type: type, open: isOpen });
 
-    const data: Grade = await queryClient.ensureQueryData({
-      queryKey: ["getGrade", id],
-      queryFn: () => getGrade(id),
-    });
+  //   const data: Grade = await queryClient.ensureQueryData({
+  //     queryKey: ["getGrade", id],
+  //     queryFn: () => getGrade(id),
+  //   });
 
-    setGradeData({
-      id: data?.id,
-      label: data?.label,
-      stage_id: data?.stage_id,
-      groups: data?.groups,
-      students: data?.students,
-      teachers: data?.teachers,
-    });
+  //   setGradeData({
+  //     id: data?.id,
+  //     label: data?.label,
+  //     stage_id: data?.stage_id,
+  //     groups: data?.groups,
+  //     group_ids: data?.group_ids,
+  //     students: data?.students,
+  //     teachers: data?.teachers,
+  //   });
 
-    // const studentIds = data.students?.map((student) => student.id);
-    // const teacherIds = data.teachers?.map((teacher) => teacher.id);
+  //   // const studentIds = data.students?.map((student) => student.id);
+  //   // const teacherIds = data.teachers?.map((teacher) => teacher.id);
 
-    // setSelectedStudents(studentIds as number[]);
-    // setSelectedTeachers(teacherIds as number[]);
-  };
+  //   // setSelectedStudents(studentIds as number[]);
+  //   // setSelectedTeachers(teacherIds as number[]);
+  // };
+
+  useEffect(() => {
+    if (getGradeQuery.data) {
+      const data = getGradeQuery.data;
+      setGradeData({
+        id: data?.id,
+        label: data?.label,
+        stage_id: data?.stage_id,
+        groups: data?.groups,
+        group_ids: data?.group_ids,
+        students: data?.students,
+        teachers: data?.teachers,
+      });
+    }
+  }, [getGradeQuery.data, setGradeData]);
 
   const onSelectGradeGroup = async (gradeId: number, groupId: number) => {
     const data: Group & { grade: Grade } = await getGradeGroup(
@@ -639,14 +651,14 @@ export default function SchoolLevels() {
   const onSubmitUpdateGradeLevel = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const groupIds = gradeData.groups?.map((group) => group.id);
+    // const groupIds = gradeData.groups?.map((group) => group.id);
 
     const formGrade: GradeData = {
       _method: "PUT",
       id: gradeData?.id,
       label: gradeData?.label,
       stage_id: gradeData?.stage_id as number,
-      groups: groupIds as number[],
+      groups: gradeData?.group_ids as number[],
       school_id: admin.school_id,
     };
 
@@ -656,14 +668,14 @@ export default function SchoolLevels() {
   const onSubmitUpdateGradeGroup = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const groupIds = gradeData.groups?.map((group) => group.id);
+    // const groupIds = gradeData.groups?.map((group) => group.id);
 
     const form: GradeData = {
       _method: "PUT",
       id: gradeData?.id,
       label: gradeData?.label,
       stage_id: gradeData?.stage_id as number,
-      groups: groupIds as number[],
+      groups: gradeData?.group_ids as number[],
       school_id: admin.school_id,
     };
 
@@ -699,11 +711,6 @@ export default function SchoolLevels() {
 
   const onCloseModal = () => {
     setOpenModal(undefined);
-    setGroupData({
-      id: 0,
-      name: "",
-      grade_id: 0,
-    });
     setSelectedStudents([]);
     setSelectedTeachers([]);
   };
@@ -922,46 +929,35 @@ export default function SchoolLevels() {
               <MultiSelect
                 label={t("form.fields.group")}
                 name="groups"
-                onSelectItem={(items) =>
-                  setGradeFormData(
-                    "groups",
-                    items.map((item) => ({ id: item.id, name: item.label })),
-                  )
-                }
-                externalSelectedItems={gradeData.groups?.map(
-                  (group: Group) => ({
-                    id: String(group.id),
-                    label: group.name,
-                  }),
-                )}
+                onSelect={(items) => setGradeFormData("group_ids", items)}
+                selectedValue={gradeData?.group_ids as number[]}
               >
-                {gradeData.groups?.map((group: Group, key: number) => (
-                  <Checkbox
-                    key={key}
-                    label={group.name}
-                    id={group.id?.toString()}
-                    name="groups"
-                    value={group.name}
-                    checked={gradeData.groups?.some(
-                      (item) => item.id == group.id,
-                    )}
-                  />
-                ))}
-                <Button
-                  className="btn-outline !m-0 flex h-8 items-center justify-center"
-                  onClick={() =>
-                    setOpenModal({
-                      id: gradeData?.id as number,
-                      open: true,
-                      type: "addGroup",
-                    })
-                  }
-                >
-                  <FaPlus size={12} className="me-2" />
-                  {t("actions.add_entity", {
-                    entity: t("form.fields.group"),
-                  })}
-                </Button>
+                <MultiSelect.List>
+                  {getGradeQuery.data?.groups.map(
+                    (group: Group, key: number) => (
+                      <MultiSelect.Option
+                        key={key}
+                        value={group.id}
+                        label={group.name}
+                      />
+                    ),
+                  )}
+                  <Button
+                    className="btn-outline !m-0 flex min-h-6 items-center justify-center"
+                    onClick={() =>
+                      setOpenModal({
+                        id: gradeData?.id as number,
+                        open: true,
+                        type: "addGroup",
+                      })
+                    }
+                  >
+                    <FaPlus size={12} className="me-2" />
+                    {t("actions.add_entity", {
+                      entity: t("form.fields.group"),
+                    })}
+                  </Button>
+                </MultiSelect.List>
               </MultiSelect>
             </div>
             <div className="mt-8 flex w-full flex-col">
@@ -1287,7 +1283,7 @@ export default function SchoolLevels() {
                             })
                           }
                           onEdit={() =>
-                            onOpenEditGradeModal({
+                            setOpenModal({
                               id: gradeLevel?.id as number,
                               open: true,
                               type: "editGrade",

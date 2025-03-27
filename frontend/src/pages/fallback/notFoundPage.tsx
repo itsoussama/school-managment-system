@@ -8,7 +8,7 @@ function NotFoundPage() {
   const themeState = useAppSelector((state) => state.preferenceSlice.themeMode);
   return (
     <div
-      className={`dark flex h-full flex-col items-center justify-center ${themeState == "dark" ? "bg-dark-primary" : "bg-light-primary"}`}
+      className={`flex h-full flex-col items-center justify-center ${themeState == "dark" ? "dark" : ""}`}
     >
       <img
         className="mb-4 max-w-lg"

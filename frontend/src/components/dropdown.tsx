@@ -221,7 +221,7 @@ function Dropdown({
         ReactDOM.createPortal(
           <div
             ref={dropdownRef}
-            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-lg border border-gray-400 bg-white shadow dark:border-gray-500 dark:bg-gray-700 ${dropdownStyle}`}
+            className={`absolute z-10 w-[inherit] min-w-[inherit] overflow-y-auto rounded-m border border-gray-400 bg-white shadow dark:border-gray-500 dark:bg-gray-700 ${dropdownStyle}`}
             style={{
               top: dropdownPosition?.top,
               left: dropdownPosition?.left,
@@ -241,10 +241,19 @@ function Dropdown({
 function List({ children, additionalStyle }: ListProps) {
   return (
     <ul
-      className={`min-w-min overflow-y-auto whitespace-nowrap py-2 text-gray-700 dark:text-gray-200 ${additionalStyle?.containerStyle}`}
+      className={`min-w-min overflow-y-auto whitespace-nowrap text-gray-700 dark:text-gray-200 ${additionalStyle?.containerStyle}`}
     >
       {children}
     </ul>
+  );
+}
+
+// Item component to display each item within the List
+function Divider() {
+  return (
+    <li>
+      <div className="border-t border-gray-200 dark:border-gray-600" />
+    </li>
   );
 }
 
@@ -286,6 +295,7 @@ function Button({ children }: ButtonProps) {
 // Exporting Dropdown with subcomponents as properties
 Dropdown.List = List;
 Dropdown.Item = Item;
+Dropdown.Divider = Divider;
 Dropdown.Button = Button;
 
 export default Dropdown;

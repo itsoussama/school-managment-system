@@ -170,7 +170,7 @@ const addAdministrator = async (formData: AddAdministratorFromData) => {
 };
 
 const addTeacher = async (formData: AddTeacherFromData) => {
-  const response = await axiosApi.post("/api/users/", formData, {
+  const response = await axiosApi.post("/api/add-teacher/", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -179,7 +179,7 @@ const addTeacher = async (formData: AddTeacherFromData) => {
 };
 
 const addStudent = async (formData: AddStudentFromData) => {
-  const response = await axiosApi.post("/api/users/", formData, {
+  const response = await axiosApi.post("/api/add-student/", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

@@ -118,7 +118,7 @@ class UserController extends Controller
             $sortColumn = $request->input('sort_column', 'id');
             $sortDirection = $request->input('sort_direction', 'asc');
             $school_id = $request->input('school_id');
-            $users = User::with('student', 'school', 'role', 'subjects', 'grades', 'guardian')
+            $users = User::with('student.grade', 'school', 'role', 'subjects', 'grades', 'guardian')
                 ->where('school_id', $school_id)
                 ->whereHas(
                     'role',
@@ -132,17 +132,17 @@ class UserController extends Controller
                         $query->where('name', 'LIKE', '%' . $name . '%');
                     }
                 })
-                ->whereHas(
-                    'grades',
-                    function ($query) {
-                        $grades = request('grades');
-                        if (!empty($grades)) {
-                            $query->whereId($grades);
-                        }
-                    }
-                )
+                // ->whereHas(
+                //     'grades',
+                //     function ($query) {
+                //         $grades = request('grades');
+                //         if (!empty($grades)) {
+                //             $query->whereId($grades);
+                //         }
+                //     }
+                // )
                 ->orderBy($sortColumn, $sortDirection);
-
+            info($users->get());
             if ($perPage == -1) {
                 return response()->json($users->get(), Response::HTTP_OK);
             }
@@ -234,6 +234,147 @@ class UserController extends Controller
                 $query->whereIn('name', ['Administrator', 'Administrator Staff', 'Teacher']);
             })->where('school_id', $school_id)->get();
             return response()->json($users, Response::HTTP_OK);
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
+    public function addTeacher(Request $request)
+    {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
+            try {
+                $validation = $request->validate([
+                    'name' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255|unique:users',
+                    'phone' => 'required|string|max:255',
+                    'address' => 'required|string|max:255',
+                    'password' => 'required|string|min:8|confirmed',
+                    'school_id' => 'required|exists:schools,id',
+                    'roles' => 'required|array',
+                    'roles.*' => 'exists:roles,id',
+                    'subjects' => 'required|array',
+                    'subjects.*' => 'exists:subjects,id',
+                    'grades' => 'required|array',
+                    'grades.*' => 'exists:grades,id',
+                    "payroll_frequency" => 'required|in:daily,weekly,bi-weekly,monthly',
+                    "hourly_rate" => 'nullable|decimal:0,2',
+                    "net_salary" => 'nullable|decimal:0,2'
+                ]);
+                if ($validation) {
+                    $path = '';
+                    if ($request->hasFile('image')) {
+                        // $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
+                        // $request->file('image')->move(public_path('images/users'), $filename);
+                        $path = $request->file('image')->store('images', 'public');
+                    }
+                    $user = User::create([
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'phone' => $request->phone,
+                        'password' => bcrypt($request->password),
+                    ]);
+
+
+                    $user->school()->associate($request->school_id);
+                    $user->role()->sync($request->roles);
+                    $user->subjects()->sync($request->subjects);
+                    $user->grades()->sync($request->grades);
+                    $user->imagePath = $path;
+
+                    $user->save();
+
+                    $user->payroll()->create([
+                        'payroll_frequency' => $request->payroll_frequency,
+                        'net_salary' => $request->net_salary,
+                        'payment_status' => 'pending',
+                        'pay_date' => $this->getUpcomingPayDate($request->payroll_frequency)
+                    ]);
+
+
+                    $user->teacher()->create([
+                        'teacher_number' => str::uuid(),
+                        'address' => $request->address,
+                        'birthdate' => '2024-01-01',
+                        'phone' => $request->phone,
+                    ]);
+                    $user->teacher->save();
+                } else {
+                    return $request;
+                }
+
+
+                // return response()->json($user, Response::HTTP_CREATED);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json($e->errors(), 422);
+            }
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
+    public function addStudent(Request $request)
+    {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
+            try {
+                $validation = $request->validate([
+                    'name' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255|unique:users',
+                    'phone' => 'required|string|max:255',
+                    'address' => 'required|string|max:255',
+                    'password' => 'required|string|min:8|confirmed',
+                    'school_id' => 'required|exists:schools,id',
+                    'guardian_id' => 'nullable|integer',
+                    'roles' => 'required|array',
+                    'roles.*' => 'exists:roles,id',
+                    'subjects' => 'array',
+                    'subjects.*' => 'exists:subjects,id',
+                    'grades' => 'required|array',
+                    'grades.*' => 'exists:grades,id',
+                ]);
+                if ($validation) {
+                    $path = '';
+                    if ($request->hasFile('image')) {
+                        // $filename = Str::random(20) . '_' . $request->file('image')->getClientOriginalName();
+                        // $request->file('image')->move(public_path('images/users'), $filename);
+                        $path = $request->file('image')->store('images', 'public');
+                    }
+                    $user = User::create([
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'phone' => $request->phone,
+                        'password' => bcrypt($request->password),
+                    ]);
+
+
+                    $user->school()->associate($request->school_id);
+                    $user->role()->sync($request->roles);
+                    // $user->grades()->sync($request->grades);
+                    // $user->subjects()->sync($request->subjects);
+                    $user->imagePath = $path;
+
+                    $user->save();
+
+
+                    $user->student()->create([
+                        'student_number' => str::uuid(),
+                        'address' => $request->address,
+                        'birthdate' => '2024-01-01',
+                    ]);
+                    $user->student->grade()->associate($request->grades[0]);
+
+                    if ($request->guardian_id) {
+                        $user->student->parents()->sync($request->guardian_id);
+                    }
+                    $user->student->save();
+                } else {
+                    return $request;
+                }
+
+
+                // return response()->json($user, Response::HTTP_CREATED);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json($e->errors(), 422);
+            }
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
@@ -541,7 +682,7 @@ class UserController extends Controller
                     'subjects.*' => 'exists:subjects,id',
                     'grades' => 'nullable|array',
                     'grades.*' => 'exists:grades,id',
-                    "payroll_frequency" => 'required|in:daily,weekly,bi-weekly,monthly',
+                    "payroll_frequency" => 'nullable|in:daily,weekly,bi-weekly,monthly',
                     "hourly_rate" => 'nullable|decimal:0,2',
                     "net_salary" => 'nullable|decimal:0,2',
                     'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

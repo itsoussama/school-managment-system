@@ -11,7 +11,7 @@ class Student extends Model
 {
     use HasFactory;
     // Fillable attributes
-    protected $fillable = ['user_id', 'student_number', 'birthdate', 'address'];
+    protected $fillable = ['user_id', 'grade_id', 'student_number', 'birthdate', 'address'];
 
     /**
      * Get the user that owns the student.
@@ -26,7 +26,7 @@ class Student extends Model
     }
     public function grade()
     {
-        return $this->belongsTo(Grade::class, 'grade_id'); // One-to-one inverse relationship
+        return $this->belongsTo(Grade::class, 'grade_id'); // One-to-one relationship
     }
     public function group()
     {

@@ -63,7 +63,10 @@ class GradeController extends Controller
      */
     public function show(Grade $grade)
     {
-        return response()->json($grade->load(['groups', 'stage']), Response::HTTP_OK);
+        $grade = $grade->load(['groups', 'stage']);
+        $groupIds = $grade->groups->pluck('id');
+        $grade->group_ids = $groupIds;
+        return response()->json($grade, Response::HTTP_OK);
     }
 
     /**

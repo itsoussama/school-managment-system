@@ -1,4 +1,4 @@
-import { Button, Input, RSelect } from "@src/components/input";
+import { Input, RSelect } from "@src/components/input";
 
 import {
   Badge,
@@ -12,11 +12,9 @@ import {
   Tooltip,
 } from "flowbite-react";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import {
-  FaExclamationTriangle,
   FaHome,
-  FaLock,
   FaPen,
   FaSearch,
   FaSortDown,
@@ -27,32 +25,15 @@ import {
 import { IoFilter } from "react-icons/io5";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  deleteUser,
-  getUser,
-  getStudents,
-  setStudent,
-  getGrades,
-  blockUser,
-  unblockUser,
-} from "@pages/shared/utils/api";
-import {
-  SkeletonContent,
-  SkeletonProfile,
-  SkeletonTable,
-} from "@src/components/skeleton";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { getStudents, getGrades } from "@pages/shared/utils/api";
+import { SkeletonTable } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import AddParentModal from "@pages/shared/components/addParentModal";
 import Alert from "@src/components/alert";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
-import { FaEyeSlash, FaEye, FaRegCircleXmark } from "react-icons/fa6";
+import { FaEye, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import {
   customTable,
@@ -60,7 +41,11 @@ import {
   customTooltip,
 } from "@src/utils/flowbite";
 import React from "react";
-import { useFormValidation } from "@src/hooks/useFormValidation";
+import BlockStudentModal from "./components/blockStudentModal";
+import { badgeColor } from "@src/utils/colors";
+import DeleteStudentModal from "./components/deleteStudentModal";
+import FormStudentModal from "./components/formStudentModal";
+import ViewStudentModal from "./components/viewStudentModal";
 
 interface Check {
   id?: number;
@@ -121,44 +106,13 @@ export interface Student {
   };
 }
 
-interface Grade {
+export interface Grade {
   id: number;
   label: string;
 }
-
-export interface Data {
-  _method: string;
+export interface Subject {
   id: number;
   name: string;
-  email: string;
-  phone: string;
-  image?: File;
-  password?: string;
-  password_confirmation?: string;
-}
-
-interface FormData {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password?: string;
-  password_confirmation?: string;
-  phone: string;
-  image?: File;
-}
-
-interface DataError {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirm_password: string;
-}
-
-interface BlockSwitch {
-  [key: string]: boolean;
 }
 
 interface Sort {
@@ -173,19 +127,7 @@ interface Filter {
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewStudents() {
-  const queryClient = useQueryClient();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  // queryClient.invalidateQueries({ queryKey: ["getTeacher"] });
-  const { formData, setData } = useFormValidation<FormData>({
-    id: 0,
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    password_confirmation: "",
-    phone: "",
-  });
-
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
@@ -204,33 +146,10 @@ export function ViewStudents() {
     school_id: "",
     open: false,
   });
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [img, setImg] = useState<FileList>();
-  const [previewImg, setPreviewImg] = useState<string>();
-  // const [data, setData] = useState<Data>({
-  //   id: 0,
-  //   firstName: "",
-  //   lastName: "",
-  //   email: "",
-  //   phone: "",
-  //   password: "",
-  //   confirm_password: "",
-  // });
-  const [formError, setFormError] = useState<DataError>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirm_password: "",
-    phone: "",
-  });
-  const [changePassword, toggleChangePassword] = useState<boolean>(false);
-  const [blockSwitch, setBlockSwitch] = useState<BlockSwitch>({});
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
   const admin = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
-  const badgeColor = ["blue", "green", "pink", "purple", "red", "yellow"];
   const minSm = useBreakpoint("min", "sm");
   const navigate = useNavigate();
   const location = useLocation();
@@ -275,261 +194,10 @@ export function ViewStudents() {
     placeholderData: keepPreviousData,
   });
 
-  const getStudentQuery = useQuery({
-    queryKey: ["getStudent", openModal?.id, "student"],
-    queryFn: () => getUser(openModal?.id as number, "student"),
-    enabled: !!openModal?.id,
-  });
-
   const getGradesQuery = useQuery({
     queryKey: ["getGrades"],
     queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
   });
-
-  const studentMutation = useMutation({
-    mutationFn: setStudent,
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getStudent"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getStudents"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllStudents"],
-      });
-
-      setData({
-        id: data?.id,
-        firstName: getUserName(data?.name).firstName,
-        lastName: getUserName(data?.name).lastName,
-        email: data?.email,
-        phone: data?.phone,
-        password: "",
-        password_confirmation: "",
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-
-      setPreviewImg(undefined);
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const deleteUserQuery = useMutation({
-    mutationFn: deleteUser,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getStudents"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllStudents"],
-      });
-      // setOpenDeleteModal(undefined);
-      setOpenModal(undefined);
-      setPage(1);
-
-      setData({
-        id: 0,
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        password: "",
-        password_confirmation: "",
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.deleted_success"),
-        state: true,
-      });
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const blockUserMutation = useMutation({
-    mutationFn: blockUser,
-    onSuccess: (_, { user_id }) => {
-      queryClient.invalidateQueries({
-        queryKey: ["getStudent"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getStudents"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getAllStudents"],
-      });
-
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: true,
-      }));
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const unBlockUserMutation = useMutation({
-    mutationFn: unblockUser,
-    onSuccess: (_, { user_id }) => {
-      queryClient.invalidateQueries({
-        queryKey: ["getStudent"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getStudents"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["getAllStudents"],
-      });
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: false,
-      }));
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.saved_success"),
-        state: true,
-      });
-    },
-
-    onError: (_, { user_id }) => {
-      setBlockSwitch((prev) => ({
-        ...prev,
-        // [userId]: !prev?.[userId],
-        [user_id]: prev?.[user_id],
-      }));
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-  // const [selectedItem, setSelectedItem] = useState()
-
-  const onChange = (event: ChangeEvent) => {
-    const inputElem = event.target as HTMLInputElement;
-    const selectElem = event.target as HTMLSelectElement;
-    // if (event?.target.nodeType)
-    setData((prev) => ({
-      ...prev,
-      [event.target.id]:
-        event?.target.nodeName == "SELECT"
-          ? selectElem.options[selectElem.selectedIndex].value
-          : inputElem.value,
-    }));
-    // console.log((event.target as HTMLInputElement).value);
-  };
-
-  const handleClientError = (field: HTMLFormElement) => {
-    // const passwordValidation = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$&()\-`.+,/"]).{8,}$/;
-    const passwordValidation = /[0-9]{8}/;
-
-    // Error messages for empty or invalid fields
-    const messages = {
-      password:
-        "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
-      confirm_password: "Passwords do not match. Please try again.",
-    };
-
-    const isEmpty = (value: string) => value.trim() === "";
-    let error = false;
-
-    // Function to set error messages and update the error flag
-    const setError = (fieldName: string, message: string) => {
-      setFormError((prev) => ({
-        ...prev,
-        [fieldName]: message,
-      }));
-      error = true;
-    };
-
-    // Clear error messages if validation is successful
-    const clearError = (fieldName: string) => {
-      setFormError((prev) => ({
-        ...prev,
-        [fieldName]: "",
-      }));
-    };
-
-    // Validate password field
-    if (changePassword) {
-      if (isEmpty(field.password.value)) {
-        setError("password", "Password field is required.");
-      } else if (!passwordValidation.test(field.password.value)) {
-        setError("password", messages.password);
-      } else {
-        clearError("password");
-      }
-
-      // Validate confirm password field
-      if (isEmpty(field.confirm_password.value)) {
-        setError("confirm_password", "Please confirm your password.");
-      } else if (field.password.value !== field.confirm_password.value) {
-        setError("confirm_password", messages.confirm_password);
-      } else {
-        clearError("confirm_password");
-      }
-    }
-
-    return error;
-  };
 
   const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
@@ -590,120 +258,6 @@ export function ViewStudents() {
     setPerPage(parseInt(target.value));
   };
 
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files;
-
-      setImg(file);
-      readAndPreview(file as FileList);
-    }
-  };
-
-  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const input = event.target as HTMLFormElement;
-
-    if (!handleClientError(input)) {
-      const form: Data = {
-        _method: "PUT",
-        id: formData?.id,
-        name: formData?.firstName + " " + formData?.lastName,
-        email: formData?.email,
-        phone: formData?.phone,
-      };
-
-      if (img) {
-        form["image"] = img[0];
-      }
-
-      if (formData?.password) {
-        form["password"] = formData?.password;
-        form["password_confirmation"] = formData?.password_confirmation;
-      }
-
-      studentMutation.mutate(form);
-    } else {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    }
-  };
-
-  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsVerficationMatch(true);
-    const input = event.target as HTMLFormElement;
-
-    if (
-      (input.verfication.value as string).toLowerCase() !==
-      getStudentQuery.data?.name.toLowerCase()
-    ) {
-      setIsVerficationMatch(false);
-      return;
-    }
-
-    deleteUserQuery.mutate(openModal?.id as number);
-  };
-
-  const onSubmitBlock = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const userId: number = openModal?.id as number;
-
-    if (!blockSwitch[userId]) {
-      blockUserMutation.mutate({ user_id: userId });
-    } else {
-      unBlockUserMutation.mutate({ user_id: userId });
-    }
-
-    setOpenModal(undefined);
-  };
-
-  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-    setOpenModal({ id: id, type: type, open: isOpen });
-    const data = (await queryClient.ensureQueryData({
-      queryKey: ["getStudent", id],
-      queryFn: () => getUser(id),
-    })) as Student;
-
-    setData({
-      id: data?.id,
-      firstName: getUserName(data?.name).firstName,
-      lastName: getUserName(data?.name).lastName,
-      email: data?.email,
-      phone: data?.phone,
-    });
-  };
-
-  const onCloseModal = () => {
-    studentMutation.reset();
-    setOpenModal(undefined);
-
-    toggleChangePassword(false);
-    setPreviewImg(undefined);
-
-    setData({
-      id: 0,
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      password: "",
-      password_confirmation: "",
-    });
-
-    setFormError({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirm_password: "",
-      phone: "",
-    });
-  };
-
   // const formatDuration = (duration: number) => {
   //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
   //   const remainingMilliseconds = duration % (1000 * 60 * 60);
@@ -718,16 +272,6 @@ export function ViewStudents() {
     const lastName = nameParts?.slice(-1).join(" ");
 
     return { firstName, lastName };
-  };
-
-  const readAndPreview = (file: FileList) => {
-    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
-      const fileReader = new FileReader();
-      fileReader.addEventListener("load", (event) => {
-        setPreviewImg(event.target?.result as string);
-      });
-      fileReader.readAsDataURL(file[0]);
-    }
   };
 
   useEffect(() => {
@@ -765,16 +309,6 @@ export function ViewStudents() {
     }
   }, [page, handleChecks]);
 
-  useEffect(() => {
-    if (getStudentsQuery.isFetched) {
-      let data = {};
-      getStudentsQuery.data?.data.map((student: Student) => {
-        data = { ...data, [student.id]: !!student.blocked };
-      });
-      setBlockSwitch(data);
-    }
-  }, [getStudentsQuery.data, getStudentsQuery.isFetched]);
-
   return (
     <div className="flex w-full flex-col">
       <Alert
@@ -811,509 +345,27 @@ export function ViewStudents() {
         </Breadcrumb.Item>
       </Breadcrumb>
 
-      <Modal
-        show={openModal?.type === "view" ? openModal?.open : false}
-        size={"4xl"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
-        onClose={onCloseModal}
-      >
-        <Modal.Header>
-          {t("form.fields.id", { entity: t("entities.parent") })}:
-          <b> {openModal?.id}</b>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="flex flex-col gap-8 sm:flex-row">
-            <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-              <SkeletonProfile
-                imgSource={
-                  getStudentQuery.data?.imagePath
-                    ? SERVER_STORAGE + getStudentQuery.data?.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.name).firstName}+${getUserName(getStudentQuery.data?.name).lastName}`
-                }
-                className="h-40 w-40"
-              />
-              <div className="flex flex-col gap-2 rounded-s bg-white px-4 py-2 dark:bg-gray-700">
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                  {t("status.active_deactivate")}
-                </span>
-                <ToggleSwitch
-                  theme={customToggleSwitch}
-                  color={brandState}
-                  checked={blockSwitch[getStudentQuery.data?.id] || false}
-                  onChange={() =>
-                    setOpenModal({
-                      id: getStudentQuery.data?.id,
-                      type: "block",
-                      open: true,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.personal_information")}
-                </h1>
-                <SkeletonContent isLoaded={getStudentQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(210px,_1fr))] gap-x-11 gap-y-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.first_name")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getStudentQuery.data?.name).firstName}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.last_name")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getUserName(getStudentQuery.data?.name).lastName}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.email")}:
-                      </span>
-                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getStudentQuery.data?.email}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.phone_number")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getStudentQuery.data?.phone}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.address")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        123 Rue Principale
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.enrollement_date")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        2024/01/01
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.parent_guardian")}:
-                      </span>
-                      {getStudentQuery.data?.guardian ? (
-                        <div
-                          className="mt-2 flex w-max cursor-pointer items-center gap-x-2 rounded-s py-2 pl-2 pr-4 hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() =>
-                            navigate("/parents/manage", {
-                              state: {
-                                parent: {
-                                  id: getStudentQuery.data?.guardian.id,
-                                },
-                              },
-                            })
-                          }
-                        >
-                          <img
-                            className="w-7 rounded-full"
-                            src={
-                              getStudentQuery.data?.guardian.imagePath
-                                ? SERVER_STORAGE +
-                                  getStudentQuery.data?.guardian.imagePath
-                                : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.guardian.name).firstName}+${getUserName(getStudentQuery.data?.guardian.name).lastName}`
-                            }
-                            alt="profile"
-                          />
-                          <span className="text-sm text-dark-primary dark:text-white">
-                            {getStudentQuery.data?.guardian?.name}
-                          </span>
-                        </div>
-                      ) : (
-                        <div
-                          className="flex cursor-pointer items-center text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
-                          onClick={() =>
-                            setOpenParentModal({
-                              id: getStudentQuery.data?.id,
-                              school_id: getStudentQuery.data?.school_id,
-                              open: true,
-                            })
-                          }
-                        >
-                          <FaUser className="me-2" />
-                          {t("general.assign_to_parent")}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </SkeletonContent>
-              </div>
+      <ViewStudentModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.academic_information")}
-                </h1>
-                <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <span className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {t("form.fields.grade_levels")}:
-                    </span>
-                    <div className="flex w-max max-w-48 flex-wrap">
-                      {getStudentQuery.data?.grades.map(
-                        (grade: Grade, index: number) => (
-                          <Badge
-                            key={index}
-                            color={badgeColor[index % badgeColor.length]}
-                            className="mb-1 me-1 rounded-xs"
-                          >
-                            {grade.label}
-                          </Badge>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                      {t("form.fields.enrollement_date")}:
-                    </span>
-                    <span className="text-base text-gray-900 dark:text-white">
-                      2024/01/01
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
+      <FormStudentModal
+        action="Edit"
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
-      <Modal
-        show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"4xl"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
-        onClose={onCloseModal}
-      >
-        <form onSubmit={onSubmitUpdate}>
-          <Modal.Header>
-            {t("form.fields.id", { entity: "entities.student" })}:
-            <b> {openModal?.id}</b>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-                <SkeletonProfile
-                  imgSource={
-                    previewImg
-                      ? previewImg
-                      : getStudentQuery.data?.imagePath
-                        ? SERVER_STORAGE + getStudentQuery.data?.imagePath
-                        : `https://ui-avatars.com/api/?background=random&name=${getUserName(getStudentQuery.data?.name).firstName}+${getUserName(getStudentQuery.data?.name).lastName}`
-                  }
-                  className="h-40 w-40"
-                />
-
-                <button className="btn-gray relative overflow-hidden">
-                  <input
-                    type="file"
-                    className="absolute left-0 top-0 cursor-pointer opacity-0"
-                    onChange={handleImageUpload}
-                  />
-                  {t("form.buttons.upload", { label: t("general.photo") })}
-                </button>
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.accepted_format")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      jpg, jpeg, png
-                    </span>
-                  </span>
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.maximum_size")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      1024 mb
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
-                <div className="w-full space-y-3">
-                  <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("information.personal_information")}
-                  </h1>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                    <Input
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      label={t("form.fields.first_name")}
-                      placeholder={t("form.placeholders.first_name")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getStudentQuery.isFetching && true}
-                      value={formData?.firstName}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      label={t("form.fields.last_name")}
-                      placeholder={t("form.placeholders.last_name")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getStudentQuery.isFetching && true}
-                      value={formData?.lastName}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="text"
-                      id="address"
-                      name="address"
-                      label={t("form.fields.address")}
-                      placeholder={t("form.placeholders.address")}
-                      value="123 Rue Principale"
-                      onChange={(e) => console.log(e.target.value)}
-                      custom-style={{ containerStyle: "col-span-full" }}
-                    />
-
-                    <Input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      label={t("form.fields.phone_number")}
-                      placeholder="06 00 00 00"
-                      pattern="(06|05)[0-9]{6}"
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getStudentQuery.isFetching && true}
-                      value={formData?.phone}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="email"
-                      id="email"
-                      name="email"
-                      label={t("form.fields.email")}
-                      placeholder={t("form.placeholders.email")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getStudentQuery.isFetching && true}
-                      value={formData?.email}
-                      onChange={onChange}
-                    />
-
-                    <div className="col-span-full border-t border-gray-300 dark:border-gray-600"></div>
-
-                    {changePassword ? (
-                      <>
-                        <Input
-                          type="password"
-                          id="password"
-                          name="password"
-                          label={t("form.fields.password")}
-                          placeholder="●●●●●●●"
-                          error={formError.password}
-                          value={formData?.password}
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          leftIcon={FaLock}
-                          rightIcon={(isPasswordVisible) =>
-                            isPasswordVisible ? FaEyeSlash : FaEye
-                          }
-                          onChange={onChange}
-                        />
-
-                        <Input
-                          type="password"
-                          id="password_confirmation"
-                          name="password_confirmation"
-                          label={t("form.fields.confirm_password")}
-                          placeholder="●●●●●●●"
-                          error={formError.confirm_password}
-                          value={formData?.password_confirmation}
-                          custom-style={{
-                            inputStyle: "px-10",
-                          }}
-                          leftIcon={FaLock}
-                          rightIcon={(isPasswordVisible) =>
-                            isPasswordVisible ? FaEyeSlash : FaEye
-                          }
-                          onChange={onChange}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => toggleChangePassword(true)}
-                          className="btn-default !w-auto"
-                        >
-                          {t("form.buttons.change", {
-                            label:
-                              t("determiners.definite.masculine") +
-                              " " +
-                              t("form.fields.password"),
-                          })}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-default !w-auto">
-              {t("general.accept")}
-            </Button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {t("general.decline")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
-
-      <Modal
-        show={openModal?.type === "delete" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitDelete}>
-          <Modal.Header>
-            {t("actions.delete_entity", { entity: t("entities.student") })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.delete.title")} <b>{getStudentQuery.data?.name}</b>
-              </p>
-              <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("modals.delete.message")}</p>
-              </div>
-              <p className="text-gray-900 dark:text-white">
-                <Trans
-                  i18nKey="modals.delete.label"
-                  values={{ item: getStudentQuery.data?.name }}
-                  components={{ bold: <strong /> }}
-                />
-              </p>
-              <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={!isVerficationMatch ? t("modals.delete.error") : null}
-                required
-              />
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
-              {t("modals.delete.delete_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("modals.delete.cancel_button")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <DeleteStudentModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
       {/* block / unblock user */}
-      <Modal
-        show={openModal?.type === "block" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitBlock}>
-          <Modal.Header>
-            {t("actions.block_entity", { entity: t("general.user") })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.block.title")} <b>{getStudentQuery.data?.name} ?</b>
-              </p>
-              {/* <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("delete-modal-message")}</p>
-              </div> */}
-              {/* <p className="text-gray-900 dark:text-white">
-                {t("delete-modal-label")}{" "}
-                <b>{getParentQuery.data?.name}</b>
-              </p> */}
-              {/* <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={
-                  !isVerficationMatch ? fieldTrans("delete-modal-error") : null
-                }
-                required
-              /> */}
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
-              {getStudentQuery.data?.blocked == 0
-                ? t("modals.block.block_button")
-                : t("modals.block.unblock_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("modals.block.cancel_button")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <BlockStudentModal
+        modal={openModal as Modal}
+        onClose={() => setOpenModal(undefined)}
+      />
 
       <AddParentModal
         open={openParentModal?.open as boolean}
@@ -1546,13 +598,13 @@ export function ViewStudents() {
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
-                          {student.student.ref}
+                          {student.student?.ref}
                         </Table.Cell>
                         <Table.Cell>{student.name}</Table.Cell>
 
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
                           <div className="flex w-max max-w-36 flex-wrap">
-                            {student.grades?.map((grade, index) => (
+                            {/* {student.grades?.map((grade, index) => (
                               <Badge
                                 key={index}
                                 color={badgeColor[index % badgeColor.length]}
@@ -1560,7 +612,22 @@ export function ViewStudents() {
                               >
                                 {grade.label}
                               </Badge>
-                            ))}
+                            ))} */}
+                            {student.student.grade ? (
+                              <Badge
+                                color={
+                                  badgeColor[
+                                    Math.floor(Math.random() * 5) %
+                                      badgeColor.length
+                                  ]
+                                }
+                                className="mb-1 me-1 rounded-xs"
+                              >
+                                {student.student.grade?.label}
+                              </Badge>
+                            ) : (
+                              "-"
+                            )}
                           </div>
                         </Table.Cell>
                         <Table.Cell>{/* {student.date_birth} */}-</Table.Cell>
@@ -1640,7 +707,7 @@ export function ViewStudents() {
                           <ToggleSwitch
                             theme={customToggleSwitch}
                             color={brandState}
-                            checked={blockSwitch[student.id] || false}
+                            checked={Boolean(student.blocked)}
                             onChange={() =>
                               setOpenModal({
                                 id: student.id,
@@ -1678,7 +745,7 @@ export function ViewStudents() {
                               <div
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
-                                  onOpenEditModal({
+                                  setOpenModal({
                                     id: student.id,
                                     type: "edit",
                                     open: true,

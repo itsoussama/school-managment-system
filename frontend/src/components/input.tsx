@@ -1,19 +1,16 @@
-// import PropTypes from 'prop-types'
-// import { FontAwesomeIcon } from '@htmlFortawesome/react-fontawesome'
-// import { faCheck, faCircleExclamation } from '@htmlFortawesome/free-solid-svg-icons'
 import React, {
   ButtonHTMLAttributes,
   ChangeEvent,
-  cloneElement,
+  createContext,
   CSSProperties,
   InputHTMLAttributes,
   JSXElementConstructor,
-  ReactElement,
-  ReactNode,
+  MutableRefObject,
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
+  useContext,
   useEffect,
-  useId,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -423,7 +420,9 @@ function CheckboxGroup({
 
   const childrenWithOnChange = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
-      return React.cloneElement(child, { onChange: handleChange });
+      return React.cloneElement(child, {
+        onChange: handleChange,
+      } as React.Attributes);
     }
     return child;
   });
@@ -523,209 +522,305 @@ function RSelect({
   );
 }
 
-interface MultiSelectProps extends InputHTMLAttributes<HTMLInputElement> {
-  name: string;
-  label: string;
-  onSelectItem: (items: Array<SelectedData>) => void;
-  children: ReactNode;
+type DropdownStylesState = {
+  width: number;
+  top: number;
+  left: number;
+  maxHeight: number;
+};
+
+// Context for MultiSelect
+interface MultiSelectContextProps {
+  selectedOptions: (number | string)[];
+  toggleItem: (item: number | string, label?: string) => void;
+  selectedItems: MutableRefObject<SelectedData[]>;
+  isOpen: boolean;
+  options: SelectedData[];
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  dropdownRef: React.RefObject<HTMLDivElement>;
+  dropdownStyles: DropdownStylesState | null;
+  setDropdownStyles: React.Dispatch<
+    React.SetStateAction<DropdownStylesState | null>
+  >;
+  setOptions: React.Dispatch<React.SetStateAction<SelectedData[]>>;
 }
+
+const defaultMultiSelectContext: MultiSelectContextProps = {
+  selectedOptions: [],
+  toggleItem: () => {},
+  selectedItems: { current: [] },
+  isOpen: false,
+  options: [],
+  setIsOpen: () => {},
+  dropdownRef: { current: null },
+  dropdownStyles: null,
+  setDropdownStyles: () => {},
+  setOptions: () => {},
+};
+
+const MultiSelectContext = createContext<MultiSelectContextProps>(
+  defaultMultiSelectContext,
+);
 
 export interface SelectedData {
-  id: string;
+  value: number | string;
   label: string;
 }
 
-function MultiSelect<T>({
+interface MultiSelectProps {
+  name: string;
+  label: string;
+  onSelect: (items?: (number | string)[]) => void;
+  children: React.ReactNode;
+  selectedValue?: (number | string)[];
+}
+
+function MultiSelect({
   label,
   name,
-  onSelectItem,
+  onSelect,
   children,
-  externalSelectedItems,
-}: MultiSelectProps & { externalSelectedItems?: T }) {
-  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
-  const [selectedItems, setSelectedItems] = useState<Array<SelectedData>>([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  selectedValue,
+}: MultiSelectProps) {
+  const [selectedOptions, setSelectedOptions] = useState<(number | string)[]>(
+    selectedValue || [],
+  );
+  const [options, setOptions] = useState<SelectedData[]>([]);
+  const selectedItems = useRef<SelectedData[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [dropdownStyles, setDropdownStyles] = useState<{
     width: number;
     top: number;
     left: number;
     maxHeight: number;
   } | null>(null);
-  const dropdownUid = useId();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const dropdownList = useRef<HTMLDivElement>(null);
 
-  // Handles item selection via checkbox
-  const handleItemsChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { id, value, checked } = event.target;
+  // Handle selection toggle
+  const toggleItem = (item: number | string, label?: string) => {
+    setSelectedOptions((prev) => {
+      const exists = prev.includes(item);
+      const updatedItems = exists
+        ? prev.filter((i) => i !== item)
+        : [...prev, item];
 
-    setSelectedItems((prev) => {
-      const updatedItems = checked
-        ? [...prev, { id, label: value }]
-        : prev.filter((item) => item.id != id);
-
-      onSelectItem(updatedItems);
+      selectedItems.current = exists
+        ? selectedItems.current.filter((i) => i.value !== item)
+        : [...selectedItems.current, { value: item, label } as SelectedData];
       return updatedItems;
     });
   };
 
-  // Removes an item from the selected list
-  const deleteItem = (id: string) => {
-    setSelectedItems((prev) => {
-      const updatedItems = prev.filter((item) => item.id !== id);
-      onSelectItem(updatedItems);
-      return updatedItems;
-    });
-  };
+  // Set external selected items
+  useEffect(() => {
+    if (Array.isArray(selectedValue)) {
+      setSelectedOptions(selectedValue);
 
-  const clonedChildren = React.Children.map(children, (child) => {
-    if (React.isValidElement(child)) {
-      return cloneElement(child as ReactElement, {
-        onChange: handleItemsChange,
+      selectedItems.current = selectedValue.map((value) => {
+        const option = options.find((opt) => opt.value === value);
+
+        return option ?? { value, label: "" };
       });
     }
-    return child;
-  });
+  }, [selectedValue, options, selectedItems]);
 
-  const openDropDown = () => {
-    setIsDropdownOpen(true);
-    console.log(dropdownUid);
+  useEffect(() => {
+    onSelect(selectedOptions);
+  }, [selectedOptions]);
 
-    const dropdownElement = document.getElementById(dropdownUid);
-    if (dropdownElement) {
-      selectedItems.forEach((item) => {
-        const checkbox = document.getElementById(
-          String(item.id),
-        ) as HTMLInputElement | null;
-        if (checkbox) {
-          checkbox.checked = true;
-        }
-      });
-    }
+  return (
+    <MultiSelectContext.Provider
+      value={{
+        selectedOptions,
+        selectedItems,
+        toggleItem,
+        isOpen,
+        setIsOpen,
+        dropdownRef,
+        dropdownStyles,
+        setDropdownStyles,
+        options,
+        setOptions,
+      }}
+    >
+      <div className="relative">
+        <label
+          htmlFor={name}
+          className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+        >
+          {label}
+        </label>
+        <div className="relative">
+          <Trigger />
+          {children}
+        </div>
+      </div>
+    </MultiSelectContext.Provider>
+  );
+}
 
-    if (dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      const availableSpace = window.innerHeight - rect.bottom;
+function Trigger() {
+  const context = useContext(MultiSelectContext);
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
+
+  const {
+    selectedOptions,
+    setIsOpen,
+    dropdownRef,
+    isOpen,
+    setDropdownStyles,
+    selectedItems,
+  } = context;
+
+  const getTriggerPosition = (trigger: HTMLDivElement, isOpen: boolean) => {
+    if (trigger && isOpen) {
+      const rect = trigger?.getBoundingClientRect();
+      const availableSpace = window.innerHeight - rect?.bottom;
+
       setDropdownStyles({
-        width: rect.width,
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
+        width: rect?.width,
+        top: rect?.bottom + window.scrollY,
+        left: rect?.left + window.scrollX,
         maxHeight: Math.max(availableSpace - 20, 150),
       });
     }
   };
 
-  const handleClickOutside = (event: MouseEvent) => {
-    if (
-      !dropdownRef.current?.contains(event.target as Node) &&
-      !(dropdownList.current as HTMLDivElement)?.contains(event.target as Node)
-    ) {
-      setIsDropdownOpen(false);
-    }
+  const onOpenDropDown = () => {
+    setIsOpen(true);
+    getTriggerPosition(dropdownRef.current as HTMLDivElement, !isOpen);
   };
 
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (Array.isArray(externalSelectedItems)) {
-      const selectedItemsWithLabels = externalSelectedItems.map((item) => {
-        // const element = document.getElementById(
-        //   String(item.id),
-        // ) as HTMLInputElement | null;
-        return { id: item.id, label: item.label || item.name };
-      });
-      setSelectedItems(selectedItemsWithLabels);
-    }
-  }, [externalSelectedItems]);
-
-  useEffect(() => {
-    if (isDropdownOpen) {
-      const dropdownElement = document.getElementById(dropdownUid);
-      if (dropdownElement) {
-        selectedItems.forEach((item) => {
-          const checkbox = document.getElementById(
-            String(item.id),
-          ) as HTMLInputElement | null;
-          if (checkbox) {
-            checkbox.checked = true;
-          }
-        });
-      }
-    }
-  }, [isDropdownOpen, selectedItems, dropdownUid]);
-
   return (
-    <div className="relative">
-      <label
-        htmlFor={name}
-        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+    <div
+      ref={dropdownRef}
+      className="relative"
+      onClick={() => onOpenDropDown()}
+    >
+      <div
+        className="dropdown relative flex h-10 w-full items-center overflow-y-scroll rounded-s border border-gray-300 bg-gray-50 px-2 text-gray-900 focus:border-2 focus:border-[var(--brand-color-600)] focus:outline-none focus:ring-[var(--brand-color-600)] sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)]"
+        style={
+          {
+            "--brand-color-500": colorPalette[brandState as BrandColor][500],
+            "--brand-color-600": colorPalette[brandState as BrandColor][600],
+          } as CSSProperties
+        }
+        tabIndex={0}
       >
-        {label}
-      </label>
-      <div className="relative" ref={dropdownRef}>
-        <div
-          id={name}
-          className="dropdown relative flex h-10 w-full items-center overflow-y-scroll rounded-s border border-gray-300 bg-gray-50 px-2 text-gray-900 focus:border-2 focus:border-[var(--brand-color-600)] focus:outline-none focus:ring-[var(--brand-color-600)] sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-[var(--brand-color-500)] dark:focus:ring-[var(--brand-color-500)]"
-          style={
-            {
-              "--brand-color-500": colorPalette[brandState as BrandColor][500],
-              "--brand-color-600": colorPalette[brandState as BrandColor][600],
-            } as CSSProperties
-          }
-          tabIndex={0}
-          onClick={() => openDropDown()}
-        >
-          {selectedItems.length < 1 ? (
-            <span className="pointer-events-none select-none text-gray-500 dark:text-gray-400">
-              None
-            </span>
-          ) : (
-            selectedItems?.map((item, key) => (
-              <span
-                key={key}
-                id={item.id?.toString()}
-                className="me-2 inline-flex items-center text-nowrap rounded-xs bg-gray-100 px-2 py-1 text-sm font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-              >
-                {item.label}
-                <button
-                  type="button"
-                  className="rounded-sm ms-2 inline-flex items-center bg-transparent p-1 text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-gray-300"
-                  aria-label="Remove"
-                  onClick={() => deleteItem(item.id)}
+        {selectedItems.current.length === 0 ? (
+          <span className="select-none text-gray-500 dark:text-gray-400">
+            None
+          </span>
+        ) : (
+          selectedItems.current.map(
+            (item) =>
+              item.label && (
+                <span
+                  key={item.value}
+                  className="me-2 inline-flex items-center whitespace-nowrap rounded-xs bg-gray-100 px-2 py-1 text-sm font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-300"
                 >
-                  <FaXmark className="pointer-events-none h-3 w-3" />
-                  <span className="sr-only">Remove badge</span>
-                </button>
-              </span>
-            ))
-          )}
-        </div>
-        {ReactDOM.createPortal(
-          <div
-            ref={dropdownList}
-            id={dropdownUid}
-            className="dropdown-content absolute left-0 z-50 mt-1 flex max-h-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-400 bg-gray-50 p-2 dark:border-gray-500 dark:bg-gray-700"
-            style={{
-              display: isDropdownOpen && dropdownStyles ? "flex" : "none",
-              width: `${dropdownStyles?.width}px`,
-              top: `${dropdownStyles?.top}px`,
-              left: `${dropdownStyles?.left}px`,
-              maxHeight: `${dropdownStyles?.maxHeight}px`,
-            }}
-          >
-            {clonedChildren}
-          </div>,
-          document.body,
+                  {item.label}
+                  <FaXmark
+                    className="ms-2 h-3 w-3 cursor-pointer text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      context.toggleItem(item.value);
+                    }}
+                  />
+                </span>
+              ),
+          )
         )}
       </div>
     </div>
   );
 }
+
+MultiSelect.List = function List({ children }: { children: React.ReactNode }) {
+  const context = useContext(MultiSelectContext);
+  const dropdownListRef = useRef<HTMLDivElement>(null);
+
+  const { setIsOpen, isOpen, dropdownRef, dropdownStyles, setOptions } =
+    context;
+
+  const memoizedOptions = useMemo(() => {
+    return React.Children.toArray(children)
+      .filter((child) => React.isValidElement(child) && child.props.value)
+      .map((child) => {
+        const element = child as React.ReactElement;
+        return {
+          value: element.props.value,
+          label: element.props.label,
+        };
+      });
+  }, [children]);
+
+  // Update options state with memoized options
+  useEffect(() => {
+    setOptions(memoizedOptions);
+  }, [memoizedOptions, setOptions]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      event.stopPropagation();
+
+      if (
+        !dropdownRef.current?.contains(event.target as Node) &&
+        dropdownListRef.current &&
+        !dropdownListRef.current?.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [setIsOpen, dropdownRef]);
+
+  if (!isOpen) return null;
+
+  return ReactDOM.createPortal(
+    <div
+      ref={dropdownListRef}
+      className="dropdown-content absolute left-0 z-50 mt-1 flex max-h-full flex-col gap-y-2 overflow-y-auto rounded-s border border-gray-400 bg-gray-50 p-2 dark:border-gray-500 dark:bg-gray-700"
+      style={{
+        width: `${dropdownStyles?.width}px`,
+        top: `${dropdownStyles?.top}px`,
+        left: `${dropdownStyles?.left}px`,
+        maxHeight: `${dropdownStyles?.maxHeight}px`,
+      }}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+};
+
+interface OptionProps {
+  value: number | string;
+  label: string;
+}
+
+MultiSelect.Option = function Option({ value, label }: OptionProps) {
+  const context = useContext(MultiSelectContext);
+  const { selectedOptions, toggleItem } = context;
+
+  return (
+    <label>
+      <Checkbox
+        htmlFor={String(value)}
+        id={String(value)}
+        label={label}
+        value={value}
+        checked={selectedOptions.some((item) => item == value)}
+        onChange={() => toggleItem(value, label)}
+      />
+    </label>
+  );
+};
 
 interface DropZone {
   label?: string;

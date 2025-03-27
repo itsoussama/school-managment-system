@@ -1,23 +1,26 @@
-import { Button, Input, MultiSelect, RSelect } from "@src/components/input";
+import { Button, Input, MultiSelect } from "@src/components/input";
 import { SkeletonProfile } from "@src/components/skeleton";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 import {
   ChangeEvent,
+  CSSProperties,
   RefObject,
   useCallback,
   useEffect,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { FaEye, FaEyeSlash, FaImage, FaLock } from "react-icons/fa6";
+import { FaEye, FaEyeSlash, FaImage, FaLock, FaPlus } from "react-icons/fa6";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { formatUserName } from "@src/pages/shared/utils/formatters";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
-import { getGrades, getSubjects } from "@src/pages/shared/utils/api";
+import { getStudents } from "@src/pages/shared/utils/api";
 import { useQuery } from "@tanstack/react-query";
-import { Grade, Subject, Teacher } from "../viewTeachers";
+import { Childrens, Parent } from "../viewParents";
 import { pluck } from "@src/utils/arrayMethod";
+import { BrandColor, colorPalette } from "@src/utils/colors";
+import { Link } from "react-router-dom";
 
 export interface FormData {
   id?: number;
@@ -28,11 +31,7 @@ export interface FormData {
   address: string;
   password?: string;
   password_confirmation?: string;
-  payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
-  net_salary?: number;
-  hourly_rate?: number;
-  subjects: number[];
-  grades: number[];
+  childrens: number[];
   image?: File;
 }
 
@@ -43,11 +42,7 @@ export interface Data {
   email: string;
   phone: string;
   address: string;
-  payroll_frequency: "daily" | "weekly" | "bi-weekly" | "monthly";
-  net_salary?: number;
-  hourly_rate?: number;
-  subjects: number[];
-  grades: number[];
+  childrens: number[];
   image?: File;
   password?: string;
   password_confirmation?: string;
@@ -55,10 +50,10 @@ export interface Data {
   school_id?: string;
 }
 
-interface TeacherFormProps {
+interface ParentFormProps {
   action: "Create" | "Edit";
   initialData: FormData;
-  oldData?: Teacher;
+  oldData?: Parent;
   formSubmitRef?: RefObject<HTMLFormElement>;
   additionalStyle?: string;
   onFormData: (data: Data) => void;
@@ -66,14 +61,14 @@ interface TeacherFormProps {
 
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
-export default function TeacherForm({
+export default function ParentForm({
   action,
   initialData,
   oldData,
   formSubmitRef,
   onFormData,
   additionalStyle = "grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))]",
-}: TeacherFormProps) {
+}: ParentFormProps) {
   const { t } = useTranslation();
   const { formData, errors, setFormData, setData, validateForm } =
     useFormValidation<FormData>(initialData);
@@ -82,15 +77,11 @@ export default function TeacherForm({
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const [changePassword, toggleChangePassword] = useState<boolean>(false);
   const user = useAppSelector((state) => state.userSlice.user);
+  const brandState = useAppSelector((state) => state.preferenceSlice.brand);
 
-  const getAllSubjectsQuery = useQuery({
-    queryKey: ["getAllSubjects"],
-    queryFn: () => getSubjects(1, -1, undefined, undefined, user.school_id),
-  });
-
-  const getGradesQuery = useQuery({
-    queryKey: ["getGrades"],
-    queryFn: () => getGrades(1, -1, undefined, undefined, user.school_id),
+  const getChildrensQuery = useQuery({
+    queryKey: ["getChildrens"],
+    queryFn: () => getStudents(1, -1, undefined, undefined, user.school_id),
   });
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -103,11 +94,7 @@ export default function TeacherForm({
           email: formData?.email as string,
           phone: formData?.phone as string,
           address: formData?.address as string,
-          payroll_frequency: formData?.payroll_frequency,
-          hourly_rate: formData?.hourly_rate,
-          net_salary: formData?.net_salary,
-          subjects: formData?.subjects,
-          grades: formData?.grades,
+          childrens: formData?.childrens,
         };
 
         if (action === "Edit") {
@@ -115,7 +102,7 @@ export default function TeacherForm({
           form["id"] = formData?.id as number;
         } else {
           form["school_id"] = user.school_id;
-          form["roles"] = [3];
+          form["roles"] = [5];
           form["password"] = formData?.password as string;
           form["password_confirmation"] =
             formData?.password_confirmation as string;
@@ -177,14 +164,10 @@ export default function TeacherForm({
         id: oldData.id,
         firstName: formatUserName(oldData.name).firstName,
         lastName: formatUserName(oldData.name).lastName,
-        address: oldData.teacher.address,
+        address: oldData.address,
         email: oldData.email,
         phone: oldData.phone,
-        payroll_frequency: oldData.payroll.payroll_frequency,
-        hourly_rate: oldData.payroll.hourly_rate,
-        net_salary: oldData.payroll.net_salary,
-        subjects: oldData.subjects.map(pluck("id")),
-        grades: oldData.grades.map(pluck("id")),
+        childrens: oldData.childrens.map(pluck("id")),
       });
 
       const imagePath = oldData?.imagePath
@@ -251,7 +234,7 @@ export default function TeacherForm({
         <div className="flex flex-[3] flex-col gap-4">
           <div className="rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {t("information.teacher_information")}
+              {t("information.parent_information")}
             </h1>
           </div>
           <form
@@ -317,81 +300,70 @@ export default function TeacherForm({
             />
 
             <MultiSelect
-              name="subjects"
-              label={t("form.fields.subjects")}
-              onSelect={(items) => setFormData("subjects", items)}
-              selectedValue={formData?.subjects}
+              name="childrens"
+              label={t("form.fields.childrens")}
+              onSelect={(items) => setFormData("childrens", items)}
+              selectedValue={formData?.childrens}
             >
               <MultiSelect.List>
-                {getAllSubjectsQuery.data?.map(
-                  (subject: Subject, key: number) => (
+                {getChildrensQuery.data?.map(
+                  (child: Childrens, key: number) => (
                     <MultiSelect.Option
                       key={key}
-                      value={subject.id}
-                      label={subject.name}
+                      value={child.id}
+                      label={child.name}
                     />
                   ),
                 )}
+                <div className="sticky -top-2 z-10 -m-2 h-full space-y-2 bg-white p-2 dark:bg-gray-700">
+                  {/* <Input
+                  id="search"
+                  type="text"
+                  icon={
+                    <FaSearch className="absolute top-1/2 mx-3 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  }
+                  label=""
+                  onKeyUp={(e) => handleSearch(e.target)}
+                  placeholder={fieldsTrans("filter-all")}
+                  name="search"
+                  custom-style={{
+                    inputStyle: "px-8 !py-1",
+                    labelStyle: "mb-0 !inline",
+                  }}
+                /> */}
+                  <Link
+                    to={"/students/new"}
+                    className="btn-default flex h-8 items-center justify-center"
+                    style={
+                      {
+                        "--brand-color-300":
+                          colorPalette[brandState as BrandColor][300],
+                        "--brand-color-600":
+                          colorPalette[brandState as BrandColor][600],
+                        "--brand-color-700":
+                          colorPalette[brandState as BrandColor][700],
+                        "--brand-color-800":
+                          colorPalette[brandState as BrandColor][800],
+                      } as CSSProperties
+                    }
+                  >
+                    <FaPlus size={12} className="me-2" />
+                    {t("actions.new_entity", {
+                      entity: t("form.fields.childrens"),
+                    })}
+                  </Link>
+                  <Button
+                    className="btn-default flex h-8 items-center justify-center"
+                    onClick={() => setOpenModal(true)}
+                  >
+                    <FaPlus size={12} className="me-2" />
+                    {t("actions.existing_entity", {
+                      entity: t("form.fields.childrens"),
+                    })}
+                  </Button>
+                </div>
               </MultiSelect.List>
             </MultiSelect>
-
-            <MultiSelect
-              name="grades"
-              label={t("form.fields.grade_levels")}
-              onSelect={(items) => setFormData("grades", items)}
-              selectedValue={formData?.grades}
-            >
-              <MultiSelect.List>
-                {getGradesQuery.data?.map((grade: Grade, key: number) => (
-                  <MultiSelect.Option
-                    key={key}
-                    value={grade.id}
-                    label={grade.label}
-                  />
-                ))}
-              </MultiSelect.List>
-            </MultiSelect>
-
-            <RSelect
-              id="payroll_frequency"
-              name="payroll_frequency"
-              label={t("form.fields.payroll_frequency")}
-              value={(formData.payroll_frequency as string) || ""}
-              onChange={(e) => setFormData(e.target.id, e.target.value)}
-            >
-              <option value={"daily"}>{t("form.fields.daily")}</option>
-              <option value={"weekly"}>{t("form.fields.weekly")}</option>
-              <option value={"bi_weekly"}>{t("form.fields.bi_weekly")}</option>
-              <option value={"monthly"}>{t("form.fields.monthly")}</option>
-            </RSelect>
-
-            {formData.payroll_frequency !== "monthly" ? (
-              <Input
-                type="number"
-                inputMode="decimal"
-                step={0.01}
-                placeholder="30.55"
-                id="hourly_rate"
-                name="hourly_rate"
-                addon="Hr"
-                label={t("form.fields.hourly_rate")}
-                value={(formData.hourly_rate as number) || ""}
-                onChange={(e) => setFormData(e.target.id, e.target.value)}
-              />
-            ) : (
-              <Input
-                type="number"
-                inputMode="decimal"
-                step={0.01}
-                placeholder="2500"
-                id="net_salary"
-                name="net_salary"
-                label={t("form.fields.salary")}
-                addon={"Dh"}
-                value={(formData.net_salary as number) || ""}
-                onChange={(e) => setFormData(e.target.id, e.target.value)}
-              />
-            )}
 
             <div className="col-span-full my-2 border-t border-gray-300 dark:border-gray-700"></div>
 
@@ -430,19 +402,17 @@ export default function TeacherForm({
                 />
               </>
             ) : (
-              <>
-                <Button
-                  onClick={() => handleChangePassword(true)}
-                  className="btn-default !w-auto"
-                >
-                  {t("form.buttons.change", {
-                    label:
-                      t("determiners.definite.masculine") +
-                      " " +
-                      t("form.fields.password"),
-                  })}
-                </Button>
-              </>
+              <Button
+                onClick={() => handleChangePassword(true)}
+                className="btn-default !w-auto"
+              >
+                {t("form.buttons.change", {
+                  label:
+                    t("determiners.definite.masculine") +
+                    " " +
+                    t("form.fields.password"),
+                })}
+              </Button>
             )}
 
             {action === "Create" && (

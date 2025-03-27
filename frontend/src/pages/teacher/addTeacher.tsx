@@ -1,28 +1,14 @@
-import {
-  Button,
-  Checkbox,
-  Input,
-  MultiSelect,
-  RSelect,
-} from "@src/components/input";
-import {
-  addTeacher,
-  getGrades,
-  getSubjects,
-} from "@src/pages/shared/utils/api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { addTeacher } from "@src/pages/shared/utils/api";
+import { useMutation } from "@tanstack/react-query";
 import { Breadcrumb } from "flowbite-react";
-import { ChangeEvent, FormEvent, useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaHome, FaImage, FaLock } from "react-icons/fa";
+import { FaHome } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { alertIntialState, Alert as AlertType } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { TransitionAnimation } from "@src/components/animation";
-import { FaEye, FaEyeSlash } from "react-icons/fa6";
-import { useFormValidation } from "@src/hooks/useFormValidation";
 import TeacherForm, { FormData } from "./components/teacherForm";
 
 const TEACHER_INITIALDATA: FormData = {
@@ -30,6 +16,7 @@ const TEACHER_INITIALDATA: FormData = {
   lastName: "",
   phone: "",
   email: "",
+  address: "",
   password: "",
   password_confirmation: "",
   payroll_frequency: "monthly",
@@ -43,23 +30,7 @@ export default function AddTeacher() {
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const { t } = useTranslation();
   const minSm = useBreakpoint("min", "sm");
-  const formRef = useRef<HTMLFormElement>(null);
   const redirect = useNavigate();
-
-  // const getAllSubjectsQuery = useQuery({
-  //   queryKey: [
-  //     "getAllSubjects",
-  //     // filter?.name,
-  //     // filter?.subject,
-  //     // filter?.gradelevel,
-  //   ],
-  //   queryFn: () => getSubjects(1, -1, undefined, undefined, admin.school_id),
-  // });
-
-  // const getGradesQuery = useQuery({
-  //   queryKey: ["getGrades"],
-  //   queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
-  // });
 
   const addTeacherQuery = useMutation({
     mutationFn: addTeacher,
@@ -129,7 +100,6 @@ export default function AddTeacher() {
           action="Create"
           initialData={TEACHER_INITIALDATA}
           onFormData={(data) => addTeacherQuery.mutate(data)}
-          formSubmitRef={formRef}
           additionalStyle="grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))]"
         />
       </TransitionAnimation>

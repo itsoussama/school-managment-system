@@ -1,6 +1,7 @@
 import { Button, Input, RSelect } from "@src/components/input";
 
 import {
+  Badge,
   Breadcrumb,
   Checkbox,
   Modal,
@@ -16,9 +17,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import {
-  FaExclamationTriangle,
   FaEye,
   FaHome,
   FaPen,
@@ -30,24 +30,9 @@ import {
 import { IoFilter } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  getResources,
-  getResource,
-  getCategories,
-  setResource,
-  deleteResource,
-} from "@pages/shared/utils/api";
-import {
-  SkeletonContent,
-  SkeletonProfile,
-  SkeletonTable,
-} from "@src/components/skeleton";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { getResources, getCategories } from "@pages/shared/utils/api";
+import { SkeletonTable } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import Alert from "@src/components/alert";
@@ -56,7 +41,10 @@ import { FaChevronDown, FaRegCircleXmark } from "react-icons/fa6";
 import { TransitionAnimation } from "@src/components/animation";
 import Dropdown from "@src/components/dropdown"; // DropdownListButton, // DropdownList,
 import { customTable, customTooltip } from "@src/utils/flowbite";
-import { useFormValidation } from "@src/hooks/useFormValidation";
+import ViewResourceModal from "./components/viewResourceModal";
+import FormResourceModal from "./components/formResourceModal";
+import DeleteResourceModal from "./components/deleteResourceModal";
+import { badgeColor } from "@src/utils/colors";
 
 interface Check {
   id?: number;
@@ -80,22 +68,6 @@ export interface Resource {
   };
 }
 
-interface FormData {
-  id: string;
-  label: string;
-  qty: number;
-  category_id: string;
-}
-
-export interface Data {
-  _method?: string;
-  id: string;
-  label: string;
-  qty: number;
-  category_id: string;
-  image?: File;
-}
-
 interface Category {
   id: number;
   label: string;
@@ -112,17 +84,7 @@ interface Filter {
   category_id: number | undefined;
 }
 
-const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
-
 export function ViewResources() {
-  const queryClient = useQueryClient();
-  const { formData, setData } = useFormValidation<FormData>({
-    id: "",
-    label: "",
-    qty: 0,
-    category_id: "",
-  });
-
   const location = useLocation();
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
@@ -140,12 +102,9 @@ export function ViewResources() {
   const [checks, setChecks] = useState<Array<Check>>([]);
   const [numChecked, setNumChecked] = useState<number>(0);
   const [openModal, setOpenModal] = useState<Modal>();
-  const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
-  const [img, setImg] = useState<FileList>();
-  const [previewImg, setPreviewImg] = useState<string>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
-  const admin = useAppSelector((state) => state.userSlice.user);
+  const user = useAppSelector((state) => state.userSlice.user);
   const { t } = useTranslation();
   const minSm = useBreakpoint("min", "sm");
 
@@ -164,7 +123,7 @@ export function ViewResources() {
         -1,
         undefined,
         undefined,
-        admin?.school_id,
+        user?.school_id,
         filter?.label,
         filter?.maxQty,
         filter?.minQty,
@@ -180,7 +139,7 @@ export function ViewResources() {
       perPage,
       sort.column,
       sort.direction,
-      admin.school_id,
+      user.school_id,
       filter?.label,
       filter?.maxQty,
       filter?.minQty,
@@ -192,7 +151,7 @@ export function ViewResources() {
         perPage,
         sort.column,
         sort.direction,
-        admin.school_id,
+        user.school_id,
         filter?.label,
         filter?.maxQty,
         filter?.minQty,
@@ -201,117 +160,10 @@ export function ViewResources() {
     placeholderData: keepPreviousData,
   });
 
-  const getResourceQuery = useQuery({
-    queryKey: ["getResource", openModal?.id],
-    queryFn: () => getResource(openModal?.id as number),
-    enabled: !!openModal?.id,
-  });
-
   const getCategoriesQuery = useQuery({
     queryKey: ["getCategories"],
-    queryFn: () => getCategories(1, -1, undefined, undefined, admin?.school_id),
+    queryFn: () => getCategories(1, -1, undefined, undefined, user.school_id),
   });
-
-  const resourceMutation = useMutation({
-    mutationFn: setResource,
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getResource"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getResources"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllResources"],
-      });
-
-      console.log(data);
-
-      setData({
-        id: data?.id as string,
-        label: data?.label as string,
-        qty: data?.qty as number,
-        category_id: data?.category_id as string,
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.created_success"),
-        state: true,
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-
-      setPreviewImg(undefined);
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  const deleteResourceQuery = useMutation({
-    mutationFn: deleteResource,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getResources"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["getAllResources"],
-      });
-
-      setOpenModal(undefined);
-      setPage(1);
-
-      setData({
-        id: "",
-        label: "",
-        qty: 0,
-        category_id: "",
-      });
-
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "success",
-        message: t("notifications.deleted_success"),
-        state: true,
-      });
-    },
-
-    onError: () => {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    },
-  });
-
-  // const [selectedItem, setSelectedItem] = useState()
-
-  const onChange = (event: ChangeEvent) => {
-    const inputElem = event.target as HTMLInputElement;
-    const selectElem = event.target as HTMLSelectElement;
-    // if (event?.target.nodeType)
-    setData((prev) => ({
-      ...prev,
-      [event.target.id]:
-        event?.target.nodeName == "SELECT"
-          ? selectElem.options[selectElem.selectedIndex].value
-          : inputElem.value,
-    }));
-  };
 
   const handleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
@@ -388,86 +240,8 @@ export function ViewResources() {
     setPerPage(parseInt(target.value));
   };
 
-  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files;
-
-      setImg(file);
-      readAndPreview(file as FileList);
-    }
-  };
-
-  const onSubmitUpdate = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    try {
-      const form: Data = {
-        _method: "PUT",
-        id: formData?.id as string,
-        label: formData?.label as string,
-        qty: formData?.qty as number,
-        category_id: formData?.category_id as string,
-      };
-
-      if (img) {
-        form["image"] = img[0];
-      }
-
-      resourceMutation.mutate(form);
-    } catch {
-      toggleAlert({
-        id: new Date().getTime(),
-        status: "fail",
-        message: t("notifications.submission_failed"),
-        state: true,
-      });
-    }
-  };
-
-  const onSubmitDelete = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsVerficationMatch(true);
-    const input = event.target as HTMLFormElement;
-
-    if (
-      (input.verfication.value as string).toLowerCase() !==
-      getResourceQuery.data?.label.toLowerCase()
-    ) {
-      setIsVerficationMatch(false);
-      return;
-    }
-
-    deleteResourceQuery.mutate(openModal?.id as number);
-  };
-
-  const onOpenEditModal = async ({ id, type, open: isOpen }: Modal) => {
-    setOpenModal({ id: id, type: type, open: isOpen });
-    const ResourceData = await queryClient.ensureQueryData({
-      queryKey: ["getResource", id],
-      queryFn: () => getResource(id),
-    });
-
-    setData({
-      id: ResourceData?.id,
-      label: ResourceData?.label,
-      qty: ResourceData?.qty,
-      category_id: ResourceData?.category_id,
-    });
-  };
-
   const onCloseModal = () => {
-    resourceMutation.reset();
     setOpenModal(undefined);
-    setPreviewImg(undefined);
-
-    setData({
-      id: "",
-      label: "",
-      qty: 0,
-      category_id: "",
-    });
-
-    setPreviewImg(undefined);
   };
 
   // const formatDuration = (duration: number) => {
@@ -485,16 +259,6 @@ export function ViewResources() {
 
   //   return { firstName, lastName };
   // };
-
-  const readAndPreview = (file: FileList) => {
-    if (/\.(jpe?g|png|gif)$/i.test(file[0].name)) {
-      const fileReader = new FileReader();
-      fileReader.addEventListener("load", (event) => {
-        setPreviewImg(event.target?.result as string);
-      });
-      fileReader.readAsDataURL(file[0]);
-    }
-  };
 
   useEffect(() => {
     const alertState = location.state?.alert;
@@ -571,254 +335,15 @@ export function ViewResources() {
         </Breadcrumb.Item>
       </Breadcrumb>
 
-      <Modal
-        show={openModal?.type === "view" ? openModal?.open : false}
-        size={"xl"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
+      <ViewResourceModal modal={openModal as Modal} onClose={onCloseModal} />
+
+      <FormResourceModal
+        action="Edit"
+        modal={openModal as Modal}
         onClose={onCloseModal}
-      >
-        <Modal.Header>
-          {t("form.fields.id", { entity: t("entities.resource") })}:
-          <b> {openModal?.id}</b>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="flex flex-col gap-8 sm:flex-row">
-            <div className="flex flex-col items-center gap-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-              <SkeletonProfile
-                imgSource={
-                  getResourceQuery.data?.imagePath
-                    ? SERVER_STORAGE + getResourceQuery.data?.imagePath
-                    : `https://ui-avatars.com/api/?background=random&name=${getResourceQuery.data?.label}`
-                }
-                className="h-40 w-40"
-              />
-            </div>
-            <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
-              <div className="w-full space-y-3">
-                <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                  {t("information.resource_information")}
-                </h1>
-                <SkeletonContent isLoaded={getResourceQuery.isFetched}>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(120px,_1fr))] gap-x-11 gap-y-8">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.label")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.label}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.quantity")}:
-                      </span>
-                      <span className="text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.qty}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-400">
-                        {t("form.fields.category")}:
-                      </span>
-                      <span className="flex-1 break-words text-base text-gray-900 dark:text-white">
-                        {getResourceQuery.data?.categories.label}
-                      </span>
-                    </div>
-                  </div>
-                </SkeletonContent>
-              </div>
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
+      />
 
-      <Modal
-        show={openModal?.type === "edit" ? openModal?.open : false}
-        size={"2xl"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6 max-sm:h-[75vh] max-sm:overflow-y-auto",
-            popup: "pt-0",
-          },
-        }}
-        onClose={onCloseModal}
-      >
-        <form onSubmit={onSubmitUpdate}>
-          <Modal.Header>
-            {t("form.fields.id", { entity: t("entities.resource") })}:
-            <b> {openModal?.id}</b>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-8 sm:flex-row">
-              <div className="flex min-w-fit flex-col items-center gap-y-4 rounded-s bg-gray-200 p-4 dark:bg-gray-800">
-                <SkeletonProfile
-                  imgSource={
-                    previewImg !== undefined
-                      ? previewImg
-                      : getResourceQuery.data?.imagePath
-                        ? SERVER_STORAGE + getResourceQuery.data?.imagePath
-                        : `https://ui-avatars.com/api/?background=random&name=${getResourceQuery.data?.label}`
-                  }
-                  className="h-40 w-40"
-                />
-
-                <button className="btn-gray relative overflow-hidden">
-                  <input
-                    type="file"
-                    className="absolute left-0 top-0 cursor-pointer opacity-0"
-                    onChange={handleImageUpload}
-                  />
-                  {t("form.buttons.upload", { label: t("general.photo") })}
-                </button>
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.accepted_format")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      jpg, jpeg, png
-                    </span>
-                  </span>
-                  <span className="text-xs text-gray-700 dark:text-gray-500">
-                    {t("form.general.maximum_size")}:{" "}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      1024 mb
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <div className="box-border flex max-h-[60vh] w-full flex-col gap-6 overflow-y-auto">
-                <div className="w-full space-y-3">
-                  <h1 className="rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {t("information.resource_information")}
-                  </h1>
-                  <div className="grid grid-cols-[repeat(auto-fit,_minmax(200px,_1fr))] gap-x-11 gap-y-8 whitespace-nowrap">
-                    <Input
-                      type="text"
-                      id="label"
-                      name="label"
-                      label={t("form.fields.label")}
-                      placeholder={t("form.placeholders.label")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getResourceQuery.isFetching && true}
-                      value={(formData?.label as string) || ""}
-                      onChange={onChange}
-                    />
-
-                    <Input
-                      type="number"
-                      id="qty"
-                      name="qty"
-                      label={t("form.fields.quantity")}
-                      placeholder="20"
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getResourceQuery.isFetching && true}
-                      value={(formData?.qty as number) || 0}
-                      onChange={onChange}
-                    />
-
-                    <RSelect
-                      id="category_id"
-                      name="categories"
-                      label={t("form.fields.category")}
-                      custom-style={{ inputStyle: "disabled:opacity-50" }}
-                      disabled={getResourceQuery.isFetching && true}
-                      value={formData?.category_id as string}
-                      onChange={onChange}
-                    >
-                      {getCategoriesQuery.data?.map(
-                        (category: Category, index: number) => (
-                          <option key={index} value={category.id}>
-                            {category.label}
-                          </option>
-                        ),
-                      )}
-                    </RSelect>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-default !w-auto">
-              {t("general.accept")}
-            </Button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {t("general.decline")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
-
-      <Modal
-        show={openModal?.type === "delete" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitDelete}>
-          <Modal.Header>
-            {t("actions.delete_entity", { entity: t("entities.parent") })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-x-8">
-              <p className="mb-3 text-gray-600 dark:text-gray-300">
-                {t("modals.delete.title")} <b>{getResourceQuery.data?.label}</b>
-              </p>
-              <div className="mb-3 flex items-center space-x-4 rounded-s bg-red-600 px-4 py-2">
-                <FaExclamationTriangle className="text-white" size={53} />
-                <p className="text-white">{t("modals.delete.message")}</p>
-              </div>
-              <p className="text-gray-900 dark:text-white">
-                <Trans
-                  i18nKey="modals.delete.label"
-                  values={{ item: getResourceQuery.data?.label }}
-                  components={{ bold: <strong /> }}
-                />
-              </p>
-              <Input
-                type="text"
-                id="verfication"
-                name="verfication"
-                placeholder="John doe"
-                error={!isVerficationMatch ? t("modals.delete.error") : null}
-                required
-              />
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <button type="submit" className="btn-danger !w-auto">
-              {t("modals.delete.delete_button")}
-            </button>
-            <button className="btn-outline !w-auto" onClick={onCloseModal}>
-              {t("modals.delete.cancel_button")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <DeleteResourceModal modal={openModal as Modal} onClose={onCloseModal} />
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
@@ -1102,7 +627,17 @@ export function ViewResources() {
                         </Table.Cell>
                         <Table.Cell>
                           <div className="flex w-max max-w-36 flex-wrap">
-                            {resource.categories.label}
+                            <Badge
+                              color={
+                                badgeColor[
+                                  Math.floor(Math.random() * 5) %
+                                    badgeColor.length
+                                ]
+                              }
+                              className="mb-1 me-1 rounded-xs"
+                            >
+                              {resource.categories?.label}
+                            </Badge>
                           </div>
                         </Table.Cell>
 
@@ -1134,7 +669,7 @@ export function ViewResources() {
                               <div
                                 className="cursor-pointer rounded-s bg-green-100 p-2 dark:bg-green-500 dark:bg-opacity-20"
                                 onClick={() =>
-                                  onOpenEditModal({
+                                  setOpenModal({
                                     id: resource.id,
                                     type: "edit",
                                     open: true,
