@@ -1,60 +1,54 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Input } from "@src/components/input";
-import { Group, GroupData, ModalProps } from "../school/schoolLevels";
 import { Modal } from "flowbite-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { Alert as AlertType, alertIntialState } from "@src/utils/alert";
 import Alert from "@src/components/alert";
 import { useFormValidation } from "@src/hooks/useFormValidation";
+import { ModalProps } from "../school/schoolLevels";
 
 interface FormData {
   id?: number;
   name: string;
-  grade_id?: number;
-  students?: number[];
-  teachers?: number[];
+  stage_id?: number;
   school_id?: string;
 }
 
-interface AddGroupModalProps {
+interface AddEntityModalProps {
   modal: ModalProps;
   onClose: (isClose?: boolean) => void;
-  oldData?: Group;
-  onFormData: (data: GroupData) => void;
+  oldData?: Grade;
+  onFormData: (data: FormData) => void;
 }
 
-const GROUP_INITIALDATA: FormData = {
+const INITIAL_DATA: FormData = {
   id: 0,
   name: "",
-  grade_id: 0,
-  students: [],
-  teachers: [],
+  stage_id: 0,
   school_id: "",
 };
 
-export default function AddGroupModal({
+export default function AddEntityModal({
   modal,
   onClose,
   oldData,
   onFormData,
-}: AddGroupModalProps) {
+}: AddEntityModalProps) {
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const { t } = useTranslation();
   const user = useAppSelector((state) => state.userSlice.user);
 
   const { formData, setFormData, setData, validateForm } =
-    useFormValidation<FormData>(GROUP_INITIALDATA);
+    useFormValidation<FormData>(INITIAL_DATA);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    // const target = e.target as HTMLFormElement;
     event.preventDefault();
     const validationResult = validateForm();
     if (validationResult.isValid) {
-      const form: GroupData = {
+      const form: FormData = {
         name: formData.name,
-        grade_id: modal?.id,
+        stage_id: modal?.id,
         school_id: user.school_id,
       };
 
@@ -64,7 +58,7 @@ export default function AddGroupModal({
 
   const onCloseModal = () => {
     onClose(true);
-    setData(GROUP_INITIALDATA);
+    setData(INITIAL_DATA);
   };
 
   const closeAlert = useCallback((value: AlertType) => {
@@ -76,7 +70,6 @@ export default function AddGroupModal({
       setData({
         id: oldData?.id,
         name: oldData?.name,
-        grade_id: modal?.id,
       });
     }
   }, [oldData, setData, modal]);
@@ -91,7 +84,7 @@ export default function AddGroupModal({
         close={closeAlert}
       />
       <Modal
-        show={modal?.type === "addGroup" ? modal?.open : false}
+        show={modal?.type === "addGrade" ? modal?.open : false}
         onClose={onCloseModal}
         size={"md"}
         theme={{
@@ -112,7 +105,7 @@ export default function AddGroupModal({
               entity:
                 t("determiners.indefinite.masculine") +
                 " " +
-                t("form.fields.group"),
+                t(`form.fields.grade_level`),
             })}
           </Modal.Header>
           <Modal.Body>
@@ -123,8 +116,8 @@ export default function AddGroupModal({
                 name="name"
                 onChange={(e) => setFormData(e.target.id, e.target.value)}
                 value={formData.name}
-                label={t("form.fields.group")}
-                placeholder={t("form.fields.group")}
+                label={t(`form.fields.label`)}
+                placeholder={t(`form.fields.label`)}
               />
             </div>
           </Modal.Body>

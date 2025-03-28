@@ -8,6 +8,7 @@ import React, {
   MutableRefObject,
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -583,7 +584,7 @@ function MultiSelect({
   selectedValue,
 }: MultiSelectProps) {
   const [selectedOptions, setSelectedOptions] = useState<(number | string)[]>(
-    selectedValue || [],
+    [],
   );
   const [options, setOptions] = useState<SelectedData[]>([]);
   const selectedItems = useRef<SelectedData[]>([]);
@@ -598,18 +599,22 @@ function MultiSelect({
 
   // Handle selection toggle
   const toggleItem = (item: number | string, label?: string) => {
-    setSelectedOptions((prev) => {
-      const exists = prev.includes(item);
-      const updatedItems = exists
-        ? prev.filter((i) => i !== item)
-        : [...prev, item];
+    const updatedSelectedOptions = selectedOptions.includes(item)
+      ? selectedOptions.filter((i) => i !== item)
+      : [...selectedOptions, item];
 
-      selectedItems.current = exists
-        ? selectedItems.current.filter((i) => i.value !== item)
-        : [...selectedItems.current, { value: item, label } as SelectedData];
-      return updatedItems;
-    });
+    selectedItems.current = selectedOptions.includes(item)
+      ? selectedItems.current.filter((i) => i.value !== item)
+      : [...selectedItems.current, { value: item, label } as SelectedData];
+
+    setSelectedOptions(updatedSelectedOptions);
+    onSelect(updatedSelectedOptions);
   };
+
+  // const memorisedSelectedValue = useMemo(
+  //   () => selectedOptions,
+  //   [selectedOptions],
+  // );
 
   // Set external selected items
   useEffect(() => {
@@ -624,9 +629,9 @@ function MultiSelect({
     }
   }, [selectedValue, options, selectedItems]);
 
-  useEffect(() => {
-    onSelect(selectedOptions);
-  }, [selectedOptions]);
+  // useEffect(() => {
+  //   onSelect(memorisedSelectedValue);
+  // }, [memorisedSelectedValue]);
 
   return (
     <MultiSelectContext.Provider
@@ -755,14 +760,8 @@ MultiSelect.List = function List({ children }: { children: React.ReactNode }) {
       });
   }, [children]);
 
-  // Update options state with memoized options
-  useEffect(() => {
-    setOptions(memoizedOptions);
-  }, [memoizedOptions, setOptions]);
-
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+  const handleCloseDropdown = useCallback(
+    (event: MouseEvent | Event) => {
       event.stopPropagation();
 
       if (
@@ -772,13 +771,30 @@ MultiSelect.List = function List({ children }: { children: React.ReactNode }) {
       ) {
         setIsOpen(false);
       }
-    };
+    },
+    [setIsOpen, dropdownRef],
+  );
 
-    document.addEventListener("mousedown", handleClickOutside);
+  // Update options state with memoized options
+  useEffect(() => {
+    setOptions(memoizedOptions);
+  }, [memoizedOptions]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    document.addEventListener("mousedown", handleCloseDropdown);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleCloseDropdown);
     };
-  }, [setIsOpen, dropdownRef]);
+  }, [handleCloseDropdown]);
+
+  // Handle second events
+  useEffect(() => {
+    window.addEventListener("scroll", handleCloseDropdown, true);
+    return () => {
+      window.removeEventListener("scroll", handleCloseDropdown);
+    };
+  }, [handleCloseDropdown]);
 
   if (!isOpen) return null;
 

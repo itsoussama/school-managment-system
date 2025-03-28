@@ -46,6 +46,7 @@ import { badgeColor } from "@src/utils/colors";
 import DeleteStudentModal from "./components/deleteStudentModal";
 import FormStudentModal from "./components/formStudentModal";
 import ViewStudentModal from "./components/viewStudentModal";
+import { Grades } from "../configuration/school/subjects";
 
 interface Check {
   id?: number;
@@ -83,13 +84,8 @@ export interface Student {
       name: string;
     },
   ];
-  grades: [
-    {
-      id: string;
-      label: string;
-    },
-  ];
   blocked?: boolean;
+  grades: Grades[];
   guardian: {
     id: number;
     guardian_id: number;
@@ -103,6 +99,7 @@ export interface Student {
     ref: string;
     birthdate: string;
     address: string;
+    grade: Grades;
   };
 }
 
@@ -613,7 +610,7 @@ export function ViewStudents() {
                                 {grade.label}
                               </Badge>
                             ))} */}
-                            {student.student.grade ? (
+                            {student.student?.grade ? (
                               <Badge
                                 color={
                                   badgeColor[
@@ -623,7 +620,7 @@ export function ViewStudents() {
                                 }
                                 className="mb-1 me-1 rounded-xs"
                               >
-                                {student.student.grade?.label}
+                                {student.student?.grade.label}
                               </Badge>
                             ) : (
                               "-"

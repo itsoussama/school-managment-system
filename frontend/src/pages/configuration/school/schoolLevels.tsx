@@ -27,6 +27,7 @@ import {
   deleteStage,
   getGrade,
   getGradeGroup,
+  getGroups,
   getStage,
   getStages,
   getStudents,
@@ -40,8 +41,10 @@ import { FaCheck, FaXmark } from "react-icons/fa6";
 import { SkeletonAccordion } from "@src/components/skeleton";
 import { Student } from "@pages/student/viewStudents";
 import { Teacher } from "@pages/teacher/viewTeachers";
+import EditGradeModal from "../components/editGradeModal";
+import AddGroupModal from "../components/addGroupModal";
 
-interface Modal {
+export interface ModalProps {
   id: number;
   type?:
     | "addGrade"
@@ -73,6 +76,7 @@ export interface GradeData {
   teachers?: number[];
   school_id: string;
 }
+
 export interface GroupData {
   _method?: string;
   id?: number;
@@ -103,7 +107,7 @@ interface GroupTeacher extends Teacher {
   user_id: number;
 }
 
-interface Group {
+export interface Group {
   id: number;
   name: string;
   grade_id?: number;
@@ -157,7 +161,7 @@ export default function SchoolLevels() {
   const { t } = useTranslation();
   const minSm = useBreakpoint("min", "sm");
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
-  const [openModal, setOpenModal] = useState<Modal>();
+  const [openModal, setOpenModal] = useState<ModalProps>();
   const [newLevel, setNewLevel] = useState<NewLevel | undefined>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   const admin = useAppSelector((state) => state.userSlice.user);
@@ -187,7 +191,7 @@ export default function SchoolLevels() {
     queryKey: ["getGrade", openModal?.id],
     queryFn: () => getGrade(openModal?.id as number),
     enabled:
-      !!openModal?.id &&
+      !!openModal?.open &&
       (openModal?.type === "deleteGrade" ||
         openModal?.type === "editGrade" ||
         openModal?.type === "addGroup"),
@@ -635,36 +639,6 @@ export default function SchoolLevels() {
     addGradeMutation.mutate(form);
   };
 
-  const onSubmitNewGroup = (e: FormEvent<HTMLFormElement>) => {
-    // const target = e.target as HTMLFormElement;
-    e.preventDefault();
-
-    const form: GroupData = {
-      name: groupData.name,
-      grade_id: openModal?.id,
-      school_id: admin.school_id,
-    };
-
-    addGroupMutation.mutate(form);
-  };
-
-  const onSubmitUpdateGradeLevel = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // const groupIds = gradeData.groups?.map((group) => group.id);
-
-    const formGrade: GradeData = {
-      _method: "PUT",
-      id: gradeData?.id,
-      label: gradeData?.label,
-      stage_id: gradeData?.stage_id as number,
-      groups: gradeData?.group_ids as number[],
-      school_id: admin.school_id,
-    };
-
-    setGradeMutation.mutate(formGrade);
-  };
-
   const onSubmitUpdateGradeGroup = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -842,159 +816,18 @@ export default function SchoolLevels() {
         </form>
       </Modal>
 
-      <Modal
-        show={openModal?.type === "addGroup" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitNewGroup}>
-          <Modal.Header>
-            {t("actions.add_entity", {
-              entity:
-                t("determiners.indefinite.masculine") +
-                " " +
-                t("form.fields.group"),
-            })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-y-3">
-              <Input
-                type="text"
-                id="name"
-                name="name"
-                onChange={(e) => setGroupFormData(e.target.id, e.target.value)}
-                label={t("form.fields.group")}
-                placeholder={t("form.fields.group")}
-              />
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-default !w-auto">
-              {t("general.accept")}
-            </Button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {t("general.decline")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <AddGroupModal
+        modal={openModal as ModalProps}
+        onClose={() => setOpenModal(undefined)}
+        onFormData={(data) => addGroupMutation.mutate(data)}
+      />
 
-      <Modal
-        show={openModal?.type === "editGrade" ? openModal?.open : false}
-        onClose={onCloseModal}
-        size={"md"}
-        theme={{
-          content: {
-            base: "relative h-full w-full p-4 md:h-auto",
-            inner:
-              "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
-          },
-          body: {
-            base: "p-6",
-            popup: "pt-0",
-          },
-        }}
-      >
-        <form onSubmit={onSubmitUpdateGradeLevel}>
-          <Modal.Header>
-            {t("actions.edit_entity", {
-              entity:
-                t("determiners.indefinite.masculine") +
-                " " +
-                t("form.fields.grade_level"),
-            })}
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-y-8">
-              <Input
-                type="text"
-                id="label"
-                name="label"
-                onChange={(e) => setGradeFormData(e.target.id, e.target.value)}
-                value={gradeData?.label}
-                label={t("form.fields.grade_level")}
-                placeholder={t("form.fields.grade_level")}
-              />
-              <MultiSelect
-                label={t("form.fields.group")}
-                name="groups"
-                onSelect={(items) => setGradeFormData("group_ids", items)}
-                selectedValue={gradeData?.group_ids as number[]}
-              >
-                <MultiSelect.List>
-                  {getGradeQuery.data?.groups.map(
-                    (group: Group, key: number) => (
-                      <MultiSelect.Option
-                        key={key}
-                        value={group.id}
-                        label={group.name}
-                      />
-                    ),
-                  )}
-                  <Button
-                    className="btn-outline !m-0 flex min-h-6 items-center justify-center"
-                    onClick={() =>
-                      setOpenModal({
-                        id: gradeData?.id as number,
-                        open: true,
-                        type: "addGroup",
-                      })
-                    }
-                  >
-                    <FaPlus size={12} className="me-2" />
-                    {t("actions.add_entity", {
-                      entity: t("form.fields.group"),
-                    })}
-                  </Button>
-                </MultiSelect.List>
-              </MultiSelect>
-            </div>
-            <div className="mt-8 flex w-full flex-col">
-              <Button
-                type="button"
-                className="btn-default"
-                onClick={() =>
-                  setOpenModal({
-                    id: gradeData?.id as number,
-                    open: true,
-                    type: "assignGroupTeachesrStudents",
-                  })
-                }
-              >
-                {t("actions.view_entity", {
-                  entity:
-                    t("determiners.definite.plural") +
-                    " " +
-                    t("entities.students") +
-                    " " +
-                    t("determiners.definite.plural") +
-                    " " +
-                    t("entities.teachers"),
-                })}
-              </Button>
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button type="submit" className="btn-default !w-auto">
-              {t("general.accept")}
-            </Button>
-            <button className="btn-danger !w-auto" onClick={onCloseModal}>
-              {t("general.decline")}
-            </button>
-          </Modal.Footer>
-        </form>
-      </Modal>
+      <EditGradeModal
+        modal={openModal as ModalProps}
+        onClose={() => setOpenModal(undefined)}
+        onFormData={(data) => setGradeMutation.mutate(data)}
+        oldData={getGradeQuery.data}
+      />
 
       <Modal
         show={
