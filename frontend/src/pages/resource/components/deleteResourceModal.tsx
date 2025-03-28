@@ -105,7 +105,10 @@ export default function DeleteResourceModal({
         size={"md"}
         theme={customModal}
       >
-        <form onSubmit={onSubmitDelete}>
+        <form
+          onSubmit={onSubmitDelete}
+          className="relative box-border flex max-h-[90vh] flex-col rounded-lg bg-white shadow dark:bg-gray-700"
+        >
           <Modal.Header>
             {t("actions.delete_entity", {
               entity: t("entities.resource"),

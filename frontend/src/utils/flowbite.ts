@@ -1,4 +1,6 @@
-const customTooltip = {
+import { FlowbiteBadgeTheme, FlowbiteModalTheme, FlowbiteProgressTheme, FlowbiteTableTheme, FlowbiteToggleSwitchTheme, FlowbiteTooltipTheme } from "flowbite-react"
+
+const customTooltip = <FlowbiteTooltipTheme>{
     "arrow": {
       "base": "absolute z-10 h-2 w-2 rotate-45",
       "style": {
@@ -18,7 +20,7 @@ const customTooltip = {
     "content": "relative z-20"
   }
 
-  const customBadge = {
+  const customBadge = <FlowbiteBadgeTheme>{
     "root": {
       "base": "flex h-fit items-center gap-1 rounded-s w-max font-semibold",
       "color": {
@@ -57,8 +59,7 @@ const customTooltip = {
     }
   }
 
-  const customTable = 
-  {
+  const customTable = <FlowbiteTableTheme>{
     root: {
       base: "w-full relative whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400",
       shadow:
@@ -87,7 +88,7 @@ const customTooltip = {
     
   }
 
-  const customToggleSwitch = {
+  const customToggleSwitch = <FlowbiteToggleSwitchTheme>{
     "root": {
       "base": "group flex rounded-lg focus:outline-none",
       "active": {
@@ -129,7 +130,7 @@ const customTooltip = {
     }
   }
 
-  const customProgress = {
+  const customProgress = <FlowbiteProgressTheme>{
     "base": "w-full overflow-hidden rounded-lg group-even:bg-gray-300 group-odd:bg-gray-200 group-even:dark:bg-gray-600 group-odd:dark:bg-gray-700",
     "label": "mb-1 flex justify-between font-medium dark:text-white",
     "bar": "space-x-2 rounded-lg text-center font-medium leading-none text-cyan-300 dark:text-cyan-100",
@@ -155,14 +156,14 @@ const customTooltip = {
     }
   }
 
-  const customModal = {
+  const customModal = <FlowbiteModalTheme>{
     content: {
-      base: "relative h-full w-full p-4 md:h-auto",
+      base: "relative w-full p-4",
       inner:
-        "relative box-border flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
+        "relative box-border max-h-[90vh] flex flex-col rounded-lg bg-white shadow dark:bg-gray-700",
     },
     body: {
-      base: "p-6 max-sm:h-screen max-sm:overflow-y-auto",
+      base: "p-6 h-auto overflow-y-auto",
       popup: "pt-0",
     },
   }

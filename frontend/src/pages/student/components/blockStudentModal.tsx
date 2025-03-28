@@ -137,7 +137,10 @@ export default function BlockStudentModal({
         size={"md"}
         theme={customModal}
       >
-        <form onSubmit={onSubmitBlock}>
+        <form
+          onSubmit={onSubmitBlock}
+          className="relative box-border flex max-h-[90vh] flex-col rounded-lg bg-white shadow dark:bg-gray-700"
+        >
           <Modal.Header>
             {t("actions.block_entity", { entity: t("general.user") })}
           </Modal.Header>

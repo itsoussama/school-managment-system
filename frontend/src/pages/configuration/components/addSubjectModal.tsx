@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import { Modal } from "flowbite-react";
 import SubjectForm from "./subjectForm";
+import { customModal } from "@src/utils/flowbite";
 
 interface AddSubjectModalProps {
   modal: ModalProps;
@@ -79,6 +80,7 @@ export default function AddSubjectModal({
       />
       <Modal
         show={modal?.type === "addSubject" ? modal?.open : false}
+        theme={customModal}
         onClose={onCloseModal}
         size="md"
       >

@@ -101,7 +101,7 @@ export default function ViewTeacherModal({
                 />
               </div>
             </div>
-            <div className="box-border flex max-h-[70vh] w-full flex-col gap-6 overflow-y-auto">
+            <div className="box-border flex w-full flex-col gap-6">
               <div className="w-full">
                 <h1 className="mb-2 rounded-s bg-gray-200 px-4 py-2 text-xl font-semibold text-gray-900 dark:bg-gray-800 dark:text-white">
                   {t("information.personal_information")}
