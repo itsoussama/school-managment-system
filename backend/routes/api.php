@@ -50,6 +50,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
         Route::post('/assign-teacher-subject', [UserController::class, 'assignTeacherSubject']);
         Route::post('/block', [UserController::class, 'blockUser']);
         Route::post('/unblock', [UserController::class, 'unblockUser']);
+        Route::post('/users/destroy-many', [UserController::class, 'destroyMany']);
         Route::get('/school-staffs', [UserController::class, 'schoolStaffs']);
         Route::apiResource('teachers', TeacherController::class);
         Route::apiResource('stages', StageController::class);

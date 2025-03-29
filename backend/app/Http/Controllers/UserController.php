@@ -845,12 +845,39 @@ class UserController extends Controller
             $user->role()->detach();
             $user->delete();
 
-
             return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
         } else {
             return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
         }
     }
+
+    public function destroyMany(Request $request)
+    {
+        if ($request->user()->hasRole(config('roles.admin_staff')) || $request->user()->hasRole(config('roles.admin'))) {
+            $request->validate([
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'exists:users,id',
+            ]);
+
+            $users = User::whereIn('id', $request->user_ids)->get();
+
+            foreach ($users as $user) {
+                if (!empty($user->imagePath)) {
+                    if (Storage::disk('public')->exists($user->imagePath)) {
+                        Storage::disk('public')->delete($user->imagePath);
+                    }
+                }
+
+                $user->role()->detach();
+                $user->delete();
+            }
+
+            return response()->json(['message' => 'Users deleted successfully'], Response::HTTP_NO_CONTENT);
+        } else {
+            return response()->json(['error' => "You don't have access to this route"], Response::HTTP_FORBIDDEN);
+        }
+    }
+
     public function destroy_admin(User $user, Request $request)
     {
         if ($request->user()->hasRole(config('roles.admin_staff'))) {
