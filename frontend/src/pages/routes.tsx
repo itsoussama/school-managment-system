@@ -25,6 +25,7 @@ import GeneralSettings from "./configuration/school/generalSettings";
 import SchoolLevels from "./configuration/school/schoolLevels";
 import Subjects from "./configuration/school/subjects";
 import Timetable from "./configuration/school/timetable";
+import ViewNotification from "./events/viewNotification";
 
 export const MainRouter = {
   path: "/",
@@ -42,6 +43,10 @@ export const MainRouter = {
     {
       path: "preference",
       element: <Preference />,
+    },
+    {
+      path: "notifications",
+      element: <ViewNotification />,
     },
     {
       path: "administrators",

@@ -237,6 +237,15 @@ const deleteUser = async (id: number) => {
   return response.data;
 };
 
+const deleteUsers = async (formData: DeleteUsersFormData) => {
+  const response = await axiosApi.post("/api/users/destroy-many", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
 const getSubjects = async (
   page = 1,
   perPage = 5,
@@ -810,6 +819,7 @@ export {
   getUser,
   getSchoolStaff,
   deleteUser,
+  deleteUsers,
   assignChilds,
   assignParent,
   blockUser,

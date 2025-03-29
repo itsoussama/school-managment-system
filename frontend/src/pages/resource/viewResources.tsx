@@ -46,11 +46,6 @@ import FormResourceModal from "./components/formResourceModal";
 import DeleteResourceModal from "./components/deleteResourceModal";
 import { badgeColor } from "@src/utils/colors";
 
-interface Check {
-  id?: number;
-  status?: boolean;
-}
-
 interface Modal {
   id: number;
   type?: "view" | "edit" | "delete";
@@ -99,8 +94,7 @@ export function ViewResources() {
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
   const isCheckBoxAll = useRef(false);
-  const [checks, setChecks] = useState<Array<Check>>([]);
-  const [numChecked, setNumChecked] = useState<number>(0);
+  const [checks, setChecks] = useState<Array<number | string>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
@@ -165,34 +159,34 @@ export function ViewResources() {
     queryFn: () => getCategories(1, -1, undefined, undefined, user.school_id),
   });
 
-  const handleCheck = async (id?: number) => {
+  const toggleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
 
     if (!id) {
       setChecks([]);
-      await handleChecks(firstCheckbox);
+      await toggleChecks(firstCheckbox);
     } else {
-      const getValue = checks.find((elem) => elem.id === id);
-      const filteredArr = checks.filter((elem) => elem.id !== id);
-      setChecks([
-        ...(filteredArr as []),
-        { id: id, status: !getValue?.status },
-      ]);
+      setChecks((prev) => {
+        const newIdsCollection = prev.includes(id)
+          ? prev.filter((i) => i != id)
+          : [...prev, id];
+        return newIdsCollection;
+      });
       firstCheckbox.checked = false;
     }
   };
 
-  const handleChecks = useCallback(
+  const toggleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllResourcesQuery.isFetched) {
         await getAllResourcesQuery.data?.forEach((resource: Resource) => {
           setChecks((prev) => {
-            const checkedData = prev.some((item) => item.id === resource.id);
-
-            if (firstCheckbox.checked && !checkedData) {
-              return [...prev, { id: resource.id as number, status: true }];
-            }
-            return [...prev, { id: resource.id as number, status: false }];
+            const checkedData = prev.includes(resource.id);
+            const newIdsCollection =
+              firstCheckbox.checked && !checkedData
+                ? [...prev, resource.id]
+                : [...prev];
+            return newIdsCollection;
           });
         });
       }
@@ -284,16 +278,10 @@ export function ViewResources() {
   }, [location]);
 
   useEffect(() => {
-    const checkedVal = checks.filter((val) => val.status === true)
-      .length as number;
-    setNumChecked(checkedVal);
-  }, [checks]);
-
-  useEffect(() => {
     if (isCheckBoxAll) {
-      handleChecks(firstCheckboxRef.current as HTMLInputElement);
+      toggleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
-  }, [page, handleChecks]);
+  }, [page, toggleChecks]);
 
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);
@@ -347,7 +335,7 @@ export function ViewResources() {
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
-          {checks.find((val) => val.status === true) ? (
+          {checks.length ? (
             <div className="flex w-full justify-between px-5 py-4">
               <div className="flex items-center gap-x-4">
                 {/* <CheckboxDropdown /> */}
@@ -355,7 +343,7 @@ export function ViewResources() {
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
                   {t("general.delete")}
-                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${checks.length}`}</span>
                 </button>
               </div>
             </div>
@@ -371,7 +359,7 @@ export function ViewResources() {
                     className="rounded-xs"
                     id="0"
                     ref={firstCheckboxRef}
-                    onChange={() => handleCheck()}
+                    onChange={() => toggleCheck()}
                   />
                 </Table.HeadCell>
                 <Table.HeadCell>
@@ -609,13 +597,8 @@ export function ViewResources() {
                             className="rounded-xs"
                             id={resource.id.toString()}
                             name="checkbox"
-                            checked={
-                              checks.find((check) => check.id == resource.id)
-                                ?.status == true
-                                ? true
-                                : false
-                            }
-                            onChange={() => handleCheck(resource.id)}
+                            checked={checks.includes(resource.id)}
+                            onChange={() => toggleCheck(resource.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">

@@ -315,10 +315,14 @@ export default {
         "dark-secondary": "#111928",
       },
       boxShadow: {
+        "sharp-dark-top": "inset 0 1px 0 0 rgba(0, 0, 0, .09)",
+        "sharp-dark-buttom": "0px 3px 7px -3px rgba(0, 0, 0, .2)",
         "sharp-dark":
-          "inset 0 1px 0 0 rgba(0, 0, 0, .07), 0 1px 2px -1px rgba(0, 0, 0, .2)",
+          "inset 0 1px 0 0 rgba(0, 0, 0, .09), 0px 3px 7px -3px rgba(0, 0, 0, .2)",
+        "sharp-light-top": "inset 0 1px 0 0 rgba(255, 255, 255, .06)",
+        "sharp-light-buttom": "0px 3px 7px -3px rgba(0, 0, 0, 0.3)",
         "sharp-light":
-          "inset 0 1px 0 0 rgba(255, 255, 255, .06), 0 2px 3px -4px rgba(255, 255, 255, .1)",
+          "inset 0 1px 0 0 rgba(255, 255, 255, .06), 0px 3px 7px -3px rgba(0, 0, 0, 0.3)",
       },
 
       animation: {

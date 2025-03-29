@@ -25,8 +25,13 @@ import {
 import { IoFilter } from "react-icons/io5";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { getStudents, getGrades } from "@pages/shared/utils/api";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { getStudents, getGrades, deleteUsers } from "@pages/shared/utils/api";
 import { SkeletonTable } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -47,11 +52,7 @@ import DeleteStudentModal from "./components/deleteStudentModal";
 import FormStudentModal from "./components/formStudentModal";
 import ViewStudentModal from "./components/viewStudentModal";
 import { Grades } from "../configuration/school/subjects";
-
-interface Check {
-  id?: number;
-  status?: boolean;
-}
+import { formatUserName } from "../shared/utils/formatters";
 
 interface Modal {
   id: number;
@@ -124,6 +125,7 @@ interface Filter {
 const SERVER_STORAGE = import.meta.env.VITE_SERVER_STORAGE;
 
 export function ViewStudents() {
+  const queryClient = useQueryClient();
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
@@ -135,8 +137,7 @@ export function ViewStudents() {
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
   const isCheckBoxAll = useRef(false);
-  const [checks, setChecks] = useState<Array<Check>>([]);
-  const [numChecked, setNumChecked] = useState<number>(0);
+  const [checks, setChecks] = useState<Array<number | string>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
   const [openParentModal, setOpenParentModal] = useState<ParentModal>({
     id: 0,
@@ -196,33 +197,65 @@ export function ViewStudents() {
     queryFn: () => getGrades(1, -1, undefined, undefined, admin.school_id),
   });
 
-  const handleCheck = async (id?: number) => {
+  const deleteUsersMutation = useMutation({
+    mutationFn: deleteUsers,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["getStudents"],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["getAllStudents"],
+      });
+
+      setChecks([]);
+
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: t("notifications.deleted_success"),
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: t("notifications.submission_failed"),
+        state: true,
+      });
+    },
+  });
+
+  const toggleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
 
     if (!id) {
       setChecks([]);
-      await handleChecks(firstCheckbox);
+      await toggleChecks(firstCheckbox);
     } else {
-      const getValue = checks.find((elem) => elem.id === id);
-      const filteredArr = checks.filter((elem) => elem.id !== id);
-      setChecks([
-        ...(filteredArr as []),
-        { id: id, status: !getValue?.status },
-      ]);
+      setChecks((prev) => {
+        const newIdsCollection = prev.includes(id)
+          ? prev.filter((i) => i != id)
+          : [...prev, id];
+        return newIdsCollection;
+      });
       firstCheckbox.checked = false;
     }
   };
 
-  const handleChecks = useCallback(
+  const toggleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllStudentsQuery.isFetched) {
         await getAllStudentsQuery.data?.forEach((student: Student) => {
           setChecks((prev) => {
-            const checkedData = prev.some((item) => item.id === student.id);
-            if (firstCheckbox.checked && !checkedData) {
-              return [...prev, { id: student.id as number, status: true }];
-            }
-            return [...prev, { id: student.id as number, status: false }];
+            const checkedData = prev.includes(student.id);
+            const newIdsCollection =
+              firstCheckbox.checked && !checkedData
+                ? [...prev, student.id]
+                : [...prev];
+            return newIdsCollection;
           });
         });
       }
@@ -263,12 +296,11 @@ export function ViewStudents() {
   //   return { hour: convertToHour, minute: convertToMinute };
   // };
 
-  const getUserName = (fullName: string) => {
-    const nameParts = fullName?.trim().split(/\s+/);
-    const firstName = nameParts?.slice(0, -1).join(" ");
-    const lastName = nameParts?.slice(-1).join(" ");
-
-    return { firstName, lastName };
+  const onDeleteUsers = () => {
+    const form: { user_ids: number[] } = {
+      user_ids: checks as number[],
+    };
+    deleteUsersMutation.mutate(form);
   };
 
   useEffect(() => {
@@ -295,16 +327,10 @@ export function ViewStudents() {
   }, [location]);
 
   useEffect(() => {
-    const checkedVal = checks.filter((val) => val.status === true)
-      .length as number;
-    setNumChecked(checkedVal);
-  }, [checks]);
-
-  useEffect(() => {
     if (isCheckBoxAll) {
-      handleChecks(firstCheckboxRef.current as HTMLInputElement);
+      toggleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
-  }, [page, handleChecks]);
+  }, [page, toggleChecks]);
 
   return (
     <div className="flex w-full flex-col">
@@ -378,15 +404,18 @@ export function ViewStudents() {
       />
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
-          {checks.find((val) => val.status === true) ? (
+          {checks.length ? (
             <div className="flex w-full justify-between px-5 py-4">
               <div className="flex items-center gap-x-4">
                 {/* <CheckboxDropdown /> */}
 
-                <button className="btn-danger !m-0 flex w-max items-center">
+                <button
+                  className="btn-danger !m-0 flex w-max items-center"
+                  onClick={() => onDeleteUsers()}
+                >
                   <FaTrash className="mr-2 text-white" />
                   {t("actions.delete_entity")}
-                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${checks.length}`}</span>
                 </button>
               </div>
             </div>
@@ -402,7 +431,7 @@ export function ViewStudents() {
                     className="rounded-xs"
                     id="0"
                     ref={firstCheckboxRef}
-                    onChange={() => handleCheck()}
+                    onChange={() => toggleCheck()}
                   />
                 </Table.HeadCell>
                 <Table.HeadCell>
@@ -585,13 +614,8 @@ export function ViewStudents() {
                             className="rounded-xs"
                             id={student.id.toString()}
                             name="checkbox"
-                            checked={
-                              checks.find((check) => check.id == student.id)
-                                ?.status == true
-                                ? true
-                                : false
-                            }
-                            onChange={() => handleCheck(student.id)}
+                            checked={checks.includes(student.id)}
+                            onChange={() => toggleCheck(student.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">
@@ -648,7 +672,7 @@ export function ViewStudents() {
                                   student.guardian.imagePath
                                     ? SERVER_STORAGE +
                                       student.guardian.imagePath
-                                    : `https://ui-avatars.com/api/?background=random&name=${getUserName(student.guardian.name).firstName}+${getUserName(student.guardian.name).lastName}`
+                                    : `https://ui-avatars.com/api/?background=random&name=${formatUserName(student.guardian.name).firstName}+${formatUserName(student.guardian.name).lastName}`
                                 }
                                 alt="profile"
                               />

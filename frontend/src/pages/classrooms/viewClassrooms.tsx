@@ -50,11 +50,6 @@ import { TransitionAnimation } from "@src/components/animation";
 import { customTable, customTooltip } from "@src/utils/flowbite";
 import { useFormValidation } from "@src/hooks/useFormValidation";
 
-interface Check {
-  id?: number;
-  status?: boolean;
-}
-
 interface Modal {
   id: number;
   type?: "view" | "edit" | "delete" | "block";
@@ -113,8 +108,7 @@ export function ViewClassrooms() {
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
   const isCheckBoxAll = useRef(false);
-  const [numChecked, setNumChecked] = useState<number>(0);
-  const [checks, setChecks] = useState<Array<Check>>([]);
+  const [checks, setChecks] = useState<Array<number | string>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
   const [isVerficationMatch, setIsVerficationMatch] = useState<boolean>(true);
   // const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
@@ -239,39 +233,39 @@ export function ViewClassrooms() {
     }));
   };
 
-  const handleCheck = async (id?: number) => {
+  const toggleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
-    // console.log(id);
 
     if (!id) {
       setChecks([]);
-      await handleChecks(firstCheckbox);
+      await toggleChecks(firstCheckbox);
     } else {
-      const getValue = checks.find((elem) => elem.id === id);
-      const filteredArr = checks.filter((elem) => elem.id !== id);
-      setChecks([
-        ...(filteredArr as []),
-        { id: id, status: !getValue?.status },
-      ]);
+      setChecks((prev) => {
+        const newIdsCollection = prev.includes(id)
+          ? prev.filter((i) => i != id)
+          : [...prev, id];
+        return newIdsCollection;
+      });
       firstCheckbox.checked = false;
     }
   };
 
-  const handleChecks = useCallback(
+  const toggleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllClassroomsQuery.isFetched) {
-        await getAllClassroomsQuery?.data.forEach((classroom: Classroom) => {
+        await getAllClassroomsQuery.data?.forEach((classrooms: Classroom) => {
           setChecks((prev) => {
-            const checkedData = prev.some((item) => item.id === classroom.id);
-            if (firstCheckbox.checked && !checkedData) {
-              return [...prev, { id: classroom.id as number, status: true }];
-            }
-            return [...prev, { id: classroom.id as number, status: false }];
+            const checkedData = prev.includes(classrooms.id);
+            const newIdsCollection =
+              firstCheckbox.checked && !checkedData
+                ? [...prev, classrooms.id]
+                : [...prev];
+            return newIdsCollection;
           });
         });
       }
     },
-    [getAllClassroomsQuery?.data, getAllClassroomsQuery.isFetched],
+    [getAllClassroomsQuery.data, getAllClassroomsQuery.isFetched],
   );
 
   const handleSort = (column: string) => {
@@ -387,16 +381,10 @@ export function ViewClassrooms() {
   }, [location]);
 
   useEffect(() => {
-    const checkedVal = checks.filter((val) => val.status === true)
-      .length as number;
-    setNumChecked(checkedVal);
-  }, [checks]);
-
-  useEffect(() => {
     if (isCheckBoxAll) {
-      handleChecks(firstCheckboxRef.current as HTMLInputElement);
+      toggleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
-  }, [page, handleChecks]);
+  }, [page, toggleChecks]);
 
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);
@@ -675,7 +663,7 @@ export function ViewClassrooms() {
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
-          {checks.find((val) => val.status === true) ? (
+          {checks.length ? (
             <div className="flex w-full justify-between px-5 py-4">
               <div className="flex items-center gap-x-4">
                 {/* <CheckboxDropdown /> */}
@@ -683,7 +671,7 @@ export function ViewClassrooms() {
                 <button className="btn-danger !m-0 flex w-max items-center">
                   <FaTrash className="mr-2 text-white" />
                   {t("actions.delete_entity")}
-                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${checks.length}`}</span>
                 </button>
               </div>
             </div>
@@ -699,7 +687,7 @@ export function ViewClassrooms() {
                     className="rounded-xs"
                     id="0"
                     ref={firstCheckboxRef}
-                    onChange={() => handleCheck()}
+                    onChange={() => toggleCheck()}
                   />
                 </Table.HeadCell>
                 <Table.HeadCell>
@@ -810,13 +798,8 @@ export function ViewClassrooms() {
                             className="rounded-xs"
                             id={classroom.id.toString()}
                             name="checkbox"
-                            checked={
-                              checks.find((check) => check.id == classroom.id)
-                                ?.status == true
-                                ? true
-                                : false
-                            }
-                            onChange={() => handleCheck(classroom.id)}
+                            checked={checks.includes(classroom.id)}
+                            onChange={() => toggleCheck(classroom.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">

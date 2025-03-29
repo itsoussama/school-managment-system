@@ -28,8 +28,13 @@ import {
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { getAdministrators } from "@src/pages/shared/utils/api";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { deleteUsers, getAdministrators } from "@src/pages/shared/utils/api";
 import { SkeletonTable } from "@src/components/skeleton";
 import { useAppSelector } from "@src/hooks/useReduxEvent";
 import useBreakpoint from "@src/hooks/useBreakpoint";
@@ -46,11 +51,6 @@ import FormAdministratorModal from "./components/formAdministratorModal";
 import ViewAdministratorModal from "./components/viewAdministratorModal";
 import DeleteAdministratorModal from "./components/deleteAdministratorModal";
 import BlockAdministratorModal from "./components/blockAdministratorModal";
-
-interface Check {
-  id?: number;
-  status?: boolean;
-}
 
 interface Modal {
   id: number;
@@ -94,6 +94,7 @@ interface Filter {
 }
 
 export function ViewAdministrators() {
+  const queryClient = useQueryClient();
   const [sortPosition, setSortPosition] = useState<number>(0);
   const [sort, setSort] = useState<Sort>({ column: "id", direction: "asc" });
   const [filter, setFilter] = useState<Filter>({
@@ -104,8 +105,7 @@ export function ViewAdministrators() {
   const [perPage, setPerPage] = useState<number>();
   const firstCheckboxRef = useRef<HTMLInputElement>(null);
   const isCheckBoxAll = useRef(false);
-  const [numChecked, setNumChecked] = useState<number>(0);
-  const [checks, setChecks] = useState<Array<Check>>([]);
+  const [checks, setChecks] = useState<Array<number | string>>([]);
   const [openModal, setOpenModal] = useState<Modal>();
   const [alert, toggleAlert] = useState<AlertType>(alertIntialState);
   const tableRef = React.useRef<HTMLTableSectionElement>(null);
@@ -152,45 +152,66 @@ export function ViewAdministrators() {
     placeholderData: keepPreviousData,
   });
 
-  // const [selectedItem, setSelectedItem] = useState()
+  const deleteUsersMutation = useMutation({
+    mutationFn: deleteUsers,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["getAdministrators"],
+      });
 
-  const handleCheck = async (id?: number) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["getAllAdministrators"],
+      });
+
+      setChecks([]);
+
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "success",
+        message: t("notifications.deleted_success"),
+        state: true,
+      });
+    },
+
+    onError: () => {
+      toggleAlert({
+        id: new Date().getTime(),
+        status: "fail",
+        message: t("notifications.submission_failed"),
+        state: true,
+      });
+    },
+  });
+
+  const toggleCheck = async (id?: number) => {
     const firstCheckbox = firstCheckboxRef.current as HTMLInputElement;
-    // console.log(id);
 
     if (!id) {
       setChecks([]);
-      await handleChecks(firstCheckbox);
+      await toggleChecks(firstCheckbox);
     } else {
-      const getValue = checks.find((elem) => elem.id === id);
-      const filteredArr = checks.filter((elem) => elem.id !== id);
-      setChecks([
-        ...(filteredArr as []),
-        { id: id, status: !getValue?.status },
-      ]);
+      setChecks((prev) => {
+        const newIdsCollection = prev.includes(id)
+          ? prev.filter((i) => i != id)
+          : [...prev, id];
+        return newIdsCollection;
+      });
       firstCheckbox.checked = false;
     }
   };
 
-  const handleChecks = useCallback(
+  const toggleChecks = useCallback(
     async (firstCheckbox: HTMLInputElement) => {
       if (getAllAdministratorsQuery.isFetched) {
         await getAllAdministratorsQuery.data?.forEach(
           (administrator: Administrator) => {
             setChecks((prev) => {
-              const checkedData = prev.some(
-                (item) => item.id === administrator.id,
-              );
-              if (firstCheckbox.checked && !checkedData) {
-                return [
-                  ...prev,
-                  { id: administrator.id as number, status: true },
-                ];
-              }
-              return [
-                ...prev,
-                { id: administrator.id as number, status: false },
-              ];
+              const checkedData = prev.includes(administrator.id);
+              const newIdsCollection =
+                firstCheckbox.checked && !checkedData
+                  ? [...prev, administrator.id]
+                  : [...prev];
+              return newIdsCollection;
             });
           },
         );
@@ -224,6 +245,13 @@ export function ViewAdministrators() {
     setPerPage(parseInt(target.value));
   };
 
+  const onDeleteUsers = () => {
+    const form: { user_ids: number[] } = {
+      user_ids: checks as number[],
+    };
+    deleteUsersMutation.mutate(form);
+  };
+
   // const formatDuration = (duration: number) => {
   //   const convertToHour = Math.floor(duration / (1000 * 60 * 60));
   //   const remainingMilliseconds = duration % (1000 * 60 * 60);
@@ -244,16 +272,10 @@ export function ViewAdministrators() {
   }, [location]);
 
   useEffect(() => {
-    const checkedVal = checks.filter((val) => val.status === true)
-      .length as number;
-    setNumChecked(checkedVal);
-  }, [checks]);
-
-  useEffect(() => {
     if (isCheckBoxAll) {
-      handleChecks(firstCheckboxRef.current as HTMLInputElement);
+      toggleChecks(firstCheckboxRef.current as HTMLInputElement);
     }
-  }, [page, handleChecks]);
+  }, [page, toggleChecks]);
 
   const closeAlert = useCallback((value: AlertType) => {
     toggleAlert(value);
@@ -319,15 +341,18 @@ export function ViewAdministrators() {
 
       <TransitionAnimation>
         <div className="flex w-full flex-col rounded-m border border-gray-200 bg-light-primary dark:border-gray-700 dark:bg-dark-primary">
-          {checks.find((val) => val.status === true) ? (
+          {checks.length ? (
             <div className="flex w-full justify-between px-5 py-4">
               <div className="flex items-center gap-x-4">
                 {/* <CheckboxDropdown /> */}
 
-                <button className="btn-danger !m-0 flex w-max items-center">
+                <button
+                  className="btn-danger !m-0 flex w-max items-center"
+                  onClick={() => onDeleteUsers()}
+                >
                   <FaTrash className="mr-2 text-white" />
                   {t("actions.delete_entity")}
-                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${numChecked}`}</span>
+                  <span className="ml-2 rounded-lg bg-red-800 pb-1 pl-1.5 pr-2 pt-0.5 text-xs">{`${checks.length}`}</span>
                 </button>
               </div>
             </div>
@@ -343,7 +368,7 @@ export function ViewAdministrators() {
                     className="rounded-xs"
                     id="0"
                     ref={firstCheckboxRef}
-                    onChange={() => handleCheck()}
+                    onChange={() => toggleCheck()}
                   />
                 </Table.HeadCell>
                 <Table.HeadCell>
@@ -456,14 +481,8 @@ export function ViewAdministrators() {
                             className="rounded-xs"
                             id={administrator.id.toString()}
                             name="checkbox"
-                            checked={
-                              checks.find(
-                                (check) => check.id == administrator.id,
-                              )?.status == true
-                                ? true
-                                : false
-                            }
-                            onChange={() => handleCheck(administrator.id)}
+                            checked={checks.includes(administrator.id)}
+                            onChange={() => toggleCheck(administrator.id)}
                           />
                         </Table.Cell>
                         <Table.Cell className="font-medium text-gray-900 dark:text-gray-300">

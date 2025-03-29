@@ -18,7 +18,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { FaArrowRightFromBracket, FaMessage } from "react-icons/fa6";
+import {
+  FaArrowRightFromBracket,
+  FaCalendarCheck,
+  FaEye,
+  FaMessage,
+  FaMoneyBill,
+} from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 import useBreakpoint from "@src/hooks/useBreakpoint";
 import { hoverContext } from "@src/context/hoverContext";
@@ -32,6 +38,7 @@ import ReactDOM from "react-dom";
 import { TabBar } from "@src/components/tabBar";
 import { BrandColor, colorPalette } from "@src/utils/colors";
 import { changeLanguage } from "i18next";
+import { Event, Indicator } from "@src/pages/shared/components/eventsUI";
 // import { MegaMenu } from "flowbite-react";
 
 interface Layout {
@@ -225,35 +232,107 @@ export function Layout({ children, menu }: Layout) {
           </div>
           <div className="top-bar flex gap-4">
             <div className="channels flex items-center gap-4 rounded-s bg-light-primary p-4 shadow-sharp-dark dark:bg-dark-primary dark:shadow-sharp-light">
-              <div className="notifications relative">
-                <span className="absolute flex h-2 w-2 rounded-full">
-                  <span
-                    className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--brand-color-500)] opacity-75"
-                    style={
-                      {
-                        "--brand-color-500":
-                          colorPalette[brandState as BrandColor][500],
-                      } as CSSProperties
+              <Event
+                trigger={
+                  <div className="notifications relative">
+                    <Indicator motion position="top-left" />
+                    <FaBell className="text-xl text-gray-500" />
+                  </div>
+                }
+              >
+                <Event.Header>Notification</Event.Header>
+                <Event.Body>
+                  <Event.Item
+                    badgeIcon={FaBell}
+                    badgeColor="yellow"
+                    readStatus="unread"
+                    // avatar="1"
+                    time="a few moments ago"
+                    message={
+                      <span>
+                        Mathematics exam is scheduled for{" "}
+                        <b>tomorrow at 9 AM</b>.
+                      </span>
                     }
-                  ></span>
-                  <span
-                    className="relative inline-flex h-2 w-2 rounded-full bg-[var(--brand-color-500)]"
-                    style={
-                      {
-                        "--brand-color-500":
-                          colorPalette[brandState as BrandColor][500],
-                      } as CSSProperties
+                  />
+                  <Event.Item
+                    badgeIcon={FaCalendarCheck}
+                    badgeColor="green"
+                    readStatus="read"
+                    // avatar="1"
+                    time="15 min ago"
+                    message={
+                      <span>
+                        timetable has been updated for this week
+                        <b>this week</b>.
+                      </span>
                     }
-                  ></span>
-                </span>
-                <FaBell className="text-xl text-gray-500" />
-              </div>
+                  />
+                  <Event.Item
+                    badgeIcon={FaMoneyBill}
+                    badgeColor="orange"
+                    readStatus="unread"
+                    // avatar="1"
+                    time="1 day ago"
+                    message={
+                      <span>
+                        Payroll for <b>September 2023</b> has been successfully
+                        processed for all employees. Please review the details
+                        in the admin panel.
+                      </span>
+                    }
+                  />
+                </Event.Body>
+                <Event.Footer link="/notifications">
+                  <FaEye className="me-2" /> See more
+                </Event.Footer>
+              </Event>
+
               <div className="messages relative">
                 {/* <span className="rounded-full absolute flex h-2 w-2">
                   <span className="rounded-full absolute inline-flex h-full w-full animate-ping bg-sky-400 opacity-75"></span>
                   <span className="rounded-full relative inline-flex h-2 w-2 bg-sky-500"></span>
                 </span> */}
-                <FaMessage className="mt-0.5 text-lg text-gray-500" />
+                <Event
+                  trigger={
+                    <FaMessage className="mt-0.5 text-lg text-gray-500" />
+                  }
+                >
+                  <Event.Header>Message</Event.Header>
+                  <Event.Body>
+                    <Event.Item
+                      avatar="https://ui-avatars.com/api/?background=random&name=john+doe"
+                      readStatus="unread"
+                      accountStatus="online"
+                      time="a few moments ago"
+                      message={
+                        <span>
+                          <b>John Doe</b>
+                          <p className="text-gray-600 dark:text-gray-300">
+                            Hey, what's up? All set for the presentation?
+                          </p>
+                        </span>
+                      }
+                    />
+                    <Event.Item
+                      avatar="https://ui-avatars.com/api/?background=random&name=Jese+Leos"
+                      readStatus="read"
+                      accountStatus="away"
+                      time="15 min ago"
+                      message={
+                        <span>
+                          <b>Jese Leos</b>
+                          <p className="text-gray-600 dark:text-gray-300">
+                            Hey, what's up? All set for the presentation?
+                          </p>
+                        </span>
+                      }
+                    />
+                  </Event.Body>
+                  <Event.Footer>
+                    <FaEye className="me-2" /> See more
+                  </Event.Footer>
+                </Event>
               </div>
               <div className="events relative">
                 {/* <span className="rounded-full absolute flex h-2 w-2">
