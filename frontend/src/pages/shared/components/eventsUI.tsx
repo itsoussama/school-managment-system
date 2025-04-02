@@ -29,6 +29,7 @@ interface EventItemProps extends HTMLAttributes<HTMLDivElement> {
   badgeIcon?: JSXElementConstructor<IconBaseProps>;
   rounded?: boolean;
   link?: string;
+  onRead?: (isRead: EventItemProps["readStatus"]) => void;
 }
 
 interface EventDropdownProps extends EventProps {
@@ -146,20 +147,38 @@ Event.Item = function Item({
   badgeIcon,
   rounded,
   link,
+  onRead,
 }: EventItemProps) {
+  const [read, toggleRead] = useState<EventItemProps["readStatus"]>(readStatus);
   const brandState = useAppSelector((state) => state.preferenceSlice.brand);
   const navigate = useNavigate();
+
+  const handleReadEvent = () => {
+    if (readStatus) {
+      const isRead: EventItemProps["readStatus"] = "read";
+      toggleRead(isRead);
+      if (onRead) {
+        onRead(isRead);
+      }
+    }
+
+    if (link) {
+      navigate(link);
+    }
+  };
+
+  useEffect(() => {
+    toggleRead(readStatus);
+  }, [readStatus]);
+
   return (
     <div
-      onClick={() => link && navigate(link)}
-      className={`relative flex px-4 py-3 hover:bg-gray-200 dark:hover:bg-gray-700 ${readStatus === "unread" ? "bg-[var(--brand-color-100)] dark:bg-[var(--brand-color-950)]" : ""} ${link ? "cursor-pointer" : "cursor-auto"} ${rounded ? "rounded-m" : ""}`}
+      onClick={handleReadEvent}
+      className={`relative flex select-none px-4 py-3 hover:bg-gray-200 dark:hover:bg-gray-700 ${read === "unread" ? "bg-[var(--brand-color-100)] dark:bg-[var(--brand-color-950)]" : ""} ${link ? "cursor-pointer" : "cursor-auto"} ${rounded ? "rounded-m" : ""}`}
       style={
         {
           "--brand-color-950": colorPalette[brandState as BrandColor][950],
           "--brand-color-100": colorPalette[brandState as BrandColor][100],
-          "--events-color-900": colorPalette[badgeColor][900],
-          "--events-color-500": colorPalette[badgeColor][500],
-          "--events-color-100": colorPalette[badgeColor][100],
         } as CSSProperties
       }
     >
@@ -174,18 +193,27 @@ Event.Item = function Item({
         ) : (
           <div
             // className={`absolute -mt-5 ms-6 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-color-50)] bg-opacity-10`}
-            className={`flex h-9 w-9 items-center justify-center rounded-full bg-[var(--events-color-100)] dark:bg-[var(--events-color-900)]`}
+            className={`border-1 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-[var(--brand-color-400)] to-[var(--brand-color-500)] dark:from-[var(--brand-color-500)] dark:to-[var(--brand-color-600)]`}
+            style={
+              {
+                "--brand-color-900": colorPalette[badgeColor][900],
+                "--brand-color-400": colorPalette[badgeColor][400],
+                "--brand-color-500": colorPalette[badgeColor][500],
+                "--brand-color-600": colorPalette[badgeColor][600],
+                "--brand-color-100": colorPalette[badgeColor][100],
+              } as CSSProperties
+            }
           >
             <IconContext.Provider
               value={{
-                className: "text-gray-500 dark:text-gray-400",
+                className:
+                  // "text-[var(--brand-color-500)] dark:text-[var(--brand-color-400)]",
+                  "text-white",
               }}
             >
               {badgeIcon &&
                 React.createElement(badgeIcon, {
                   size: "20px",
-                  className:
-                    "text-[var(--events-color-500)] dark:text-[var(--events-color-500)]",
                 })}
             </IconContext.Provider>
           </div>
@@ -198,7 +226,7 @@ Event.Item = function Item({
         <div className="text-xs text-blue-600 dark:text-blue-500">{time}</div>
       </div>
       <div className="relative ms-5">
-        {readStatus === "unread" && <Indicator position="top-right" />}
+        {read === "unread" && <Indicator position="top-right" />}
       </div>
     </div>
   );

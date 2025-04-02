@@ -27,6 +27,7 @@ function ViewNotification() {
               badgeIcon={FaBell}
               badgeColor="yellow"
               readStatus="unread"
+              onRead={(isRead) => console.log(isRead)}
               time="a few moments ago"
               message={
                 <span>
