@@ -17,6 +17,11 @@ class Administrator extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function calendars()
+    {
+        return $this->morphToMany(Calendar::class, 'calendarable', "calendarables", "calendar_id", "user_id");
+    }
+
     protected static function boot()
     {
         parent::boot();

@@ -13,16 +13,17 @@ return new class extends Migration
     {
         Schema::create('calendars', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('teacher_id');
             $table->unsignedBigInteger('group_id');
             $table->unsignedBigInteger('classroom_id');
             $table->unsignedBigInteger('subject_id');
             $table->unsignedBigInteger('school_id');
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->enum('event_type', ['timetable', 'exam', 'meeting', 'holiday']);
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->timestamps();
 
-            $table->foreign('teacher_id')->references('id')->on('teachers')->onDelete('cascade');
             $table->foreign('group_id')->references('id')->on('groups')->onDelete('cascade');
             $table->foreign('classroom_id')->references('id')->on('class_rooms')->onDelete('cascade');
             $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('cascade');

@@ -52,6 +52,7 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
         Route::post('/unblock', [UserController::class, 'unblockUser']);
         Route::post('/users/destroy-many', [UserController::class, 'destroyMany']);
         Route::get('/school-staffs', [UserController::class, 'schoolStaffs']);
+        Route::apiResource('calendars', CalendarController::class);
         Route::apiResource('teachers', TeacherController::class);
         Route::apiResource('stages', StageController::class);
     });
@@ -68,7 +69,6 @@ Route::middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
     Route::apiResource('grades', GradeController::class);
     Route::apiResource('subjects', SubjectController::class);
     Route::apiResource('class_rooms', ClassRoomController::class);
-    Route::apiResource('calendars', CalendarController::class);
     Route::apiResource('students', StudentController::class);
     Route::apiResource('groups', GroupController::class);
     Route::get('/groups-no-grades', [GroupController::class, 'groupsWithoutGrade']);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\ReferenceIDHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,17 +11,30 @@ class Calendar extends Model
     use HasFactory;
 
     protected $fillable = [
-        'teacher_id',
+        'title',
+        'description',
+        'event_type',
         'group_id',
         'classroom_id',
         'subject_id',
+        'school_id',
         'start_date',
         'end_date',
     ];
 
-    public function teacher()
+    public function administrators()
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->morphedByMany(Administrator::class, 'calendarable');
+    }
+
+    public function teachers()
+    {
+        return $this->morphedByMany(Teacher::class, 'calendarable');
+    }
+
+    public function students()
+    {
+        return $this->morphedByMany(Student::class, 'calendarable');
     }
 
     public function group()
@@ -41,4 +55,13 @@ class Calendar extends Model
     {
         return $this->belongsTo(School::class);
     }
+
+    // protected static function boot()
+    // {
+    //     calendar::boot();
+
+    //     static::creating(function ($model) {
+    //         ReferenceIDHelper::setReferenceID($model);
+    //     });
+    // }
 }

@@ -34,7 +34,7 @@ class Student extends Model
     }
     public function calendars()
     {
-        return $this->hasMany(Calendar::class);
+        return $this->morphToMany(Calendar::class, 'calendarable', "calendarables", "calendar_id", "user_id");
     }
 
     protected static function boot()
