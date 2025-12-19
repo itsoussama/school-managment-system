@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\School;
+use App\Models\User;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,6 +15,7 @@ class SchoolSeeder extends Seeder
      */
     public function run(): void
     {
+        // School::factory()->has(User::factory())->create();
         School::factory(2)->create();
     }
 }

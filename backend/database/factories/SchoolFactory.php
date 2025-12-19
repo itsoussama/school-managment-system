@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\School;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,8 +17,10 @@ class SchoolFactory extends Factory
      */
     public function definition(): array
     {
+        $schoolName = fake()->company();
         return [
-            'name' => fake()->name(),
+            'name' =>  $schoolName,
+            'ref' => School::generateURN($schoolName),
             'address' => fake()->address(),
             // 'phone' => fake()->phoneNumber(),
             // 'email' => fake()->unique()->safeEmail(),

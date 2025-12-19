@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\Client\Request;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +23,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'guardian_id',
         'password',
     ];
 
@@ -46,12 +50,80 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function role() : BelongsToMany
+    public function role(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
     }
-    public function school() : BelongsTo
+    public function grades(): BelongsToMany
+    {
+        return $this->belongsToMany(Grade::class);
+    }
+    public function school(): BelongsTo
     {
         return $this->belongsTo(School::class, 'school_id', 'id');
+    }
+    public function subjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Subject::class, 'subject_user');
+    }
+    public function hasRole($role)
+    {
+        $roles = $this->role->pluck('name')->toArray();
+        return in_array($role, $roles);
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        foreach ($roles as $role) {
+            if ($this->hasRole($role)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public function administrator()
+    {
+        return $this->hasOne(Administrator::class); // One-to-one relationship with Student
+    }
+    public function student()
+    {
+        return $this->hasOne(Student::class); // One-to-one relationship with Student
+    }
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class); // One-to-one relationship with Student
+    }
+    public function parent()
+    {
+        return $this->hasOne(Parents::class); // One-to-one relationship with Student
+    }
+
+    public function guardian()
+    {
+        return $this->belongsTo(User::class, 'guardian_id');
+    }
+
+    public function childrens()
+    {
+        return $this->hasMany(User::class, 'guardian_id');
+    }
+    public function maintenanceRequests()
+    {
+        return $this->belongsToMany(MaintenanceRequest::class);
+    }
+
+    public function events(): belongsToMany
+    {
+        return $this->belongsToMany(Event::class);
+    }
+
+    public function payroll()
+    {
+        return $this->hasOne(Payroll::class);
+    }
+
+    public function fee()
+    {
+        return $this->hasOne(Fee::class);
     }
 }

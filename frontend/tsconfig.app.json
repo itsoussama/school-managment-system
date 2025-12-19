@@ -27,10 +27,19 @@
     "paths": {
       "@src/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
+      "@pages/*": ["src/pages/*"],
+      "@axios/*": ["src/api/*"],
+      "@context/*": ["src/context/*"],
+      "@components/*": ["src/components/*"],
       "@hooks/*": ["src/hooks/*"],
+      "@utils/*": ["src/utils/*"],
+      "@redux/*": ["src/store/*"],
+      "@config/*": ["src/config/*"],
+      "@auth/*": ["src/auth/*"],
       "@lang/*": ["src/lang/*"],
-    }
+    },
+    "types": ["i18next"]
 
   },
-  "include": ["src"]
+  "include": ["src", "i18n.d.ts", "src/pages/shared/utils/.ts"]
 }
